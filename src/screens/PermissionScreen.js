@@ -1,39 +1,82 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
+  PermissionsAndroid,
+  NativeModules,
+  NativeEventEmitter,
+  Platform,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
+import * as Location from 'expo-location';
+import * as ImagePicker from 'expo-image-picker';
+import BleManager from 'react-native-ble-manager';
+import { useNavigation } from '@react-navigation/native';
+import PermissionItem from '../components/PermissionItem';
+import { usePermissions } from '../hooks/usePermissions';
 
-// const ICON_WRAPPER_SIZE = 40; // 배경 크기 상수 제거
-const ICON_SIZE = 28; // 아이콘 크기 상수 추가
-const ICON_MARGIN_RIGHT = 5;
-
-const PermissionItem = ({ iconName, title, description }) => (
-  <View style={styles.permissionItemContainer}>
-    {/* 상단 행: 아이콘 + 제목 */}
-    <View style={styles.itemTopRow}>
-      {/* 아이콘 배경 제거, 아이콘 바로 표시 */}
-      {/* <View style={styles.iconWrapper}> */}
-        <MaterialIcons name={iconName} size={ICON_SIZE} style={styles.icon} />
-      {/* </View> */}
-      <Text style={styles.permissionTitle}>{title}</Text>
-    </View>
-    {/* 하단 행: 설명 */}
-    <Text style={styles.permissionDescription}>{description}</Text>
-  </View>
-);
+const BleManagerModule = NativeModules.BleManager;
+const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const PermissionScreen = () => {
+  const navigation = useNavigation();
+  const { permissionsStatus, requestAllPermissions } = usePermissions();
+
+  // BleManager 초기화
+  useEffect(() => {
+    BleManager.start({ showAlert: false })
+      .then(() => {
+        console.log('BleManager initialized');
+      })
+      .catch((error) => {
+        console.error('BleManager initialization error:', error);
+      });
+
+    // 이벤트 리스너 등록 (옵션)
+    const handlerDiscover = bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', (peripheral) => {
+      console.log('Discovered peripheral: ', peripheral);
+    });
+    const handlerStop = bleManagerEmitter.addListener('BleManagerStopScan', () => {
+      console.log('Scan stopped');
+    });
+
+    // 컴포넌트 언마운트 시 리스너 제거
+    return () => {
+      handlerDiscover.remove();
+      handlerStop.remove();
+    };
+  }, []);
+
+  // "다음" 버튼 클릭 핸들러
+  const handlePressNext = async () => {
+    // 훅에서 반환된 요청 함수 호출
+    await requestAllPermissions();
+    // 네비게이션은 useEffect에서 처리
+  };
+
+  // permissionsStatus 상태 변경 감지하여 네비게이션 처리
+  useEffect(() => {
+    if (permissionsStatus === 'success') {
+      console.log('Permission status success, navigating to Home.');
+      navigation.navigate('Home');
+    } else if (permissionsStatus === 'fail') {
+      // 실패 시 사용자에게 추가 안내 Alert (훅 내부 Alert과 중복될 수 있으니 조절)
+      console.log('Permission status fail, navigation blocked.');
+       Alert.alert('권한 실패', '일부 권한이 거부되었습니다. 앱 설정에서 필요한 권한을 허용해주세요.');
+    }
+  }, [permissionsStatus, navigation]); // permissionsStatus 변경 시 실행
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.headerContainer}>
-          <Text style={styles.logoText}>ㅇㅊㅊ</Text>
-          <Text style={styles.headerTitle}>이용을 위해</Text>
+          <Text style={styles.headerTitle}>
+            <Text style={{ color: '#3498db',fontSize: 28, fontWeight: 'bold' }}>ㅇㅊㅊ</Text> 이용을 위해
+          </Text>
           <Text style={styles.headerTitle}>아래 권한을 허용해주세요.</Text>
         </View>
 
@@ -60,8 +103,14 @@ const PermissionScreen = () => {
           />
         </View>
 
-        <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>다음</Text>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handlePressNext}
+          disabled={permissionsStatus === 'checking'}
+        >
+          <Text style={styles.buttonText}>
+            {permissionsStatus === 'checking' ? '권한 확인 중...' : '다음'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -86,12 +135,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  logoText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#3498db',
-    marginBottom: 10,
-  },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
@@ -102,31 +145,6 @@ const styles = StyleSheet.create({
   permissionsListContainer: {
     width: '100%',
     alignItems: 'center',
-  },
-  permissionItemContainer: {
-    marginBottom: 25,
-    alignItems: 'center',
-    width: '90%',
-  },
-  itemTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  icon: {
-    color: '#555',
-    marginRight: ICON_MARGIN_RIGHT,
-  },
-  permissionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  permissionDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    textAlign: 'center',
   },
   button: {
     backgroundColor: '#5dade2',
