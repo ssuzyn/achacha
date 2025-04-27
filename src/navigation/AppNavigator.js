@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PermissionScreen from '../screens/PermissionScreen';
 import HomeScreen from '../screens/HomeScreen';
+import LoginScreen from '../screens/LoginScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +27,11 @@ const AppNavigator = () => {
         name="Permission"
         component={PermissionScreen}
         options={{ headerShown: false }} // 권한 화면 헤더 숨기기
+      />
+      <Stack.Screen
+        name="Login"
+        component={LoginScreen}
+        options={{ headerShown: false }} // 헤더 타이틀 설정 (필요 시)
       />
       <Stack.Screen
         name="Home"
