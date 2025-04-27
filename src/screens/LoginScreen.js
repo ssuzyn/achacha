@@ -1,10 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-// 소셜 로그인 아이콘/로고는 react-native-vector-icons나 직접 이미지 사용 가능
-// 여기서는 예시로 로컬 이미지를 사용한다고 가정합니다. (실제 경로에 맞게 수정 필요)
-// 또는 @expo/vector-icons/Ionicons 등 사용 가능
-// import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { useAuth } from '../hooks/useAuth';
+
 
 // --- 로고 이미지 경로 (실제 프로젝트 경로에 맞게 수정) ---
 const GOOGLE_LOGO_URL = '../../assets/google_logo.png'; // 파일명 수정 (log -> logo)
@@ -12,23 +9,9 @@ const KAKAO_LOGO_URL = '../../assets/kakao-talk_logo.png';   // 파일명 수정
 // -----------------------------------------------------
 
 const LoginScreen = () => {
-  const navigation = useNavigation();
+  const { authState, signInWithKakao, signInWithGoogle } = useAuth();
 
-  const handleKakaoLogin = () => {
-    // TODO: 카카오 로그인 로직 구현
-    console.log('카카오 로그인 시도');
-    // 예: @react-native-kakao/login 라이브러리 사용
-    alert('카카오 로그인이 구현되지 않았습니다.');
-    navigation.navigate('Home');
-  };
-
-  const handleGoogleLogin = () => {
-    // TODO: 구글 로그인 로직 구현
-    console.log('구글 로그인 시도');
-    // 예: @react-native-google-signin/google-signin 라이브러리 사용
-    alert('구글 로그인이 구현되지 않았습니다.');
-    navigation.navigate('Home');
-  };
+  const isLoading = authState === 'loading';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -46,13 +29,27 @@ const LoginScreen = () => {
 
         {/* 버튼 영역 */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={[styles.button, styles.kakaoButton]} onPress={handleKakaoLogin}>
-            {/* 카카오 로고 아이콘 추가 가능 */}
-            <Text style={[styles.buttonText, styles.kakaoButtonText]}>카카오톡 로그인</Text>
+          <TouchableOpacity
+            style={[styles.button, styles.kakaoButton, isLoading && styles.buttonDisabled]}
+            onPress={signInWithKakao}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#191919" />
+            ) : (
+              <Text style={[styles.buttonText, styles.kakaoButtonText]}>카카오톡 로그인</Text>
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.googleButton]} onPress={handleGoogleLogin}>
-            {/* 구글 로고 아이콘 추가 가능 */}
-            <Text style={[styles.buttonText, styles.googleButtonText]}>Google 로그인</Text>
+          <TouchableOpacity
+            style={[styles.button, styles.googleButton, isLoading && styles.buttonDisabled]}
+            onPress={signInWithGoogle}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={[styles.buttonText, styles.googleButtonText]}>Google 로그인</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -131,6 +128,9 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: '#FFFFFF', // 빨간 배경일 때 흰색 텍스트
     // color: '#5F6368', // 흰색 배경일 때 회색 텍스트
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
 
