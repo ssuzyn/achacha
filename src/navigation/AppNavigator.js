@@ -4,6 +4,7 @@ import PermissionScreen from '../screens/PermissionScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SplashScreenComponent from '../screens/SplashScreen';
+import GuideFirstScreen from '../screens/GuideFirstScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,10 @@ const AppNavigator = () => {
       <Stack.Screen 
         name="Splash" 
         component={SplashScreenComponent} 
+      />
+      <Stack.Screen
+        name="GuideFirst"
+        component={GuideFirstScreen}
       />
       <Stack.Screen
         name="Permission"
