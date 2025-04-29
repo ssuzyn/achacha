@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useGuideSteps } from '../hooks/useGuideSteps';
+import theme from '../theme';
 
 const { width } = Dimensions.get('window');
 
@@ -18,7 +19,7 @@ const GuideFirstScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
       <View style={styles.container}>
         <View style={styles.mainContentContainer}>
           <View style={styles.headerContainer}>
@@ -85,7 +86,7 @@ const GuideFirstScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
@@ -126,18 +127,16 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   titleText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000000',
+    ...theme.typography.headingStyles.h2,
+    color: theme.colors.text,
     textAlign: 'center',
     marginBottom: 10,
   },
   subText: {
-    fontSize: 20,
-    color: '#333333',
-    fontWeight: 'normal',
+    ...theme.typography.bodyStyles.large,
+    color: theme.colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 28,
+    lineHeight: theme.typography.normalize(28),
   },
   paginationContainer: {
     flexDirection: 'row',
@@ -154,26 +153,25 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   dotActive: {
-    backgroundColor: '#56AEE9',
+    backgroundColor: theme.colors.primary,
   },
   dotInactive: {
-    backgroundColor: '#D3D3D3',
+    backgroundColor: theme.colors.disabled,
   },
   buttonWrapper: {
     width: '90%',
     alignSelf: 'center',
   },
   button: {
-    backgroundColor: '#56AEE9',
+    backgroundColor: theme.colors.primary,
     paddingVertical: 15,
-    borderRadius: 8,
+    borderRadius: theme.border.radius.medium,
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...theme.typography.buttonStyles.medium,
+    color: theme.colors.buttonText,
   },
 });
 
