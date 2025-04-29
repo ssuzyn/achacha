@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.layout.screen.paddingHorizontal,
     paddingTop: 40,
     paddingBottom: 30,
     justifyContent: 'space-between',
@@ -145,7 +145,7 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: theme.layout.spacing.xxl,
     width: '100%',
   },
   headerTitle: {
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.buttonPrimary,
     paddingVertical: 15,
     borderRadius: theme.border.radius.medium,
     alignItems: 'center',
