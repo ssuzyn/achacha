@@ -11,7 +11,7 @@ const colors = {
   backgroundDark: '#EEEEEE',
 
   // 텍스트 색상
-  text: '#333333',
+  text: '#000000',
   textSecondary: '#666666',
   textLight: '#999999',
   textInverted: '#FFFFFF',
