@@ -74,34 +74,36 @@ const PermissionScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.headerTitle}>
-            <Text style={{ color: '#3498db',fontSize: 28, fontWeight: 'bold' }}>ㅇㅊㅊ</Text> 이용을 위해
-          </Text>
-          <Text style={styles.headerTitle}>아래 권한을 허용해주세요.</Text>
-        </View>
+        <View style={styles.mainContentContainer}>
+          <View style={styles.headerContainer}>
+            <Text style={styles.headerTitle}>
+              <Text style={{ color: '#3498db',fontSize: 28, fontWeight: 'bold' }}>ㅇㅊㅊ</Text> 이용을 위해
+            </Text>
+            <Text style={styles.headerTitle}>아래 권한을 허용해주세요.</Text>
+          </View>
 
-        <View style={styles.permissionsListContainer}>
-          <PermissionItem
-            iconName="notifications"
-            title="알림"
-            description="기프티콘 유효기간 및 위치 기반 알림을 받기 위해 알림 권한이 필요합니다."
-          />
-          <PermissionItem
-            iconName="bluetooth"
-            title="블루투스"
-            description="기프티콘 공유 및 위치 기반 알림 기능을 위해 블루투스 권한이 필요합니다."
-          />
-          <PermissionItem
-            iconName="location-pin"
-            title="위치"
-            description="근처 매장 정보와 설정 변경 내 지도를 제공하기 위해 위치 권한이 필요합니다."
-          />
-          <PermissionItem
-            iconName="photo-library"
-            title="갤러리"
-            description="기프티콘 이미지 업로드를 위하여 갤러리 접근 권한이 필요합니다."
-          />
+          <View style={styles.permissionsListContainer}>
+            <PermissionItem
+              iconName="notifications"
+              title="알림"
+              description="기프티콘 유효기간 및 위치 기반 알림을 받기 위해 알림 권한이 필요합니다."
+            />
+            <PermissionItem
+              iconName="bluetooth"
+              title="블루투스"
+              description="기프티콘 공유 및 위치 기반 알림 기능을 위해 블루투스 권한이 필요합니다."
+            />
+            <PermissionItem
+              iconName="location-pin"
+              title="위치"
+              description="근처 매장 정보와 설정 변경 내 지도를 제공하기 위해 위치 권한이 필요합니다."
+            />
+            <PermissionItem
+              iconName="photo-library"
+              title="갤러리"
+              description="기프티콘 이미지 업로드를 위하여 갤러리 접근 권한이 필요합니다."
+            />
+          </View>
         </View>
 
         <TouchableOpacity
@@ -127,14 +129,20 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 40,
-    paddingBottom: 20,
+    paddingBottom: 30,
+    justifyContent: 'space-between',
+    backgroundColor: '#fff',
+  },
+  mainContentContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    width: '100%',
   },
   headerContainer: {
     alignItems: 'center',
     marginBottom: 40,
+    width: '100%',
   },
   headerTitle: {
     fontSize: 22,
@@ -148,12 +156,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#5dade2',
+    backgroundColor: '#56AEE9',
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: 20,
     width: '90%',
+    alignSelf: 'center',
   },
   buttonText: {
     color: '#fff',
