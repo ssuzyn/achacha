@@ -5,7 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="643ce2da-126f-4978-988f-3264d55bbfcd" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.eslintrc.js" beforeDir="false" afterPath="$PROJECT_DIR$/.eslintrc.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.prettierrc.js" beforeDir="false" afterPath="$PROJECT_DIR$/.prettierrc.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/babel.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/babel.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/metro.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/metro.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/PermissionItem.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/PermissionItem.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/guideContent.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/guideContent.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useAuth.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useAuth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/useGuideSteps.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useGuideSteps.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/hooks/usePermissions.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/usePermissions.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/navigation/AppNavigator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/navigation/AppNavigator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/GuideFirstScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/GuideFirstScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/HomeScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/LoginScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/LoginScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/PermissionScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/PermissionScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/SplashScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SplashScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/theme/colors.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/colors.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/theme/layout.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/layout.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/appStorage.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/appStorage.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,10 +38,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 4
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 4
+}</component>
   <component name="ProjectId" id="2wOb8765RBshomXSferIzgdouBJ" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -34,7 +54,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "feat/S12P31D205-49-projectSetting",
+    "git-widget-placeholder": "design/S12P31D205-34-componentPublish",
     "kotlin-language-version-configured": "true",
     "settings.editor.selected.configurable": "preferences.lookFeel"
   }
