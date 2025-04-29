@@ -18,6 +18,7 @@ import BleManager from 'react-native-ble-manager';
 import { useNavigation } from '@react-navigation/native';
 import PermissionItem from '../components/PermissionItem';
 import { usePermissions } from '../hooks/usePermissions';
+import theme from '../theme';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -80,8 +81,7 @@ const PermissionScreen = () => {
         <View style={styles.mainContentContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.headerTitle}>
-              <Text style={{ color: '#3498db', fontSize: 28, fontWeight: 'bold' }}>ㅇㅊㅊ</Text>{' '}
-              이용을 위해
+              <Text style={styles.appName}>ㅇㅊㅊ</Text> 이용을 위해
             </Text>
             <Text style={styles.headerTitle}>아래 권한을 허용해주세요.</Text>
           </View>
@@ -127,7 +127,7 @@ const PermissionScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     paddingTop: 40,
     paddingBottom: 30,
     justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   mainContentContainer: {
     flex: 1,
@@ -149,28 +149,30 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    lineHeight: 30,
+    ...theme.typography.headingStyles.h3,
+    color: theme.colors.text,
     textAlign: 'center',
+  },
+  appName: {
+    color: theme.colors.primary,
+    fontSize: theme.typography.responsiveFont(28),
+    fontWeight: theme.typography.fontWeights.bold,
   },
   permissionsListContainer: {
     width: '100%',
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#56AEE9',
+    backgroundColor: theme.colors.primary,
     paddingVertical: 15,
-    borderRadius: 8,
+    borderRadius: theme.border.radius.medium,
     alignItems: 'center',
     width: '90%',
     alignSelf: 'center',
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    ...theme.typography.buttonStyles.medium,
+    color: theme.colors.buttonText,
   },
 });
 
