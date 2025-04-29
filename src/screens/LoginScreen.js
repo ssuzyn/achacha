@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useNavigation } from '@react-navigation/native';
 import theme from '../theme';
 
 // --- 로고 이미지 경로 (실제 프로젝트 경로에 맞게 수정) ---
@@ -18,8 +19,33 @@ const KAKAO_LOGO_URL = '../../assets/kakao-talk_logo.png'; // 파일명 수정
 
 const LoginScreen = () => {
   const { authState, signInWithKakao, signInWithGoogle } = useAuth();
+  const navigation = useNavigation();
 
   const isLoading = authState === 'loading';
+
+  // 로그인 성공 시 메인 화면으로 이동하는 함수
+  const handleLoginSuccess = () => {
+    navigation.navigate('Main');
+  };
+
+  // 로그인 함수 래퍼
+  const handleKakaoLogin = async () => {
+    try {
+      await signInWithKakao();
+      handleLoginSuccess();
+    } catch (error) {
+      console.error('카카오 로그인 실패:', error);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+      handleLoginSuccess();
+    } catch (error) {
+      console.error('구글 로그인 실패:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -37,7 +63,7 @@ const LoginScreen = () => {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, styles.kakaoButton, isLoading && styles.buttonDisabled]}
-            onPress={signInWithKakao}
+            onPress={handleKakaoLogin}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -48,7 +74,7 @@ const LoginScreen = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.googleButton, isLoading && styles.buttonDisabled]}
-            onPress={signInWithGoogle}
+            onPress={handleGoogleLogin}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -72,7 +98,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.layout.screen.paddingHorizontal,
     paddingBottom: 40, // 하단 여백 추가
   },
   logoContainer: {
@@ -125,7 +151,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...theme.typography.buttonStyles.medium,
-    marginLeft: 8, // 아이콘과 텍스트 간격 (아이콘 추가 시)
+    marginLeft: theme.layout.spacing.sm, // 아이콘과 텍스트 간격 (아이콘 추가 시)
   },
   kakaoButtonText: {
     color: theme.colors.social.kakaoText, // 카카오 텍스트 색상
