@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import theme from '../theme';
 
 const ICON_SIZE = 28; // 아이콘 크기 상수
 const ICON_MARGIN_RIGHT = 5; // 아이콘 오른쪽 마진 상수
@@ -29,18 +30,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   icon: {
-    color: '#555',
+    color: theme.colors.textSecondary,
     marginRight: ICON_MARGIN_RIGHT,
   },
   permissionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    ...theme.typography.labelStyles.large,
+    color: theme.colors.text,
   },
   permissionDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    ...theme.typography.bodyStyles.medium,
+    color: theme.colors.textSecondary,
     textAlign: 'left', // 왼쪽 정렬 유지
   },
 });
