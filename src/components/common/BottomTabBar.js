@@ -89,19 +89,19 @@ const BottomTabBar = () => {
     let iconName;
 
     switch (route.name) {
-      case 'Home':
+      case 'TabHome':
         iconName = TAB_ICONS.home;
         break;
-      case 'GifticonManage':
+      case 'TabGifticonManage':
         iconName = TAB_ICONS.gifticonManage;
         break;
-      case 'Map':
+      case 'TabMap':
         iconName = TAB_ICONS.map;
         break;
-      case 'Sharebox':
+      case 'TabSharebox':
         iconName = TAB_ICONS.sharebox;
         break;
-      case 'Settings':
+      case 'TabSettings':
         iconName = TAB_ICONS.settings;
         break;
       default:
@@ -136,20 +136,23 @@ const BottomTabBar = () => {
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarItemStyle: styles.tabBarItem,
-        // 선택 효과 추가
+        // 호버 효과 제거
+        tabBarPressColor: 'transparent',
+        tabBarPressOpacity: 1,
         tabBarActiveBackgroundColor: 'transparent',
         tabBarInactiveBackgroundColor: 'transparent',
       })}
+      safeAreaInsets={{ bottom: 0 }}
     >
       <Tab.Screen
-        name="Home"
+        name="TabHome"
         component={props => <TabScreenWrapper component={HomeScreen} name="Home" {...props} />}
         options={{
           tabBarLabel: '홈',
         }}
       />
       <Tab.Screen
-        name="GifticonManage"
+        name="TabGifticonManage"
         component={props => (
           <TabScreenWrapper component={GifticonManageScreen} name="GifticonManage" {...props} />
         )}
@@ -158,14 +161,14 @@ const BottomTabBar = () => {
         }}
       />
       <Tab.Screen
-        name="Map"
+        name="TabMap"
         component={props => <TabScreenWrapper component={MapScreen} name="Map" {...props} />}
         options={{
           tabBarLabel: 'MAP',
         }}
       />
       <Tab.Screen
-        name="Sharebox"
+        name="TabSharebox"
         component={props => (
           <TabScreenWrapper component={ShareboxScreen} name="Sharebox" {...props} />
         )}
@@ -174,7 +177,7 @@ const BottomTabBar = () => {
         }}
       />
       <Tab.Screen
-        name="Settings"
+        name="TabSettings"
         component={props => (
           <TabScreenWrapper component={SettingsScreen} name="Settings" {...props} />
         )}
@@ -188,35 +191,41 @@ const BottomTabBar = () => {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: Platform.OS === 'ios' ? 82 : 62, // iOS에서 더 큰 높이 적용 (노치 고려)
-    paddingTop: 6,
-    paddingBottom: Platform.OS === 'ios' ? 25 : 7, // iOS에서 하단 영역 고려
+    height: 65, // 안드로이드/iOS 일관된 높이
     backgroundColor: theme.colors.background,
     ...Platform.select({
       ios: {
-        shadowColor: theme.colors.shadow,
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 3,
+        shadowColor: 'transparent', // 그림자 제거
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0,
+        shadowRadius: 0,
       },
       android: {
-        elevation: 8,
+        elevation: 0, // 그림자 제거
       },
     }),
+    paddingTop: 0,
+    paddingBottom: 0,
   },
   tabBarLabel: {
     fontWeight: '500',
-    marginBottom: Platform.OS === 'ios' ? 0 : 4,
-    marginTop: Platform.OS === 'ios' ? -3 : 0,
+    marginBottom: 4,
+    marginTop: 4,
+    paddingBottom: 3,
   },
   tabBarItem: {
-    paddingVertical: 6,
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
   },
   iconContainer: {
     width: ICON_SIZE + 8,
     height: ICON_SIZE + 8,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 7,
+    marginBottom: 2,
   },
 });
 
