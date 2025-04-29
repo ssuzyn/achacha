@@ -27,4 +27,4 @@ export const markAppAsLaunched = async () => {
   } catch (error) {
     console.error('AsyncStorage 쓰기 오류 (markAppAsLaunched):', error);
   }
-}; 
+};

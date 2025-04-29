@@ -45,4 +45,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PermissionItem; 
+export default PermissionItem;
