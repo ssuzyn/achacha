@@ -7,9 +7,9 @@ import {
   Image,
   SafeAreaView,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import theme from '../theme';
 
 // --- 로고 이미지 경로 (실제 프로젝트 경로에 맞게 수정) ---
 const GOOGLE_LOGO_URL = '../../assets/google_logo.png'; // 파일명 수정 (log -> logo)
@@ -66,7 +66,7 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   container: {
     flex: 1,
@@ -96,9 +96,8 @@ const styles = StyleSheet.create({
     transform: [{ translateX: 80 }], // 오른쪽으로 80만큼 이동
   },
   title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
+    ...theme.typography.headingStyles.h3,
+    color: theme.colors.text,
     textAlign: 'center',
     marginBottom: 10, // 두 줄 사이 간격
   },
@@ -108,32 +107,31 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 15,
-    borderRadius: 8,
+    borderRadius: theme.border.radius.medium,
     alignItems: 'center',
     marginBottom: 15, // 버튼 간 간격
     flexDirection: 'row', // 아이콘과 텍스트 가로 배치 위해
     justifyContent: 'center', // 내부 요소 중앙 정렬
   },
   kakaoButton: {
-    backgroundColor: '#FEE500', // 카카오 표준 노란색
+    backgroundColor: theme.colors.social.kakao, // 카카오 표준 노란색
   },
   googleButton: {
-    backgroundColor: '#EA4335', // 구글 표준 빨간색 (이미지 참고)
+    backgroundColor: theme.colors.social.google, // 구글 표준 빨간색 (이미지 참고)
     // 표준 가이드라인은 흰색 배경에 로고 사용 권장
     // backgroundColor: '#FFFFFF',
     // borderWidth: 1,
     // borderColor: '#DDDDDD',
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    ...theme.typography.buttonStyles.medium,
     marginLeft: 8, // 아이콘과 텍스트 간격 (아이콘 추가 시)
   },
   kakaoButtonText: {
-    color: '#191919', // 카카오 텍스트 색상
+    color: theme.colors.social.kakaoText, // 카카오 텍스트 색상
   },
   googleButtonText: {
-    color: '#FFFFFF', // 빨간 배경일 때 흰색 텍스트
+    color: theme.colors.social.googleText, // 빨간 배경일 때 흰색 텍스트
     // color: '#5F6368', // 흰색 배경일 때 회색 텍스트
   },
   buttonDisabled: {
