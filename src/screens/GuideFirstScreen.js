@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: theme.layout.screen.paddingHorizontal,
     paddingBottom: 30,
   },
   mainContentContainer: {
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     minHeight: width * 0.6,
-    marginBottom: 10,
+    marginBottom: theme.layout.spacing.sm,
   },
   giftboxImage: {
     width: width * 0.5,
@@ -122,15 +122,15 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     alignItems: 'center',
-    paddingBottom: 20,
-    marginTop: 10,
+    paddingBottom: theme.layout.spacing.lg,
+    marginTop: theme.layout.spacing.sm,
     minHeight: 100,
   },
   titleText: {
     ...theme.typography.headingStyles.h2,
     color: theme.colors.text,
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: theme.layout.spacing.sm,
   },
   subText: {
     ...theme.typography.bodyStyles.large,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
-    marginTop: 30,
+    marginTop: theme.layout.spacing.xl,
     position: 'absolute',
     bottom: 80,
   },
@@ -151,12 +151,6 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     marginHorizontal: 5,
-  },
-  dotActive: {
-    backgroundColor: theme.colors.primary,
-  },
-  dotInactive: {
-    backgroundColor: theme.colors.disabled,
   },
   buttonWrapper: {
     width: '90%',
