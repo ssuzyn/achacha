@@ -30,7 +30,7 @@ export const useGuideSteps = () => {
         navigation.dispatch(
           CommonActions.reset({
             index: 0,
-            routes: [{ name: 'Permission' }], 
+            routes: [{ name: 'Permission' }],
           })
         );
       }
@@ -42,6 +42,6 @@ export const useGuideSteps = () => {
     currentContent,
     isLastStep,
     handleNext,
-    totalSteps: guideSteps.length // 페이지네이션 등을 위해 총 단계 수 반환
+    totalSteps: guideSteps.length, // 페이지네이션 등을 위해 총 단계 수 반환
   };
-}; 
+};

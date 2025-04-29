@@ -14,13 +14,7 @@ import { useGuideSteps } from '../hooks/useGuideSteps';
 const { width } = Dimensions.get('window');
 
 const GuideFirstScreen = () => {
-  const {
-    currentStep,
-    currentContent,
-    isLastStep,
-    handleNext,
-    totalSteps
-  } = useGuideSteps();
+  const { currentStep, currentContent, isLastStep, handleNext, totalSteps } = useGuideSteps();
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -33,12 +27,18 @@ const GuideFirstScreen = () => {
                 <>
                   <Image
                     source={require('../../assets/giftbox1.png')}
-                    style={[styles.giftboxImage, { transform: [{ translateX: -80 }, { translateY: 50 }]}]}
+                    style={[
+                      styles.giftboxImage,
+                      { transform: [{ translateX: -80 }, { translateY: 50 }] },
+                    ]}
                     resizeMode="contain"
                   />
                   <Image
                     source={require('../../assets/giftbox2.png')}
-                    style={[styles.giftboxImage, { transform: [{ translateX: 80 }, { translateY: -width * 0.1 } ]}]}
+                    style={[
+                      styles.giftboxImage,
+                      { transform: [{ translateX: 80 }, { translateY: -width * 0.1 }] },
+                    ]}
                     resizeMode="contain"
                   />
                 </>
@@ -57,7 +57,9 @@ const GuideFirstScreen = () => {
           <View style={styles.content}>
             <Text style={styles.titleText}>{currentContent.title}</Text>
             <Text style={styles.subText}>{currentContent.subText1}</Text>
-            {currentContent.subText2 ? <Text style={styles.subText}>{currentContent.subText2}</Text> : null}
+            {currentContent.subText2 ? (
+              <Text style={styles.subText}>{currentContent.subText2}</Text>
+            ) : null}
           </View>
 
           <View style={styles.paginationContainer}>
@@ -175,4 +177,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GuideFirstScreen; 
+export default GuideFirstScreen;

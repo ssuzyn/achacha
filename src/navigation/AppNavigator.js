@@ -12,33 +12,15 @@ const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
   return (
-    <Stack.Navigator 
-      initialRouteName="Splash"
-      screenOptions={{ headerShown: false }}
-    >
-      <Stack.Screen 
-        name="Splash" 
-        component={SplashScreenComponent} 
-      />
-      <Stack.Screen
-        name="GuideFirst"
-        component={GuideFirstScreen}
-      />
-      <Stack.Screen
-        name="Permission"
-        component={PermissionScreen}
-      />
-      <Stack.Screen
-        name="Login"
-        component={LoginScreen}
-      />
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-      />
+    <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Splash" component={SplashScreenComponent} />
+      <Stack.Screen name="GuideFirst" component={GuideFirstScreen} />
+      <Stack.Screen name="Permission" component={PermissionScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Home" component={HomeScreen} />
       {/* 다른 스크린들을 여기에 추가할 수 있습니다 */}
     </Stack.Navigator>
   );
 };
 
-export default AppNavigator; 
+export default AppNavigator;

@@ -14,9 +14,9 @@ export default function App() {
     // The timed navigation logic is handled within SplashScreenComponent.
     try {
       await SplashScreen.hideAsync();
-      console.log("Native splash screen hidden by App.js");
+      console.log('Native splash screen hidden by App.js');
     } catch (e) {
-      console.warn("Failed to hide native splash screen:", e);
+      console.warn('Failed to hide native splash screen:', e);
     }
   }, []);
 

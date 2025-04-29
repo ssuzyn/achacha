@@ -1,11 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import { useAuth } from '../hooks/useAuth';
-
 
 // --- 로고 이미지 경로 (실제 프로젝트 경로에 맞게 수정) ---
 const GOOGLE_LOGO_URL = '../../assets/google_logo.png'; // 파일명 수정 (log -> logo)
-const KAKAO_LOGO_URL = '../../assets/kakao-talk_logo.png';   // 파일명 수정
+const KAKAO_LOGO_URL = '../../assets/kakao-talk_logo.png'; // 파일명 수정
 // -----------------------------------------------------
 
 const LoginScreen = () => {
@@ -18,10 +26,8 @@ const LoginScreen = () => {
       <View style={styles.container}>
         {/* 로고 영역 */}
         <View style={styles.logoContainer}>
-        
           <Image source={require(GOOGLE_LOGO_URL)} style={styles.googleLogo} resizeMode="contain" />
           <Image source={require(KAKAO_LOGO_URL)} style={styles.kakaoLogo} resizeMode="contain" />
-         
         </View>
 
         {/* 텍스트 영역 */}
@@ -76,17 +82,18 @@ const styles = StyleSheet.create({
     marginBottom: 40, // 텍스트와의 간격 조정 (기존 60)
     // 이미지와 유사하게 배치하려면 flexDirection: 'column' 또는 각 로고 위치 조정 필요
   },
-  googleLogo: { // 구글 로고 스타일 추가
-    width: 140, 
-    height: 140, 
+  googleLogo: {
+    // 구글 로고 스타일 추가
+    width: 140,
+    height: 140,
     marginBottom: 0, // 아래 로고와의 간격
-    transform: [{ translateX: -80 }, { translateY: 50 }] // 왼쪽으로 80만큼 이동 아래로 50만큼 이동
+    transform: [{ translateX: -80 }, { translateY: 50 }], // 왼쪽으로 80만큼 이동 아래로 50만큼 이동
   },
   kakaoLogo: {
-    width: 170, 
+    width: 170,
     height: 170,
     marginBottom: 0,
-    transform: [{ translateX: 80 }] // 오른쪽으로 80만큼 이동
+    transform: [{ translateX: 80 }], // 오른쪽으로 80만큼 이동
   },
   title: {
     fontSize: 22,
@@ -134,4 +141,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen; 
+export default LoginScreen;

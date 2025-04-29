@@ -32,14 +32,17 @@ const PermissionScreen = () => {
       .then(() => {
         console.log('BleManager initialized');
       })
-      .catch((error) => {
+      .catch(error => {
         console.error('BleManager initialization error:', error);
       });
 
     // 이벤트 리스너 등록 (옵션)
-    const handlerDiscover = bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', (peripheral) => {
-      console.log('Discovered peripheral: ', peripheral);
-    });
+    const handlerDiscover = bleManagerEmitter.addListener(
+      'BleManagerDiscoverPeripheral',
+      peripheral => {
+        console.log('Discovered peripheral: ', peripheral);
+      }
+    );
     const handlerStop = bleManagerEmitter.addListener('BleManagerStopScan', () => {
       console.log('Scan stopped');
     });
@@ -77,7 +80,8 @@ const PermissionScreen = () => {
         <View style={styles.mainContentContainer}>
           <View style={styles.headerContainer}>
             <Text style={styles.headerTitle}>
-              <Text style={{ color: '#3498db',fontSize: 28, fontWeight: 'bold' }}>ㅇㅊㅊ</Text> 이용을 위해
+              <Text style={{ color: '#3498db', fontSize: 28, fontWeight: 'bold' }}>ㅇㅊㅊ</Text>{' '}
+              이용을 위해
             </Text>
             <Text style={styles.headerTitle}>아래 권한을 허용해주세요.</Text>
           </View>
@@ -170,4 +174,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PermissionScreen; 
+export default PermissionScreen;

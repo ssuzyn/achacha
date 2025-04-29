@@ -61,7 +61,7 @@ export const layout = {
     small: 48,
     medium: 80,
     large: 150,
-  }
+  },
 };
 
 export default layout;

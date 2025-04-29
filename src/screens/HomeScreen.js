@@ -8,7 +8,8 @@ const HomeScreen = () => {
   const pickImage = async () => {
     console.log('[HomeScreen] pickImage function started.'); // 함수 시작 로그
 
-    try { // 오류 처리를 위해 try...catch 추가
+    try {
+      // 오류 처리를 위해 try...catch 추가
       // 갤러리 접근 권한 확인
       console.log('[HomeScreen] Checking media library permissions...');
       const { status: currentStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
@@ -25,7 +26,10 @@ const HomeScreen = () => {
 
       // 최종 권한 상태 확인
       if (finalStatus !== 'granted') {
-        Alert.alert('권한 필요', '갤러리에 접근하려면 권한이 필요합니다. 앱 설정에서 허용해주세요.');
+        Alert.alert(
+          '권한 필요',
+          '갤러리에 접근하려면 권한이 필요합니다. 앱 설정에서 허용해주세요.'
+        );
         console.log('[HomeScreen] Final permission status is not granted. Aborting.');
         return; // 권한 없으면 여기서 종료
       }
@@ -47,7 +51,6 @@ const HomeScreen = () => {
       } else {
         console.log('[HomeScreen] Image selection cancelled or failed.');
       }
-
     } catch (error) {
       console.error('[HomeScreen] Error in pickImage function:', error); // 오류 로그 출력
       Alert.alert('오류 발생', '이미지를 선택하는 중 오류가 발생했습니다.');
@@ -84,4 +87,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen; 
+export default HomeScreen;
