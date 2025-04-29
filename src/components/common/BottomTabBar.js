@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import theme from '../../theme';
 import { useTabBar } from '../../context/TabBarContext';
+import HeaderBar from './HeaderBar';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
@@ -34,6 +35,13 @@ const SettingsScreen = () => (
   </View>
 );
 
+// 알림 화면
+const NotificationScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <Text>알림 화면</Text>
+  </View>
+);
+
 const Tab = createBottomTabNavigator();
 
 // 각 탭의 아이콘 정의
@@ -43,6 +51,7 @@ const TAB_ICONS = {
   map: 'location-on',
   sharebox: 'inventory-2',
   settings: 'settings',
+  notification: 'notifications',
 };
 
 // 화면 크기 계산
@@ -55,9 +64,17 @@ const HIDDEN_TAB_BAR_SCREENS = [
   'GifticonDetail',
   'AddGifticon',
   'EditProfile',
-  'Notification',
+  // 'Notification', // 알림 화면에서는 탭바 표시
   // 추가할 화면들...
 ];
+
+// 헤더바가 포함된 스크린 컴포넌트
+const ScreenWithHeader = ({ children }) => (
+  <View style={{ flex: 1 }}>
+    <HeaderBar notificationCount={3} />
+    {children}
+  </View>
+);
 
 // 탭 스크린 래퍼 컴포넌트 - 탭바 표시 여부를 조절하는 로직 포함
 const TabScreenWrapper = ({ component: Component, name }) => {
@@ -79,7 +96,11 @@ const TabScreenWrapper = ({ component: Component, name }) => {
     return unsubscribeFocus;
   }, [navigation, hideTabBar, showTabBar, name]);
 
-  return <Component />;
+  return (
+    <ScreenWithHeader>
+      <Component />
+    </ScreenWithHeader>
+  );
 };
 
 const BottomTabBar = () => {
@@ -103,6 +124,9 @@ const BottomTabBar = () => {
         break;
       case 'TabSettings':
         iconName = TAB_ICONS.settings;
+        break;
+      case 'TabNotification':
+        iconName = TAB_ICONS.notification;
         break;
       default:
         iconName = 'help-outline';
@@ -183,6 +207,15 @@ const BottomTabBar = () => {
         )}
         options={{
           tabBarLabel: '설정',
+        }}
+      />
+      <Tab.Screen
+        name="TabNotification"
+        component={props => (
+          <TabScreenWrapper component={NotificationScreen} name="Notification" {...props} />
+        )}
+        options={{
+          tabBarLabel: '알림',
         }}
       />
     </Tab.Navigator>
