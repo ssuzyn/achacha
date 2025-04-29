@@ -94,11 +94,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoContainer: {
-    // Centering is handled by the container's justify/align properties
+    ...theme.layout.flex.center,
   },
   logo: {
-    width: 200,
-    height: 200,
+    width: theme.layout.imageSize.extraLarge,
+    height: theme.layout.imageSize.extraLarge,
   },
 });
 
