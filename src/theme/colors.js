@@ -19,30 +19,54 @@ const colors = {
   // 버튼 색상
   buttonText: '#FFFFFF',
   buttonPrimary: '#56AEE9',
-  buttonSecondary: '#6C757D',
+  buttonSecondary: '#278CCC',
+  buttonTertiary: '#A7DAF9',
   buttonDanger: '#DC3545',
-  buttonSuccess: '#28A745',
+  buttonSuccess: '#68DB7D',
 
   // 상태 색상
-  success: '#28A745',
-  warning: '#FFC107',
+  success: '#68DB7D',
+  warning: '#FCE642',
   danger: '#DC3545',
   info: '#17A2B8',
 
   // 경계 색상
-  border: '#DEE2E6',
-  borderLight: '#E9ECEF',
-  borderDark: '#ADB5BD',
+  border: '#718096',
+  borderLight: '#E2E8F0',
+  borderDark: '#2D3748',
 
   // 비활성화 색상
-  disabled: '#D3D3D3',
-  disabledText: '#A9A9A9',
+  disabled: '#A7DAF94D',
+  disabledText: '#278CCC',
+
+  // 카드 색상
+  card: {
+    orange: '#FF9500',
+    green: '#0DBA39',
+    purple: '#AF52DE',
+    blue: '#007AFF',
+    cyan: '#30B0C7',
+    pink: '#FF2DC3',
+    // 비활성화 색상 (20%, 40% 투명도)
+    orangeDisabled20: '#FF950033',
+    orangeDisabled40: '#FF950066',
+    greenDisabled20: '#0DBA3933',
+    greenDisabled40: '#0DBA3966',
+    purpleDisabled20: '#AF52DE33',
+    purpleDisabled40: '#AF52DE66',
+    blueDisabled20: '#007AFF33',
+    blueDisabled40: '#007AFF66',
+    cyanDisabled20: '#30B0C733',
+    cyanDisabled40: '#30B0C766',
+    pinkDisabled20: '#FF2DC333',
+    pinkDisabled40: '#FF2DC366',
+  },
 
   // 소셜 로그인 색상
   social: {
-    kakao: '#FEE500',
-    kakaoText: '#191919',
-    google: '#EA4335',
+    kakao: '#FCE642',
+    kakaoText: '#462000',
+    google: '#EF4040',
     googleText: '#FFFFFF',
   },
 
