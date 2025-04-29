@@ -61,14 +61,15 @@ const PermissionScreen = () => {
   // permissionsStatus 상태 변경 감지하여 네비게이션 처리
   useEffect(() => {
     if (permissionsStatus === 'success') {
-      console.log('Permission status success, navigating to Home.');
-      navigation.navigate('Home');
+      console.log('Permission request process finished, navigating to Login.');
+      navigation.navigate('Login');
     } else if (permissionsStatus === 'fail') {
-      // 실패 시 사용자에게 추가 안내 Alert (훅 내부 Alert과 중복될 수 있으니 조절)
-      console.log('Permission status fail, navigation blocked.');
-       Alert.alert('권한 실패', '일부 권한이 거부되었습니다. 앱 설정에서 필요한 권한을 허용해주세요.');
+      // 심각한 오류 발생 시 (훅 내부 Alert 후 추가 동작 필요 시)
+      console.error('Permission request process failed critically.');
+      // Alert.alert(...) 제거 또는 다른 오류 처리 로직 추가
     }
-  }, [permissionsStatus, navigation]); // permissionsStatus 변경 시 실행
+    // 'checking' 이나 'idle' 상태에서는 아무것도 하지 않음
+  }, [permissionsStatus, navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

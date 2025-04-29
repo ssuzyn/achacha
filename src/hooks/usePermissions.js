@@ -26,8 +26,8 @@ export const usePermissions = () => {
       console.log('[usePermissions] Android 12+ Permissions Status:', statuses);
       const allGranted = permissions.every(permission => statuses[permission] === PermissionsAndroid.RESULTS.GRANTED);
       if (!allGranted) {
-        Alert.alert('블루투스/위치 권한 거부됨', 'Android 12 이상에서는 블루투스 스캔, 연결 및 위치 권한이 필요합니다.');
-        return false;
+        console.warn('[usePermissions] Android 12+ Bluetooth/Location permissions denied.'); // Alert 대신 경고 로그
+        return false; // 여전히 성공 여부는 반환
       }
     // Android 6 (API 23) ~ 11 (API 30) 위치 권한 요청
     } else if (Platform.Version >= 23) {
@@ -35,8 +35,8 @@ export const usePermissions = () => {
       if (!locationPermission) {
         const statusResult = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
         if (statusResult !== PermissionsAndroid.RESULTS.GRANTED) {
-          Alert.alert('위치 권한 거부됨', '블루투스 스캔을 위해 위치 권한이 필요합니다.');
-          return false;
+          console.warn('[usePermissions] Location permission denied for Bluetooth scan.'); // Alert 대신 경고 로그
+          return false; // 성공 여부 반환
         }
       }
     }
@@ -46,58 +46,48 @@ export const usePermissions = () => {
   // 모든 권한을 순차적으로 요청하는 함수
   const requestAllPermissions = useCallback(async () => {
     setPermissionsStatus('checking');
-    let allGranted = true;
+    let finalOutcome = { // 각 권한 결과를 저장할 객체
+        notification: false,
+        bluetoothLocation: false,
+        mediaLibrary: false,
+    };
 
     try {
       // 1. 알림 권한 요청
       console.log('[usePermissions] Requesting Notification permissions...');
       const { status: notificationStatus } = await Notifications.requestPermissionsAsync();
-      if (notificationStatus !== 'granted') {
-        Alert.alert('알림 권한 거부됨', '앱 설정에서 알림 권한을 허용해주세요.');
-        allGranted = false;
+      finalOutcome.notification = notificationStatus === 'granted';
+      if (!finalOutcome.notification) {
+        console.warn('[usePermissions] Notification permission denied.'); // Alert 대신 경고 로그
       }
       console.log(`[usePermissions] Notification permission: ${notificationStatus}`);
 
-      // 2. 블루투스 및 위치 권한 요청 (Android) - 이전 권한이 성공한 경우 진행 (선택 사항)
-      if (allGranted || true) { // 모든 권한이 필수라고 가정하고 진행 (필수가 아니면 조건 수정)
-        console.log('[usePermissions] Requesting Bluetooth/Location permissions...');
-        const androidPermissionsGranted = await handleAndroidBluetoothPermissions();
-        if (!androidPermissionsGranted) {
-          console.log('[usePermissions] Android Bluetooth/Location permissions denied.');
-          allGranted = false;
-        } else {
-          console.log('[usePermissions] Android Bluetooth/Location permissions granted.');
-        }
-      }
+      // 2. 블루투스 및 위치 권한 요청 (Android) - 이전 결과와 관계없이 실행
+      console.log('[usePermissions] Requesting Bluetooth/Location permissions...');
+      const androidPermissionsGranted = await handleAndroidBluetoothPermissions();
+      finalOutcome.bluetoothLocation = androidPermissionsGranted;
+      // 내부 로그는 handleAndroidBluetoothPermissions 에서 처리
 
-      // 3. 갤러리 권한 요청 - 이전 권한이 성공한 경우 진행 (선택 사항)
-      if (allGranted || true) { // 모든 권한이 필수라고 가정하고 진행
-        console.log('[usePermissions] Requesting Media Library permissions...');
-        const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (mediaLibraryStatus !== 'granted') {
-          Alert.alert('갤러리 접근 권한 거부됨', '앱 설정에서 갤러리 접근 권한을 허용해주세요.');
-          allGranted = false;
-        }
-        console.log(`[usePermissions] Media Library permission: ${mediaLibraryStatus}`);
+      // 3. 갤러리 권한 요청 - 이전 결과와 관계없이 실행
+      console.log('[usePermissions] Requesting Media Library permissions...');
+      const { status: mediaLibraryStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      finalOutcome.mediaLibrary = mediaLibraryStatus === 'granted';
+      if (!finalOutcome.mediaLibrary) {
+        console.warn('[usePermissions] Media Library permission denied.'); // Alert 대신 경고 로그
       }
+      console.log(`[usePermissions] Media Library permission: ${mediaLibraryStatus}`);
 
-      // 최종 결과 처리
-      if (allGranted) {
-        setPermissionsStatus('success');
-        console.log('[usePermissions] 모든 필수 권한 요청 완료.');
-        return true; // 성공 반환
-      } else {
-        setPermissionsStatus('fail');
-        console.log('[usePermissions] 일부 필수 권한이 거부됨.');
-        // 실패 시 추가 Alert은 필요에 따라 유지 또는 제거
-        // Alert.alert('권한 필요', '앱을 사용하려면 모든 필수 권한을 허용해야 합니다. 앱 설정에서 권한을 변경해주세요.');
-        return false; // 실패 반환
-      }
+      // 모든 요청 시도 후 상태를 'success'로 설정 (프로세스 완료 의미)
+      setPermissionsStatus('success');
+      console.log('[usePermissions] Permission request process completed.', finalOutcome);
+      // 함수 반환 값은 필요에 따라 사용할 수 있음 (예: 최종 권한 상태 객체)
+      return finalOutcome;
+
     } catch (error) {
       console.error("[usePermissions] Error requesting permissions:", error);
-      setPermissionsStatus('fail');
+      setPermissionsStatus('fail'); // 심각한 오류 시에만 fail 상태
       Alert.alert('권한 요청 오류', '권한을 요청하는 중 오류가 발생했습니다.');
-      return false; // 실패 반환
+      return finalOutcome; // 오류 시에도 현재까지의 결과 반환
     }
   }, [handleAndroidBluetoothPermissions]); // handleAndroidBluetoothPermissions 함수가 의존성
 
