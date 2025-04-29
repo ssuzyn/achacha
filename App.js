@@ -4,6 +4,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
+import { styled } from 'nativewind';
+
+// Styled 컴포넌트 생성
+const StyledView = styled(View);
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -21,11 +25,11 @@ export default function App() {
   }, []);
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <StyledView className="flex-1" onLayout={onLayoutRootView}>
       <NavigationContainer>
         <AppNavigator />
         <StatusBar style="auto" />
       </NavigationContainer>
-    </View>
+    </StyledView>
   );
 }
