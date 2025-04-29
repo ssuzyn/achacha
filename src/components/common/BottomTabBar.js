@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, View, Text, Platform, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation } from '@react-navigation/native';
 import theme from '../../theme';
+import { useTabBar } from '../../context/TabBarContext';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
@@ -14,7 +16,7 @@ const GifticonManageScreen = () => (
   </View>
 );
 
-const GifticonMapScreen = () => (
+const MapScreen = () => (
   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
     <Text>기프티콘 MAP 화면</Text>
   </View>
@@ -48,7 +50,41 @@ const { width } = Dimensions.get('window');
 const ICON_SIZE = width > 380 ? 26 : 24;
 const LABEL_FONTSIZE = width > 380 ? 11 : 10;
 
+// 특정 화면에서 탭바를 숨길 화면 목록
+const HIDDEN_TAB_BAR_SCREENS = [
+  'GifticonDetail',
+  'AddGifticon',
+  'EditProfile',
+  'Notification',
+  // 추가할 화면들...
+];
+
+// 탭 스크린 래퍼 컴포넌트 - 탭바 표시 여부를 조절하는 로직 포함
+const TabScreenWrapper = ({ component: Component, name }) => {
+  const { hideTabBar, showTabBar } = useTabBar();
+  const navigation = useNavigation();
+
+  // 현재 화면의 포커스 상태 변경 감지하여 탭바 표시 여부 설정
+  useEffect(() => {
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      // 특정 화면에서 탭바 숨기기
+      if (HIDDEN_TAB_BAR_SCREENS.includes(name)) {
+        hideTabBar();
+      } else {
+        showTabBar();
+      }
+    });
+
+    // 화면에서 나갈 때 리스너 해제
+    return unsubscribeFocus;
+  }, [navigation, hideTabBar, showTabBar, name]);
+
+  return <Component />;
+};
+
 const BottomTabBar = () => {
+  const { isTabBarVisible } = useTabBar();
+
   const renderTabBarIcon = (route, focused, color) => {
     let iconName;
 
@@ -94,6 +130,8 @@ const BottomTabBar = () => {
           // 상단에 연한 Primary 색상 선 추가
           borderTopWidth: 1,
           borderTopColor: `${theme.colors.primary}20`,
+          // 탭바 표시 여부에 따라 동적으로 스타일 변경
+          display: isTabBarVisible ? 'flex' : 'none',
         },
         headerShown: false,
         tabBarHideOnKeyboard: true,
@@ -105,35 +143,41 @@ const BottomTabBar = () => {
     >
       <Tab.Screen
         name="Home"
-        component={HomeScreen}
+        component={props => <TabScreenWrapper component={HomeScreen} name="Home" {...props} />}
         options={{
           tabBarLabel: '홈',
         }}
       />
       <Tab.Screen
         name="GifticonManage"
-        component={GifticonManageScreen}
+        component={props => (
+          <TabScreenWrapper component={GifticonManageScreen} name="GifticonManage" {...props} />
+        )}
         options={{
           tabBarLabel: '기프티콘 관리',
         }}
       />
       <Tab.Screen
         name="Map"
-        component={GifticonMapScreen}
+        component={props => <TabScreenWrapper component={MapScreen} name="Map" {...props} />}
         options={{
           tabBarLabel: 'MAP',
         }}
       />
       <Tab.Screen
         name="Sharebox"
-        component={ShareboxScreen}
+        component={props => (
+          <TabScreenWrapper component={ShareboxScreen} name="Sharebox" {...props} />
+        )}
         options={{
           tabBarLabel: '쉐어박스',
         }}
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={props => (
+          <TabScreenWrapper component={SettingsScreen} name="Settings" {...props} />
+        )}
         options={{
           tabBarLabel: '설정',
         }}
