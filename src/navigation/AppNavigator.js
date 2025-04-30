@@ -5,7 +5,7 @@ import PermissionScreen from '../screens/PermissionScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SplashScreenComponent from '../screens/SplashScreen';
-import GuideFirstScreen from '../screens/GuideFirstScreen';
+import GuideFirstScreen from '../screens/GuideScreen';
 import BottomTabBar from '../components/common/BottomTabBar';
 import { config } from '../components/ui/gluestack-ui-provider';
 
