@@ -14,6 +14,8 @@ module.exports = function (api) {
           allowUndefined: true,
         },
       ],
+      // 애니메이션을 위한 Reanimated 플러그인
+      'react-native-reanimated/plugin',
     ],
   };
 };
