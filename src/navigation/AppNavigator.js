@@ -6,7 +6,7 @@ import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SplashScreenComponent from '../screens/SplashScreen';
 import GuideFirstScreen from '../screens/GuideFirstScreen';
-import BottomTabBar from '../components/common/BottomTabBar';
+import BottomTabBar from '../components/BottomTabBar';
 import theme from '../theme';
 
 const Stack = createNativeStackNavigator();

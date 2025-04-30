@@ -3,12 +3,12 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, View, Text, Platform, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import theme from '../../theme';
-import { useTabBar } from '../../context/TabBarContext';
+import theme from '../theme';
+import { useTabBar } from '../context/TabBarContext';
 import HeaderBar from './HeaderBar';
 
 // 임포트할 스크린들
-import HomeScreen from '../../screens/HomeScreen';
+import HomeScreen from '../screens/HomeScreen';
 
 // 임시 스크린
 const GifticonManageScreen = () => (
