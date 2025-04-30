@@ -1,167 +1,160 @@
-import React from "react";
-import { StyleSheet } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, Dimensions } from "react-native";
 import { WebView } from "react-native-webview";
 import { KAKAO_MAP_API_KEY } from "@env";
-import React, { useRef, useEffect, useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { WebView } from "react-native-webview";
 
-const KakaoMapView = ({
-  latitude,
-  longitude,
-  level,
-  width,
-  height,
-  onMapReady,
-}) => {
-  const webViewRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+const { width, height } = Dimensions.get("window");
 
-  // 디버깅을 위한 콘솔 로그 주입
-  const injectedJavaScript = `
-    console.log = function(message) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({type: 'console', message}));
-    };
-    console.error = function(message) {
-      window.ReactNativeWebView.postMessage(JSON.stringify({type: 'error', message}));
-    };
-    true;
-  `;
+const KakaoMapWebView = () => {
+  const [mapLoaded, setMapLoaded] = useState(false);
 
-  const html = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <style>
-          body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
-          #map { width: 100%; height: 100%; }
-        </style>
-        <script defer src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_APP_KEY&autoload=false"></script>
-      </head>
-      <body>
-        <div id="map"></div>
-        <script>
-          // 디버깅용 타임아웃 - 5초 후에도 지도가 로드되지 않으면 오류 메시지 전송
-          const timeout = setTimeout(() => {
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-              type: 'timeout',
-              message: 'Map initialization timed out'
-            }));
-          }, 5000);
-          
-          try {
-            kakao.maps.load(function() {
-              try {
-                console.log('Kakao Map SDK loaded');
-                const mapContainer = document.getElementById('map');
-                const mapOption = { 
-                  center: new kakao.maps.LatLng(${latitude}, ${longitude}),
-                  level: ${level}
-                };
-                
-                console.log('Creating map with options:', JSON.stringify(mapOption));
-                const map = new kakao.maps.Map(mapContainer, mapOption);
-                
-                // 맵 생성 성공 시 타임아웃 제거
-                clearTimeout(timeout);
-                
-                // 지도가 로드되었음을 알림
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                  type: 'ready',
-                  message: 'map_ready'
-                }));
-                
-                console.log('Map initialization complete');
-              } catch (e) {
-                console.error('Error initializing map: ' + e.message);
-                window.ReactNativeWebView.postMessage(JSON.stringify({
-                  type: 'error',
-                  message: e.message
-                }));
-              }
-            });
-          } catch (e) {
-            console.error('Error loading Kakao Maps SDK: ' + e.message);
-            window.ReactNativeWebView.postMessage(JSON.stringify({
-              type: 'error',
-              message: e.message
-            }));
-          }
-        </script>
-      </body>
-    </html>
-  `;
-
+  // 웹뷰에서 메시지를 받아 처리하는 함수
   const handleMessage = (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
 
-      if (data.type === "console") {
-        console.log("WebView log:", data.message);
-      } else if (data.type === "error") {
-        console.error("WebView error:", data.message);
-        setError(data.message);
-      } else if (data.type === "timeout") {
-        console.warn("WebView timeout:", data.message);
-        setError("Map loading timed out. Please check your connection.");
-      } else if (data.type === "ready") {
-        console.log("Map is ready!");
-        setIsLoading(false);
-        onMapReady && onMapReady();
+      console.log(`[${data.type}] ${data.message}`);
+
+      if (data.type === "mapLoaded" && data.success) {
+        setMapLoaded(true);
       }
-    } catch (e) {
-      console.log("Raw message from WebView:", event.nativeEvent.data);
+    } catch (error) {
+      console.error("메시지 파싱 오류:", error);
     }
   };
 
+  // 카카오맵 HTML 코드
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <title>카카오맵</title>
+      <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
+        #map { width: 100%; height: 100%; }
+      </style>
+    </head>
+    <body>
+      <!-- 지도를 표시할 div -->
+      <div id="map"></div>
+
+      <script>
+        // 디버그 메시지 표시 함수 - 콘솔 로그만 표시
+        function debugLog(message) {
+          // 메시지를 React Native로 전송
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'log',
+              message: message
+            }));
+          }
+        }
+
+        // 에러 메시지 표시 함수
+        function debugError(message) {
+          // 에러를 React Native로 전송
+          if (window.ReactNativeWebView) {
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'error',
+              message: message
+            }));
+          }
+        }
+
+        // 페이지 로드 완료 시 지도 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+          // 카카오맵 SDK 스크립트 로드
+          const script = document.createElement('script');
+          script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false';
+          
+          script.onload = function() {
+            debugLog('카카오맵 SDK 스크립트 로드 완료, 초기화 시작...');
+            
+            kakao.maps.load(function() {
+              // SDK 로드 후 지도 초기화
+              try {
+                var mapContainer = document.getElementById('map');
+                if (!mapContainer) {
+                  debugError('맵 컨테이너를 찾을 수 없습니다.');
+                  return;
+                }
+                
+                var mapOption = { 
+                  center: new kakao.maps.LatLng(36.1073502, 128.4152258),
+                  level: 3
+                };
+
+                debugLog('지도 생성 중...');
+                var map = new kakao.maps.Map(mapContainer, mapOption);
+                
+                debugLog('지도 생성 성공!');
+                
+                // 지도 로드 성공 메시지 전송
+                if (window.ReactNativeWebView) {
+                  window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'mapLoaded',
+                    success: true
+                  }));
+                }
+              } catch (error) {
+                debugError('지도 생성 중 오류: ' + error.message);
+                
+                // 지도 로드 실패 메시지 전송
+                if (window.ReactNativeWebView) {
+                  window.ReactNativeWebView.postMessage(JSON.stringify({
+                    type: 'mapLoaded',
+                    success: false,
+                    error: error.message
+                  }));
+                }
+              }
+            });
+          };
+          
+          script.onerror = function(error) {
+            debugError('카카오맵 SDK 로드 실패: ' + error);
+          };
+          
+          document.head.appendChild(script);
+        });
+      </script>
+    </body>
+    </html>
+  `;
+
   return (
-    <View style={[styles.container, { width, height }]}>
+    <View style={styles.container}>
       <WebView
-        ref={webViewRef}
         originWhitelist={["*"]}
-        source={{ html }}
+        source={{ html: htmlContent }}
         style={styles.webView}
         javaScriptEnabled={true}
         domStorageEnabled={true}
-        cacheEnabled={true}
-        injectedJavaScript={injectedJavaScript}
         onMessage={handleMessage}
         onError={(syntheticEvent) => {
           const { nativeEvent } = syntheticEvent;
-          setError(`WebView error: ${nativeEvent.description}`);
+          console.error("WebView 오류:", nativeEvent);
+        }}
+        onHttpError={(syntheticEvent) => {
+          const { nativeEvent } = syntheticEvent;
+          console.error("HTTP 오류:", nativeEvent);
         }}
       />
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>오류: {error}</Text>
-        </View>
-      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    overflow: "hidden",
+    flex: 1,
+    width: width,
+    height: height * 0.9,
   },
   webView: {
     flex: 1,
   },
-  errorContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "rgba(255, 0, 0, 0.7)",
-    padding: 10,
-  },
-  errorText: {
-    color: "white",
-    textAlign: "center",
-  },
 });
 
-export default KakaoMapView;
+export default KakaoMapWebView;
