@@ -4,16 +4,40 @@ import { tva } from '@gluestack-style/react';
 
 // Switch 스타일 설정
 const switchStyle = tva({
-  base: {},
+  base: {
+    trackColor: {
+      false: '$colorBorderLight',
+      true: '$colorPrimary',
+    },
+    thumbColor: '$colorBackground',
+    onThumbColor: '$colorBackground',
+    offThumbColor: '$colorBackground',
+    _disabled: {
+      opacity: 0.5,
+    },
+  },
   variants: {
     size: {
-      sm: {},
-      md: {},
-      lg: {},
+      sm: {
+        transform: [{ scale: 0.7 }],
+      },
+      md: {
+        transform: [{ scale: 0.9 }],
+      },
+      lg: {
+        transform: [{ scale: 1.1 }],
+      },
     },
     variant: {
-      outline: {},
-      solid: {},
+      outline: {
+        _track: {
+          borderWidth: 1,
+          borderColor: '$colorBorder',
+        },
+      },
+      solid: {
+        // 기본값 유지
+      },
     },
   },
   defaultVariants: {
@@ -33,6 +57,15 @@ const config = {
         },
       ],
     },
+  },
+  aliases: {
+    // 색상 별칭
+    colorPrimary: { value: 'var(--color-primary)' },
+    colorSecondary: { value: 'var(--color-secondary)' },
+    colorBackground: { value: 'var(--color-background)' },
+    colorBorder: { value: 'var(--color-border)' },
+    colorBorderLight: { value: 'var(--color-border-light)' },
+    colorDisabled: { value: 'var(--color-disabled)' },
   },
 };
 
