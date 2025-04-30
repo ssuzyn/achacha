@@ -1,231 +1,218 @@
 import { vars } from '@gluestack-ui/themed';
 
+// Theme colors - 테마 색상 정의
+const colors = {
+  primary: '#56AEE9',
+  secondary: '#278CCC',
+  tertiary: '#A7DAF9',
+  success: '#68DB7D',
+  warning: '#FCE642',
+  danger: '#DC3545',
+  info: '#17A2B8',
+
+  // 배경 색상
+  background: '#FFFFFF',
+  backgroundAlt: '#F8F9FA',
+  backgroundDark: '#EEEEEE',
+
+  // 텍스트 색상
+  text: '#000000',
+  textSecondary: '#666666',
+  textLight: '#999999',
+  textInverted: '#FFFFFF',
+
+  // 버튼 색상
+  buttonText: '#FFFFFF',
+  buttonPrimary: '#56AEE9',
+  buttonSecondary: '#278CCC',
+  buttonTertiary: '#A7DAF9',
+  buttonDanger: '#DC3545',
+  buttonSuccess: '#68DB7D',
+
+  // 기타 색상
+  border: '#718096',
+  borderLight: '#E2E8F0',
+  borderDark: '#2D3748',
+  disabled: '#A7DAF94D',
+  disabledText: '#278CCC',
+  transparent: 'transparent',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  shadow: 'rgba(0, 0, 0, 0.1)',
+
+  // 소셜 로그인 색상
+  socialKakao: '#FCE642',
+  socialKakaoText: '#462000',
+  socialGoogle: '#EF4040',
+  socialGoogleText: '#FFFFFF',
+
+  // 카드 색상
+  cardOrange: '#FF9500',
+  cardGreen: '#0DBA39',
+  cardPurple: '#AF52DE',
+  cardBlue: '#007AFF',
+  cardCyan: '#30B0C7',
+  cardPink: '#FF2DC3',
+};
+
+// 다크모드 색상 설정
+const darkColors = {
+  ...colors,
+  background: '#121212',
+  backgroundAlt: '#1E1E1E',
+  backgroundDark: '#333333',
+  text: '#E0E0E0',
+  textSecondary: '#AAAAAA',
+  borderLight: '#2D3748',
+  borderDark: '#E2E8F0',
+  overlay: 'rgba(0, 0, 0, 0.7)',
+  shadow: 'rgba(0, 0, 0, 0.3)',
+};
+
+// Typography settings - 타이포그래피 설정
+const typography = {
+  fontWeights: {
+    thin: '100',
+    light: '300',
+    regular: '400',
+    medium: '500',
+    semibold: '600',
+    bold: '700',
+    extrabold: '800',
+  },
+  fontSizes: {
+    xs: '10',
+    sm: '12',
+    md: '14',
+    lg: '16',
+    xl: '18',
+    '2xl': '20',
+    '3xl': '24',
+    '4xl': '28',
+    custom: '80',
+  },
+  lineHeights: {
+    xs: '16',
+    sm: '18',
+    md: '20',
+    lg: '22',
+    xl: '24',
+    '2xl': '26',
+    '3xl': '30',
+    '4xl': '34',
+  },
+};
+
+// Layout settings - 레이아웃 설정
+const layout = {
+  spacing: {
+    none: '0',
+    xs: '4',
+    sm: '8',
+    md: '12',
+    lg: '16',
+    xl: '24',
+    '2xl': '32',
+  },
+  borderRadius: {
+    none: '0',
+    xs: '2',
+    sm: '4',
+    md: '8',
+    lg: '12',
+    xl: '16',
+    full: '9999',
+  },
+  borderWidth: {
+    none: '0',
+    thin: '1',
+    medium: '2',
+    thick: '3',
+    xThick: '4',
+  },
+};
+
+// 라이트 모드 변수 생성
+const generateLightVars = () => {
+  const lightVars = {};
+
+  // 색상 변수 설정
+  Object.entries(colors).forEach(([key, value]) => {
+    lightVars[`--color-${key}`] = value;
+  });
+
+  // 타이포그래피 변수 설정
+  Object.entries(typography.fontWeights).forEach(([key, value]) => {
+    lightVars[`--font-weight-${key}`] = value;
+  });
+
+  Object.entries(typography.fontSizes).forEach(([key, value]) => {
+    lightVars[`--font-size-${key}`] = value;
+  });
+
+  Object.entries(typography.lineHeights).forEach(([key, value]) => {
+    lightVars[`--line-height-${key}`] = value;
+  });
+
+  // 레이아웃 변수 설정
+  Object.entries(layout.spacing).forEach(([key, value]) => {
+    lightVars[`--spacing-${key}`] = value;
+  });
+
+  Object.entries(layout.borderRadius).forEach(([key, value]) => {
+    lightVars[`--border-radius-${key}`] = value;
+  });
+
+  Object.entries(layout.borderWidth).forEach(([key, value]) => {
+    lightVars[`--border-width-${key}`] = value;
+  });
+
+  return lightVars;
+};
+
+// 다크 모드 변수 생성
+const generateDarkVars = () => {
+  const darkVars = {};
+
+  // 색상 변수 설정
+  Object.entries(darkColors).forEach(([key, value]) => {
+    darkVars[`--color-${key}`] = value;
+  });
+
+  // 타이포그래피 변수 설정 (다크모드에서도 동일)
+  Object.entries(typography.fontWeights).forEach(([key, value]) => {
+    darkVars[`--font-weight-${key}`] = value;
+  });
+
+  Object.entries(typography.fontSizes).forEach(([key, value]) => {
+    darkVars[`--font-size-${key}`] = value;
+  });
+
+  Object.entries(typography.lineHeights).forEach(([key, value]) => {
+    darkVars[`--line-height-${key}`] = value;
+  });
+
+  // 레이아웃 변수 설정 (다크모드에서도 동일)
+  Object.entries(layout.spacing).forEach(([key, value]) => {
+    darkVars[`--spacing-${key}`] = value;
+  });
+
+  Object.entries(layout.borderRadius).forEach(([key, value]) => {
+    darkVars[`--border-radius-${key}`] = value;
+  });
+
+  Object.entries(layout.borderWidth).forEach(([key, value]) => {
+    darkVars[`--border-width-${key}`] = value;
+  });
+
+  return darkVars;
+};
+
 export const config = {
-  light: vars({
-    // 기본 색상 설정
-    '--color-primary': '#56AEE9',
-    '--color-secondary': '#278CCC',
-    '--color-tertiary': '#A7DAF9',
-    '--color-background': '#FFFFFF',
-    '--color-background-alt': '#F8F9FA',
-    '--color-background-dark': '#EEEEEE',
-    '--color-text': '#000000',
-    '--color-text-secondary': '#666666',
-    '--color-text-light': '#999999',
-    '--color-text-inverted': '#FFFFFF',
-    '--color-button-text': '#FFFFFF',
-    '--color-button-primary': '#56AEE9',
-    '--color-button-secondary': '#278CCC',
-    '--color-button-tertiary': '#A7DAF9',
-    '--color-button-danger': '#DC3545',
-    '--color-button-success': '#68DB7D',
-
-    // 추가 색상 설정
-    '--color-success': '#68DB7D',
-    '--color-warning': '#FCE642',
-    '--color-danger': '#DC3545',
-    '--color-info': '#17A2B8',
-    '--color-border': '#718096',
-    '--color-border-light': '#E2E8F0',
-    '--color-border-dark': '#2D3748',
-    '--color-disabled': '#A7DAF94D',
-    '--color-disabled-text': '#278CCC',
-    '--color-transparent': 'transparent',
-    '--color-overlay': 'rgba(0, 0, 0, 0.5)',
-    '--color-shadow': 'rgba(0, 0, 0, 0.1)',
-
-    // 카드 색상
-    '--color-card-orange': '#FF9500',
-    '--color-card-green': '#0DBA39',
-    '--color-card-purple': '#AF52DE',
-    '--color-card-blue': '#007AFF',
-    '--color-card-cyan': '#30B0C7',
-    '--color-card-pink': '#FF2DC3',
-    '--color-card-orange-disabled-20': '#FF950033',
-    '--color-card-orange-disabled-40': '#FF950066',
-    '--color-card-green-disabled-20': '#0DBA3933',
-    '--color-card-green-disabled-40': '#0DBA3966',
-    '--color-card-purple-disabled-20': '#AF52DE33',
-    '--color-card-purple-disabled-40': '#AF52DE66',
-    '--color-card-blue-disabled-20': '#007AFF33',
-    '--color-card-blue-disabled-40': '#007AFF66',
-    '--color-card-cyan-disabled-20': '#30B0C733',
-    '--color-card-cyan-disabled-40': '#30B0C766',
-    '--color-card-pink-disabled-20': '#FF2DC333',
-    '--color-card-pink-disabled-40': '#FF2DC366',
-
-    // 소셜 로그인 색상
-    '--color-social-kakao': '#FCE642',
-    '--color-social-kakao-text': '#462000',
-    '--color-social-google': '#EF4040',
-    '--color-social-google-text': '#FFFFFF',
-
-    // 타이포그래피 설정
-    '--font-weight-thin': '100',
-    '--font-weight-light': '300',
-    '--font-weight-regular': '400',
-    '--font-weight-medium': '500',
-    '--font-weight-semibold': '600',
-    '--font-weight-bold': '700',
-    '--font-weight-extrabold': '800',
-
-    // 폰트 사이즈
-    '--font-size-xs': '10',
-    '--font-size-sm': '12',
-    '--font-size-md': '14',
-    '--font-size-lg': '16',
-    '--font-size-xl': '18',
-    '--font-size-2xl': '20',
-    '--font-size-3xl': '24',
-    '--font-size-4xl': '28',
-    '--custom-font-size': '80',
-
-    // 라인 높이
-    '--line-height-xs': '16',
-    '--line-height-sm': '18',
-    '--line-height-md': '20',
-    '--line-height-lg': '22',
-    '--line-height-xl': '24',
-    '--line-height-2xl': '26',
-    '--line-height-3xl': '30',
-    '--line-height-4xl': '34',
-
-    // 레이아웃 설정
-    '--spacing-none': '0',
-    '--spacing-xs': '4',
-    '--spacing-sm': '8',
-    '--spacing-md': '12',
-    '--spacing-lg': '16',
-    '--spacing-xl': '24',
-    '--spacing-2xl': '32',
-
-    // 테두리 설정
-    '--border-radius-none': '0',
-    '--border-radius-xs': '2',
-    '--border-radius-sm': '4',
-    '--border-radius-md': '8',
-    '--border-radius-lg': '12',
-    '--border-radius-xl': '16',
-    '--border-radius-full': '9999',
-
-    '--border-width-none': '0',
-    '--border-width-thin': '1',
-    '--border-width-medium': '2',
-    '--border-width-thick': '3',
-    '--border-width-x-thick': '4',
-  }),
-
-  dark: vars({
-    // 기본 색상 설정 (다크모드)
-    '--color-primary': '#56AEE9',
-    '--color-secondary': '#278CCC',
-    '--color-tertiary': '#A7DAF9',
-    '--color-background': '#121212',
-    '--color-background-alt': '#1E1E1E',
-    '--color-background-dark': '#333333',
-    '--color-text': '#E0E0E0',
-    '--color-text-secondary': '#AAAAAA',
-    '--color-text-light': '#999999',
-    '--color-text-inverted': '#000000',
-    '--color-button-text': '#FFFFFF',
-    '--color-button-primary': '#56AEE9',
-    '--color-button-secondary': '#278CCC',
-    '--color-button-tertiary': '#A7DAF9',
-    '--color-button-danger': '#DC3545',
-    '--color-button-success': '#68DB7D',
-
-    // 추가 색상 설정 (다크모드)
-    '--color-success': '#68DB7D',
-    '--color-warning': '#FCE642',
-    '--color-danger': '#DC3545',
-    '--color-info': '#17A2B8',
-    '--color-border': '#718096',
-    '--color-border-light': '#2D3748',
-    '--color-border-dark': '#E2E8F0',
-    '--color-disabled': '#A7DAF94D',
-    '--color-disabled-text': '#278CCC',
-    '--color-transparent': 'transparent',
-    '--color-overlay': 'rgba(0, 0, 0, 0.7)',
-    '--color-shadow': 'rgba(0, 0, 0, 0.3)',
-
-    // 카드 색상 (다크모드)
-    '--color-card-orange': '#FF9500',
-    '--color-card-green': '#0DBA39',
-    '--color-card-purple': '#AF52DE',
-    '--color-card-blue': '#007AFF',
-    '--color-card-cyan': '#30B0C7',
-    '--color-card-pink': '#FF2DC3',
-    '--color-card-orange-disabled-20': '#FF950033',
-    '--color-card-orange-disabled-40': '#FF950066',
-    '--color-card-green-disabled-20': '#0DBA3933',
-    '--color-card-green-disabled-40': '#0DBA3966',
-    '--color-card-purple-disabled-20': '#AF52DE33',
-    '--color-card-purple-disabled-40': '#AF52DE66',
-    '--color-card-blue-disabled-20': '#007AFF33',
-    '--color-card-blue-disabled-40': '#007AFF66',
-    '--color-card-cyan-disabled-20': '#30B0C733',
-    '--color-card-cyan-disabled-40': '#30B0C766',
-    '--color-card-pink-disabled-20': '#FF2DC333',
-    '--color-card-pink-disabled-40': '#FF2DC366',
-
-    // 소셜 로그인 색상 (다크모드)
-    '--color-social-kakao': '#FCE642',
-    '--color-social-kakao-text': '#462000',
-    '--color-social-google': '#EF4040',
-    '--color-social-google-text': '#FFFFFF',
-
-    // 타이포그래피 설정 (다크모드)
-    '--font-weight-thin': '100',
-    '--font-weight-light': '300',
-    '--font-weight-regular': '400',
-    '--font-weight-medium': '500',
-    '--font-weight-semibold': '600',
-    '--font-weight-bold': '700',
-    '--font-weight-extrabold': '800',
-
-    // 폰트 사이즈 (다크모드)
-    '--font-size-xs': '10',
-    '--font-size-sm': '12',
-    '--font-size-md': '14',
-    '--font-size-lg': '16',
-    '--font-size-xl': '18',
-    '--font-size-2xl': '20',
-    '--font-size-3xl': '24',
-    '--font-size-4xl': '28',
-    '--custom-font-size': '80',
-
-    // 라인 높이 (다크모드)
-    '--line-height-xs': '16',
-    '--line-height-sm': '18',
-    '--line-height-md': '20',
-    '--line-height-lg': '22',
-    '--line-height-xl': '24',
-    '--line-height-2xl': '26',
-    '--line-height-3xl': '30',
-    '--line-height-4xl': '34',
-
-    // 레이아웃 설정 (다크모드)
-    '--spacing-none': '0',
-    '--spacing-xs': '4',
-    '--spacing-sm': '8',
-    '--spacing-md': '12',
-    '--spacing-lg': '16',
-    '--spacing-xl': '24',
-    '--spacing-2xl': '32',
-
-    // 테두리 설정 (다크모드)
-    '--border-radius-none': '0',
-    '--border-radius-xs': '2',
-    '--border-radius-sm': '4',
-    '--border-radius-md': '8',
-    '--border-radius-lg': '12',
-    '--border-radius-xl': '16',
-    '--border-radius-full': '9999',
-
-    '--border-width-none': '0',
-    '--border-width-thin': '1',
-    '--border-width-medium': '2',
-    '--border-width-thick': '3',
-    '--border-width-x-thick': '4',
-  }),
+  light: vars(generateLightVars()),
+  dark: vars(generateDarkVars()),
+  // tailwind와 통합하기 위한 참조 내보내기
+  colors,
+  darkColors,
+  typography,
+  layout,
 };
