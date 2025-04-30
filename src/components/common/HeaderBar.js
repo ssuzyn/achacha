@@ -25,7 +25,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
   const handleNotificationPress = () => {
     // 알림 화면으로 이동
     console.log('알림 버튼 클릭');
-    navigation.navigate('TabNotification');
+    navigation.navigate('Notification');
   };
 
   // 탭바가 숨겨져 있을 때는 헤더도 숨김
@@ -86,20 +86,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 24,
     backgroundColor: theme.colors.background,
-    borderBottomWidth: 1,
-    borderBottomColor: `${theme.colors.primary}20`, // 연한 프라이머리 색상의 선
-    marginTop: 20, // 상단 여백 추가
+    borderBottomWidth: 0,
+    marginTop: 30,
     ...Platform.select({
       ios: {
-        shadowColor: theme.colors.shadow,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
+        shadowColor: 'transparent',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0,
+        shadowRadius: 0,
       },
       android: {
-        elevation: 2,
+        elevation: 0,
       },
     }),
   },
