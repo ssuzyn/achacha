@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import theme from '../theme';
+import { config } from './ui/gluestack-ui-provider';
 
 const ICON_SIZE = 28; // 아이콘 크기 상수
 const ICON_MARGIN_RIGHT = 5; // 아이콘 오른쪽 마진 상수
@@ -30,16 +30,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   icon: {
-    color: theme.colors.textSecondary,
+    color: config.light['--color-text-secondary'],
     marginRight: ICON_MARGIN_RIGHT,
   },
   permissionTitle: {
-    ...theme.typography.labelStyles.large,
-    color: theme.colors.text,
+    fontSize: parseInt(config.light['--font-size-lg']),
+    fontWeight: config.light['--font-weight-bold'],
+    color: config.light['--color-text'],
   },
   permissionDescription: {
-    ...theme.typography.bodyStyles.medium,
-    color: theme.colors.textSecondary,
+    fontSize: parseInt(config.light['--font-size-md']),
+    fontWeight: config.light['--font-weight-regular'],
+    color: config.light['--color-text-secondary'],
     textAlign: 'left', // 왼쪽 정렬 유지
   },
 });

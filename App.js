@@ -5,6 +5,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
 import { TabBarProvider } from './src/context/TabBarContext';
+import { GluestackUIProviderWrapper } from './src/components/ui/gluestack-ui-provider';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -22,13 +23,15 @@ export default function App() {
   }, []);
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <TabBarProvider>
-        <NavigationContainer>
-          <AppNavigator />
-          <StatusBar style="auto" />
-        </NavigationContainer>
-      </TabBarProvider>
-    </View>
+    <GluestackUIProviderWrapper colorMode="light">
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <TabBarProvider>
+          <NavigationContainer>
+            <AppNavigator />
+            <StatusBar style="auto" />
+          </NavigationContainer>
+        </TabBarProvider>
+      </View>
+    </GluestackUIProviderWrapper>
   );
 }

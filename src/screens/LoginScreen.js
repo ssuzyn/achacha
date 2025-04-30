@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigation } from '@react-navigation/native';
-import theme from '../theme';
+import { config } from '../components/ui/gluestack-ui-provider';
 
 // --- 로고 이미지 경로 (실제 프로젝트 경로에 맞게 수정) ---
 const GOOGLE_LOGO_URL = '../../assets/google_logo.png'; // 파일명 수정 (log -> logo)
@@ -92,13 +92,13 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: config.light['--color-background'],
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: theme.layout.screen.paddingHorizontal,
+    paddingHorizontal: parseInt(config.light['--spacing-xl']),
     paddingBottom: 40, // 하단 여백 추가
   },
   logoContainer: {
@@ -122,8 +122,9 @@ const styles = StyleSheet.create({
     transform: [{ translateX: 80 }], // 오른쪽으로 80만큼 이동
   },
   title: {
-    ...theme.typography.headingStyles.h3,
-    color: theme.colors.text,
+    fontSize: parseInt(config.light['--font-size-3xl']),
+    fontWeight: config.light['--font-weight-bold'],
+    color: config.light['--color-text'],
     textAlign: 'center',
     marginBottom: 10, // 두 줄 사이 간격
   },
@@ -133,31 +134,32 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 15,
-    borderRadius: theme.border.radius.medium,
+    borderRadius: parseInt(config.light['--border-radius-md']),
     alignItems: 'center',
     marginBottom: 15, // 버튼 간 간격
     flexDirection: 'row', // 아이콘과 텍스트 가로 배치 위해
     justifyContent: 'center', // 내부 요소 중앙 정렬
   },
   kakaoButton: {
-    backgroundColor: theme.colors.social.kakao, // 카카오 표준 노란색
+    backgroundColor: config.light['--color-social-kakao'], // 카카오 표준 노란색
   },
   googleButton: {
-    backgroundColor: theme.colors.social.google, // 구글 표준 빨간색 (이미지 참고)
+    backgroundColor: config.light['--color-social-google'], // 구글 표준 빨간색 (이미지 참고)
     // 표준 가이드라인은 흰색 배경에 로고 사용 권장
     // backgroundColor: '#FFFFFF',
     // borderWidth: 1,
     // borderColor: '#DDDDDD',
   },
   buttonText: {
-    ...theme.typography.buttonStyles.medium,
-    marginLeft: theme.layout.spacing.sm, // 아이콘과 텍스트 간격 (아이콘 추가 시)
+    fontSize: parseInt(config.light['--font-size-lg']),
+    fontWeight: config.light['--font-weight-medium'],
+    marginLeft: parseInt(config.light['--spacing-sm']), // 아이콘과 텍스트 간격 (아이콘 추가 시)
   },
   kakaoButtonText: {
-    color: theme.colors.social.kakaoText, // 카카오 텍스트 색상
+    color: config.light['--color-social-kakao-text'], // 카카오 텍스트 색상
   },
   googleButtonText: {
-    color: theme.colors.social.googleText, // 빨간 배경일 때 흰색 텍스트
+    color: config.light['--color-social-google-text'], // 빨간 배경일 때 흰색 텍스트
     // color: '#5F6368', // 흰색 배경일 때 회색 텍스트
   },
   buttonDisabled: {

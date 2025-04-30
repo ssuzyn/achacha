@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useGuideSteps } from '../hooks/useGuideSteps';
-import theme from '../theme';
+import { config } from '../components/ui/gluestack-ui-provider';
 
 const { width } = Dimensions.get('window');
 
@@ -19,7 +19,7 @@ const GuideFirstScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+      <StatusBar barStyle="dark-content" backgroundColor={config.light['--color-background']} />
       <View style={styles.container}>
         <View style={styles.mainContentContainer}>
           <View style={styles.headerContainer}>
@@ -86,12 +86,12 @@ const GuideFirstScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: config.light['--color-background'],
   },
   container: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingHorizontal: theme.layout.screen.paddingHorizontal,
+    paddingHorizontal: parseInt(config.light['--spacing-xl']),
     paddingBottom: 30,
   },
   mainContentContainer: {
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     minHeight: width * 0.6,
-    marginBottom: theme.layout.spacing.sm,
+    marginBottom: parseInt(config.light['--spacing-sm']),
   },
   giftboxImage: {
     width: width * 0.5,
@@ -122,27 +122,29 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     alignItems: 'center',
-    paddingBottom: theme.layout.spacing.lg,
-    marginTop: theme.layout.spacing.sm,
+    paddingBottom: parseInt(config.light['--spacing-lg']),
+    marginTop: parseInt(config.light['--spacing-sm']),
     minHeight: 100,
   },
   titleText: {
-    ...theme.typography.headingStyles.h2,
-    color: theme.colors.text,
+    fontSize: parseInt(config.light['--font-size-3xl']),
+    fontWeight: config.light['--font-weight-bold'],
+    color: config.light['--color-text'],
     textAlign: 'center',
-    marginBottom: theme.layout.spacing.sm,
+    marginBottom: parseInt(config.light['--spacing-sm']),
   },
   subText: {
-    ...theme.typography.bodyStyles.large,
-    color: theme.colors.textSecondary,
+    fontSize: parseInt(config.light['--font-size-lg']),
+    fontWeight: config.light['--font-weight-regular'],
+    color: config.light['--color-text-secondary'],
     textAlign: 'center',
-    lineHeight: theme.typography.normalize(28),
+    lineHeight: 28,
   },
   paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
-    marginTop: theme.layout.spacing.xl,
+    marginTop: parseInt(config.light['--spacing-xl']),
     position: 'absolute',
     bottom: 80,
   },
@@ -157,15 +159,16 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   button: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: config.light['--color-primary-400'],
     paddingVertical: 15,
-    borderRadius: theme.border.radius.medium,
+    borderRadius: parseInt(config.light['--border-radius-md']),
     alignItems: 'center',
     justifyContent: 'center',
   },
   buttonText: {
-    ...theme.typography.buttonStyles.medium,
-    color: theme.colors.buttonText,
+    fontSize: parseInt(config.light['--font-size-lg']),
+    fontWeight: config.light['--font-weight-medium'],
+    color: config.light['--color-button-text'],
   },
 });
 

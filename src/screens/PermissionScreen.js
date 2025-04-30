@@ -18,7 +18,7 @@ import BleManager from 'react-native-ble-manager';
 import { useNavigation } from '@react-navigation/native';
 import PermissionItem from '../components/PermissionItem';
 import { usePermissions } from '../hooks/usePermissions';
-import theme from '../theme';
+import { config } from '../components/ui/gluestack-ui-provider';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -127,15 +127,15 @@ const PermissionScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: config.light['--color-background'],
   },
   container: {
     flex: 1,
-    paddingHorizontal: theme.layout.screen.paddingHorizontal,
+    paddingHorizontal: parseInt(config.light['--spacing-xl']),
     paddingTop: 40,
     paddingBottom: 30,
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.background,
+    backgroundColor: config.light['--color-background'],
   },
   mainContentContainer: {
     flex: 1,
@@ -145,34 +145,36 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: theme.layout.spacing.xxl,
+    marginBottom: parseInt(config.light['--spacing-2xl']),
     width: '100%',
   },
   headerTitle: {
-    ...theme.typography.headingStyles.h3,
-    color: theme.colors.text,
+    fontSize: parseInt(config.light['--font-size-3xl']),
+    fontWeight: config.light['--font-weight-bold'],
+    color: config.light['--color-text'],
     textAlign: 'center',
   },
   appName: {
-    color: theme.colors.primary,
-    fontSize: theme.typography.responsiveFont(28),
-    fontWeight: theme.typography.fontWeights.bold,
+    color: config.light['--color-primary-400'],
+    fontSize: 28,
+    fontWeight: config.light['--font-weight-bold'],
   },
   permissionsListContainer: {
     width: '100%',
     alignItems: 'center',
   },
   button: {
-    backgroundColor: theme.colors.buttonPrimary,
+    backgroundColor: config.light['--color-button-primary'],
     paddingVertical: 15,
-    borderRadius: theme.border.radius.medium,
+    borderRadius: parseInt(config.light['--border-radius-md']),
     alignItems: 'center',
     width: '90%',
     alignSelf: 'center',
   },
   buttonText: {
-    ...theme.typography.buttonStyles.medium,
-    color: theme.colors.buttonText,
+    fontSize: parseInt(config.light['--font-size-lg']),
+    fontWeight: config.light['--font-weight-medium'],
+    color: config.light['--color-button-text'],
   },
 });
 

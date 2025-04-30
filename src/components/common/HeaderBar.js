@@ -3,7 +3,7 @@ import { StyleSheet, View, Image, TouchableOpacity, Platform, Dimensions } from 
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTabBar } from '../../context/TabBarContext';
-import theme from '../../theme';
+import { config } from '../../components/ui/gluestack-ui-provider';
 
 // 화면 크기 계산
 const { width } = Dimensions.get('window');
@@ -48,7 +48,11 @@ const HeaderBar = ({ notificationCount = 3 }) => {
       <View style={styles.iconContainer}>
         {/* 추가 버튼 */}
         <TouchableOpacity style={styles.iconButton} onPress={handleAddPress} activeOpacity={0.7}>
-          <Icon name="add-circle-outline" size={ICON_SIZE} color={theme.colors.primary} />
+          <Icon
+            name="add-circle-outline"
+            size={ICON_SIZE}
+            color={config.light['--color-primary-400']}
+          />
         </TouchableOpacity>
 
         {/* 알림 버튼 */}
@@ -57,7 +61,11 @@ const HeaderBar = ({ notificationCount = 3 }) => {
           onPress={handleNotificationPress}
           activeOpacity={0.7}
         >
-          <Icon name="notifications-none" size={ICON_SIZE} color={theme.colors.primary} />
+          <Icon
+            name="notifications-none"
+            size={ICON_SIZE}
+            color={config.light['--color-primary-400']}
+          />
           {/* 알림 뱃지 */}
           {notificationCount > 0 && (
             <View style={styles.badge}>
@@ -87,7 +95,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    backgroundColor: theme.colors.background,
+    backgroundColor: config.light['--color-background'],
     borderBottomWidth: 0,
     marginTop: 30,
     ...Platform.select({
