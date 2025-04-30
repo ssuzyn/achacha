@@ -12,33 +12,54 @@ import HomeScreen from '../../screens/HomeScreen';
 
 // 임시 스크린
 const GifticonManageScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    }}
+  >
     <Text>기프티콘 관리 화면</Text>
   </View>
 );
 
 const MapScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    }}
+  >
     <Text>기프티콘 MAP 화면</Text>
   </View>
 );
 
 const ShareboxScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    }}
+  >
     <Text>쉐어박스 화면</Text>
   </View>
 );
 
 const SettingsScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+  <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    }}
+  >
     <Text>설정 화면</Text>
-  </View>
-);
-
-// 알림 화면
-const NotificationScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <Text>알림 화면</Text>
   </View>
 );
 
@@ -51,7 +72,6 @@ const TAB_ICONS = {
   map: 'location-on',
   sharebox: 'inventory-2',
   settings: 'settings',
-  notification: 'notifications',
 };
 
 // 화면 크기 계산
@@ -64,15 +84,23 @@ const HIDDEN_TAB_BAR_SCREENS = [
   'GifticonDetail',
   'AddGifticon',
   'EditProfile',
-  // 'Notification', // 알림 화면에서는 탭바 표시
   // 추가할 화면들...
 ];
 
 // 헤더바가 포함된 스크린 컴포넌트
 const ScreenWithHeader = ({ children }) => (
-  <View style={{ flex: 1 }}>
+  <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
     <HeaderBar notificationCount={3} />
-    {children}
+    <View
+      style={{
+        flex: 1,
+        paddingTop: 12,
+        paddingHorizontal: 16,
+        backgroundColor: theme.colors.background,
+      }}
+    >
+      {children}
+    </View>
   </View>
 );
 
@@ -125,9 +153,6 @@ const BottomTabBar = () => {
       case 'TabSettings':
         iconName = TAB_ICONS.settings;
         break;
-      case 'TabNotification':
-        iconName = TAB_ICONS.notification;
-        break;
       default:
         iconName = 'help-outline';
     }
@@ -151,9 +176,9 @@ const BottomTabBar = () => {
         },
         tabBarStyle: {
           ...styles.tabBar,
-          // 상단에 연한 Primary 색상 선 추가
-          borderTopWidth: 1,
-          borderTopColor: `${theme.colors.primary}20`,
+          // 테두리 제거
+          borderTopWidth: 0,
+          backgroundColor: theme.colors.background,
           // 탭바 표시 여부에 따라 동적으로 스타일 변경
           display: isTabBarVisible ? 'flex' : 'none',
         },
@@ -207,15 +232,6 @@ const BottomTabBar = () => {
         )}
         options={{
           tabBarLabel: '설정',
-        }}
-      />
-      <Tab.Screen
-        name="TabNotification"
-        component={props => (
-          <TabScreenWrapper component={NotificationScreen} name="Notification" {...props} />
-        )}
-        options={{
-          tabBarLabel: '알림',
         }}
       />
     </Tab.Navigator>

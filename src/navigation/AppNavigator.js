@@ -1,11 +1,13 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { View, Text } from 'react-native';
 import PermissionScreen from '../screens/PermissionScreen';
 import HomeScreen from '../screens/HomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SplashScreenComponent from '../screens/SplashScreen';
 import GuideFirstScreen from '../screens/GuideFirstScreen';
 import BottomTabBar from '../components/common/BottomTabBar';
+import theme from '../theme';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,5 +32,20 @@ const AppNavigator = () => {
 const MainNavigator = () => {
   return <BottomTabBar />;
 };
+
+// 임시 알림 화면
+const NotificationScreen = () => (
+  <View
+    style={{
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 20,
+      backgroundColor: theme.colors.background,
+    }}
+  >
+    <Text>알림 화면</Text>
+  </View>
+);
 
 export default AppNavigator;
