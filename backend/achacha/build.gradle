@@ -18,7 +18,7 @@ configurations {
 		extendsFrom annotationProcessor
 	}
 	// Spring Boot 기본 로깅 제외
-	all {
+    configureEach {
 		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
 	}
 }
