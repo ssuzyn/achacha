@@ -10,3 +10,26 @@ services:
       - "8080:8080"  # Spring Boot 애플리케이션 포트 매핑
     environment:
       SPRING_PROFILES_ACTIVE: local
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0.36
+    restart: always
+    ports:
+      - "3300:3306"
+    volumes:
+      - achacha-mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: achacha
+      MYSQL_USER: local
+      MYSQL_PASSWORD: local
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+09:00
+
+volumes:
+  achacha-mysql:
