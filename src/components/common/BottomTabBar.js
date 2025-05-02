@@ -185,7 +185,7 @@ const BottomTabBar = () => {
         tabBarStyle: {
           ...styles.tabBar,
           borderTopWidth: 1,
-          borderTopColor: '#56AEE9',
+          borderTopColor: theme.colors.primary,
           backgroundColor: theme.colors.white,
           display: isTabBarVisible ? 'flex' : 'none',
         },
