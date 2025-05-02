@@ -44,6 +44,14 @@ const dummyNotifications = [
   },
 ];
 
+// 알림이 없을 때 표시할 컴포넌트
+const EmptyNotifications = ({ theme }) => (
+  <View style={styles.emptyContainer}>
+    <Icon name="notifications-off" type="material" size={50} color={theme.colors.grey3} />
+    <Text style={[styles.emptyText, { color: theme.colors.grey2 }]}>새로운 알림이 없습니다</Text>
+  </View>
+);
+
 const NotificationScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
@@ -67,7 +75,6 @@ const NotificationScreen = () => {
 
   // 알림 항목 선택 처리
   const handleNotificationPress = item => {
-    console.log('알림 선택:', item);
     // 여기서 알림에 따른 화면 전환 로직 구현 가능
     // 예: navigation.navigate('TargetScreen', { data: item });
   };
@@ -93,14 +100,6 @@ const NotificationScreen = () => {
     </TouchableOpacity>
   );
 
-  // 알림이 없을 때 표시할 컴포넌트
-  const EmptyNotifications = () => (
-    <View style={styles.emptyContainer}>
-      <Icon name="notifications-off" type="material" size={50} color={theme.colors.grey3} />
-      <Text style={[styles.emptyText, { color: theme.colors.grey2 }]}>새로운 알림이 없습니다</Text>
-    </View>
-  );
-
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
@@ -124,7 +123,7 @@ const NotificationScreen = () => {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={EmptyNotifications}
+        ListEmptyComponent={<EmptyNotifications theme={theme} />}
       />
     </View>
   );
