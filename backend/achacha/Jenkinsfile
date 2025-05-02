@@ -61,9 +61,9 @@ pipeline {
 
                             docker run -d --name achacha-backend \\
                               -e SPRING_PROFILES_ACTIVE=prod \\
-                              -e SPRING_DATASOURCE_URL=\\\"${SPRING_DATABASE_URL}\\\" \\
-                              -e SPRING_DATASOURCE_USERNAME=\\\"${SPRING_DATABASE_USR}\\\" \\
-                              -e SPRING_DATASOURCE_PASSWORD=\\\"${SPRING_DATABASE_PSW}\\\" \\
+                              -e SPRING_DATABASE_URL=\\\"${SPRING_DATABASE_URL}\\\" \\
+                              -e SPRING_DATABASE_USERNAME=\\\"${SPRING_DATABASE.username}\\\" \\
+                              -e SPRING_DATABASE_PASSWORD=\\\"${SPRING_DATABASE.password}\\\" \\
                               -p 8081:8080 \\
                               --network achacha-network \\
                               --restart unless-stopped \\
