@@ -67,14 +67,14 @@ pipeline {
                             docker stop achacha-backend || true
                             docker rm achacha-backend || true
                             docker run -d --name achacha-backend \\
-                                -e SPRING_PROFILES_ACTIVE=prod \\
-                                -e SPRING_DATASOURCE_URL=${SPRING_DATABASE_URL} \\
-                                -e SPRING_DATASOURCE_USERNAME=${SPRING_DATABASE_USR} \\
-                                -e SPRING_DATASOURCE_PASSWORD=${SPRING_DATABASE_PSW} \\
-                                -p 8081:8080 \\
-                                --network achacha-network \\
-                                --restart unless-stopped \\
-                                ${DOCKER_IMAGE}:latest
+                            -e SPRING_PROFILES_ACTIVE=prod \\
+                            -e SPRING_DATASOURCE_URL=${SPRING_DATABASE_URL} \\
+                            -e SPRING_DATASOURCE_USERNAME=${SPRING_DATABASE_USR} \\
+                            -e SPRING_DATASOURCE_PASSWORD=${SPRING_DATABASE_PSW} \\
+                            -p 8081:8080 \\
+                            --network achacha-network \\
+                            --restart unless-stopped \\
+                            ${DOCKER_IMAGE}:latest
                             docker system prune -f
                         "
                     '''
