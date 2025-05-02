@@ -263,3 +263,257 @@ export const skeletonUtils = {
       },
     }),
 };
+
+/**
+ * 카드 컴포넌트 스타일 관련 유틸리티 함수
+ */
+export const cardUtils = {
+  getCardVariantStyle: (theme, variant = 'default') => {
+    const baseStyle = {
+      borderRadius: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      backgroundColor: theme.colors.white,
+    };
+
+    switch (variant) {
+      case 'elevated':
+        return {
+          ...baseStyle,
+          shadowOpacity: 0.2,
+          shadowRadius: 6,
+          elevation: 5,
+        };
+      case 'outlined':
+        return {
+          ...baseStyle,
+          shadowOpacity: 0,
+          shadowRadius: 0,
+          elevation: 0,
+          borderWidth: 1,
+          borderColor: theme.colors.grey2,
+        };
+      case 'colored':
+        return {
+          ...baseStyle,
+          backgroundColor: theme.colors.background,
+        };
+      case 'default':
+      default:
+        return baseStyle;
+    }
+  },
+
+  getCardStyles: () =>
+    StyleSheet.create({
+      container: {
+        marginBottom: 15,
+        overflow: 'hidden',
+      },
+      wrapper: {
+        padding: 12,
+      },
+      divider: {
+        marginVertical: 8,
+      },
+      title: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 8,
+      },
+      featuredContainer: {
+        position: 'relative',
+      },
+      featuredContent: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: 15,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      },
+      featuredTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
+        marginBottom: 5,
+      },
+      featuredSubtitle: {
+        fontSize: 14,
+        color: 'white',
+      },
+      image: {
+        width: '100%',
+        height: 200,
+      },
+    }),
+};
+
+/**
+ * 리스트 아이템 컴포넌트 스타일 관련 유틸리티 함수
+ */
+export const listItemUtils = {
+  getListItemVariantStyle: (theme, variant = 'default') => {
+    const baseStyle = {
+      borderBottomWidth: 1,
+      borderColor: theme.colors.grey3,
+      backgroundColor: theme.colors.white,
+    };
+
+    switch (variant) {
+      case 'elevated':
+        return {
+          ...baseStyle,
+          borderBottomWidth: 0,
+          marginVertical: 4,
+          marginHorizontal: 8,
+          borderRadius: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 2,
+          elevation: 2,
+        };
+      case 'outlined':
+        return {
+          ...baseStyle,
+          borderWidth: 1,
+          borderBottomWidth: 1,
+          marginVertical: 4,
+          borderRadius: 8,
+        };
+      case 'colored':
+        return {
+          ...baseStyle,
+          backgroundColor: theme.colors.grey0,
+        };
+      case 'default':
+      default:
+        return baseStyle;
+    }
+  },
+
+  getListItemStyles: () =>
+    StyleSheet.create({
+      container: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+      },
+      content: {
+        flex: 1,
+        marginLeft: 10,
+      },
+      title: {
+        fontSize: 16,
+        fontWeight: '500',
+      },
+      subtitle: {
+        fontSize: 14,
+        color: '#737373',
+        marginTop: 4,
+      },
+      chevron: {
+        marginLeft: 8,
+      },
+      accordionContent: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        backgroundColor: '#f9f9f9',
+      },
+      swipeableActionContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      buttonGroup: {
+        marginTop: 8,
+      },
+      input: {
+        borderBottomWidth: 0,
+      },
+    }),
+};
+
+/**
+ * 칩 컴포넌트 스타일 관련 유틸리티 함수
+ */
+export const chipUtils = {
+  getChipVariantStyle: (theme, variant = 'default', color) => {
+    const baseStyle = {
+      borderRadius: 25,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+    };
+
+    // 색상 처리
+    let backgroundColor = theme.colors.grey0;
+    let textColor = theme.colors.black;
+    let borderColor = theme.colors.grey2;
+
+    if (color && theme.colors[color]) {
+      switch (variant) {
+        case 'solid':
+          backgroundColor = theme.colors[color];
+          textColor = theme.colors.white;
+          borderColor = 'transparent';
+          break;
+        case 'outlined':
+          backgroundColor = 'transparent';
+          textColor = theme.colors[color];
+          borderColor = theme.colors[color];
+          break;
+        default:
+          backgroundColor = `${theme.colors[color]}20`; // 투명도 20%
+          textColor = theme.colors[color];
+          borderColor = 'transparent';
+      }
+    } else {
+      switch (variant) {
+        case 'solid':
+          backgroundColor = theme.colors.primary;
+          textColor = theme.colors.white;
+          borderColor = 'transparent';
+          break;
+        case 'outlined':
+          backgroundColor = 'transparent';
+          textColor = theme.colors.primary;
+          borderColor = theme.colors.primary;
+          break;
+        case 'default':
+        default:
+          // 기본값 유지
+          break;
+      }
+    }
+
+    return {
+      ...baseStyle,
+      backgroundColor,
+      borderColor,
+      textColor,
+      borderWidth: variant === 'outlined' ? 1 : 0,
+    };
+  },
+
+  getChipStyles: () =>
+    StyleSheet.create({
+      container: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 8,
+        marginBottom: 8,
+      },
+      title: {
+        fontSize: 14,
+      },
+      icon: {
+        marginRight: 4,
+      },
+      closeIcon: {
+        marginLeft: 4,
+      },
+    }),
+};

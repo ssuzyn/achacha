@@ -44,6 +44,44 @@ const theme = {
   Card: {
     containerStyle: {
       borderRadius: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+      marginBottom: 15,
+    },
+    wrapperStyle: {
+      padding: 12,
+    },
+    titleStyle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 8,
+      color: '#000000',
+    },
+    dividerStyle: {
+      marginVertical: 8,
+    },
+    featuredTitleStyle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#FFFFFF',
+      marginBottom: 5,
+      textShadowColor: 'rgba(0, 0, 0, 0.75)',
+      textShadowOffset: { width: -1, height: 1 },
+      textShadowRadius: 5,
+    },
+    featuredSubtitleStyle: {
+      fontSize: 14,
+      color: '#FFFFFF',
+      textShadowColor: 'rgba(0, 0, 0, 0.75)',
+      textShadowOffset: { width: -1, height: 1 },
+      textShadowRadius: 5,
+    },
+    imageStyle: {
+      borderTopLeftRadius: 10,
+      borderTopRightRadius: 10,
     },
   },
   Text: {
@@ -86,6 +124,37 @@ const theme = {
     containerStyle: {
       borderBottomWidth: 1,
       borderColor: '#718096',
+      paddingVertical: 12,
+    },
+    contentContainerStyle: {
+      marginLeft: 10,
+    },
+    titleStyle: {
+      fontSize: 16,
+      color: '#000000',
+      fontWeight: '500',
+    },
+    subtitleStyle: {
+      fontSize: 14,
+      color: '#737373',
+    },
+    chevronStyle: {
+      color: '#56AEE9',
+    },
+    checkmarkStyle: {
+      color: '#56AEE9',
+    },
+    buttonGroupContainerStyle: {
+      borderRadius: 8,
+    },
+    accordionStyle: {
+      backgroundColor: '#f9f9f9',
+    },
+    swipeableContainerStyle: {
+      borderRadius: 0,
+    },
+    inputStyle: {
+      fontSize: 14,
     },
   },
   Divider: {
@@ -103,6 +172,27 @@ const theme = {
     inputContainerStyle: {
       backgroundColor: '#f9f9f9',
       borderRadius: 10,
+    },
+  },
+  Chip: {
+    buttonStyle: {
+      backgroundColor: '#f9f9f9',
+      borderRadius: 25,
+      borderWidth: 1,
+      borderColor: '#e0e0e0',
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+    },
+    titleStyle: {
+      fontSize: 14,
+      color: '#000000',
+    },
+    containerStyle: {
+      marginRight: 8,
+      marginBottom: 8,
+    },
+    iconStyle: {
+      marginRight: 4,
     },
   },
 };

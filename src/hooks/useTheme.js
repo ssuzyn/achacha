@@ -1,5 +1,6 @@
 import { useTheme as useRNETheme } from 'react-native-elements';
 import defaultTheme from '../theme/theme';
+import { cardUtils, listItemUtils, chipUtils } from '../theme/themeUtils';
 
 /**
  * 테마 설정과 관련된 커스텀 훅
@@ -49,6 +50,24 @@ export const useTheme = () => {
       md: 768,
       lg: 992,
       xl: 1200,
+    },
+
+    // Card 관련 유틸리티 함수들
+    card: {
+      getVariantStyle: variant => cardUtils.getCardVariantStyle(theme, variant),
+      getStyles: () => cardUtils.getCardStyles(),
+    },
+
+    // ListItem 관련 유틸리티 함수들
+    listItem: {
+      getVariantStyle: variant => listItemUtils.getListItemVariantStyle(theme, variant),
+      getStyles: () => listItemUtils.getListItemStyles(),
+    },
+
+    // Chip 관련 유틸리티 함수들
+    chip: {
+      getVariantStyle: (variant, color) => chipUtils.getChipVariantStyle(theme, variant, color),
+      getStyles: () => chipUtils.getChipStyles(),
     },
   };
 };
