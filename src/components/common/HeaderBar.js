@@ -9,9 +9,8 @@ import {
   Alert,
   Text,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTabBar } from '../../context/TabBarContext';
+import { Icon, useTheme } from 'react-native-elements';
 
 // 화면 크기 계산
 const { width } = Dimensions.get('window');
@@ -19,21 +18,17 @@ const ICON_SIZE = width > 380 ? 26 : 24;
 
 // 헤더 컴포넌트
 const HeaderBar = ({ notificationCount = 3 }) => {
-  const navigation = useNavigation();
   const { isTabBarVisible } = useTabBar();
+  const { theme } = useTheme();
 
   // 추가 버튼 클릭 핸들러
   const handleAddPress = () => {
-    // 추가 메뉴 또는 추가 화면으로 이동
-    console.log('추가 버튼 클릭');
     // 예: navigation.navigate('AddNew');
     Alert.alert('안내', '추가 기능은 준비 중입니다.');
   };
 
   // 알림 버튼 클릭 핸들러
   const handleNotificationPress = () => {
-    // 알림 화면으로 이동
-    console.log('알림 버튼 클릭');
     // 아직 구현되지 않은 화면이므로 임시 알림 표시
     Alert.alert('안내', '알림 기능은 준비 중입니다.');
     // 아래 코드는 Notification 화면이 구현되면 주석 해제
@@ -46,7 +41,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
   }
 
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: theme.colors.white }]}>
       {/* 로고 영역 */}
       <View style={styles.logoContainer}>
         <Image
@@ -60,7 +55,12 @@ const HeaderBar = ({ notificationCount = 3 }) => {
       <View style={styles.iconContainer}>
         {/* 추가 버튼 */}
         <TouchableOpacity style={styles.iconButton} onPress={handleAddPress} activeOpacity={0.7}>
-          <Icon name="add-circle-outline" size={ICON_SIZE} color="#56AEE9" />
+          <Icon
+            name="add-circle-outline"
+            size={ICON_SIZE}
+            color={theme.colors.primary}
+            type="material"
+          />
         </TouchableOpacity>
 
         {/* 알림 버튼 */}
@@ -69,15 +69,32 @@ const HeaderBar = ({ notificationCount = 3 }) => {
           onPress={handleNotificationPress}
           activeOpacity={0.7}
         >
-          <Icon name="notifications-none" size={ICON_SIZE} color="#56AEE9" />
+          <Icon
+            name="notifications-none"
+            size={ICON_SIZE}
+            color={theme.colors.primary}
+            type="material"
+          />
           {/* 알림 뱃지 */}
           {notificationCount > 0 && (
             <View style={styles.badge}>
               <View style={styles.badgeInner}>
-                <Icon name="circle" size={18} color="red" style={styles.badgeBackground} />
+                <Icon
+                  name="circle"
+                  size={18}
+                  color="#EF4040"
+                  style={styles.badgeBackground}
+                  type="material"
+                />
                 <View style={styles.badgeTextContainer}>
                   {notificationCount > 9 ? (
-                    <Icon name="add" size={12} color="white" style={styles.badgeText} />
+                    <Icon
+                      name="add"
+                      size={12}
+                      color="#FFFFFF"
+                      style={styles.badgeText}
+                      type="material"
+                    />
                   ) : (
                     <Text style={styles.badgeNumber}>{notificationCount}</Text>
                   )}
@@ -98,7 +115,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    backgroundColor: 'white',
     borderBottomWidth: 0,
     marginTop: 30,
     ...Platform.select({
@@ -158,7 +174,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   badgeNumber: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',

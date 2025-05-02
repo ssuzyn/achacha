@@ -1,66 +1,46 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, View, Text, Platform, Dimensions } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { StyleSheet, View, Platform, Dimensions, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
+import { Icon } from 'react-native-elements';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
 
 // 임시 스크린
-const GifticonManageScreen = () => (
-  <View
-    style={{
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'white',
-    }}
-  >
-    <Text>기프티콘 관리 화면</Text>
-  </View>
-);
+const GifticonManageScreen = () => {
+  return (
+    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
+      <Text style={styles.screenText}>기프티콘 관리 화면</Text>
+    </View>
+  );
+};
 
-const MapScreen = () => (
-  <View
-    style={{
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'white',
-    }}
-  >
-    <Text>기프티콘 MAP 화면</Text>
-  </View>
-);
+const MapScreen = () => {
+  return (
+    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
+      <Text style={styles.screenText}>기프티콘 MAP 화면</Text>
+    </View>
+  );
+};
 
-const ShareboxScreen = () => (
-  <View
-    style={{
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'white',
-    }}
-  >
-    <Text>쉐어박스 화면</Text>
-  </View>
-);
+const ShareboxScreen = () => {
+  return (
+    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
+      <Text style={styles.screenText}>쉐어박스 화면</Text>
+    </View>
+  );
+};
 
-const SettingsScreen = () => (
-  <View
-    style={{
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'white',
-    }}
-  >
-    <Text>설정 화면</Text>
-  </View>
-);
+const SettingsScreen = () => {
+  return (
+    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
+      <Text style={styles.screenText}>설정 화면</Text>
+    </View>
+  );
+};
 
 const Tab = createBottomTabNavigator();
 
@@ -87,21 +67,14 @@ const HIDDEN_TAB_BAR_SCREENS = [
 ];
 
 // 헤더바가 포함된 스크린 컴포넌트
-const ScreenWithHeader = ({ children }) => (
-  <View style={{ flex: 1, backgroundColor: 'white' }}>
-    <HeaderBar notificationCount={3} />
-    <View
-      style={{
-        flex: 1,
-        paddingTop: 12,
-        paddingHorizontal: 16,
-        backgroundColor: 'white',
-      }}
-    >
-      {children}
+const ScreenWithHeader = ({ children }) => {
+  return (
+    <View style={[styles.headerContainer, { backgroundColor: 'white' }]}>
+      <HeaderBar notificationCount={3} />
+      <View style={[styles.contentContainer, { backgroundColor: 'white' }]}>{children}</View>
     </View>
-  </View>
-);
+  );
+};
 
 // 탭 스크린 래퍼 컴포넌트 - 탭바 표시 여부를 조절하는 로직 포함
 const createWrappedComponent = (Component, screenName) => {
@@ -170,7 +143,7 @@ const BottomTabBar = () => {
 
     return (
       <View style={styles.iconContainer}>
-        <Icon name={iconName} size={ICON_SIZE} color={color} />
+        <Icon name={iconName} size={ICON_SIZE} color={color} type="material" />
       </View>
     );
   };
@@ -187,16 +160,13 @@ const BottomTabBar = () => {
         },
         tabBarStyle: {
           ...styles.tabBar,
-          // 테두리 제거
           borderTopWidth: 0,
           backgroundColor: 'white',
-          // 탭바 표시 여부에 따라 동적으로 스타일 변경
           display: isTabBarVisible ? 'flex' : 'none',
         },
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarItemStyle: styles.tabBarItem,
-        // 호버 효과 제거
         tabBarPressColor: 'transparent',
         tabBarPressOpacity: 1,
         tabBarActiveBackgroundColor: 'transparent',
@@ -244,18 +214,34 @@ const BottomTabBar = () => {
 };
 
 const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  screenText: {
+    fontSize: 16,
+    color: '#000000',
+  },
+  headerContainer: {
+    flex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    paddingTop: 12,
+    paddingHorizontal: 16,
+  },
   tabBar: {
-    height: 65, // 안드로이드/iOS 일관된 높이
-    backgroundColor: 'white',
+    height: 65,
     ...Platform.select({
       ios: {
-        shadowColor: 'transparent', // 그림자 제거
+        shadowColor: 'transparent',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0,
         shadowRadius: 0,
       },
       android: {
-        elevation: 0, // 그림자 제거
+        elevation: 0,
       },
     }),
   },
@@ -267,6 +253,7 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 6,
     fontWeight: '500',
+    textAlign: 'center',
   },
   iconContainer: {
     marginBottom: -4,
