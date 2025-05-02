@@ -515,5 +515,13 @@ export const chipUtils = {
       closeIcon: {
         marginLeft: 4,
       },
+      tab: {
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 15,
+        marginVertical: 8,
+        minWidth: 80,
+        justifyContent: 'center',
+      },
     }),
 };

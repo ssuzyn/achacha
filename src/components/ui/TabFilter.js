@@ -45,6 +45,7 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
                   {
                     fontSize: 15,
                     color: isSelected ? colors.black : colors.grey3,
+                    marginTop: -2,
                   },
                 ]}
               >
@@ -65,9 +66,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   tab: {
-    height: 45,
-    paddingHorizontal: 18,
-    borderRadius: 15,
+    height: 42,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     marginRight: 10,
     backgroundColor: 'white',
   },
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tabText: {
-    fontWeight: '500',
+    fontWeight: '400',
   },
 });
 
