@@ -12,8 +12,6 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "@gluestack-style/react": "^1.0.57",
-    "@gluestack-ui/themed": "^1.1.73",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-navigation/bottom-tabs": "^7.3.10",
     "@react-navigation/native": "^7.1.6",
@@ -25,6 +23,7 @@
     "expo-splash-screen": "~0.29.24",
     "expo-status-bar": "~2.0.1",
     "react": "18.3.1",
+    "react-dom": "^18.3.1",
     "react-native": "0.76.9",
     "react-native-ble-manager": "^12.1.4",
     "react-native-reanimated": "^3.17.5",
@@ -39,14 +38,15 @@
     "@babel/eslint-parser": "^7.22.15",
     "@babel/preset-react": "^7.24.1",
     "@react-native/eslint-config": "^0.74.0",
+    "@types/react": "~18.3.12",
+    "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-native": "^4.1.0",
-    "prettier": "^3.5.3",
-    "@types/react": "~18.3.12"
+    "prettier": "^3.5.3"
   },
   "private": true
 }
