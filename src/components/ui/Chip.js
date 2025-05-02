@@ -20,11 +20,19 @@ const Chip = ({
   disabled = false,
   variant = 'default',
   color,
+  isSelected = false,
   ...props
 }) => {
   const { chip } = useTheme();
   const chipStyles = chip.getStyles();
-  const variantStyle = chip.getVariantStyle(variant, color);
+
+  // 탭 변형을 위한 처리
+  let variantToUse = variant;
+  if (variant === 'tab') {
+    variantToUse = isSelected ? 'solid' : 'outlined';
+  }
+
+  const variantStyle = chip.getVariantStyle(variantToUse, color);
 
   const renderIcon = () => {
     if (!icon) return null;
@@ -68,6 +76,9 @@ const Chip = ({
     );
   };
 
+  // 탭 스타일 적용
+  const tabStyle = variant === 'tab' ? chipStyles.tab : {};
+
   return (
     <TouchableOpacity
       style={[
@@ -77,6 +88,7 @@ const Chip = ({
           borderColor: variantStyle.borderColor,
           borderWidth: variantStyle.borderWidth,
         },
+        tabStyle,
         containerStyle,
       ]}
       onPress={onPress}
