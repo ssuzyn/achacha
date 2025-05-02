@@ -29,51 +29,39 @@ export const SwipeableListItem = ({
 }) => {
   const { theme } = useTheme();
 
-  // 기본 왼쪽 스와이프 컨텐츠
-  const defaultLeftContent = leftIcon ? (
-    <Icon
-      name={typeof leftIcon === 'string' ? leftIcon : 'edit'}
-      type="material"
-      color={theme.colors.white}
-      size={24}
-    />
-  ) : null;
-
-  // 기본 오른쪽 스와이프 컨텐츠
-  const defaultRightContent = rightIcon ? (
-    <Icon
-      name={typeof rightIcon === 'string' ? rightIcon : 'delete'}
-      type="material"
-      color={theme.colors.white}
-      size={24}
-    />
-  ) : null;
-
-  // 기본 왼쪽 액션 스타일
-  const defaultLeftStyle = {
-    backgroundColor: theme.colors.primary,
-    ...leftStyle,
-  };
-
-  // 기본 오른쪽 액션 스타일
-  const defaultRightStyle = {
-    backgroundColor: theme.colors.error,
-    ...rightStyle,
-  };
-
   return (
     <ListItem.Swipeable
       leftContent={
         leftActionable && (
-          <ListItem.Content style={[styles.actionContent, defaultLeftStyle]}>
-            {leftContent || defaultLeftContent}
+          <ListItem.Content
+            style={[styles.actionContent, { backgroundColor: theme.colors.primary }, leftStyle]}
+          >
+            {leftContent ||
+              (leftIcon && (
+                <Icon
+                  name={typeof leftIcon === 'string' ? leftIcon : 'edit'}
+                  type="material"
+                  color={theme.colors.white}
+                  size={24}
+                />
+              ))}
           </ListItem.Content>
         )
       }
       rightContent={
         rightActionable && (
-          <ListItem.Content style={[styles.actionContent, defaultRightStyle]}>
-            {rightContent || defaultRightContent}
+          <ListItem.Content
+            style={[styles.actionContent, { backgroundColor: theme.colors.error }, rightStyle]}
+          >
+            {rightContent ||
+              (rightIcon && (
+                <Icon
+                  name={typeof rightIcon === 'string' ? rightIcon : 'delete'}
+                  type="material"
+                  color={theme.colors.white}
+                  size={24}
+                />
+              ))}
           </ListItem.Content>
         )
       }

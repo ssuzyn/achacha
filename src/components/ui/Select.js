@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
   },
   // 변형 스타일
   outline: {
-    borderRadius: 0.8,
+    borderRadius: 8,
   },
   filled: {
     borderRadius: 8,

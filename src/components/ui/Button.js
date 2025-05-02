@@ -1,6 +1,7 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
-import { useTheme } from 'react-native-elements';
+import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
+import { useTheme } from '../../hooks/useTheme';
+import { buttonUtils } from '../../theme/themeUtils';
 
 /**
  * 기본 버튼 컴포넌트
@@ -19,6 +20,7 @@ export const Button = ({
   ...props
 }) => {
   const { theme } = useTheme();
+  const styles = buttonUtils.getButtonStyles();
 
   // 버튼 스타일 가져오기
   const buttonStyle = [
@@ -38,85 +40,36 @@ export const Button = ({
     textStyle,
   ];
 
+  // theme utils를 사용하여 스타일 속성 가져오기
+  const backgroundColor = buttonUtils.getBackgroundColor(theme, variant, isDisabled);
+  const textColor = buttonUtils.getTextColor(theme, variant, isDisabled);
+  const borderColor = buttonUtils.getBorderColor(theme, variant, isDisabled);
+
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled || isLoading}
       style={[
         buttonStyle,
-        // variant에 따른 색상 설정 적용
-        variant === 'primary' && { backgroundColor: theme.colors.secondary },
-        variant === 'secondary' && { backgroundColor: theme.colors.primary },
-        variant === 'outline' && { borderColor: theme.colors.primary },
-        isDisabled && { backgroundColor: theme.colors.disabled },
-        isDisabled && { borderColor: theme.colors.transparent },
+        {
+          backgroundColor,
+          borderColor,
+        },
       ]}
       activeOpacity={0.7}
       {...props}
     >
       {isLoading ? (
-        <ActivityIndicator
-          size="small"
-          color={
-            variant === 'outline' || variant === 'ghost' || variant === 'link'
-              ? theme.colors.primary
-              : theme.colors.white
-          }
-        />
+        <ActivityIndicator size="small" color={textColor} />
       ) : (
         <View style={styles.contentContainer}>
           {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
-          <Text
-            style={[
-              buttonTextStyle,
-              variant === 'primary' && { color: theme.colors.white },
-              variant === 'secondary' && { color: theme.colors.white },
-              variant === 'outline' && { color: theme.colors.primary },
-              variant === 'ghost' && { color: theme.colors.primary },
-              variant === 'link' && { color: theme.colors.primary },
-              isDisabled && { color: theme.colors.grey4 },
-            ]}
-          >
-            {title}
-          </Text>
+          <Text style={[buttonTextStyle, { color: textColor }]}>{title}</Text>
           {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
         </View>
       )}
     </TouchableOpacity>
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  contentContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // 텍스트 스타일
-  text: {
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-
-  // 비활성화 스타일
-  disabled: {
-    // 테마 적용으로 인해 색상 제거, 직접 설정
-  },
-  disabledText: {
-    // 테마 적용으로 인해 색상 제거, 직접 설정
-  },
-  // 아이콘 스타일
-  iconLeft: {
-    marginRight: 8,
-  },
-  iconRight: {
-    marginLeft: 8,
-  },
-});
 
 export default Button;

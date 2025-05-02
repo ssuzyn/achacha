@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Skeleton as RNESkeleton, useTheme } from 'react-native-elements';
+import { View } from 'react-native';
+import { Skeleton as RNESkeleton } from 'react-native-elements';
+import { useTheme } from '../../hooks/useTheme';
+import { skeletonUtils } from '../../theme/themeUtils';
 
 /**
  * 스켈레톤 로딩 컴포넌트
@@ -16,32 +18,8 @@ export const Skeleton = ({
 }) => {
   const { theme } = useTheme();
 
-  // 변형에 따른 스타일 계산
-  const getVariantStyle = () => {
-    switch (variant) {
-      case 'circle':
-        return {
-          width: width || 48,
-          height: height || 48,
-          borderRadius: borderRadius || 24,
-        };
-      case 'text':
-        return {
-          width: width || '100%',
-          height: height || 16,
-          borderRadius: borderRadius || 4,
-        };
-      case 'rect':
-      default:
-        return {
-          width: width || 100,
-          height: height || 80,
-          borderRadius: borderRadius || 4,
-        };
-    }
-  };
-
-  const variantStyle = getVariantStyle();
+  // themeUtils를 사용하여 변형에 따른 스타일 계산
+  const variantStyle = skeletonUtils.getVariantStyle(variant, width, height, borderRadius);
 
   return (
     <RNESkeleton
@@ -61,6 +39,7 @@ export const SkeletonGroup = ({
   style,
 }) => {
   const { theme } = useTheme();
+  const styles = skeletonUtils.getSkeletonStyles();
 
   const renderItems = () => {
     const items = [];
@@ -124,46 +103,5 @@ export const SkeletonGroup = ({
 
   return <View style={styles.groupContainer}>{renderItems()}</View>;
 };
-
-const styles = StyleSheet.create({
-  groupContainer: {
-    width: '100%',
-  },
-  listItem: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  listContent: {
-    marginLeft: 10,
-    flex: 1,
-  },
-  card: {
-    marginBottom: 16,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  cardContent: {
-    padding: 12,
-  },
-  profile: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  profileContent: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  detail: {
-    width: '100%',
-  },
-  mt5: {
-    marginTop: 5,
-  },
-  mt10: {
-    marginTop: 10,
-  },
-});
 
 export default Skeleton;

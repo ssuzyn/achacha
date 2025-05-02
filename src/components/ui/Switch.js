@@ -23,19 +23,6 @@ export const Switch = ({
 }) => {
   const { theme } = useTheme();
 
-  // 테마 기반 색상 설정
-  const defaultTrackColor = {
-    false: theme.colors.grey2,
-    true: theme.colors.primary,
-  };
-
-  const defaultThumbColor = {
-    false: theme.colors.white,
-    true: theme.colors.white,
-  };
-
-  const defaultIosBackgroundColor = theme.colors.grey2;
-
   // 사이즈에 따른 스타일 결정
   const getSizeStyle = () => {
     switch (size) {
@@ -74,16 +61,18 @@ export const Switch = ({
   const currentThumbColor = value
     ? disabled
       ? theme.colors.grey1
-      : thumbColor?.true || defaultThumbColor.true
+      : thumbColor?.true || theme.colors.white
     : disabled
       ? theme.colors.grey1
-      : thumbColor?.false || defaultThumbColor.false;
+      : thumbColor?.false || theme.colors.white;
 
   // 현재 상태에 따른 트랙 색상 결정
   const currentTrackColor = {
-    false: disabled ? theme.colors.grey1 : trackColor?.false || defaultTrackColor.false,
-    true: disabled ? theme.colors.grey3 : trackColor?.true || defaultTrackColor.true,
+    false: disabled ? theme.colors.grey1 : trackColor?.false || theme.colors.grey2,
+    true: disabled ? theme.colors.grey3 : trackColor?.true || theme.colors.primary,
   };
+
+  const currentIosBackgroundColor = ios_backgroundColor || theme.colors.grey2;
 
   return (
     <View style={[getContainerStyle(), containerStyle]}>
@@ -106,7 +95,7 @@ export const Switch = ({
         disabled={disabled}
         trackColor={currentTrackColor}
         thumbColor={currentThumbColor}
-        ios_backgroundColor={ios_backgroundColor || defaultIosBackgroundColor}
+        ios_backgroundColor={currentIosBackgroundColor}
         style={[getSizeStyle(), style]}
         {...props}
       />

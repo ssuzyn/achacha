@@ -21,11 +21,15 @@ export const AlertDialog = ({
   const { theme } = useTheme();
 
   // 타입에 따른 버튼 색상 매핑
-  const buttonColorMap = {
-    info: theme.colors.secondary,
-    success: theme.colors.success,
-    warning: theme.colors.warning,
-    error: theme.colors.error,
+  const getButtonColor = () => {
+    const typeToColorMap = {
+      info: theme.colors.secondary,
+      success: theme.colors.success,
+      warning: theme.colors.warning,
+      error: theme.colors.error,
+    };
+
+    return typeToColorMap[type] || typeToColorMap.info;
   };
 
   return (
@@ -48,7 +52,7 @@ export const AlertDialog = ({
             style={[
               styles.button,
               styles.confirmButton,
-              { backgroundColor: buttonColorMap[type] || buttonColorMap.info },
+              { backgroundColor: getButtonColor() },
               hideCancel && styles.fullWidthButton,
             ]}
             onPress={onConfirm}

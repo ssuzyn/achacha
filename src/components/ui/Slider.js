@@ -46,13 +46,6 @@ export const Slider = ({
     return localValue;
   };
 
-  // 테마 기반 색상 설정
-  const trackTintColors = {
-    min: minimumTrackTintColor || theme.colors.primary,
-    max: maximumTrackTintColor || theme.colors.grey2,
-    thumb: thumbTintColor || theme.colors.primary,
-  };
-
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
@@ -75,10 +68,14 @@ export const Slider = ({
         onSlidingComplete={onSlidingComplete}
         disabled={disabled}
         trackStyle={[styles.track, trackStyle]}
-        thumbStyle={[styles.thumb, { backgroundColor: trackTintColors.thumb }, thumbStyle]}
-        minimumTrackTintColor={trackTintColors.min}
-        maximumTrackTintColor={trackTintColors.max}
-        thumbTintColor={trackTintColors.thumb}
+        thumbStyle={[
+          styles.thumb,
+          { backgroundColor: thumbTintColor || theme.colors.primary },
+          thumbStyle,
+        ]}
+        minimumTrackTintColor={minimumTrackTintColor || theme.colors.primary}
+        maximumTrackTintColor={maximumTrackTintColor || theme.colors.grey2}
+        thumbTintColor={thumbTintColor || theme.colors.primary}
         {...props}
       />
 

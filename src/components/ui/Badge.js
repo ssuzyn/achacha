@@ -19,15 +19,7 @@ export const Badge = ({
 
   // 변형과 상태에 따른 배경 및 텍스트 색상 설정
   const getStatusColor = () => {
-    const colors = {
-      primary: theme.colors.primary,
-      success: theme.colors.success,
-      warning: theme.colors.warning,
-      error: theme.colors.error,
-      info: theme.colors.secondary,
-    };
-
-    return colors[status] || colors.primary;
+    return theme.colors[status] || theme.colors.primary;
   };
 
   // 사이즈에 따른 스타일 설정
