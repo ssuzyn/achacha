@@ -5,8 +5,6 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
-import { GluestackUIProvider } from '@gluestack-ui/themed';
-import { config } from '../../components/ui/gluestack-ui-provider';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
@@ -105,24 +103,12 @@ const ScreenWithHeader = ({ children }) => (
   </View>
 );
 
-// GluestackUIProvider로 감싸는 HOC
-const withGluestack = Component => {
-  return props => (
-    <GluestackUIProvider config={config}>
-      <Component {...props} />
-    </GluestackUIProvider>
-  );
-};
-
 // 탭 스크린 래퍼 컴포넌트 - 탭바 표시 여부를 조절하는 로직 포함
 const createWrappedComponent = (Component, screenName) => {
   // 각 화면에 대한 래퍼 컴포넌트를 미리 생성
   const WrappedScreenComponent = props => {
     const { hideTabBar, showTabBar } = useTabBar();
     const navigation = useNavigation();
-
-    // GluestackUIProvider로 감싼 컴포넌트
-    const WrappedComponent = withGluestack(Component);
 
     // 현재 화면의 포커스 상태 변경 감지하여 탭바 표시 여부 설정
     useEffect(() => {
@@ -141,7 +127,7 @@ const createWrappedComponent = (Component, screenName) => {
 
     return (
       <ScreenWithHeader>
-        <WrappedComponent {...props} />
+        <Component {...props} />
       </ScreenWithHeader>
     );
   };

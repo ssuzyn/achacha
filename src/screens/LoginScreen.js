@@ -1,12 +1,12 @@
 import React from 'react';
 import {
-  Image,
-  StyleSheet,
-  SafeAreaView,
   View,
   Text,
-  TouchableOpacity,
+  Image,
   ActivityIndicator,
+  SafeAreaView,
+  StyleSheet,
+  TouchableOpacity,
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 
@@ -21,23 +21,23 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.flex}>
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           {/* 로고 영역 */}
           <View style={styles.logoContainer}>
-            <Image source={require(LOGIN_LOGO_URL)} style={styles.loginLogo} resizeMode="contain" />
+            <Image source={require(LOGIN_LOGO_URL)} style={styles.logo} resizeMode="contain" />
           </View>
 
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
-            <Text style={styles.heading}>소셜 계정으로</Text>
-            <Text style={styles.heading}>간편한 로그인</Text>
+            <Text style={styles.title}>소셜 계정으로</Text>
+            <Text style={styles.title}>간편한 로그인</Text>
           </View>
 
           {/* 버튼 영역 */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.button, styles.kakaoButton, isLoading && styles.disabledButton]}
+              style={[styles.kakaoButton, isLoading && styles.disabledButton]}
               onPress={signInWithKakao}
               disabled={isLoading}
             >
@@ -47,8 +47,9 @@ const LoginScreen = () => {
                 <Text style={styles.kakaoButtonText}>카카오톡 로그인</Text>
               )}
             </TouchableOpacity>
+
             <TouchableOpacity
-              style={[styles.button, styles.googleButton, isLoading && styles.disabledButton]}
+              style={[styles.googleButton, isLoading && styles.disabledButton]}
               onPress={signInWithGoogle}
               disabled={isLoading}
             >
@@ -68,30 +69,30 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#FFFFFF',
   },
-  flex: {
+  safeArea: {
     flex: 1,
   },
   content: {
     flex: 1,
+    paddingHorizontal: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
   },
   logoContainer: {
-    marginBottom: 32,
     alignItems: 'center',
+    marginBottom: 32,
   },
-  loginLogo: {
+  logo: {
     width: 400,
     height: 300,
   },
   textContainer: {
-    marginBottom: 32,
     alignItems: 'center',
+    marginBottom: 32,
   },
-  heading: {
+  title: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#000000',
@@ -101,31 +102,33 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 16,
   },
-  button: {
-    paddingVertical: 16,
+  kakaoButton: {
+    backgroundColor: '#FCE642',
+    padding: 16,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
-  kakaoButton: {
-    backgroundColor: '#FCE642',
-  },
   googleButton: {
     backgroundColor: '#EF4040',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  kakaoButtonText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#462000',
+  },
+  googleButtonText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: 'white',
   },
   disabledButton: {
     opacity: 0.6,
-  },
-  kakaoButtonText: {
-    color: '#462000',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  googleButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });
 

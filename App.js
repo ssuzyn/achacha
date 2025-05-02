@@ -3,11 +3,10 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBarProvider } from './src/context/TabBarContext';
 import { HeaderBarProvider } from './src/context/HeaderBarContext';
-import { GluestackUIProviderWrapper } from './src/components/ui/gluestack-ui-provider';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -26,18 +25,22 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <GluestackUIProviderWrapper colorMode="light">
-        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-          <HeaderBarProvider>
-            <TabBarProvider>
-              <NavigationContainer>
-                <AppNavigator />
-                <StatusBar style="auto" />
-              </NavigationContainer>
-            </TabBarProvider>
-          </HeaderBarProvider>
-        </View>
-      </GluestackUIProviderWrapper>
+      <View style={styles.container} onLayout={onLayoutRootView}>
+        <HeaderBarProvider>
+          <TabBarProvider>
+            <NavigationContainer>
+              <AppNavigator />
+              <StatusBar style="auto" />
+            </NavigationContainer>
+          </TabBarProvider>
+        </HeaderBarProvider>
+      </View>
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});

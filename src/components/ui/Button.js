@@ -1,161 +1,156 @@
 import React from 'react';
-import { Button, ButtonText, ButtonGroup, ButtonIcon, ButtonSpinner } from '@gluestack-ui/themed';
-import { tva } from '@gluestack-style/react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
 
-// Button 스타일 설정
-const buttonStyle = tva({
-  base: {
-    borderRadius: '$md',
-    display: 'flex',
-    flexDirection: 'row',
+/**
+ * 기본 버튼 컴포넌트
+ */
+export const Button = ({
+  onPress,
+  title,
+  variant = 'primary', // primary, secondary, outline, ghost, link
+  size = 'md', // sm, md, lg
+  isDisabled = false,
+  isLoading = false,
+  leftIcon,
+  rightIcon,
+  style,
+  textStyle,
+  ...props
+}) => {
+  // 버튼 스타일 가져오기
+  const buttonStyle = [
+    styles.button,
+    styles[variant],
+    styles[`${size}Size`],
+    isDisabled && styles.disabled,
+    style,
+  ];
+
+  // 텍스트 스타일 가져오기
+  const buttonTextStyle = [
+    styles.text,
+    styles[`${variant}Text`],
+    styles[`${size}Text`],
+    isDisabled && styles.disabledText,
+    textStyle,
+  ];
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={isDisabled || isLoading}
+      style={buttonStyle}
+      activeOpacity={0.7}
+      {...props}
+    >
+      {isLoading ? (
+        <ActivityIndicator
+          size="small"
+          color={
+            variant === 'outline' || variant === 'ghost' || variant === 'link' ? '#278CCC' : 'white'
+          }
+        />
+      ) : (
+        <View style={styles.contentContainer}>
+          {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
+          <Text style={buttonTextStyle}>{title}</Text>
+          {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  button: {
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  variants: {
-    variant: {
-      solid: {
-        backgroundColor: '$colorButtonPrimary',
-        color: '$colorButtonText',
-      },
-      outline: {
-        borderWidth: '$borderWidthMedium',
-        borderColor: '$colorButtonPrimary',
-        color: '$colorButtonPrimary',
-        backgroundColor: 'transparent',
-      },
-      link: {
-        backgroundColor: 'transparent',
-        color: '$colorButtonPrimary',
-        borderWidth: 0,
-      },
-    },
-    size: {
-      xs: {
-        paddingHorizontal: '$spacingXs',
-        paddingVertical: '$spacingXs',
-        fontSize: '$fontSizeXs',
-        minHeight: 30,
-      },
-      sm: {
-        paddingHorizontal: '$spacingSm',
-        paddingVertical: '$spacingSm',
-        fontSize: '$fontSizeSm',
-        minHeight: 36,
-      },
-      md: {
-        paddingHorizontal: '$spacingMd',
-        paddingVertical: '$spacingSm',
-        fontSize: '$fontSizeMd',
-        minHeight: 42,
-      },
-      lg: {
-        paddingHorizontal: '$spacingLg',
-        paddingVertical: '$spacingMd',
-        fontSize: '$fontSizeLg',
-        minHeight: 48,
-      },
-      xl: {
-        paddingHorizontal: '$spacingXl',
-        paddingVertical: '$spacingLg',
-        fontSize: '$fontSizeXl',
-        minHeight: 56,
-      },
-    },
-    action: {
-      primary: {
-        backgroundColor: '$colorButtonPrimary',
-        color: '$colorButtonText',
-        _pressed: {
-          backgroundColor: '$colorSecondary',
-        },
-      },
-      secondary: {
-        backgroundColor: '$colorButtonSecondary',
-        color: '$colorButtonText',
-        _pressed: {
-          backgroundColor: '$colorPrimary',
-        },
-      },
-      positive: {
-        backgroundColor: '$colorButtonSuccess',
-        color: '$colorButtonText',
-        _pressed: {
-          backgroundColor: '$colorSuccess',
-          opacity: 0.8,
-        },
-      },
-      negative: {
-        backgroundColor: '$colorButtonDanger',
-        color: '$colorButtonText',
-        _pressed: {
-          backgroundColor: '$colorDanger',
-          opacity: 0.8,
-        },
-      },
-    },
-    disabled: {
-      true: {
-        opacity: 0.6,
-        _text: {
-          opacity: 0.6,
-        },
-      },
-    },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  defaultVariants: {
-    variant: 'solid',
-    size: 'md',
-    action: 'primary',
+  // 버튼 변형
+  primary: {
+    backgroundColor: '#278CCC',
+  },
+  secondary: {
+    backgroundColor: '#56AEE9',
+  },
+  outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#278CCC',
+  },
+  ghost: {
+    backgroundColor: 'transparent',
+  },
+  link: {
+    backgroundColor: 'transparent',
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
+  // 버튼 사이즈
+  smSize: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  mdSize: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+  },
+  lgSize: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  // 텍스트 스타일
+  text: {
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  primaryText: {
+    color: '#FFFFFF',
+  },
+  secondaryText: {
+    color: '#FFFFFF',
+  },
+  outlineText: {
+    color: '#278CCC',
+  },
+  ghostText: {
+    color: '#278CCC',
+  },
+  linkText: {
+    color: '#278CCC',
+    textDecorationLine: 'underline',
+  },
+  // 텍스트 사이즈
+  smText: {
+    fontSize: 12,
+  },
+  mdText: {
+    fontSize: 14,
+  },
+  lgText: {
+    fontSize: 16,
+  },
+  // 비활성화 스타일
+  disabled: {
+    backgroundColor: '#E5E5E5',
+    borderColor: 'transparent',
+  },
+  disabledText: {
+    color: '#999999',
+  },
+  // 아이콘 스타일
+  iconLeft: {
+    marginRight: 8,
+  },
+  iconRight: {
+    marginLeft: 8,
   },
 });
 
-// 사용자 정의 설정을 위한 config 객체
-const config = {
-  twMerge: true,
-  twMergeConfig: {
-    classGroups: {
-      'font-size': [
-        {
-          text: ['custom-heading-xl'],
-        },
-      ],
-    },
-  },
-  aliases: {
-    // 색상 별칭 매핑
-    colorPrimary: { value: '$primary' },
-    colorSecondary: { value: '$secondary' },
-    colorTertiary: { value: '$tertiary' },
-    colorButtonPrimary: { value: '$buttonPrimary' },
-    colorButtonSecondary: { value: '$buttonSecondary' },
-    colorButtonSuccess: { value: '$buttonSuccess' },
-    colorButtonDanger: { value: '$buttonDanger' },
-    colorButtonText: { value: '$buttonText' },
-    colorSuccess: { value: '$success' },
-    colorDanger: { value: '$danger' },
-
-    // 폰트 사이즈 별칭
-    fontSizeXs: { value: '$xs' },
-    fontSizeSm: { value: '$sm' },
-    fontSizeMd: { value: '$md' },
-    fontSizeLg: { value: '$lg' },
-    fontSizeXl: { value: '$xl' },
-
-    // 간격 별칭
-    spacingXs: { value: '$xs' },
-    spacingSm: { value: '$sm' },
-    spacingMd: { value: '$md' },
-    spacingLg: { value: '$lg' },
-    spacingXl: { value: '$xl' },
-
-    // 테두리 별칭
-    borderWidthThin: { value: '$thin' },
-    borderWidthMedium: { value: '$medium' },
-    borderRadiusNone: { value: '$none' },
-    borderRadiusSm: { value: '$sm' },
-    borderRadiusMd: { value: '$md' },
-    borderRadiusLg: { value: '$lg' },
-  },
-};
-
-export { Button, ButtonText, ButtonGroup, ButtonIcon, ButtonSpinner, buttonStyle, config };
+export default Button;

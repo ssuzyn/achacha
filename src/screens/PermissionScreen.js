@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react';
 import {
-  StyleSheet,
-  Alert,
   PermissionsAndroid,
   NativeModules,
   NativeEventEmitter,
   Platform,
-  SafeAreaView,
+  Image,
   View,
   Text,
   TouchableOpacity,
+  SafeAreaView,
+  StyleSheet,
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
@@ -21,6 +21,15 @@ import { usePermissions } from '../hooks/usePermissions';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+
+// 색상 상수 정의
+const COLORS = {
+  primary: '#56AEE9',
+  background: '#FFFFFF',
+  text: '#000000',
+  textSecondary: '#666666',
+  buttonPrimary: '#56AEE9',
+};
 
 const PermissionScreen = () => {
   const navigation = useNavigation();
@@ -76,14 +85,19 @@ const PermissionScreen = () => {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.flex}>
+      <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
-          <View style={styles.innerContent}>
+          <View style={styles.centerContainer}>
             <View style={styles.headerContainer}>
-              <Text style={styles.heading}>
-                <Text style={styles.primaryText}>ㅇㅊㅊ</Text> 이용을 위해
-              </Text>
-              <Text style={styles.heading}>아래 권한을 허용해주세요.</Text>
+              <View style={styles.titleContainer}>
+                <Image
+                  source={require('../../assets/splash-icon.png')}
+                  style={{ width: 60, height: 22, marginRight: 8 }}
+                  resizeMode="contain"
+                />
+                <Text style={styles.titleText}>이용을 위해</Text>
+              </View>
+              <Text style={[styles.titleText, styles.textCenter]}>아래 권한을 허용해주세요.</Text>
             </View>
 
             <View style={styles.permissionsContainer}>
@@ -111,7 +125,7 @@ const PermissionScreen = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, permissionsStatus === 'checking' && styles.disabledButton]}
+            style={[styles.button, permissionsStatus === 'checking' && styles.buttonDisabled]}
             onPress={handlePressNext}
             disabled={permissionsStatus === 'checking'}
           >
@@ -128,9 +142,9 @@ const PermissionScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: COLORS.background,
   },
-  flex: {
+  safeArea: {
     flex: 1,
   },
   content: {
@@ -139,44 +153,47 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     justifyContent: 'space-between',
   },
-  innerContent: {
+  centerContainer: {
     flex: 1,
-    alignItems: 'center',
     justifyContent: 'center',
   },
   headerContainer: {
-    marginBottom: 32,
     width: '100%',
     alignItems: 'center',
+    marginBottom: 32,
   },
-  heading: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-    textAlign: 'center',
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 4,
   },
-  primaryText: {
-    color: '#56AEE9',
+  titleText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: COLORS.text,
+  },
+  textCenter: {
+    textAlign: 'center',
   },
   permissionsContainer: {
     width: '100%',
   },
   button: {
-    backgroundColor: '#56AEE9',
+    backgroundColor: COLORS.buttonPrimary,
     paddingVertical: 16,
     borderRadius: 8,
+    alignItems: 'center',
     width: '90%',
     alignSelf: 'center',
   },
-  disabledButton: {
+  buttonDisabled: {
     opacity: 0.6,
   },
   buttonText: {
-    color: 'white',
-    textAlign: 'center',
-    fontWeight: 'bold',
     fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
 

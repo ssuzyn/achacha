@@ -1,146 +1,210 @@
-import React from 'react';
-import { Input, InputField, InputIcon, InputSlot, InputGroup } from '@gluestack-ui/themed';
-import { tva } from '@gluestack-style/react';
+import React, { useState } from 'react';
+import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-// Input 스타일 설정
-const inputStyle = tva({
-  base: {
-    borderRadius: '$md',
-    borderWidth: '$borderWidthThin',
-    backgroundColor: 'transparent',
-    minHeight: 42,
+/**
+ * 기본 입력 컴포넌트
+ */
+export const Input = ({
+  value,
+  onChangeText,
+  placeholder,
+  label,
+  helperText,
+  errorText,
+  isInvalid = false,
+  isDisabled = false,
+  isRequired = false,
+  secureTextEntry = false,
+  keyboardType = 'default',
+  leftIcon,
+  rightIcon,
+  size = 'md', // sm, md, lg
+  variant = 'outline', // outline, filled, underlined
+  style,
+  inputStyle,
+  labelStyle,
+  ...props
+}) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(!secureTextEntry);
+
+  // 입력창 스타일 가져오기
+  const containerStyle = [
+    styles.container,
+    styles[variant],
+    styles[`${size}Container`],
+    isFocused && styles.focused,
+    isInvalid && styles.invalid,
+    isDisabled && styles.disabled,
+    style,
+  ];
+
+  // 입력 필드 스타일
+  const textInputStyle = [
+    styles.input,
+    styles[`${size}Input`],
+    isDisabled && styles.disabledText,
+    leftIcon && styles.inputWithLeftIcon,
+    rightIcon && styles.inputWithRightIcon,
+    inputStyle,
+  ];
+
+  // 아이콘 및 비밀번호 토글 버튼 처리
+  const renderRightElement = () => {
+    if (secureTextEntry) {
+      return (
+        <TouchableOpacity
+          onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+          style={styles.iconContainer}
+        >
+          <Icon name={isPasswordVisible ? 'visibility' : 'visibility-off'} size={20} color="#666" />
+        </TouchableOpacity>
+      );
+    }
+
+    if (rightIcon) {
+      return <View style={styles.iconContainer}>{rightIcon}</View>;
+    }
+
+    return null;
+  };
+
+  return (
+    <View style={styles.wrapper}>
+      {label && (
+        <Text style={[styles.label, labelStyle]}>
+          {label}
+          {isRequired && <Text style={styles.required}> *</Text>}
+        </Text>
+      )}
+
+      <View style={containerStyle}>
+        {leftIcon && <View style={styles.iconContainer}>{leftIcon}</View>}
+
+        <TextInput
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          secureTextEntry={secureTextEntry && !isPasswordVisible}
+          keyboardType={keyboardType}
+          style={textInputStyle}
+          editable={!isDisabled}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          placeholderTextColor="#999999"
+          {...props}
+        />
+
+        {renderRightElement()}
+      </View>
+
+      {(helperText || errorText) && (
+        <Text style={[styles.helperText, isInvalid && styles.errorText]}>
+          {isInvalid ? errorText : helperText}
+        </Text>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  wrapper: {
     width: '100%',
+    marginBottom: 16,
   },
-  variants: {
-    variant: {
-      outline: {
-        borderColor: '$colorBorderLight',
-        _focus: {
-          borderColor: '$colorPrimary',
-        },
-      },
-      rounded: {
-        borderRadius: '$full',
-        borderColor: '$colorBorderLight',
-        _focus: {
-          borderColor: '$colorPrimary',
-        },
-      },
-      underlined: {
-        borderWidth: 0,
-        borderBottomWidth: '$borderWidthThin',
-        borderRadius: 0,
-        borderColor: '$colorBorderLight',
-        _focus: {
-          borderColor: '$colorPrimary',
-        },
-      },
-    },
-    size: {
-      xs: {
-        paddingHorizontal: '$spacingXs',
-        paddingVertical: '$spacingXs',
-        fontSize: '$fontSizeXs',
-        minHeight: 30,
-      },
-      sm: {
-        paddingHorizontal: '$spacingSm',
-        paddingVertical: '$spacingXs',
-        fontSize: '$fontSizeSm',
-        minHeight: 36,
-      },
-      md: {
-        paddingHorizontal: '$spacingMd',
-        paddingVertical: '$spacingSm',
-        fontSize: '$fontSizeMd',
-        minHeight: 42,
-      },
-      lg: {
-        paddingHorizontal: '$spacingLg',
-        paddingVertical: '$spacingMd',
-        fontSize: '$fontSizeLg',
-        minHeight: 48,
-      },
-      xl: {
-        paddingHorizontal: '$spacingXl',
-        paddingVertical: '$spacingLg',
-        fontSize: '$fontSizeXl',
-        minHeight: 56,
-      },
-    },
-    state: {
-      error: {
-        borderColor: '$colorDanger',
-        _focus: {
-          borderColor: '$colorDanger',
-        },
-      },
-      success: {
-        borderColor: '$colorSuccess',
-        _focus: {
-          borderColor: '$colorSuccess',
-        },
-      },
-    },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
+    backgroundColor: '#FFFFFF',
   },
-  defaultVariants: {
-    variant: 'outline',
-    size: 'md',
+  // 변형 스타일
+  outline: {
+    borderRadius: 8,
+  },
+  filled: {
+    borderRadius: 8,
+    backgroundColor: '#F8F9FA',
+  },
+  underlined: {
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    borderRadius: 0,
+  },
+  // 상태 스타일
+  focused: {
+    borderColor: '#278CCC',
+  },
+  invalid: {
+    borderColor: '#FF3B30',
+  },
+  disabled: {
+    backgroundColor: '#F0F2F5',
+    borderColor: '#E5E5E5',
+  },
+  // 크기 스타일
+  smContainer: {
+    height: 32,
+  },
+  mdContainer: {
+    height: 40,
+  },
+  lgContainer: {
+    height: 48,
+  },
+  // 입력 필드 스타일
+  input: {
+    flex: 1,
+    color: '#333333',
+    paddingHorizontal: 12,
+  },
+  smInput: {
+    fontSize: 12,
+  },
+  mdInput: {
+    fontSize: 14,
+  },
+  lgInput: {
+    fontSize: 16,
+  },
+  inputWithLeftIcon: {
+    paddingLeft: 8,
+  },
+  inputWithRightIcon: {
+    paddingRight: 8,
+  },
+  // 레이블 스타일
+  label: {
+    marginBottom: 6,
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333333',
+  },
+  required: {
+    color: '#FF3B30',
+  },
+  // 헬퍼 텍스트 스타일
+  helperText: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 4,
+  },
+  errorText: {
+    color: '#FF3B30',
+  },
+  // 비활성화 텍스트
+  disabledText: {
+    color: '#999999',
+  },
+  // 아이콘 컨테이너
+  iconContainer: {
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
-// 사용자 정의 설정을 위한 config 객체
-const config = {
-  twMerge: true,
-  twMergeConfig: {
-    classGroups: {
-      'font-size': [
-        {
-          text: ['custom-heading-xl'],
-        },
-      ],
-    },
-  },
-  aliases: {
-    // 색상 별칭 매핑
-    colorPrimary: { value: '$primary' },
-    colorSecondary: { value: '$secondary' },
-    colorTertiary: { value: '$tertiary' },
-    colorSuccess: { value: '$success' },
-    colorDanger: { value: '$danger' },
-    colorWarning: { value: '$warning' },
-    colorInfo: { value: '$info' },
-    colorBorder: { value: '$border' },
-    colorBorderLight: { value: '$borderLight' },
-    colorText: { value: '$text' },
-    colorTextSecondary: { value: '$textSecondary' },
-    colorDisabled: { value: '$disabled' },
-
-    // 폰트 사이즈 별칭
-    fontSizeXs: { value: '$xs' },
-    fontSizeSm: { value: '$sm' },
-    fontSizeMd: { value: '$md' },
-    fontSizeLg: { value: '$lg' },
-    fontSizeXl: { value: '$xl' },
-
-    // 간격 별칭
-    spacingXs: { value: '$xs' },
-    spacingSm: { value: '$sm' },
-    spacingMd: { value: '$md' },
-    spacingLg: { value: '$lg' },
-    spacingXl: { value: '$xl' },
-
-    // 테두리 별칭
-    borderWidthThin: { value: '$thin' },
-    borderWidthMedium: { value: '$medium' },
-    borderWidthThick: { value: '$thick' },
-    borderRadiusNone: { value: '$none' },
-    borderRadiusSm: { value: '$sm' },
-    borderRadiusMd: { value: '$md' },
-    borderRadiusLg: { value: '$lg' },
-    borderRadiusXl: { value: '$xl' },
-    borderRadiusFull: { value: '$full' },
-  },
-};
-
-export { Input, InputField, InputIcon, InputSlot, InputGroup, inputStyle, config };
+export default Input;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, Alert, View, Text, TouchableOpacity } from 'react-native';
+import { Image, Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 const HomeScreen = () => {
@@ -59,17 +59,21 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.center}>
-        <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.centerContainer}>
           <Text style={styles.title}>홈 스크린</Text>
 
           <TouchableOpacity style={styles.button} onPress={pickImage}>
             <Text style={styles.buttonText}>갤러리에서 이미지 선택</Text>
           </TouchableOpacity>
 
-          {image && <Image source={{ uri: image }} style={styles.image} />}
+          {image && (
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
+            </View>
+          )}
         </View>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -78,27 +82,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: 'white',
+  },
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 20,
   },
-  center: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    alignItems: 'center',
-    width: '100%',
-  },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#333333',
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#56AEE9',
-    paddingVertical: 12,
+    backgroundColor: '#278CCC',
     paddingHorizontal: 20,
+    paddingVertical: 12,
     borderRadius: 8,
     marginBottom: 20,
   },
@@ -107,11 +110,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
+  imageContainer: {
+    marginTop: 20,
+  },
   image: {
     width: 300,
     height: 300,
-    marginTop: 20,
-    resizeMode: 'contain',
     borderRadius: 8,
   },
 });
