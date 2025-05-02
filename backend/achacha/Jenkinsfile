@@ -27,6 +27,8 @@ pipeline {
             steps {
                 dir('backend/achacha') {
                     script {
+                        echo "DOCKER_USERNAME: ${env.DOCKER_USERNAME}"
+                        echo "BUILD_NUMBER: ${env.BUILD_NUMBER}"
                         // Docker 이미지 빌드
                         def dockerImage = docker.build("${env.DOCKER_USERNAME}/achacha-backend:${BUILD_NUMBER}")
 
