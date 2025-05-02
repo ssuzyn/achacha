@@ -30,23 +30,25 @@ pipeline {
                     script {
                         // Docker Hub 로그인
                         withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                            withEnv(['PATH=/usr/bin:${env.PATH}']) {
+                                sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
 
-                            // 이미지 태그 생성 (예: 날짜-빌드번호)
-                            def imageTag = "v${BUILD_NUMBER}"
+                                // 이미지 태그 생성 (예: 날짜-빌드번호)
+                                def imageTag = "v${BUILD_NUMBER}"
 
-                            // Docker 이미지 빌드
-                            sh "docker build -t ${DOCKER_USERNAME}/achacha-backend:${imageTag} ."
+                                // Docker 이미지 빌드
+                                sh "docker build -t ${DOCKER_USERNAME}/achacha-backend:${imageTag} ."
 
-                            // Docker Hub에 이미지 푸시
-                            sh "docker push ${DOCKER_USERNAME}/achacha-backend:${imageTag}"
+                                // Docker Hub에 이미지 푸시
+                                sh "docker push ${DOCKER_USERNAME}/achacha-backend:${imageTag}"
 
-                            // 최신 버전 태그도 함께 푸시
-                            sh "docker tag ${DOCKER_USERNAME}/achacha-backend:${imageTag} ${DOCKER_USERNAME}/achacha-backend:latest"
-                            sh "docker push ${DOCKER_USERNAME}/achacha-backend:latest"
+                                // 최신 버전 태그도 함께 푸시
+                                sh "docker tag ${DOCKER_USERNAME}/achacha-backend:${imageTag} ${DOCKER_USERNAME}/achacha-backend:latest"
+                                sh "docker push ${DOCKER_USERNAME}/achacha-backend:latest"
 
-                            // 이미지 태그를 환경 변수로 저장 (다음 단계에서 사용)
-                            env.IMAGE_TAG = imageTag
+                                // 이미지 태그를 환경 변수로 저장 (다음 단계에서 사용)
+                                env.IMAGE_TAG = imageTag
+                            }
                         }
                     }
                 }
