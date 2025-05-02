@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
     borderBottomWidth: 0,
     marginTop: 30,
     ...Platform.select({
@@ -114,12 +114,12 @@ const styles = StyleSheet.create({
     }),
   },
   logoContainer: {
-    height: 40,
+    height: 35,
     justifyContent: 'center',
   },
   logo: {
-    width: 110,
-    height: 36,
+    width: 90,
+    height: 30,
   },
   iconContainer: {
     flexDirection: 'row',
