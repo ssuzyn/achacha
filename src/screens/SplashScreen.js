@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, StatusBar } from 'react-native';
+import { Image, StyleSheet, StatusBar, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions } from '@react-navigation/native';
-import { Box, Center } from '@gluestack-ui/themed';
 // import { checkIsFirstLaunch } from '../utils/appStorage'; // Temporarily disable first launch check
 
 const SPLASH_DURATION = 2000;
@@ -73,24 +72,33 @@ const SplashScreenComponent = ({ navigation }) => {
 
   // Always show logo (no loading indicator needed as check is bypassed)
   return (
-    <Box flex={1} bg="$background">
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       <SafeAreaView style={styles.flex}>
-        <Center flex={1}>
+        <View style={styles.centerContainer}>
           <Image
             source={require('../../assets/splash-icon.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-        </Center>
+        </View>
       </SafeAreaView>
-    </Box>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   flex: {
     flex: 1,
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logo: {
     width: 192,

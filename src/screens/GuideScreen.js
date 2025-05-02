@@ -1,7 +1,15 @@
 import React from 'react';
-import { Image, StyleSheet, StatusBar, Dimensions, SafeAreaView } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  StatusBar,
+  Dimensions,
+  SafeAreaView,
+  View,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import { useGuideSteps } from '../hooks/useGuideSteps';
-import { Box, Text, VStack, HStack, Center, Button, ButtonText } from '@gluestack-ui/themed';
 
 const { width } = Dimensions.get('window');
 
@@ -9,13 +17,13 @@ const GuideFirstScreen = () => {
   const { currentStep, currentContent, isLastStep, handleNext, totalSteps } = useGuideSteps();
 
   return (
-    <Box flex={1} bg="$background">
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       <SafeAreaView style={styles.flex}>
-        <Box flex={1} px="$6" pb="$7">
-          <Box flex={1} justifyContent="center" alignItems="center" w="$full">
-            <Box w="$full" alignItems="center">
-              <Box w="$full" alignItems="center" minHeight={width * 0.6} mb="$2">
+        <View style={styles.content}>
+          <View style={styles.mainContent}>
+            <View style={styles.imageContainer}>
+              <View style={[styles.imageBox, { minHeight: width * 0.6, marginBottom: 8 }]}>
                 {currentStep === 0 ? (
                   <>
                     <Image
@@ -44,49 +52,65 @@ const GuideFirstScreen = () => {
                     />
                   </>
                 )}
-              </Box>
-            </Box>
+              </View>
+            </View>
 
-            <VStack space="$2" w="$full" alignItems="center" pb="$6" mt="$2" minHeight={100}>
-              <Text fontSize="$3xl" fontWeight="$bold" color="$text" textAlign="center">
-                {currentContent.title}
-              </Text>
-              <Text fontSize="$lg" color="$textSecondary" textAlign="center" lineHeight={28}>
-                {currentContent.subText1}
-              </Text>
+            <View style={styles.textContainer}>
+              <Text style={styles.title}>{currentContent.title}</Text>
+              <Text style={styles.subText}>{currentContent.subText1}</Text>
               {currentContent.subText2 ? (
-                <Text fontSize="$lg" color="$textSecondary" textAlign="center" lineHeight={28}>
-                  {currentContent.subText2}
-                </Text>
+                <Text style={styles.subText}>{currentContent.subText2}</Text>
               ) : null}
-            </VStack>
+            </View>
 
-            <HStack justifyContent="center" w="$full" mt="$6" position="absolute" bottom={80}>
+            <View style={styles.indicatorContainer}>
               {[...Array(totalSteps)].map((_, index) => (
-                <Box
+                <View
                   key={index}
-                  w={8}
-                  h={8}
-                  borderRadius={4}
-                  mx="$1"
-                  bg={index === currentStep ? '$primary' : '$disabled'}
+                  style={[
+                    styles.indicator,
+                    { backgroundColor: index === currentStep ? '#56AEE9' : '#A7DAF94D' },
+                  ]}
                 />
               ))}
-            </HStack>
-          </Box>
+            </View>
+          </View>
 
-          <Button bg="$primary" py="$4" borderRadius="$md" onPress={handleNext}>
-            <ButtonText>{isLastStep ? '시작하기' : '다음'}</ButtonText>
-          </Button>
-        </Box>
+          <TouchableOpacity style={styles.button} onPress={handleNext}>
+            <Text style={styles.buttonText}>{isLastStep ? '시작하기' : '다음'}</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
-    </Box>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   flex: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingBottom: 28,
+  },
+  mainContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+  },
+  imageContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  imageBox: {
+    width: '100%',
+    alignItems: 'center',
   },
   giftboxImage: {
     width: width * 0.5,
@@ -96,6 +120,51 @@ const styles = StyleSheet.create({
   guideImage: {
     width: width * 0.6,
     height: width * 0.6,
+  },
+  textContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingBottom: 24,
+    marginTop: 8,
+    minHeight: 100,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+  },
+  subText: {
+    fontSize: 16,
+    color: '#666666',
+    textAlign: 'center',
+    lineHeight: 28,
+    marginTop: 8,
+  },
+  indicatorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+    marginTop: 24,
+    position: 'absolute',
+    bottom: 80,
+  },
+  indicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  button: {
+    backgroundColor: '#56AEE9',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

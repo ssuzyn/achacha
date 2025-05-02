@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Image, StyleSheet, Alert } from 'react-native';
+import { Image, StyleSheet, Alert, View, Text, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { Box, Text, Button, ButtonText, Center, VStack } from '@gluestack-ui/themed';
 
 const HomeScreen = () => {
   const [image, setImage] = useState(null);
@@ -59,25 +58,55 @@ const HomeScreen = () => {
   };
 
   return (
-    <Box flex={1} bg="$background" p="$5">
-      <Center>
-        <VStack space="$5" alignItems="center">
-          <Text fontSize="$3xl" fontWeight="$bold" color="$text">
-            홈 스크린
-          </Text>
+    <View style={styles.container}>
+      <View style={styles.center}>
+        <View style={styles.content}>
+          <Text style={styles.title}>홈 스크린</Text>
 
-          <Button onPress={pickImage} bg="$primary" py="$3" px="$5" borderRadius="$md">
-            <ButtonText>갤러리에서 이미지 선택</ButtonText>
-          </Button>
+          <TouchableOpacity style={styles.button} onPress={pickImage}>
+            <Text style={styles.buttonText}>갤러리에서 이미지 선택</Text>
+          </TouchableOpacity>
 
           {image && <Image source={{ uri: image }} style={styles.image} />}
-        </VStack>
-      </Center>
-    </Box>
+        </View>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    padding: 20,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  content: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginBottom: 20,
+  },
+  button: {
+    backgroundColor: '#56AEE9',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   image: {
     width: 300,
     height: 300,

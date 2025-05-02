@@ -1,16 +1,14 @@
 import React from 'react';
-import { Image, StyleSheet, SafeAreaView } from 'react-native';
-import { useAuth } from '../hooks/useAuth';
 import {
-  Box,
+  Image,
+  StyleSheet,
+  SafeAreaView,
+  View,
   Text,
-  Button,
-  ButtonText,
-  VStack,
-  Center,
-  Heading,
-  Spinner,
-} from '@gluestack-ui/themed';
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { useAuth } from '../hooks/useAuth';
 
 // --- 로고 이미지 경로 ---
 const LOGIN_LOGO_URL = '../../assets/login_logo.png';
@@ -22,68 +20,112 @@ const LoginScreen = () => {
   const isLoading = authState === 'loading';
 
   return (
-    <Box flex={1} bg="$background">
+    <View style={styles.container}>
       <SafeAreaView style={styles.flex}>
-        <Box flex={1} justifyContent="center" alignItems="center" p="$6">
+        <View style={styles.content}>
           {/* 로고 영역 */}
-          <Center mb="$8">
+          <View style={styles.logoContainer}>
             <Image source={require(LOGIN_LOGO_URL)} style={styles.loginLogo} resizeMode="contain" />
-          </Center>
+          </View>
 
           {/* 텍스트 영역 */}
-          <VStack space="$2" mb="$8" alignItems="center">
-            <Heading size="xl" color="$text">
-              소셜 계정으로
-            </Heading>
-            <Heading size="xl" color="$text">
-              간편한 로그인
-            </Heading>
-          </VStack>
+          <View style={styles.textContainer}>
+            <Text style={styles.heading}>소셜 계정으로</Text>
+            <Text style={styles.heading}>간편한 로그인</Text>
+          </View>
 
           {/* 버튼 영역 */}
-          <VStack space="$4" width="$full">
-            <Button
-              size="lg"
-              bg="$socialKakao"
-              borderRadius="$md"
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.button, styles.kakaoButton, isLoading && styles.disabledButton]}
               onPress={signInWithKakao}
               disabled={isLoading}
-              opacity={isLoading ? 0.6 : 1}
             >
               {isLoading ? (
-                <Spinner color="$socialKakaoText" />
+                <ActivityIndicator color="#462000" />
               ) : (
-                <ButtonText color="$socialKakaoText">카카오톡 로그인</ButtonText>
+                <Text style={styles.kakaoButtonText}>카카오톡 로그인</Text>
               )}
-            </Button>
-            <Button
-              size="lg"
-              bg="$socialGoogle"
-              borderRadius="$md"
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.googleButton, isLoading && styles.disabledButton]}
               onPress={signInWithGoogle}
               disabled={isLoading}
-              opacity={isLoading ? 0.6 : 1}
             >
               {isLoading ? (
-                <Spinner color="$socialGoogleText" />
+                <ActivityIndicator color="white" />
               ) : (
-                <ButtonText color="$socialGoogleText">Google 로그인</ButtonText>
+                <Text style={styles.googleButtonText}>Google 로그인</Text>
               )}
-            </Button>
-          </VStack>
-        </Box>
+            </TouchableOpacity>
+          </View>
+        </View>
       </SafeAreaView>
-    </Box>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   flex: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  logoContainer: {
+    marginBottom: 32,
+    alignItems: 'center',
   },
   loginLogo: {
     width: 400,
     height: 300,
+  },
+  textContainer: {
+    marginBottom: 32,
+    alignItems: 'center',
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+  },
+  buttonContainer: {
+    width: '100%',
+    marginTop: 16,
+  },
+  button: {
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  kakaoButton: {
+    backgroundColor: '#FCE642',
+  },
+  googleButton: {
+    backgroundColor: '#EF4040',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  kakaoButtonText: {
+    color: '#462000',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  googleButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 

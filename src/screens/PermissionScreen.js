@@ -7,6 +7,9 @@ import {
   NativeEventEmitter,
   Platform,
   SafeAreaView,
+  View,
+  Text,
+  TouchableOpacity,
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
@@ -15,7 +18,6 @@ import BleManager from 'react-native-ble-manager';
 import { useNavigation } from '@react-navigation/native';
 import PermissionItem from '../components/PermissionItem';
 import { usePermissions } from '../hooks/usePermissions';
-import { Box, VStack, Text, Button, ButtonText, Heading, Center } from '@gluestack-ui/themed';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -73,20 +75,18 @@ const PermissionScreen = () => {
   }, [permissionsStatus, navigation]);
 
   return (
-    <Box flex={1} bg="$background">
+    <View style={styles.container}>
       <SafeAreaView style={styles.flex}>
-        <Box flex={1} px="$6" py="$10" justifyContent="space-between">
-          <VStack flex={1} alignItems="center" justifyContent="center">
-            <Center mb="$8" w="$full">
-              <Heading color="$text" mb="$1" textAlign="center">
-                <Text color="$primary">ㅇㅊㅊ</Text> 이용을 위해
-              </Heading>
-              <Heading color="$text" textAlign="center">
-                아래 권한을 허용해주세요.
-              </Heading>
-            </Center>
+        <View style={styles.content}>
+          <View style={styles.innerContent}>
+            <View style={styles.headerContainer}>
+              <Text style={styles.heading}>
+                <Text style={styles.primaryText}>ㅇㅊㅊ</Text> 이용을 위해
+              </Text>
+              <Text style={styles.heading}>아래 권한을 허용해주세요.</Text>
+            </View>
 
-            <VStack space="$4" w="$full">
+            <View style={styles.permissionsContainer}>
               <PermissionItem
                 iconName="notifications"
                 title="알림"
@@ -107,31 +107,76 @@ const PermissionScreen = () => {
                 title="갤러리"
                 description="기프티콘 이미지 업로드를 위하여 갤러리 접근 권한이 필요합니다."
               />
-            </VStack>
-          </VStack>
+            </View>
+          </View>
 
-          <Button
-            bg="$buttonPrimary"
-            py="$4"
-            borderRadius="$md"
-            w="90%"
-            alignSelf="center"
+          <TouchableOpacity
+            style={[styles.button, permissionsStatus === 'checking' && styles.disabledButton]}
             onPress={handlePressNext}
-            isDisabled={permissionsStatus === 'checking'}
+            disabled={permissionsStatus === 'checking'}
           >
-            <ButtonText color="$buttonText">
+            <Text style={styles.buttonText}>
               {permissionsStatus === 'checking' ? '권한 확인 중...' : '다음'}
-            </ButtonText>
-          </Button>
-        </Box>
+            </Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
-    </Box>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
   flex: {
     flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+    justifyContent: 'space-between',
+  },
+  innerContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerContainer: {
+    marginBottom: 32,
+    width: '100%',
+    alignItems: 'center',
+  },
+  heading: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  primaryText: {
+    color: '#56AEE9',
+  },
+  permissionsContainer: {
+    width: '100%',
+  },
+  button: {
+    backgroundColor: '#56AEE9',
+    paddingVertical: 16,
+    borderRadius: 8,
+    width: '90%',
+    alignSelf: 'center',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: 'white',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
