@@ -38,6 +38,7 @@
     "@babel/core": "^7.20.0",
     "@babel/eslint-parser": "^7.22.15",
     "@babel/preset-react": "^7.24.1",
+    "@react-native-community/cli-platform-android": "^18.0.0",
     "@react-native/eslint-config": "^0.74.0",
     "@types/react": "~18.3.12",
     "babel-plugin-module-resolver": "^5.0.2",
