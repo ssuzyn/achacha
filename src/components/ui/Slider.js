@@ -94,19 +94,19 @@ const config = {
   },
   aliases: {
     // 색상 별칭
-    colorPrimary: { value: 'var(--color-primary)' },
-    colorSecondary: { value: 'var(--color-secondary)' },
-    colorBackground: { value: 'var(--color-background)' },
-    colorBorderLight: { value: 'var(--color-border-light)' },
-    colorShadow: { value: 'var(--color-shadow)' },
+    colorPrimary: { value: '$primary' },
+    colorSecondary: { value: '$secondary' },
+    colorBackground: { value: '$background' },
+    colorBorderLight: { value: '$borderLight' },
+    colorShadow: { value: '$shadow' },
 
     // 테두리 별칭
-    borderWidthThin: { value: '{--border-width-thin}px' },
-    borderWidthMedium: { value: '{--border-width-medium}px' },
-    borderRadiusSm: { value: '{--border-radius-sm}px' },
-    borderRadiusMd: { value: '{--border-radius-md}px' },
-    borderRadiusLg: { value: '{--border-radius-lg}px' },
-    borderRadiusFull: { value: '{--border-radius-full}px' },
+    borderWidthThin: { value: '$thin' },
+    borderWidthMedium: { value: '$medium' },
+    borderRadiusSm: { value: '$sm' },
+    borderRadiusMd: { value: '$md' },
+    borderRadiusLg: { value: '$lg' },
+    borderRadiusFull: { value: '$full' },
   },
 };
 

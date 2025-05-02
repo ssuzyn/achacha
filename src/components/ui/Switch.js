@@ -60,12 +60,12 @@ const config = {
   },
   aliases: {
     // 색상 별칭
-    colorPrimary: { value: 'var(--color-primary)' },
-    colorSecondary: { value: 'var(--color-secondary)' },
-    colorBackground: { value: 'var(--color-background)' },
-    colorBorder: { value: 'var(--color-border)' },
-    colorBorderLight: { value: 'var(--color-border-light)' },
-    colorDisabled: { value: 'var(--color-disabled)' },
+    colorPrimary: { value: '$primary' },
+    colorSecondary: { value: '$secondary' },
+    colorBackground: { value: '$background' },
+    colorBorder: { value: '$border' },
+    colorBorderLight: { value: '$borderLight' },
+    colorDisabled: { value: '$disabled' },
   },
 };
 

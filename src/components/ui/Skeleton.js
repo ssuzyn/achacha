@@ -90,17 +90,17 @@ const config = {
   },
   aliases: {
     // 색상 별칭
-    colorBackground: { value: 'var(--color-background)' },
-    colorBackgroundAlt: { value: 'var(--color-background-alt)' },
-    colorBackgroundDark: { value: 'var(--color-background-dark)' },
-    colorBorder: { value: 'var(--color-border)' },
-    colorBorderLight: { value: 'var(--color-border-light)' },
+    colorBackground: { value: '$background' },
+    colorBackgroundAlt: { value: '$backgroundAlt' },
+    colorBackgroundDark: { value: '$backgroundDark' },
+    colorBorder: { value: '$border' },
+    colorBorderLight: { value: '$borderLight' },
 
     // 테두리 별칭
-    borderRadiusSm: { value: '{--border-radius-sm}px' },
-    borderRadiusMd: { value: '{--border-radius-md}px' },
-    borderRadiusLg: { value: '{--border-radius-lg}px' },
-    borderRadiusFull: { value: '{--border-radius-full}px' },
+    borderRadiusSm: { value: '$sm' },
+    borderRadiusMd: { value: '$md' },
+    borderRadiusLg: { value: '$lg' },
+    borderRadiusFull: { value: '$full' },
   },
 };
 

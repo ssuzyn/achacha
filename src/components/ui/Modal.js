@@ -70,29 +70,29 @@ const config = {
   },
   aliases: {
     // 색상 별칭 매핑
-    colorBackground: { value: 'var(--color-background)' },
-    colorBackgroundAlt: { value: 'var(--color-background-alt)' },
-    colorText: { value: 'var(--color-text)' },
-    colorTextSecondary: { value: 'var(--color-text-secondary)' },
-    colorBorder: { value: 'var(--color-border)' },
-    colorBorderLight: { value: 'var(--color-border-light)' },
-    colorPrimary: { value: 'var(--color-primary)' },
-    colorSecondary: { value: 'var(--color-secondary)' },
-    colorOverlay: { value: 'var(--color-overlay)' },
-    colorShadow: { value: 'var(--color-shadow)' },
+    colorBackground: { value: '$background' },
+    colorBackgroundAlt: { value: '$backgroundAlt' },
+    colorText: { value: '$text' },
+    colorTextSecondary: { value: '$textSecondary' },
+    colorBorder: { value: '$border' },
+    colorBorderLight: { value: '$borderLight' },
+    colorPrimary: { value: '$primary' },
+    colorSecondary: { value: '$secondary' },
+    colorOverlay: { value: '$overlay' },
+    colorShadow: { value: '$shadow' },
 
     // 테두리 별칭
-    borderRadiusSm: { value: '{--border-radius-sm}px' },
-    borderRadiusMd: { value: '{--border-radius-md}px' },
-    borderRadiusLg: { value: '{--border-radius-lg}px' },
-    borderRadiusXl: { value: '{--border-radius-xl}px' },
+    borderRadiusSm: { value: '$sm' },
+    borderRadiusMd: { value: '$md' },
+    borderRadiusLg: { value: '$lg' },
+    borderRadiusXl: { value: '$xl' },
 
     // 간격 별칭
-    spacingSm: { value: '{--spacing-sm}px' },
-    spacingMd: { value: '{--spacing-md}px' },
-    spacingLg: { value: '{--spacing-lg}px' },
-    spacingXl: { value: '{--spacing-xl}px' },
-    spacing2xl: { value: '{--spacing-2xl}px' },
+    spacingSm: { value: '$sm' },
+    spacingMd: { value: '$md' },
+    spacingLg: { value: '$lg' },
+    spacingXl: { value: '$xl' },
+    spacing2xl: { value: '$2xl' },
   },
 };
 
