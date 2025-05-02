@@ -1,0 +1,54 @@
+pipeline {
+    agent any
+    tools {
+        jdk "JDK17"
+    }
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // GitLab 저장소에서 'be' 브랜치 코드 가져오기
+                echo 'Cloning the repository...'
+                git branch: 'be',
+                    credentialsId: 'GITLAB_API_TOKEN',
+                    url: 'https://lab.ssafy.com/s12-final/S12P31D205.git'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('backend/achacha') {  // 백엔드 코드가 있는 디렉토리로 이동
+                    sh 'chmod +x gradlew'  // Gradle 래퍼에 실행 권한 부여
+                    sh './gradlew clean build -x test'  // 테스트 제외하고 빌드
+                }
+            }
+        }
+
+//         stage('Test') {
+//             steps {
+//                 // 테스트 실행
+//                 dir('backend/achacha') {
+//                     sh './gradlew test'
+//                 }
+//             }
+//             post {
+//                 success {
+//                     // 테스트 결과 수집
+//                     junit '**/build/test-results/test/TEST-*.xml'
+//                 }
+//             }
+//         }
+
+    }
+
+    post {
+            always {
+                cleanWs()
+            }
+            success {
+                echo '[BE] 빌드 성공! ✅'
+            }
+            failure {
+                echo '[BE] 빌드 실패! ❌'
+            }
+        }
+}
