@@ -4,7 +4,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBarProvider } from './src/context/TabBarContext';
+import { HeaderBarProvider } from './src/context/HeaderBarContext';
 import { GluestackUIProviderWrapper } from './src/components/ui/gluestack-ui-provider';
 
 // Keep the splash screen visible while we fetch resources
@@ -23,15 +25,19 @@ export default function App() {
   }, []);
 
   return (
-    <GluestackUIProviderWrapper colorMode="light">
-      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-        <TabBarProvider>
-          <NavigationContainer>
-            <AppNavigator />
-            <StatusBar style="auto" />
-          </NavigationContainer>
-        </TabBarProvider>
-      </View>
-    </GluestackUIProviderWrapper>
+    <SafeAreaProvider>
+      <GluestackUIProviderWrapper colorMode="light">
+        <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+          <HeaderBarProvider>
+            <TabBarProvider>
+              <NavigationContainer>
+                <AppNavigator />
+                <StatusBar style="auto" />
+              </NavigationContainer>
+            </TabBarProvider>
+          </HeaderBarProvider>
+        </View>
+      </GluestackUIProviderWrapper>
+    </SafeAreaProvider>
   );
 }
