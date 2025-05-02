@@ -5,12 +5,12 @@ import { StatusBar } from 'react-native';
 import { TabBarProvider } from './context/TabBarContext';
 import { HeaderBarProvider } from './context/HeaderBarContext';
 import AppNavigator from './navigation/AppNavigator';
-import { config, GluestackUIProviderWrapper } from './components/ui/gluestack-ui-provider';
+import { GluestackUIProviderWrapper } from './components/ui/gluestack-ui-provider';
 
 const App = () => {
   return (
     <SafeAreaProvider>
-      <StatusBar barStyle="dark-content" backgroundColor={config.light['--color-background']} />
+      <StatusBar barStyle="dark-content" backgroundColor="$background" />
       <GluestackUIProviderWrapper colorMode="light">
         <HeaderBarProvider>
           <TabBarProvider>

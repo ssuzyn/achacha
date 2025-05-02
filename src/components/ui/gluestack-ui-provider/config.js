@@ -1,5 +1,3 @@
-import { vars } from '@gluestack-ui/themed';
-
 // Theme colors - 테마 색상 정의
 const colors = {
   primary: '#56AEE9',
