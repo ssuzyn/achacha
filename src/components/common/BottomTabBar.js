@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, View, Text, Platform, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
-import { config } from '../ui/gluestack-ui-provider';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
 
@@ -17,7 +16,7 @@ const GifticonManageScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: config.light['--color-background'],
+      backgroundColor: '$background',
     }}
   >
     <Text>기프티콘 관리 화면</Text>
@@ -30,7 +29,7 @@ const MapScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: config.light['--color-background'],
+      backgroundColor: '$background',
     }}
   >
     <Text>기프티콘 MAP 화면</Text>
@@ -43,7 +42,7 @@ const ShareboxScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: config.light['--color-background'],
+      backgroundColor: '$background',
     }}
   >
     <Text>쉐어박스 화면</Text>
@@ -56,7 +55,7 @@ const SettingsScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: config.light['--color-background'],
+      backgroundColor: '$background',
     }}
   >
     <Text>설정 화면</Text>
@@ -89,14 +88,14 @@ const HIDDEN_TAB_BAR_SCREENS = [
 
 // 헤더바가 포함된 스크린 컴포넌트
 const ScreenWithHeader = ({ children }) => (
-  <View style={{ flex: 1, backgroundColor: config.light['--color-background'] }}>
+  <View style={{ flex: 1, backgroundColor: '$background' }}>
     <HeaderBar notificationCount={3} />
     <View
       style={{
         flex: 1,
         paddingTop: 12,
         paddingHorizontal: 16,
-        backgroundColor: config.light['--color-background'],
+        backgroundColor: '$background',
       }}
     >
       {children}
@@ -168,8 +167,8 @@ const BottomTabBar = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color }) => renderTabBarIcon(route, focused, color),
-        tabBarActiveTintColor: config.light['--color-primary-400'],
-        tabBarInactiveTintColor: config.light['--color-border'],
+        tabBarActiveTintColor: '$primary400',
+        tabBarInactiveTintColor: '$border',
         tabBarLabelStyle: {
           ...styles.tabBarLabel,
           fontSize: LABEL_FONTSIZE,
@@ -178,7 +177,7 @@ const BottomTabBar = () => {
           ...styles.tabBar,
           // 테두리 제거
           borderTopWidth: 0,
-          backgroundColor: config.light['--color-background'],
+          backgroundColor: '$background',
           // 탭바 표시 여부에 따라 동적으로 스타일 변경
           display: isTabBarVisible ? 'flex' : 'none',
         },
@@ -241,7 +240,7 @@ const BottomTabBar = () => {
 const styles = StyleSheet.create({
   tabBar: {
     height: 65, // 안드로이드/iOS 일관된 높이
-    backgroundColor: config.light['--color-background'],
+    backgroundColor: '$background',
     ...Platform.select({
       ios: {
         shadowColor: 'transparent', // 그림자 제거
