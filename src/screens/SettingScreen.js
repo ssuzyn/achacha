@@ -50,13 +50,7 @@ const SettingScreen = () => {
               해제 시 유효기간 만료 알림이 중단됩니다.
             </Text>
           </View>
-          <Switch
-            value={expiryNotification}
-            onValueChange={setExpiryNotification}
-            trackColor={{ false: theme.colors.grey5, true: theme.colors.background }}
-            thumbColor={expiryNotification ? theme.colors.primary : theme.colors.white}
-            ios_backgroundColor={theme.colors.grey5}
-          />
+          <Switch value={expiryNotification} onValueChange={setExpiryNotification} />
         </View>
 
         {/* 유효기간 알림 주기 설정 */}
@@ -120,13 +114,7 @@ const SettingScreen = () => {
               해제 시 기프티콘 나누기 알림이 중단됩니다.
             </Text>
           </View>
-          <Switch
-            value={giftSharingNotification}
-            onValueChange={setGiftSharingNotification}
-            trackColor={{ false: theme.colors.grey5, true: theme.colors.background }}
-            thumbColor={giftSharingNotification ? theme.colors.primary : theme.colors.white}
-            ios_backgroundColor={theme.colors.grey5}
-          />
+          <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
         </View>
 
         {/* 근접 매장 알림 */}
@@ -139,13 +127,7 @@ const SettingScreen = () => {
               해제 시 근접 매장 알림이 중단됩니다.
             </Text>
           </View>
-          <Switch
-            value={nearbyStoreNotification}
-            onValueChange={setNearbyStoreNotification}
-            trackColor={{ false: theme.colors.grey5, true: theme.colors.background }}
-            thumbColor={nearbyStoreNotification ? theme.colors.primary : theme.colors.white}
-            ios_backgroundColor={theme.colors.grey5}
-          />
+          <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
         </View>
       </View>
 
