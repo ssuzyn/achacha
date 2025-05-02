@@ -62,26 +62,22 @@ const HeaderBar = ({ notificationCount = 3 }) => {
           />
 
           {/* 알림 버튼 */}
-          <Icon
-            name="notifications-none"
-            size={ICON_SIZE}
-            color={theme.colors.primary}
-            type="material"
-            containerStyle={styles.notificationIcon}
-            onPress={handleNotificationPress}
-          >
+          <View style={styles.notificationBadgeContainer}>
+            <Icon
+              name="notifications-none"
+              size={ICON_SIZE}
+              color={theme.colors.primary}
+              type="material"
+              containerStyle={styles.notificationIcon}
+              onPress={handleNotificationPress}
+            />
             {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
             {notificationCount > 0 && (
               <View style={styles.badgeContainer}>
-                <Badge
-                  value={notificationCount > 9 ? '+' : notificationCount.toString()}
-                  status="error"
-                  size="sm"
-                  containerStyle={styles.badgeStyle}
-                />
+                <Badge value={notificationCount.toString()} status="error" size="sm" />
               </View>
             )}
-          </Icon>
+          </View>
         </View>
       </View>
     </View>
@@ -129,22 +125,18 @@ const styles = StyleSheet.create({
     padding: 0,
     backgroundColor: 'transparent',
   },
+  notificationBadgeContainer: {
+    position: 'relative',
+  },
   notificationIcon: {
-    marginLeft: 0,
     padding: 0,
     backgroundColor: 'transparent',
-    position: 'relative',
   },
   badgeContainer: {
     position: 'absolute',
-    top: 0,
-    right: 0,
-  },
-  badgeStyle: {
-    borderRadius: 10,
-    height: 16,
-    minWidth: 16,
-    paddingHorizontal: 2,
+    top: -4,
+    right: -4,
+    zIndex: 1,
   },
 });
 

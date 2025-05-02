@@ -26,9 +26,9 @@ export const Badge = ({
   const getSizeStyle = () => {
     const sizeStyles = {
       sm: {
-        height: 16,
-        minWidth: 16,
-        borderRadius: 8,
+        height: 18,
+        minWidth: 18,
+        borderRadius: 9,
         fontSize: 10,
       },
       md: {
@@ -81,7 +81,10 @@ export const Badge = ({
 
 const styles = StyleSheet.create({
   badge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   text: {
     fontWeight: 'bold',
