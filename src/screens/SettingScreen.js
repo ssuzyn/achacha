@@ -20,6 +20,7 @@ const SettingScreen = () => {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.white }]}
+      contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
       {/* 설정 헤더 */}
@@ -28,7 +29,7 @@ const SettingScreen = () => {
       </View>
 
       {/* 회원정보 섹션 */}
-      <View style={styles.section}>
+      <View style={[styles.section, styles.firstSection]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.black }]}>회원정보</Text>
         <View style={[styles.infoItem, { borderBottomColor: theme.colors.grey5 }]}>
           <Text style={[styles.infoLabel, { color: theme.colors.grey1 }]}>연결된 소셜 계정</Text>
@@ -79,8 +80,8 @@ const SettingScreen = () => {
                           styles.marker,
                           {
                             backgroundColor: index === 4 ? theme.colors.error : theme.colors.grey4,
-                            height: index === 4 ? 12 : 8,
                           },
+                          index === 4 ? { height: 12 } : { height: 8 },
                         ]}
                       />
                       <Text
@@ -152,9 +153,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingTop: 0,
+  },
+  contentContainer: {
+    paddingTop: 0,
   },
   headerSection: {
-    paddingVertical: 16,
+    paddingTop: 0,
+    paddingBottom: 20,
   },
   headerTitle: {
     fontSize: 24,
@@ -162,6 +168,9 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 24,
+  },
+  firstSection: {
+    marginTop: 10,
   },
   sectionTitle: {
     fontSize: 18,
