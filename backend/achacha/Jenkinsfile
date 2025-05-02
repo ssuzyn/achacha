@@ -5,6 +5,7 @@ pipeline {
     }
     environment {
         DOCKER_IMAGE = 'ssuzyn/achacha-backend' // <- Docker 이미지 이름 변수
+        SERVER_HOST = credentials('EC2_HOST')
     }
     stages {
         stage('Clone Repository') {
@@ -48,33 +49,17 @@ pipeline {
 
         stage('Deploy to Server') {
             steps {
-                sshPublisher(
-                    publishers: [
-                        sshPublisherDesc(
-                            configName: 'ec2-server',
-                            transfers: [
-                                sshTransfer(
-                                    sourceFiles: '',
-                                    remoteDirectory: '',
-                                    execCommand: '''
-                                        docker pull ${env.DOCKER_IMAGE}:latest
-                                        docker stop achacha-backend || true
-                                        docker rm achacha-backend || true
-                                        docker run -d --name achacha-backend -p 8080:8080 --restart unless-stopped ${env.DOCKER_IMAGE}:latest
-                                        docker system prune -f
-                                    ''',
-                                    execTimeout: 120000,
-                                    usePty: true,
-                                    noDefaultExcludes: false,
-                                    flatten: false
-                                )
-                            ],
-                            usePromotionTimestamp: false,
-                            useWorkspaceInPromotion: false,
-                            verbose: true
-                        )
-                    ]
-                )
+                sshagent(['EC2_SSH']) {
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_HOST} "
+                            docker pull ${DOCKER_IMAGE}:latest
+                            docker stop achacha-backend || true
+                            docker rm achacha-backend || true
+                            docker run -d --name achacha-backend -p 8080:8080 --restart unless-stopped ${DOCKER_IMAGE}:latest
+                            docker system prune -f
+                        "
+                    '''
+                }
             }
         }
     }
