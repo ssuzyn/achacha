@@ -11,6 +11,8 @@ import {
 import { useTabBar } from '../../context/TabBarContext';
 import { Icon, useTheme } from 'react-native-elements';
 import Badge from '../ui/Badge';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // 화면 크기 계산
 const { width } = Dimensions.get('window');
@@ -20,6 +22,8 @@ const ICON_SIZE = width > 380 ? 26 : 24;
 const HeaderBar = ({ notificationCount = 3 }) => {
   const { isTabBarVisible } = useTabBar();
   const { theme } = useTheme();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
 
   // 추가 버튼 클릭 핸들러
   const handleAddPress = () => {
@@ -29,10 +33,8 @@ const HeaderBar = ({ notificationCount = 3 }) => {
 
   // 알림 버튼 클릭 핸들러
   const handleNotificationPress = () => {
-    // 아직 구현되지 않은 화면이므로 임시 알림 표시
-    Alert.alert('안내', '알림 기능은 준비 중입니다.');
-    // 아래 코드는 Notification 화면이 구현되면 주석 해제
-    // navigation.navigate('Notification');
+    // 알림 화면으로 이동
+    navigation.navigate('Notification');
   };
 
   // 탭바가 숨겨져 있을 때는 헤더도 숨김
@@ -41,52 +43,57 @@ const HeaderBar = ({ notificationCount = 3 }) => {
   }
 
   return (
-    <View style={[styles.header, { backgroundColor: theme.colors.white }]}>
-      {/* 로고 영역 */}
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('../../../assets/splash-icon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
+    <View>
+      {/* 안전 영역 고려한 상단 여백 */}
+      <View style={{ height: insets.top, backgroundColor: theme.colors.white }} />
 
-      {/* 우측 아이콘 버튼 영역 */}
-      <View style={styles.iconContainer}>
-        {/* 추가 버튼 */}
-        <TouchableOpacity style={styles.iconButton} onPress={handleAddPress} activeOpacity={0.7}>
-          <Icon
-            name="add-circle-outline"
-            size={ICON_SIZE}
-            color={theme.colors.primary}
-            type="material"
+      <View style={[styles.header, { backgroundColor: theme.colors.white }]}>
+        {/* 로고 영역 */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/splash-icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
           />
-        </TouchableOpacity>
+        </View>
 
-        {/* 알림 버튼 */}
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={handleNotificationPress}
-          activeOpacity={0.7}
-        >
-          <Icon
-            name="notifications-none"
-            size={ICON_SIZE}
-            color={theme.colors.primary}
-            type="material"
-          />
-          {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
-          {notificationCount > 0 && (
-            <View style={styles.badgeContainer}>
-              <Badge
-                value={notificationCount > 9 ? '+' : notificationCount.toString()}
-                status="error"
-                size="sm"
-                containerStyle={styles.badgeStyle}
-              />
-            </View>
-          )}
-        </TouchableOpacity>
+        {/* 우측 아이콘 버튼 영역 */}
+        <View style={styles.iconContainer}>
+          {/* 추가 버튼 */}
+          <TouchableOpacity style={styles.iconButton} onPress={handleAddPress} activeOpacity={0.7}>
+            <Icon
+              name="add-circle-outline"
+              size={ICON_SIZE}
+              color={theme.colors.primary}
+              type="material"
+            />
+          </TouchableOpacity>
+
+          {/* 알림 버튼 */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={handleNotificationPress}
+            activeOpacity={0.7}
+          >
+            <Icon
+              name="notifications-none"
+              size={ICON_SIZE}
+              color={theme.colors.primary}
+              type="material"
+            />
+            {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
+            {notificationCount > 0 && (
+              <View style={styles.badgeContainer}>
+                <Badge
+                  value={notificationCount > 9 ? '+' : notificationCount.toString()}
+                  status="error"
+                  size="sm"
+                  containerStyle={styles.badgeStyle}
+                />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -100,7 +107,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 32,
     borderBottomWidth: 0,
-    marginTop: 30,
     ...Platform.select({
       ios: {
         shadowColor: 'transparent',
