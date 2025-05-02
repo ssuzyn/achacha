@@ -29,12 +29,12 @@ const GuideFirstScreen = () => {
                 {currentStep === 0 ? (
                   <>
                     <Image
-                      source={require('../../assets/giftbox1.png')}
+                      source={require('../../assets/images/giftbox1.png')}
                       style={[styles.giftbox1]}
                       resizeMode="contain"
                     />
                     <Image
-                      source={require('../../assets/giftbox2.png')}
+                      source={require('../../assets/images/giftbox2.png')}
                       style={[styles.giftbox2]}
                       resizeMode="contain"
                     />
