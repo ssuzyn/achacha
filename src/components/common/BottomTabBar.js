@@ -9,6 +9,7 @@ import { Button } from '../ui';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
+import SettingScreen from '../../screens/SettingScreen';
 
 // 임시 스크린
 const GifticonManageScreen = () => {
@@ -37,16 +38,6 @@ const ShareboxScreen = () => {
   return (
     <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
       <Text style={[styles.screenText, { color: theme.colors.black }]}>쉐어박스 화면</Text>
-    </View>
-  );
-};
-
-const SettingsScreen = () => {
-  const { theme } = useTheme();
-
-  return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
-      <Text style={[styles.screenText, { color: theme.colors.black }]}>설정 화면</Text>
     </View>
   );
 };
@@ -126,7 +117,7 @@ const WrappedHomeScreen = createWrappedComponent(HomeScreen, 'Home');
 const WrappedGifticonManageScreen = createWrappedComponent(GifticonManageScreen, 'GifticonManage');
 const WrappedMapScreen = createWrappedComponent(MapScreen, 'Map');
 const WrappedShareboxScreen = createWrappedComponent(ShareboxScreen, 'Sharebox');
-const WrappedSettingsScreen = createWrappedComponent(SettingsScreen, 'Settings');
+const WrappedSettingsScreen = createWrappedComponent(SettingScreen, 'Settings');
 
 const BottomTabBar = () => {
   const { isTabBarVisible } = useTabBar();
