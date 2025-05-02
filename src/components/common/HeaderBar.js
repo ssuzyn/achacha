@@ -7,10 +7,10 @@ import {
   Platform,
   Dimensions,
   Alert,
-  Text,
 } from 'react-native';
 import { useTabBar } from '../../context/TabBarContext';
 import { Icon, useTheme } from 'react-native-elements';
+import Badge from '../ui/Badge';
 
 // 화면 크기 계산
 const { width } = Dimensions.get('window');
@@ -75,33 +75,15 @@ const HeaderBar = ({ notificationCount = 3 }) => {
             color={theme.colors.primary}
             type="material"
           />
-          {/* 알림 뱃지 */}
+          {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
           {notificationCount > 0 && (
-            <View style={styles.badge}>
-              <View style={styles.badgeInner}>
-                <Icon
-                  name="circle"
-                  size={18}
-                  color={theme.colors.error}
-                  style={styles.badgeBackground}
-                  type="material"
-                />
-                <View style={styles.badgeTextContainer}>
-                  {notificationCount > 9 ? (
-                    <Icon
-                      name="add"
-                      size={12}
-                      color={theme.colors.white}
-                      style={styles.badgeText}
-                      type="material"
-                    />
-                  ) : (
-                    <Text style={[styles.badgeNumber, { color: theme.colors.white }]}>
-                      {notificationCount}
-                    </Text>
-                  )}
-                </View>
-              </View>
+            <View style={styles.badgeContainer}>
+              <Badge
+                value={notificationCount > 9 ? '+' : notificationCount.toString()}
+                status="error"
+                size="sm"
+                containerStyle={styles.badgeStyle}
+              />
             </View>
           )}
         </TouchableOpacity>
@@ -148,37 +130,16 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     position: 'relative',
   },
-  badge: {
+  badgeContainer: {
     position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
+    top: 3,
+    right: 3,
   },
-  badgeInner: {
-    position: 'relative',
-    width: 18,
-    height: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  badgeBackground: {
-    position: 'absolute',
-  },
-  badgeTextContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  badgeText: {
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
-  badgeNumber: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  badgeStyle: {
+    borderRadius: 10,
+    height: 16,
+    minWidth: 16,
+    paddingHorizontal: 2,
   },
 });
 
