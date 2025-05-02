@@ -10,12 +10,14 @@ export const buttonUtils = {
 
     switch (variant) {
       case 'primary':
-        return theme.colors.secondary;
-      case 'secondary':
         return theme.colors.primary;
+      case 'secondary':
+        return theme.colors.secondary;
       case 'outline':
       case 'ghost':
       case 'link':
+      case 'custom':
+        return 'transparent';
       default:
         return 'transparent';
     }
@@ -28,6 +30,8 @@ export const buttonUtils = {
       case 'primary':
       case 'secondary':
         return theme.colors.white;
+      case 'custom':
+        return null;
       case 'outline':
       case 'ghost':
       case 'link':
@@ -65,15 +69,15 @@ export const buttonUtils = {
       },
       // 크기 스타일
       smSize: {
-        paddingVertical: 6,
+        paddingVertical: 8,
         paddingHorizontal: 12,
       },
       mdSize: {
-        paddingVertical: 8,
+        paddingVertical: 10,
         paddingHorizontal: 16,
       },
       lgSize: {
-        paddingVertical: 10,
+        paddingVertical: 12,
         paddingHorizontal: 20,
       },
       // 텍스트 크기 스타일

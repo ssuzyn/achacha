@@ -1,6 +1,5 @@
 import React from 'react';
-import { Image, ActivityIndicator, StyleSheet, View, Text, SafeAreaView } from 'react-native';
-import { Button } from '../components/ui';
+import { Image, StyleSheet, View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';
 
@@ -31,31 +30,35 @@ const LoginScreen = () => {
 
           {/* 버튼 영역 */}
           <View style={styles.buttonContainer}>
-            <Button
-              title={isLoading ? null : '카카오톡 로그인'}
+            {/* 카카오톡 로그인 버튼 */}
+            <TouchableOpacity
               onPress={signInWithKakao}
-              isDisabled={isLoading}
-              isLoading={isLoading}
+              disabled={isLoading}
               style={[
-                styles.kakaoButton,
+                styles.button,
                 { backgroundColor: theme.colors.loginYellow },
                 isLoading && styles.disabledButton,
               ]}
-              textStyle={{ color: theme.colors.textBrown, fontWeight: 'bold', fontSize: 16 }}
-            />
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.buttonText, { color: theme.colors.textBrown }]}>
+                카카오톡 로그인
+              </Text>
+            </TouchableOpacity>
 
-            <Button
-              title={isLoading ? null : 'Google 로그인'}
+            {/* 구글 로그인 버튼 */}
+            <TouchableOpacity
               onPress={signInWithGoogle}
-              isDisabled={isLoading}
-              isLoading={isLoading}
+              disabled={isLoading}
               style={[
-                styles.googleButton,
+                styles.button,
                 { backgroundColor: theme.colors.loginRed },
                 isLoading && styles.disabledButton,
               ]}
-              textStyle={{ color: theme.colors.white, fontWeight: 'bold', fontSize: 16 }}
-            />
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.buttonText, { color: theme.colors.white }]}>Google 로그인</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
@@ -97,18 +100,17 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 16,
   },
-  kakaoButton: {
-    padding: 16,
+  button: {
+    width: '100%',
+    height: 56,
     borderRadius: 8,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  googleButton: {
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   disabledButton: {
     opacity: 0.6,
