@@ -73,32 +73,38 @@ const SettingScreen = () => {
               showMinMax={false}
               renderCustomMarkers={() => (
                 <View style={styles.markersContainer}>
-                  {markers.map((marker, index) => (
-                    <View key={index} style={styles.markerItem}>
-                      <View
-                        style={[
-                          styles.marker,
-                          {
-                            backgroundColor: index === 4 ? theme.colors.error : theme.colors.grey4,
-                          },
-                          index === 4 ? { height: 12 } : { height: 8 },
-                        ]}
-                      />
-                      <Text
-                        style={[
-                          styles.markerLabel,
-                          {
-                            color:
-                              expiryNotificationInterval === marker
-                                ? theme.colors.primary
-                                : theme.colors.grey3,
-                          },
-                        ]}
-                      >
-                        {marker}
-                      </Text>
-                    </View>
-                  ))}
+                  {markers.map((marker, index) => {
+                    // 미리 스타일 계산
+                    const markerHeight = index === 4 ? 12 : 8;
+                    const markerColor = index === 4 ? theme.colors.error : theme.colors.grey4;
+
+                    return (
+                      <View key={index} style={styles.markerItem}>
+                        <View
+                          style={[
+                            styles.marker,
+                            {
+                              backgroundColor: markerColor,
+                              height: markerHeight,
+                            },
+                          ]}
+                        />
+                        <Text
+                          style={[
+                            styles.markerLabel,
+                            {
+                              color:
+                                expiryNotificationInterval === marker
+                                  ? theme.colors.primary
+                                  : theme.colors.grey3,
+                            },
+                          ]}
+                        >
+                          {marker}
+                        </Text>
+                      </View>
+                    );
+                  })}
                 </View>
               )}
             />
