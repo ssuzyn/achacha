@@ -1,0 +1,110 @@
+// React Native Elements 테마 설정
+const theme = {
+  colors: {
+    // 메인 색상
+    primary: '#56AEE9',
+    // 강조 색상
+    secondary: '#278CCC',
+    // 백그라운드
+    background: '#A7DAF9',
+    // 텍스트 색상
+    black: '#000000',
+    white: '#FFFFFF',
+    textBrown: '#462000',
+    // 카드 색상
+    cardOrange: '#FF9500',
+    cardGreen: '#0DBA3F',
+    cardPurple: '#AF52DE',
+    cardBlue: '#007AFF',
+    cardTeal: '#30B0C7',
+    cardPink: '#FF2DC3',
+    // 로그인 버튼 색상
+    loginYellow: '#FCE642',
+    loginRed: '#EF4040',
+    // 하단 탭 및 보더 색상
+    grey0: '#f9f9f9',
+    grey1: '#e0e0e0',
+    grey2: '#cccccc',
+    grey3: '#718096', // border 색상
+    grey4: '#999999',
+    grey5: '#737373',
+    greyOutline: '#718096', // border 색상과 동일
+    // 기본 색상
+    success: '#0DBA3F',
+    warning: '#FF9500',
+    error: '#EF4040',
+    disabled: '#cccccc',
+  },
+  Button: {
+    raised: true,
+    buttonStyle: {
+      borderRadius: 10,
+    },
+  },
+  Card: {
+    containerStyle: {
+      borderRadius: 10,
+    },
+  },
+  Text: {
+    style: {
+      color: '#000000',
+    },
+    h1Style: {
+      fontWeight: 'bold',
+    },
+    h2Style: {
+      fontWeight: 'bold',
+    },
+    h3Style: {
+      fontWeight: 'bold',
+    },
+    h4Style: {
+      fontWeight: 'bold',
+    },
+  },
+  Input: {
+    inputContainerStyle: {
+      borderBottomWidth: 1,
+      borderColor: '#718096',
+    },
+  },
+  Badge: {
+    badgeStyle: {
+      borderRadius: 5,
+    },
+  },
+  Avatar: {
+    rounded: true,
+  },
+  Icon: {
+    type: 'material',
+    size: 24,
+    color: '#56AEE9',
+  },
+  ListItem: {
+    containerStyle: {
+      borderBottomWidth: 1,
+      borderColor: '#718096',
+    },
+  },
+  Divider: {
+    style: {
+      backgroundColor: '#718096',
+      opacity: 0.3,
+    },
+  },
+  SearchBar: {
+    containerStyle: {
+      backgroundColor: 'transparent',
+      borderBottomWidth: 0,
+      borderTopWidth: 0,
+    },
+    inputContainerStyle: {
+      backgroundColor: '#f9f9f9',
+      borderRadius: 10,
+    },
+  },
+};
+
+export default theme;
