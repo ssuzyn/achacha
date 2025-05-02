@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, Button, Image, StyleSheet, Alert } from 'react-native';
+import { Image, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { config } from '../components/ui/gluestack-ui-provider';
+import { Box, Text, Button, ButtonText, Center, VStack } from '@gluestack-ui/themed';
 
 const HomeScreen = () => {
   const [image, setImage] = useState(null);
@@ -59,39 +59,31 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>홈 스크린</Text>
-      <Button
-        title="갤러리에서 이미지 선택"
-        onPress={pickImage}
-        color={config.light['--color-primary-400']}
-      />
-      {/* 선택된 이미지가 있으면 표시 */}
-      {image && <Image source={{ uri: image }} style={styles.image} />}
-    </View>
+    <Box flex={1} bg="$background" p="$5">
+      <Center>
+        <VStack space="$5" alignItems="center">
+          <Text fontSize="$3xl" fontWeight="$bold" color="$text">
+            홈 스크린
+          </Text>
+
+          <Button onPress={pickImage} bg="$primary" py="$3" px="$5" borderRadius="$md">
+            <ButtonText>갤러리에서 이미지 선택</ButtonText>
+          </Button>
+
+          {image && <Image source={{ uri: image }} style={styles.image} />}
+        </VStack>
+      </Center>
+    </Box>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    backgroundColor: config.light['--color-background'],
-  },
-  title: {
-    fontSize: parseInt(config.light['--font-size-3xl']),
-    fontWeight: config.light['--font-weight-bold'],
-    color: config.light['--color-text'],
-    marginBottom: 20,
-  },
   image: {
     width: 300,
     height: 300,
     marginTop: 20,
-    resizeMode: 'contain', // 이미지 비율 유지
-    borderRadius: parseInt(config.light['--border-radius-sm']),
+    resizeMode: 'contain',
+    borderRadius: 8,
   },
 });
 

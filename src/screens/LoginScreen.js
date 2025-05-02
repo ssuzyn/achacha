@@ -1,169 +1,89 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  ActivityIndicator,
-} from 'react-native';
+import { Image, StyleSheet, SafeAreaView } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigation } from '@react-navigation/native';
-import { config } from '../components/ui/gluestack-ui-provider';
+import {
+  Box,
+  Text,
+  Button,
+  ButtonText,
+  VStack,
+  Center,
+  Heading,
+  Spinner,
+} from '@gluestack-ui/themed';
 
-// --- 로고 이미지 경로 (실제 프로젝트 경로에 맞게 수정) ---
-const GOOGLE_LOGO_URL = '../../assets/google_logo.png'; // 파일명 수정 (log -> logo)
-const KAKAO_LOGO_URL = '../../assets/kakao-talk_logo.png'; // 파일명 수정
-// -----------------------------------------------------
+// --- 로고 이미지 경로 ---
+const LOGIN_LOGO_URL = '../../assets/login_logo.png';
+// -----------------------
 
 const LoginScreen = () => {
   const { authState, signInWithKakao, signInWithGoogle } = useAuth();
-  const navigation = useNavigation();
 
   const isLoading = authState === 'loading';
 
-  // 로그인 성공 시 메인 화면으로 이동하는 함수
-  const handleLoginSuccess = () => {
-    navigation.navigate('Main');
-  };
-
-  // 로그인 함수 래퍼
-  const handleKakaoLogin = async () => {
-    try {
-      await signInWithKakao();
-      handleLoginSuccess();
-    } catch (error) {
-      console.error('카카오 로그인 실패:', error);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithGoogle();
-      handleLoginSuccess();
-    } catch (error) {
-      console.error('구글 로그인 실패:', error);
-    }
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* 로고 영역 */}
-        <View style={styles.logoContainer}>
-          <Image source={require(GOOGLE_LOGO_URL)} style={styles.googleLogo} resizeMode="contain" />
-          <Image source={require(KAKAO_LOGO_URL)} style={styles.kakaoLogo} resizeMode="contain" />
-        </View>
+    <Box flex={1} bg="$background">
+      <SafeAreaView style={styles.flex}>
+        <Box flex={1} justifyContent="center" alignItems="center" p="$6">
+          {/* 로고 영역 */}
+          <Center mb="$8">
+            <Image source={require(LOGIN_LOGO_URL)} style={styles.loginLogo} resizeMode="contain" />
+          </Center>
 
-        {/* 텍스트 영역 */}
-        <Text style={styles.title}>소셜 계정으로 간편하게 로그인</Text>
+          {/* 텍스트 영역 */}
+          <VStack space="$2" mb="$8" alignItems="center">
+            <Heading size="xl" color="$text">
+              소셜 계정으로
+            </Heading>
+            <Heading size="xl" color="$text">
+              간편한 로그인
+            </Heading>
+          </VStack>
 
-        {/* 버튼 영역 */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.kakaoButton, isLoading && styles.buttonDisabled]}
-            onPress={handleKakaoLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#191919" />
-            ) : (
-              <Text style={[styles.buttonText, styles.kakaoButtonText]}>카카오톡 로그인</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.googleButton, isLoading && styles.buttonDisabled]}
-            onPress={handleGoogleLogin}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={[styles.buttonText, styles.googleButtonText]}>Google 로그인</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
-    </SafeAreaView>
+          {/* 버튼 영역 */}
+          <VStack space="$4" width="$full">
+            <Button
+              size="lg"
+              bg="$socialKakao"
+              borderRadius="$md"
+              onPress={signInWithKakao}
+              disabled={isLoading}
+              opacity={isLoading ? 0.6 : 1}
+            >
+              {isLoading ? (
+                <Spinner color="$socialKakaoText" />
+              ) : (
+                <ButtonText color="$socialKakaoText">카카오톡 로그인</ButtonText>
+              )}
+            </Button>
+            <Button
+              size="lg"
+              bg="$socialGoogle"
+              borderRadius="$md"
+              onPress={signInWithGoogle}
+              disabled={isLoading}
+              opacity={isLoading ? 0.6 : 1}
+            >
+              {isLoading ? (
+                <Spinner color="$socialGoogleText" />
+              ) : (
+                <ButtonText color="$socialGoogleText">Google 로그인</ButtonText>
+              )}
+            </Button>
+          </VStack>
+        </Box>
+      </SafeAreaView>
+    </Box>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  flex: {
     flex: 1,
-    backgroundColor: config.light['--color-background'],
   },
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: parseInt(config.light['--spacing-xl']),
-    paddingBottom: 40, // 하단 여백 추가
-  },
-  logoContainer: {
-    flexDirection: 'column', // 세로 배치로 변경
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40, // 텍스트와의 간격 조정 (기존 60)
-    // 이미지와 유사하게 배치하려면 flexDirection: 'column' 또는 각 로고 위치 조정 필요
-  },
-  googleLogo: {
-    // 구글 로고 스타일 추가
-    width: 140,
-    height: 140,
-    marginBottom: 0, // 아래 로고와의 간격
-    transform: [{ translateX: -80 }, { translateY: 50 }], // 왼쪽으로 80만큼 이동 아래로 50만큼 이동
-  },
-  kakaoLogo: {
-    width: 170,
-    height: 170,
-    marginBottom: 0,
-    transform: [{ translateX: 80 }], // 오른쪽으로 80만큼 이동
-  },
-  title: {
-    fontSize: parseInt(config.light['--font-size-3xl']),
-    fontWeight: config.light['--font-weight-bold'],
-    color: config.light['--color-text'],
-    textAlign: 'center',
-    marginBottom: 10, // 두 줄 사이 간격
-  },
-  buttonContainer: {
-    width: '90%', // 버튼 너비 컨테이너
-    marginTop: 60, // 텍스트와의 간격
-  },
-  button: {
-    paddingVertical: 15,
-    borderRadius: parseInt(config.light['--border-radius-md']),
-    alignItems: 'center',
-    marginBottom: 15, // 버튼 간 간격
-    flexDirection: 'row', // 아이콘과 텍스트 가로 배치 위해
-    justifyContent: 'center', // 내부 요소 중앙 정렬
-  },
-  kakaoButton: {
-    backgroundColor: config.light['--color-social-kakao'], // 카카오 표준 노란색
-  },
-  googleButton: {
-    backgroundColor: config.light['--color-social-google'], // 구글 표준 빨간색 (이미지 참고)
-    // 표준 가이드라인은 흰색 배경에 로고 사용 권장
-    // backgroundColor: '#FFFFFF',
-    // borderWidth: 1,
-    // borderColor: '#DDDDDD',
-  },
-  buttonText: {
-    fontSize: parseInt(config.light['--font-size-lg']),
-    fontWeight: config.light['--font-weight-medium'],
-    marginLeft: parseInt(config.light['--spacing-sm']), // 아이콘과 텍스트 간격 (아이콘 추가 시)
-  },
-  kakaoButtonText: {
-    color: config.light['--color-social-kakao-text'], // 카카오 텍스트 색상
-  },
-  googleButtonText: {
-    color: config.light['--color-social-google-text'], // 빨간 배경일 때 흰색 텍스트
-    // color: '#5F6368', // 흰색 배경일 때 회색 텍스트
-  },
-  buttonDisabled: {
-    opacity: 0.6,
+  loginLogo: {
+    width: 400,
+    height: 300,
   },
 });
 

@@ -1,15 +1,12 @@
 import React, { useEffect } from 'react';
 import {
-  View,
-  Text,
   StyleSheet,
-  TouchableOpacity,
-  SafeAreaView,
   Alert,
   PermissionsAndroid,
   NativeModules,
   NativeEventEmitter,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
@@ -18,7 +15,7 @@ import BleManager from 'react-native-ble-manager';
 import { useNavigation } from '@react-navigation/native';
 import PermissionItem from '../components/PermissionItem';
 import { usePermissions } from '../hooks/usePermissions';
-import { config } from '../components/ui/gluestack-ui-provider';
+import { Box, VStack, Text, Button, ButtonText, Heading, Center } from '@gluestack-ui/themed';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -76,105 +73,65 @@ const PermissionScreen = () => {
   }, [permissionsStatus, navigation]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.mainContentContainer}>
-          <View style={styles.headerContainer}>
-            <Text style={styles.headerTitle}>
-              <Text style={styles.appName}>ㅇㅊㅊ</Text> 이용을 위해
-            </Text>
-            <Text style={styles.headerTitle}>아래 권한을 허용해주세요.</Text>
-          </View>
+    <Box flex={1} bg="$background">
+      <SafeAreaView style={styles.flex}>
+        <Box flex={1} px="$6" py="$10" justifyContent="space-between">
+          <VStack flex={1} alignItems="center" justifyContent="center">
+            <Center mb="$8" w="$full">
+              <Heading color="$text" mb="$1" textAlign="center">
+                <Text color="$primary">ㅇㅊㅊ</Text> 이용을 위해
+              </Heading>
+              <Heading color="$text" textAlign="center">
+                아래 권한을 허용해주세요.
+              </Heading>
+            </Center>
 
-          <View style={styles.permissionsListContainer}>
-            <PermissionItem
-              iconName="notifications"
-              title="알림"
-              description="기프티콘 유효기간 및 위치 기반 알림을 받기 위해 알림 권한이 필요합니다."
-            />
-            <PermissionItem
-              iconName="bluetooth"
-              title="블루투스"
-              description="기프티콘 공유 및 위치 기반 알림 기능을 위해 블루투스 권한이 필요합니다."
-            />
-            <PermissionItem
-              iconName="location-pin"
-              title="위치"
-              description="근처 매장 정보와 설정 변경 내 지도를 제공하기 위해 위치 권한이 필요합니다."
-            />
-            <PermissionItem
-              iconName="photo-library"
-              title="갤러리"
-              description="기프티콘 이미지 업로드를 위하여 갤러리 접근 권한이 필요합니다."
-            />
-          </View>
-        </View>
+            <VStack space="$4" w="$full">
+              <PermissionItem
+                iconName="notifications"
+                title="알림"
+                description="기프티콘 유효기간 및 위치 기반 알림을 받기 위해 알림 권한이 필요합니다."
+              />
+              <PermissionItem
+                iconName="bluetooth"
+                title="블루투스"
+                description="기프티콘 공유 및 위치 기반 알림 기능을 위해 블루투스 권한이 필요합니다."
+              />
+              <PermissionItem
+                iconName="location-pin"
+                title="위치"
+                description="근처 매장 정보와 설정 변경 내 지도를 제공하기 위해 위치 권한이 필요합니다."
+              />
+              <PermissionItem
+                iconName="photo-library"
+                title="갤러리"
+                description="기프티콘 이미지 업로드를 위하여 갤러리 접근 권한이 필요합니다."
+              />
+            </VStack>
+          </VStack>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handlePressNext}
-          disabled={permissionsStatus === 'checking'}
-        >
-          <Text style={styles.buttonText}>
-            {permissionsStatus === 'checking' ? '권한 확인 중...' : '다음'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <Button
+            bg="$buttonPrimary"
+            py="$4"
+            borderRadius="$md"
+            w="90%"
+            alignSelf="center"
+            onPress={handlePressNext}
+            isDisabled={permissionsStatus === 'checking'}
+          >
+            <ButtonText color="$buttonText">
+              {permissionsStatus === 'checking' ? '권한 확인 중...' : '다음'}
+            </ButtonText>
+          </Button>
+        </Box>
+      </SafeAreaView>
+    </Box>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  flex: {
     flex: 1,
-    backgroundColor: config.light['--color-background'],
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: parseInt(config.light['--spacing-xl']),
-    paddingTop: 40,
-    paddingBottom: 30,
-    justifyContent: 'space-between',
-    backgroundColor: config.light['--color-background'],
-  },
-  mainContentContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: parseInt(config.light['--spacing-2xl']),
-    width: '100%',
-  },
-  headerTitle: {
-    fontSize: parseInt(config.light['--font-size-3xl']),
-    fontWeight: config.light['--font-weight-bold'],
-    color: config.light['--color-text'],
-    textAlign: 'center',
-  },
-  appName: {
-    color: config.light['--color-primary-400'],
-    fontSize: 28,
-    fontWeight: config.light['--font-weight-bold'],
-  },
-  permissionsListContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  button: {
-    backgroundColor: config.light['--color-button-primary'],
-    paddingVertical: 15,
-    borderRadius: parseInt(config.light['--border-radius-md']),
-    alignItems: 'center',
-    width: '90%',
-    alignSelf: 'center',
-  },
-  buttonText: {
-    fontSize: parseInt(config.light['--font-size-lg']),
-    fontWeight: config.light['--font-weight-medium'],
-    color: config.light['--color-button-text'],
   },
 });
 

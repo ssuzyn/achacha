@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Image, StyleSheet, StatusBar } from 'react-native';
+import { Image, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions } from '@react-navigation/native';
-import { config } from '../components/ui/gluestack-ui-provider';
+import { Box, Center } from '@gluestack-ui/themed';
 // import { checkIsFirstLaunch } from '../utils/appStorage'; // Temporarily disable first launch check
 
 const SPLASH_DURATION = 2000;
@@ -73,33 +73,28 @@ const SplashScreenComponent = ({ navigation }) => {
 
   // Always show logo (no loading indicator needed as check is bypassed)
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={config.light['--color-background']} />
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('../../assets/splash-icon.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-    </SafeAreaView>
+    <Box flex={1} bg="$background">
+      <StatusBar barStyle="dark-content" backgroundColor="white" />
+      <SafeAreaView style={styles.flex}>
+        <Center flex={1}>
+          <Image
+            source={require('../../assets/splash-icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </Center>
+      </SafeAreaView>
+    </Box>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  flex: {
     flex: 1,
-    backgroundColor: config.light['--color-background'],
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   logo: {
-    width: parseInt(config.light['--spacing-2xl']) * 6,
-    height: parseInt(config.light['--spacing-2xl']) * 6,
+    width: 192,
+    height: 192,
   },
 });
 
