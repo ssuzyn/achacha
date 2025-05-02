@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, Image, Platform, Dimensions, Alert } from 'react-native';
+import { StyleSheet, Image, Platform, Dimensions, Alert, View } from 'react-native';
 import { useTabBar } from '../../context/TabBarContext';
-import { Icon, useTheme, View } from 'react-native-elements';
+import { Icon, useTheme } from 'react-native-elements';
 import { Badge, Button } from '../ui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

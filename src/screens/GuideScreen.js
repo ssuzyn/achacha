@@ -1,6 +1,5 @@
 import React from 'react';
-import { Image, Dimensions, StatusBar, StyleSheet } from 'react-native';
-import { View, Text, SafeAreaView } from 'react-native-elements';
+import { Image, Dimensions, StatusBar, StyleSheet, View, Text, SafeAreaView } from 'react-native';
 import { Button } from '../components/ui';
 import { useGuideSteps } from '../hooks/useGuideSteps';
 import { useTheme } from 'react-native-elements';

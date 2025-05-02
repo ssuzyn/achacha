@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StatusBar, StyleSheet } from 'react-native';
-import { View, SafeAreaView } from 'react-native-elements';
+import { Image, StatusBar, StyleSheet, View, SafeAreaView } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { useTheme } from 'react-native-elements';
 // import { checkIsFirstLaunch } from '../utils/appStorage'; // Temporarily disable first launch check

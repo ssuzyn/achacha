@@ -1,6 +1,5 @@
 import React from 'react';
-import { Image, ActivityIndicator, StyleSheet } from 'react-native';
-import { View, Text, SafeAreaView } from 'react-native-elements';
+import { Image, ActivityIndicator, StyleSheet, View, Text, SafeAreaView } from 'react-native';
 import { Button } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';

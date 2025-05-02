@@ -1,6 +1,13 @@
 import React, { useEffect } from 'react';
-import { NativeModules, NativeEventEmitter, Image, StyleSheet } from 'react-native';
-import { View, Text, SafeAreaView } from 'react-native-elements';
+import {
+  NativeModules,
+  NativeEventEmitter,
+  Image,
+  StyleSheet,
+  View,
+  Text,
+  SafeAreaView,
+} from 'react-native';
 import { Button } from '../components/ui';
 // import * as Notifications from 'expo-notifications';
 // import * as Location from 'expo-location';

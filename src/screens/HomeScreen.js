@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Image, Alert, StyleSheet, ScrollView } from 'react-native';
-import { View, Text } from 'react-native-elements';
+import { Image, Alert, StyleSheet, ScrollView, View, Text } from 'react-native';
 import { Button } from '../components/ui';
 import * as ImagePicker from 'expo-image-picker';
 

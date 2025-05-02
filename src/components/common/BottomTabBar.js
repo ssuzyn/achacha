@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, Platform, Dimensions, TouchableOpacity } from 'react-native';
+import { StyleSheet, Platform, Dimensions, TouchableOpacity, View, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
-import { Icon, useTheme, View, Text } from 'react-native-elements';
+import { Icon, useTheme } from 'react-native-elements';
 import { Button } from '../ui';
 
 // 임포트할 스크린들

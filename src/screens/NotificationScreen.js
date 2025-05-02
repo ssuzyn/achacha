@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, FlatList, StatusBar } from 'react-native';
-import { Icon, useTheme, View, Text } from 'react-native-elements';
+import { StyleSheet, FlatList, StatusBar, View, Text } from 'react-native';
+import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
