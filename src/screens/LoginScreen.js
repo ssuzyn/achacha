@@ -12,7 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';
 
 // --- 로고 이미지 경로 ---
-const LOGIN_LOGO_URL = '../../assets/login_logo.png';
+const LOGIN_LOGO_URL = 'src/assets/images/login_logo.png';
 // -----------------------
 
 const LoginScreen = () => {

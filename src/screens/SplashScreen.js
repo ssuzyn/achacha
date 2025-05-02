@@ -79,7 +79,7 @@ const SplashScreenComponent = ({ navigation }) => {
         <View style={styles.centerContainer}>
           <View style={styles.imageContainer}>
             <Image
-              source={require('../../assets/images/splash-icon.png')}
+              source={require('src/assets/images/splash-icon.png')}
               style={styles.image}
               resizeMode="contain"
             />

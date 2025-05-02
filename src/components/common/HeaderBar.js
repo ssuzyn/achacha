@@ -51,7 +51,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
         {/* 로고 영역 */}
         <View style={styles.logoContainer}>
           <Image
-            source={require('../../../assets/images/splash-icon.png')}
+            source={require('src/assets/images/splash-icon.png')}
             style={styles.logo}
             resizeMode="contain"
           />
