@@ -7,6 +7,8 @@ import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBarProvider } from './src/context/TabBarContext';
 import { HeaderBarProvider } from './src/context/HeaderBarContext';
+import { ThemeProvider } from 'react-native-elements';
+import theme from './src/theme/theme';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -24,18 +26,20 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaProvider>
-      <View style={styles.container} onLayout={onLayoutRootView}>
-        <HeaderBarProvider>
-          <TabBarProvider>
-            <NavigationContainer>
-              <AppNavigator />
-              <StatusBar style="auto" />
-            </NavigationContainer>
-          </TabBarProvider>
-        </HeaderBarProvider>
-      </View>
-    </SafeAreaProvider>
+    <ThemeProvider theme={theme}>
+      <SafeAreaProvider>
+        <View style={styles.container} onLayout={onLayoutRootView}>
+          <HeaderBarProvider>
+            <TabBarProvider>
+              <NavigationContainer>
+                <AppNavigator />
+                <StatusBar style="auto" />
+              </NavigationContainer>
+            </TabBarProvider>
+          </HeaderBarProvider>
+        </View>
+      </SafeAreaProvider>
+    </ThemeProvider>
   );
 }
 
