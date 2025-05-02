@@ -9,7 +9,7 @@ pipeline {
                 // GitLab 저장소에서 'be' 브랜치 코드 가져오기
                 echo 'Cloning the repository...'
                 git branch: 'be',
-                    credentialsId: 'GITLAB_API_TOKEN',
+                    credentialsId: 'GITLAB_PAT',
                     url: 'https://lab.ssafy.com/s12-final/S12P31D205.git'
             }
         }
