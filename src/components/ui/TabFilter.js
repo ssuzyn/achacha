@@ -31,7 +31,7 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
               styles.tab,
               {
                 borderColor: isSelected ? colors.primary : colors.grey2,
-                borderWidth: 2,
+                borderWidth: theme.Chip.buttonStyle.borderWidth,
               },
             ]}
             onPress={() => handleTabPress(tab.id)}
@@ -43,9 +43,7 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
                   styles.tabText,
                   theme.Chip.titleStyle,
                   {
-                    fontSize: 15,
                     color: isSelected ? colors.black : colors.grey3,
-                    marginTop: -2,
                   },
                 ]}
               >
