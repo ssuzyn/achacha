@@ -3,10 +3,12 @@ pipeline {
     tools {
         jdk "JDK17"
     }
+    environment {
+        DOCKER_IMAGE = 'ssuzyn/achacha-backend' // <- Docker 이미지 이름 변수
+    }
     stages {
         stage('Clone Repository') {
             steps {
-                // GitLab 저장소에서 'be' 브랜치 코드 가져오기
                 echo 'Cloning the repository...'
                 git branch: 'be',
                     credentialsId: 'GITLAB_PAT',
@@ -16,9 +18,9 @@ pipeline {
 
         stage('Build') {
             steps {
-                dir('backend/achacha') {  // 백엔드 코드가 있는 디렉토리로 이동
-                    sh 'chmod +x gradlew'  // Gradle 래퍼에 실행 권한 부여
-                    sh './gradlew clean build -x test'  // 테스트 제외하고 빌드
+                dir('backend/achacha') {
+                    sh 'chmod +x gradlew'
+                    sh './gradlew clean build -x test'
                 }
             }
         }
@@ -27,19 +29,18 @@ pipeline {
             steps {
                 dir('backend/achacha') {
                     script {
-                        echo "DOCKER_USERNAME: ${env.DOCKER_USERNAME}"
+                        echo "DOCKER_IMAGE: ${env.DOCKER_IMAGE}"
                         echo "BUILD_NUMBER: ${env.BUILD_NUMBER}"
-                        // Docker 이미지 빌드
-                        def dockerImage = docker.build("${env.DOCKER_USERNAME}/achacha-backend:${BUILD_NUMBER}")
 
-                        // Docker Hub 로그인 및 푸시
-                        withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                            docker.withRegistry('', 'docker.io') {
-                                dockerImage.push()
-                                dockerImage.push('latest')
-                            }
+                        // Docker 이미지 빌드 및 태그
+                        def dockerImage = docker.build("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+
+                        // Docker Hub에 Credentials ID를 사용하여 푸시
+                        docker.withRegistry('', 'docker-hub') {
+                            dockerImage.push()
+                            dockerImage.push('latest')
                         }
-                        env.IMAGE_TAG = "${env.DOCKER_USERNAME}/achacha-backend:${BUILD_NUMBER}"
+                        env.IMAGE_TAG = "${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}"
                     }
                 }
             }
@@ -47,41 +48,30 @@ pipeline {
 
         stage('Deploy to Server') {
             steps {
-                // Publish Over SSH 플러그인을 사용하여 원격 서버에 배포 명령 실행
                 sshPublisher(
                     publishers: [
                         sshPublisherDesc(
-                            configName: 'ec2-server', // Jenkins 시스템 설정에서 정의한 SSH 서버 이름
+                            configName: 'ec2-server',
                             transfers: [
                                 sshTransfer(
-                                    sourceFiles: '', // 전송할 파일이 없음
-                                    remoteDirectory: '', // 원격 디렉토리 지정(필요시 변경)
+                                    sourceFiles: '',
+                                    remoteDirectory: '',
                                     execCommand: '''
-                                        # Docker 이미지 풀
-                                        docker pull ssuzyn/achacha-backend:latest
-
-                                        # 기존 컨테이너 중지 및 삭제 (없으면 무시)
+                                        docker pull ${env.DOCKER_IMAGE}:latest
                                         docker stop achacha-backend || true
                                         docker rm achacha-backend || true
-
-                                        # 새 컨테이너 실행
-                                        docker run -d --name achacha-backend \\
-                                            -p 8080:8080 \\
-                                            --restart unless-stopped \\
-                                            ssuzyn/achacha-backend:latest
-
-                                        # 사용하지 않는 이미지 정리
+                                        docker run -d --name achacha-backend -p 8080:8080 --restart unless-stopped ${env.DOCKER_IMAGE}:latest
                                         docker system prune -f
                                     ''',
-                                    execTimeout: 120000, // 명령 실행 타임아웃 (밀리초)
-                                    usePty: true, // PTY 사용
-                                    noDefaultExcludes: false, // 기본 제외 파일 사용
-                                    flatten: false // 디렉토리 구조 평면화 안함
+                                    execTimeout: 120000,
+                                    usePty: true,
+                                    noDefaultExcludes: false,
+                                    flatten: false
                                 )
                             ],
                             usePromotionTimestamp: false,
                             useWorkspaceInPromotion: false,
-                            verbose: true // 자세한 로그 출력
+                            verbose: true
                         )
                     ]
                 )
@@ -100,4 +90,96 @@ pipeline {
             echo '[BE] 빌드 실패! ❌'
         }
     }
-}
+}pipeline {
+     agent any
+     tools {
+         jdk "JDK17"
+     }
+     environment {
+         DOCKER_IMAGE = 'ssuzyn/achacha-backend' // <- Docker 이미지 이름 변수
+     }
+     stages {
+         stage('Clone Repository') {
+             steps {
+                 echo 'Cloning the repository...'
+                 git branch: 'be',
+                     credentialsId: 'GITLAB_PAT',
+                     url: 'https://lab.ssafy.com/s12-final/S12P31D205.git'
+             }
+         }
+
+         stage('Build') {
+             steps {
+                 dir('backend/achacha') {
+                     sh 'chmod +x gradlew'
+                     sh './gradlew clean build -x test'
+                 }
+             }
+         }
+
+         stage('Docker Build & Push') {
+             steps {
+                 dir('backend/achacha') {
+                     script {
+                         echo "DOCKER_IMAGE: ${env.DOCKER_IMAGE}"
+                         echo "BUILD_NUMBER: ${env.BUILD_NUMBER}"
+
+                         // Docker 이미지 빌드 및 태그
+                         def dockerImage = docker.build("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
+
+                         // Docker Hub에 Credentials ID를 사용하여 푸시
+                         docker.withRegistry('', 'DOCKER_HUB') {
+                             dockerImage.push()
+                             dockerImage.push('latest')
+                         }
+                         env.IMAGE_TAG = "${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}"
+                     }
+                 }
+             }
+         }
+
+         stage('Deploy to Server') {
+             steps {
+                 sshPublisher(
+                     publishers: [
+                         sshPublisherDesc(
+                             configName: 'ec2-server',
+                             transfers: [
+                                 sshTransfer(
+                                     sourceFiles: '',
+                                     remoteDirectory: '',
+                                     execCommand: '''
+                                         docker pull ${env.DOCKER_IMAGE}:latest
+                                         docker stop achacha-backend || true
+                                         docker rm achacha-backend || true
+                                         docker run -d --name achacha-backend -p 8080:8080 --restart unless-stopped ${env.DOCKER_IMAGE}:latest
+                                         docker system prune -f
+                                     ''',
+                                     execTimeout: 120000,
+                                     usePty: true,
+                                     noDefaultExcludes: false,
+                                     flatten: false
+                                 )
+                             ],
+                             usePromotionTimestamp: false,
+                             useWorkspaceInPromotion: false,
+                             verbose: true
+                         )
+                     ]
+                 )
+             }
+         }
+     }
+
+     post {
+         always {
+             cleanWs()
+         }
+         success {
+             echo '[BE] 빌드 성공! ✅'
+         }
+         failure {
+             echo '[BE] 빌드 실패! ❌'
+         }
+     }
+ }
