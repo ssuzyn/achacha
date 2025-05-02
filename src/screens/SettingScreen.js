@@ -12,7 +12,7 @@ const SettingScreen = () => {
   const [expiryNotification, setExpiryNotification] = useState(true);
   const [giftSharingNotification, setGiftSharingNotification] = useState(true);
   const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
-  const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(7);
+  const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(1);
 
   // 슬라이더 마커 값
   const markers = [0, 1, 2, 3, 7, 30, 60, 90];
@@ -31,7 +31,7 @@ const SettingScreen = () => {
       {/* 회원정보 섹션 */}
       <View style={[styles.section, styles.firstSection]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.black }]}>회원정보</Text>
-        <View style={[styles.infoItem, { borderBottomColor: theme.colors.grey5 }]}>
+        <View style={styles.infoItem}>
           <Text style={[styles.infoLabel, { color: theme.colors.grey1 }]}>연결된 소셜 계정</Text>
           <Text style={[styles.infoValue, { color: theme.colors.black }]}>qwer@kakao.com</Text>
         </View>
@@ -42,7 +42,7 @@ const SettingScreen = () => {
         <Text style={[styles.sectionTitle, { color: theme.colors.black }]}>알림</Text>
 
         {/* 유효기간 만료 알림 */}
-        <View style={[styles.notificationItem, { borderBottomColor: theme.colors.grey5 }]}>
+        <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
               유효기간 만료 알림
@@ -55,64 +55,31 @@ const SettingScreen = () => {
         </View>
 
         {/* 유효기간 알림 주기 설정 */}
-        <View style={[styles.sliderContainer, { borderBottomColor: theme.colors.grey5 }]}>
-          <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
-            유효기간 알림 주기 설정
-          </Text>
-          <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-            만료 알림은 오전 9시에 전송됩니다.
-          </Text>
+        <View style={styles.sliderContainer}>
+          <View style={styles.notificationInfo}>
+            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+              유효기간 알림 주기 설정
+            </Text>
+            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+              만료 알림은 오전 9시에 전송됩니다.
+            </Text>
+          </View>
+
           <View style={styles.customSliderContainer}>
             <Slider
               value={expiryNotificationInterval}
-              minimumValue={0}
-              maximumValue={7}
-              step={1}
-              onValueChange={value => setExpiryNotificationInterval(markers[Math.round(value)])}
+              values={markers}
+              onValueChange={value => setExpiryNotificationInterval(value)}
+              activeColor="#0F84FE"
+              inactiveColor="#D8D8D8"
               showValue={false}
-              showMinMax={false}
-              renderCustomMarkers={() => (
-                <View style={styles.markersContainer}>
-                  {markers.map((marker, index) => {
-                    // 미리 스타일 계산
-                    const markerHeight = index === 4 ? 12 : 8;
-                    const markerColor = index === 4 ? theme.colors.error : theme.colors.grey4;
-
-                    return (
-                      <View key={index} style={styles.markerItem}>
-                        <View
-                          style={[
-                            styles.marker,
-                            {
-                              backgroundColor: markerColor,
-                              height: markerHeight,
-                            },
-                          ]}
-                        />
-                        <Text
-                          style={[
-                            styles.markerLabel,
-                            {
-                              color:
-                                expiryNotificationInterval === marker
-                                  ? theme.colors.primary
-                                  : theme.colors.grey3,
-                            },
-                          ]}
-                        >
-                          {marker}
-                        </Text>
-                      </View>
-                    );
-                  })}
-                </View>
-              )}
+              containerStyle={styles.sliderStyle}
             />
           </View>
         </View>
 
         {/* 선물 나누기 알림 */}
-        <View style={[styles.notificationItem, { borderBottomColor: theme.colors.grey5 }]}>
+        <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
               선물 나누기 알림
@@ -125,7 +92,7 @@ const SettingScreen = () => {
         </View>
 
         {/* 근접 매장 알림 */}
-        <View style={[styles.notificationItem, { borderBottomColor: theme.colors.grey5 }]}>
+        <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
               근접 매장 알림
@@ -188,7 +155,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
+    marginBottom: 8,
   },
   infoLabel: {
     fontSize: 16,
@@ -201,7 +168,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    borderBottomWidth: 1,
+    marginBottom: 8,
   },
   notificationInfo: {
     flex: 1,
@@ -215,29 +182,17 @@ const styles = StyleSheet.create({
   },
   sliderContainer: {
     paddingVertical: 12,
-    borderBottomWidth: 1,
+    marginBottom: 8,
   },
   customSliderContainer: {
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  markersContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginTop: -8,
-  },
-  markerItem: {
-    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+    width: '100%',
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  marker: {
-    width: 2,
-    borderRadius: 1,
-  },
-  markerLabel: {
-    marginTop: 4,
-    fontSize: 12,
+  sliderStyle: {
+    marginLeft: -35,
   },
   buttonContainer: {
     marginVertical: 24,
