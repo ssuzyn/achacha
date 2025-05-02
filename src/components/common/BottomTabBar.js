@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, View, Platform, Dimensions, Text } from 'react-native';
+import { StyleSheet, View, Platform, Dimensions, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
@@ -161,6 +161,17 @@ const BottomTabBar = () => {
     );
   };
 
+  // 커스텀 탭바 버튼 렌더링 함수
+  const renderTabBarButton = props => {
+    return (
+      <TouchableOpacity
+        {...props}
+        activeOpacity={1}
+        style={[props.style, { backgroundColor: 'transparent' }]}
+      />
+    );
+  };
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -180,6 +191,7 @@ const BottomTabBar = () => {
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarItemStyle: styles.tabBarItem,
+        tabBarButton: renderTabBarButton,
         tabBarPressColor: 'transparent',
         tabBarPressOpacity: 1,
         tabBarActiveBackgroundColor: 'transparent',
