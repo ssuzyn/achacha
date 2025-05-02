@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, StatusBar, View } from 'react-native';
+import { Image, StyleSheet, StatusBar, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CommonActions } from '@react-navigation/native';
 // import { checkIsFirstLaunch } from '../utils/appStorage'; // Temporarily disable first launch check
@@ -76,11 +76,13 @@ const SplashScreenComponent = ({ navigation }) => {
       <StatusBar barStyle="dark-content" backgroundColor="white" />
       <SafeAreaView style={styles.flex}>
         <View style={styles.centerContainer}>
-          <Image
-            source={require('../../assets/splash-icon.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../assets/splash-icon.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -97,12 +99,18 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  logoContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logo: {
-    width: 192,
-    height: 192,
+    width: 200,
+    height: 100,
   },
 });
 
