@@ -2,13 +2,13 @@ import React from 'react';
 import { StyleSheet, Image, Platform, Dimensions, Alert, View } from 'react-native';
 import { useTabBar } from '../../context/TabBarContext';
 import { Icon, useTheme } from 'react-native-elements';
-import { Badge, Button } from '../ui';
+import { Badge } from '../ui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // 화면 크기 계산
 const { width } = Dimensions.get('window');
-const ICON_SIZE = width > 380 ? 26 : 24;
+const ICON_SIZE = width > 380 ? 28 : 26;
 
 // 헤더 컴포넌트
 const HeaderBar = ({ notificationCount = 3 }) => {
@@ -52,33 +52,23 @@ const HeaderBar = ({ notificationCount = 3 }) => {
         {/* 우측 아이콘 버튼 영역 */}
         <View style={styles.iconContainer}>
           {/* 추가 버튼 */}
-          <Button
-            variant="ghost"
-            style={styles.iconButton}
+          <Icon
+            name="add-circle-outline"
+            size={ICON_SIZE}
+            color={theme.colors.primary}
+            type="material"
+            containerStyle={styles.addIcon}
             onPress={handleAddPress}
-            leftIcon={
-              <Icon
-                name="add-circle-outline"
-                size={ICON_SIZE}
-                color={theme.colors.primary}
-                type="material"
-              />
-            }
           />
 
           {/* 알림 버튼 */}
-          <Button
-            variant="ghost"
-            style={styles.iconButton}
+          <Icon
+            name="notifications-none"
+            size={ICON_SIZE}
+            color={theme.colors.primary}
+            type="material"
+            containerStyle={styles.notificationIcon}
             onPress={handleNotificationPress}
-            leftIcon={
-              <Icon
-                name="notifications-none"
-                size={ICON_SIZE}
-                color={theme.colors.primary}
-                type="material"
-              />
-            }
           >
             {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
             {notificationCount > 0 && (
@@ -91,7 +81,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
                 />
               </View>
             )}
-          </Button>
+          </Icon>
         </View>
       </View>
     </View>
@@ -104,7 +94,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: 20,
     borderBottomWidth: 0,
     ...Platform.select({
       ios: {
@@ -121,6 +111,7 @@ const styles = StyleSheet.create({
   logoContainer: {
     height: 35,
     justifyContent: 'center',
+    marginLeft: 8,
   },
   logo: {
     width: 90,
@@ -129,17 +120,25 @@ const styles = StyleSheet.create({
   iconContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginRight: 10,
+    paddingRight: 0,
   },
-  iconButton: {
-    padding: 8,
-    marginLeft: 8,
-    position: 'relative',
+  addIcon: {
+    marginRight: 12,
+    padding: 0,
     backgroundColor: 'transparent',
+  },
+  notificationIcon: {
+    marginLeft: 0,
+    padding: 0,
+    backgroundColor: 'transparent',
+    position: 'relative',
   },
   badgeContainer: {
     position: 'absolute',
-    top: 3,
-    right: 3,
+    top: 0,
+    right: 0,
   },
   badgeStyle: {
     borderRadius: 10,
