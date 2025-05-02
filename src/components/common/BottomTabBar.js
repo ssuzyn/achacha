@@ -115,34 +115,46 @@ const withGluestack = Component => {
 };
 
 // 탭 스크린 래퍼 컴포넌트 - 탭바 표시 여부를 조절하는 로직 포함
-const TabScreenWrapper = ({ component: Component, name }) => {
-  const { hideTabBar, showTabBar } = useTabBar();
-  const navigation = useNavigation();
+const createWrappedComponent = (Component, screenName) => {
+  // 각 화면에 대한 래퍼 컴포넌트를 미리 생성
+  const WrappedScreenComponent = props => {
+    const { hideTabBar, showTabBar } = useTabBar();
+    const navigation = useNavigation();
 
-  // GluestackUIProvider로 감싼 컴포넌트
-  const WrappedComponent = withGluestack(Component);
+    // GluestackUIProvider로 감싼 컴포넌트
+    const WrappedComponent = withGluestack(Component);
 
-  // 현재 화면의 포커스 상태 변경 감지하여 탭바 표시 여부 설정
-  useEffect(() => {
-    const unsubscribeFocus = navigation.addListener('focus', () => {
-      // 특정 화면에서 탭바 숨기기
-      if (HIDDEN_TAB_BAR_SCREENS.includes(name)) {
-        hideTabBar();
-      } else {
-        showTabBar();
-      }
-    });
+    // 현재 화면의 포커스 상태 변경 감지하여 탭바 표시 여부 설정
+    useEffect(() => {
+      const unsubscribeFocus = navigation.addListener('focus', () => {
+        // 특정 화면에서 탭바 숨기기
+        if (HIDDEN_TAB_BAR_SCREENS.includes(screenName)) {
+          hideTabBar();
+        } else {
+          showTabBar();
+        }
+      });
 
-    // 화면에서 나갈 때 리스너 해제
-    return unsubscribeFocus;
-  }, [navigation, hideTabBar, showTabBar, name]);
+      // 화면에서 나갈 때 리스너 해제
+      return unsubscribeFocus;
+    }, [navigation, hideTabBar, showTabBar]);
 
-  return (
-    <ScreenWithHeader>
-      <WrappedComponent />
-    </ScreenWithHeader>
-  );
+    return (
+      <ScreenWithHeader>
+        <WrappedComponent {...props} />
+      </ScreenWithHeader>
+    );
+  };
+
+  return WrappedScreenComponent;
 };
+
+// 각 화면에 대한 래퍼 컴포넌트를 미리 생성
+const WrappedHomeScreen = createWrappedComponent(HomeScreen, 'Home');
+const WrappedGifticonManageScreen = createWrappedComponent(GifticonManageScreen, 'GifticonManage');
+const WrappedMapScreen = createWrappedComponent(MapScreen, 'Map');
+const WrappedShareboxScreen = createWrappedComponent(ShareboxScreen, 'Sharebox');
+const WrappedSettingsScreen = createWrappedComponent(SettingsScreen, 'Settings');
 
 const BottomTabBar = () => {
   const { isTabBarVisible } = useTabBar();
@@ -208,41 +220,35 @@ const BottomTabBar = () => {
     >
       <Tab.Screen
         name="TabHome"
-        component={props => <TabScreenWrapper component={HomeScreen} name="Home" {...props} />}
+        component={WrappedHomeScreen}
         options={{
           tabBarLabel: '홈',
         }}
       />
       <Tab.Screen
         name="TabGifticonManage"
-        component={props => (
-          <TabScreenWrapper component={GifticonManageScreen} name="GifticonManage" {...props} />
-        )}
+        component={WrappedGifticonManageScreen}
         options={{
           tabBarLabel: '기프티콘 관리',
         }}
       />
       <Tab.Screen
         name="TabMap"
-        component={props => <TabScreenWrapper component={MapScreen} name="Map" {...props} />}
+        component={WrappedMapScreen}
         options={{
           tabBarLabel: 'MAP',
         }}
       />
       <Tab.Screen
         name="TabSharebox"
-        component={props => (
-          <TabScreenWrapper component={ShareboxScreen} name="Sharebox" {...props} />
-        )}
+        component={WrappedShareboxScreen}
         options={{
           tabBarLabel: '쉐어박스',
         }}
       />
       <Tab.Screen
         name="TabSettings"
-        component={props => (
-          <TabScreenWrapper component={SettingsScreen} name="Settings" {...props} />
-        )}
+        component={WrappedSettingsScreen}
         options={{
           tabBarLabel: '설정',
         }}
