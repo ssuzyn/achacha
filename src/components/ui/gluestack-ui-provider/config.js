@@ -207,12 +207,14 @@ const generateDarkVars = () => {
   return darkVars;
 };
 
-export const config = {
-  light: vars(generateLightVars()),
-  dark: vars(generateDarkVars()),
+const config = {
+  light: generateLightVars(),
+  dark: generateDarkVars(),
   // tailwind와 통합하기 위한 참조 내보내기
   colors,
   darkColors,
   typography,
   layout,
 };
+
+export { config };

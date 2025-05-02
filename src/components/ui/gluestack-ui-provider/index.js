@@ -4,7 +4,7 @@ import { config } from './config';
 
 export function GluestackUIProviderWrapper({ children, colorMode = 'light' }) {
   return (
-    <GluestackUIProvider config={config.theme} colorMode={colorMode}>
+    <GluestackUIProvider config={config} colorMode={colorMode}>
       {children}
     </GluestackUIProvider>
   );
