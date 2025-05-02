@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-elements';
 import Slider from '../components/ui/Slider';
 import { Button } from '../components/ui';
+import Switch from '../components/ui/Switch';
 
 const SettingScreen = () => {
   const { theme } = useTheme();
 
   // 상태 관리
-  const [pushNotification, setPushNotification] = useState(true);
   const [expiryNotification, setExpiryNotification] = useState(true);
   const [giftSharingNotification, setGiftSharingNotification] = useState(true);
   const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
@@ -40,23 +40,6 @@ const SettingScreen = () => {
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.black }]}>알림</Text>
 
-        {/* 푸시 알림 */}
-        <View style={[styles.notificationItem, { borderBottomColor: theme.colors.grey5 }]}>
-          <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>푸시 알림</Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              해제 시 알림이 전체 중단됩니다.
-            </Text>
-          </View>
-          <Switch
-            value={pushNotification}
-            onValueChange={setPushNotification}
-            trackColor={{ false: theme.colors.grey5, true: theme.colors.background }}
-            thumbColor={pushNotification ? theme.colors.primary : theme.colors.white}
-            ios_backgroundColor={theme.colors.grey5}
-          />
-        </View>
-
         {/* 유효기간 만료 알림 */}
         <View style={[styles.notificationItem, { borderBottomColor: theme.colors.grey5 }]}>
           <View style={styles.notificationInfo}>
@@ -80,6 +63,9 @@ const SettingScreen = () => {
         <View style={[styles.sliderContainer, { borderBottomColor: theme.colors.grey5 }]}>
           <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
             유효기간 알림 주기 설정
+          </Text>
+          <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+            만료 알림은 오전 9시에 전송됩니다.
           </Text>
           <View style={styles.customSliderContainer}>
             <Slider
