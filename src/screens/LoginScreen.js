@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from 'react-native-elements';
 
 // --- 로고 이미지 경로 ---
 const LOGIN_LOGO_URL = '../../assets/login_logo.png';
@@ -16,11 +17,12 @@ const LOGIN_LOGO_URL = '../../assets/login_logo.png';
 
 const LoginScreen = () => {
   const { authState, signInWithKakao, signInWithGoogle } = useAuth();
+  const { theme } = useTheme();
 
   const isLoading = authState === 'loading';
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           {/* 로고 영역 */}
@@ -30,33 +32,45 @@ const LoginScreen = () => {
 
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
-            <Text style={styles.title}>소셜 계정으로</Text>
-            <Text style={styles.title}>간편한 로그인</Text>
+            <Text style={[styles.title, { color: theme.colors.black }]}>소셜 계정으로</Text>
+            <Text style={[styles.title, { color: theme.colors.black }]}>간편한 로그인</Text>
           </View>
 
           {/* 버튼 영역 */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[styles.kakaoButton, isLoading && styles.disabledButton]}
+              style={[
+                styles.kakaoButton,
+                { backgroundColor: theme.colors.loginYellow },
+                isLoading && styles.disabledButton,
+              ]}
               onPress={signInWithKakao}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#462000" />
+                <ActivityIndicator color={theme.colors.textBrown} />
               ) : (
-                <Text style={styles.kakaoButtonText}>카카오톡 로그인</Text>
+                <Text style={[styles.kakaoButtonText, { color: theme.colors.textBrown }]}>
+                  카카오톡 로그인
+                </Text>
               )}
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.googleButton, isLoading && styles.disabledButton]}
+              style={[
+                styles.googleButton,
+                { backgroundColor: theme.colors.loginRed },
+                isLoading && styles.disabledButton,
+              ]}
               onPress={signInWithGoogle}
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={theme.colors.white} />
               ) : (
-                <Text style={styles.googleButtonText}>Google 로그인</Text>
+                <Text style={[styles.googleButtonText, { color: theme.colors.white }]}>
+                  Google 로그인
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -69,7 +83,6 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   safeArea: {
     flex: 1,
@@ -95,7 +108,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000000',
     textAlign: 'center',
   },
   buttonContainer: {
@@ -103,7 +115,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   kakaoButton: {
-    backgroundColor: '#FCE642',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -111,7 +122,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   googleButton: {
-    backgroundColor: '#EF4040',
     padding: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -120,12 +130,10 @@ const styles = StyleSheet.create({
   kakaoButtonText: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: '#462000',
   },
   googleButtonText: {
     fontWeight: 'bold',
     fontSize: 16,
-    color: 'white',
   },
   disabledButton: {
     opacity: 0.6,

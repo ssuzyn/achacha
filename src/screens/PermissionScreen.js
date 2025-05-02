@@ -1,9 +1,7 @@
 import React, { useEffect } from 'react';
 import {
-  PermissionsAndroid,
   NativeModules,
   NativeEventEmitter,
-  Platform,
   Image,
   View,
   Text,
@@ -11,29 +9,22 @@ import {
   SafeAreaView,
   StyleSheet,
 } from 'react-native';
-import * as Notifications from 'expo-notifications';
-import * as Location from 'expo-location';
-import * as ImagePicker from 'expo-image-picker';
+// import * as Notifications from 'expo-notifications';
+// import * as Location from 'expo-location';
+// import * as ImagePicker from 'expo-image-picker';
 import BleManager from 'react-native-ble-manager';
 import { useNavigation } from '@react-navigation/native';
 import PermissionItem from '../components/PermissionItem';
 import { usePermissions } from '../hooks/usePermissions';
+import { useTheme } from 'react-native-elements';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
-// 색상 상수 정의
-const COLORS = {
-  primary: '#56AEE9',
-  background: '#FFFFFF',
-  text: '#000000',
-  textSecondary: '#666666',
-  buttonPrimary: '#56AEE9',
-};
-
 const PermissionScreen = () => {
   const navigation = useNavigation();
   const { permissionsStatus, requestAllPermissions } = usePermissions();
+  const { theme } = useTheme();
 
   // BleManager 초기화
   useEffect(() => {
@@ -84,7 +75,7 @@ const PermissionScreen = () => {
   }, [permissionsStatus, navigation]);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.centerContainer}>
@@ -92,12 +83,14 @@ const PermissionScreen = () => {
               <View style={styles.titleContainer}>
                 <Image
                   source={require('../../assets/splash-icon.png')}
-                  style={{ width: 60, height: 22, marginRight: 8 }}
+                  style={styles.logoImage}
                   resizeMode="contain"
                 />
-                <Text style={styles.titleText}>이용을 위해</Text>
+                <Text style={[styles.titleText, { color: theme.colors.black }]}>이용을 위해</Text>
               </View>
-              <Text style={[styles.titleText, styles.textCenter]}>아래 권한을 허용해주세요.</Text>
+              <Text style={[styles.titleText, styles.textCenter, { color: theme.colors.black }]}>
+                아래 권한을 허용해주세요.
+              </Text>
             </View>
 
             <View style={styles.permissionsContainer}>
@@ -125,11 +118,15 @@ const PermissionScreen = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, permissionsStatus === 'checking' && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              { backgroundColor: theme.colors.primary },
+              permissionsStatus === 'checking' && styles.buttonDisabled,
+            ]}
             onPress={handlePressNext}
             disabled={permissionsStatus === 'checking'}
           >
-            <Text style={styles.buttonText}>
+            <Text style={[styles.buttonText, { color: theme.colors.white }]}>
               {permissionsStatus === 'checking' ? '권한 확인 중...' : '다음'}
             </Text>
           </TouchableOpacity>
@@ -142,7 +139,6 @@ const PermissionScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background,
   },
   safeArea: {
     flex: 1,
@@ -168,10 +164,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 4,
   },
+  logoImage: {
+    width: 60,
+    height: 22,
+    marginRight: 8,
+  },
   titleText: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.text,
   },
   textCenter: {
     textAlign: 'center',
@@ -180,7 +180,6 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   button: {
-    backgroundColor: COLORS.buttonPrimary,
     paddingVertical: 16,
     borderRadius: 8,
     alignItems: 'center',
@@ -193,7 +192,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: 'white',
   },
 });
 

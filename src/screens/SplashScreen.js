@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Image, StatusBar, View, StyleSheet, SafeAreaView } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
+import { useTheme } from 'react-native-elements';
 // import { checkIsFirstLaunch } from '../utils/appStorage'; // Temporarily disable first launch check
 
 const SPLASH_DURATION = 2000;
@@ -9,6 +10,7 @@ const SplashScreenComponent = ({ navigation }) => {
   // const [isLoadingStorage, setIsLoadingStorage] = useState(true); // No longer needed for testing
   const [isFirstLaunch, setIsFirstLaunch] = useState(null);
   const [timePassed, setTimePassed] = useState(false);
+  const { theme } = useTheme();
 
   console.log('SplashScreen 렌더링됨 (Guide Always)');
 
@@ -71,8 +73,8 @@ const SplashScreenComponent = ({ navigation }) => {
 
   // Always show logo (no loading indicator needed as check is bypassed)
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
+    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.centerContainer}>
           <View style={styles.imageContainer}>
@@ -91,7 +93,6 @@ const SplashScreenComponent = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
   },
   safeAreaContainer: {
     flex: 1,
