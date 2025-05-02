@@ -23,32 +23,73 @@ pipeline {
             }
         }
 
-//         stage('Test') {
-//             steps {
-//                 // 테스트 실행
-//                 dir('backend/achacha') {
-//                     sh './gradlew test'
-//                 }
-//             }
-//             post {
-//                 success {
-//                     // 테스트 결과 수집
-//                     junit '**/build/test-results/test/TEST-*.xml'
-//                 }
-//             }
-//         }
+        stage('Docker Build & Push') {
+            steps {
+                dir('backend/achacha') {
+                    // Dockerfile이 있는 위치에서 Docker 이미지 빌드
+                    script {
+                        // Docker Hub 로그인
+                        withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
 
+                            // 이미지 태그 생성 (예: 날짜-빌드번호)
+                            def imageTag = "v${BUILD_NUMBER}"
+
+                            // Docker 이미지 빌드
+                            sh "docker build -t ${DOCKER_USERNAME}/achacha-backend:${imageTag} ."
+
+                            // Docker Hub에 이미지 푸시
+                            sh "docker push ${DOCKER_USERNAME}/achacha-backend:${imageTag}"
+
+                            // 최신 버전 태그도 함께 푸시
+                            sh "docker tag ${DOCKER_USERNAME}/achacha-backend:${imageTag} ${DOCKER_USERNAME}/achacha-backend:latest"
+                            sh "docker push ${DOCKER_USERNAME}/achacha-backend:latest"
+
+                            // 이미지 태그를 환경 변수로 저장 (다음 단계에서 사용)
+                            env.IMAGE_TAG = imageTag
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Server') {
+            steps {
+                // SSH를 통해 Spring Boot 서버에 배포
+                sshagent(['EC2_SSH']) {  // EC2_SSH는 Jenkins에 설정된 자격 증명 ID
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no ubuntu@[YOUR_SERVER_IP] "
+                            # Docker 이미지 풀
+                            docker pull ssuzyn/achacha-backend:latest
+
+                            # 기존 컨테이너 중지 및 삭제 (없으면 무시)
+                            docker stop achacha-backend || true
+                            docker rm achacha-backend || true
+
+                            # 새 컨테이너 실행
+                            docker run -d --name achacha-backend \\
+                                -p 8080:8080 \\
+                                --restart unless-stopped \\
+                                ssuzyn/achacha-backend:latest
+
+                            # 사용하지 않는 이미지 정리
+                            docker system prune -f
+                        "
+                    '''
+                }
+            }
+        }
     }
 
     post {
-            always {
-                cleanWs()
-            }
-            success {
-                echo '[BE] 빌드 성공! ✅'
-            }
-            failure {
-                echo '[BE] 빌드 실패! ❌'
-            }
+        always {
+            cleanWs()
         }
+        success {
+            echo '[BE] 빌드 성공! ✅'
+        }
+        failure {
+            echo '[BE] 빌드 실패! ❌'
+        }
+    }
 }
