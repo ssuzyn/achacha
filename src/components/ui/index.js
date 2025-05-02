@@ -8,3 +8,4 @@ export { default as Skeleton, SkeletonGroup } from './Skeleton';
 export { default as Slider } from './Slider';
 export { default as Switch } from './Switch';
 export { default as Select } from './Select';
+export { default as SwipeableListItem } from './SwipeableListItem';
