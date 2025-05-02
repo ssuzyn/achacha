@@ -35,10 +35,8 @@ pipeline {
                         echo "DOCKER_IMAGE: ${env.DOCKER_IMAGE}"
                         echo "BUILD_NUMBER: ${env.BUILD_NUMBER}"
 
-                        // Docker 이미지 빌드 및 태그
                         def dockerImage = docker.build("${env.DOCKER_IMAGE}:${env.BUILD_NUMBER}")
 
-                        // Docker Hub에 Credentials ID를 사용하여 푸시
                         docker.withRegistry('', 'DOCKER_HUB') {
                             dockerImage.push()
                             dockerImage.push('latest')
@@ -52,32 +50,29 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 sshagent(['EC2_SSH']) {
-                    sh '''
-                        ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_HOST} "
-                            # 네트워크가 없으면 생성
-                            docker network inspect achacha-network >/dev/null 2>&1 || docker network create achacha-network
+                    script {
+                        sh '''
+                            ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_HOST} "
+                            docker network inspect achacha-network >/dev/null 2>&1 || docker network create achacha-network;
+                            if docker ps | grep achacha-mysql; then docker network connect achacha-network achacha-mysql || true; fi;
+                            docker pull ${DOCKER_IMAGE}:latest;
+                            docker stop achacha-backend || true;
+                            docker rm achacha-backend || true;
 
-                            # MySQL 컨테이너 실행 상태 확인 및 네트워크 연결
-                            if docker ps | grep achacha-mysql; then
-                                docker network connect achacha-network achacha-mysql || true
-                            fi
-
-                            # 백엔드 컨테이너 배포
-                            docker pull ${DOCKER_IMAGE}:latest
-                            docker stop achacha-backend || true
-                            docker rm achacha-backend || true
                             docker run -d --name achacha-backend \\
-                            -e SPRING_PROFILES_ACTIVE=prod \\
-                            -e SPRING_DATASOURCE_URL=${SPRING_DATABASE_URL} \\
-                            -e SPRING_DATASOURCE_USERNAME=${SPRING_DATABASE_USR} \\
-                            -e SPRING_DATASOURCE_PASSWORD=${SPRING_DATABASE_PSW} \\
-                            -p 8081:8080 \\
-                            --network achacha-network \\
-                            --restart unless-stopped \\
-                            ${DOCKER_IMAGE}:latest
+                              -e SPRING_PROFILES_ACTIVE=prod \\
+                              -e SPRING_DATASOURCE_URL=\\\"${SPRING_DATABASE_URL}\\\" \\
+                              -e SPRING_DATASOURCE_USERNAME=\\\"${SPRING_DATABASE_USR}\\\" \\
+                              -e SPRING_DATASOURCE_PASSWORD=\\\"${SPRING_DATABASE_PSW}\\\" \\
+                              -p 8081:8080 \\
+                              --network achacha-network \\
+                              --restart unless-stopped \\
+                              ${DOCKER_IMAGE}:latest;
+
                             docker system prune -f
-                        "
-                    '''
+                            "
+                        '''
+                    }
                 }
             }
         }
