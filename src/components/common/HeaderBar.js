@@ -82,7 +82,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
                 <Icon
                   name="circle"
                   size={18}
-                  color="#EF4040"
+                  color={theme.colors.error}
                   style={styles.badgeBackground}
                   type="material"
                 />
@@ -91,12 +91,14 @@ const HeaderBar = ({ notificationCount = 3 }) => {
                     <Icon
                       name="add"
                       size={12}
-                      color="#FFFFFF"
+                      color={theme.colors.white}
                       style={styles.badgeText}
                       type="material"
                     />
                   ) : (
-                    <Text style={styles.badgeNumber}>{notificationCount}</Text>
+                    <Text style={[styles.badgeNumber, { color: theme.colors.white }]}>
+                      {notificationCount}
+                    </Text>
                   )}
                 </View>
               </View>
@@ -174,7 +176,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   badgeNumber: {
-    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',

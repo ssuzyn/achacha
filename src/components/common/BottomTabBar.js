@@ -4,40 +4,48 @@ import { StyleSheet, View, Platform, Dimensions, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
-import { Icon } from 'react-native-elements';
+import { Icon, useTheme } from 'react-native-elements';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
 
 // 임시 스크린
 const GifticonManageScreen = () => {
+  const { theme } = useTheme();
+
   return (
-    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
-      <Text style={styles.screenText}>기프티콘 관리 화면</Text>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
+      <Text style={[styles.screenText, { color: theme.colors.black }]}>기프티콘 관리 화면</Text>
     </View>
   );
 };
 
 const MapScreen = () => {
+  const { theme } = useTheme();
+
   return (
-    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
-      <Text style={styles.screenText}>기프티콘 MAP 화면</Text>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
+      <Text style={[styles.screenText, { color: theme.colors.black }]}>기프티콘 MAP 화면</Text>
     </View>
   );
 };
 
 const ShareboxScreen = () => {
+  const { theme } = useTheme();
+
   return (
-    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
-      <Text style={styles.screenText}>쉐어박스 화면</Text>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
+      <Text style={[styles.screenText, { color: theme.colors.black }]}>쉐어박스 화면</Text>
     </View>
   );
 };
 
 const SettingsScreen = () => {
+  const { theme } = useTheme();
+
   return (
-    <View style={[styles.screenContainer, { backgroundColor: 'white' }]}>
-      <Text style={styles.screenText}>설정 화면</Text>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
+      <Text style={[styles.screenText, { color: theme.colors.black }]}>설정 화면</Text>
     </View>
   );
 };
@@ -68,10 +76,14 @@ const HIDDEN_TAB_BAR_SCREENS = [
 
 // 헤더바가 포함된 스크린 컴포넌트
 const ScreenWithHeader = ({ children }) => {
+  const { theme } = useTheme();
+
   return (
-    <View style={[styles.headerContainer, { backgroundColor: 'white' }]}>
+    <View style={[styles.headerContainer, { backgroundColor: theme.colors.white }]}>
       <HeaderBar notificationCount={3} />
-      <View style={[styles.contentContainer, { backgroundColor: 'white' }]}>{children}</View>
+      <View style={[styles.contentContainer, { backgroundColor: theme.colors.white }]}>
+        {children}
+      </View>
     </View>
   );
 };
@@ -117,6 +129,7 @@ const WrappedSettingsScreen = createWrappedComponent(SettingsScreen, 'Settings')
 
 const BottomTabBar = () => {
   const { isTabBarVisible } = useTabBar();
+  const { theme } = useTheme();
 
   const renderTabBarIcon = (route, focused, color) => {
     let iconName;
@@ -152,8 +165,8 @@ const BottomTabBar = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color }) => renderTabBarIcon(route, focused, color),
-        tabBarActiveTintColor: '#56AEE9',
-        tabBarInactiveTintColor: '#718096',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.grey3,
         tabBarLabelStyle: {
           ...styles.tabBarLabel,
           fontSize: LABEL_FONTSIZE,
@@ -161,7 +174,7 @@ const BottomTabBar = () => {
         tabBarStyle: {
           ...styles.tabBar,
           borderTopWidth: 0,
-          backgroundColor: 'white',
+          backgroundColor: theme.colors.white,
           display: isTabBarVisible ? 'flex' : 'none',
         },
         headerShown: false,
@@ -221,7 +234,6 @@ const styles = StyleSheet.create({
   },
   screenText: {
     fontSize: 16,
-    color: '#000000',
   },
   headerContainer: {
     flex: 1,
