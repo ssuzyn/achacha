@@ -163,13 +163,7 @@ const BottomTabBar = () => {
 
   // 커스텀 탭바 버튼 렌더링 함수
   const renderTabBarButton = props => {
-    return (
-      <TouchableOpacity
-        {...props}
-        activeOpacity={1}
-        style={[props.style, { backgroundColor: 'transparent' }]}
-      />
-    );
+    return <TouchableOpacity {...props} activeOpacity={1} style={props.style} />;
   };
 
   return (
@@ -261,6 +255,7 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     height: 65,
+    backgroundColor: 'transparent',
     ...Platform.select({
       ios: {
         shadowColor: 'transparent',
