@@ -4,6 +4,8 @@ import { useTheme } from 'react-native-elements';
 
 /**
  * 커스텀 스위치 컴포넌트
+ * 활성화(ON) 상태: 연한 파란색(#C9EAFC) 배경에 중간 파란색(#83C8F5) 동그라미
+ * 비활성화(OFF) 상태: 흰색 배경에 하늘색(#A7DAF9) 테두리, 하늘색(#A7DAF9) 동그라미
  */
 export const Switch = ({
   value,
@@ -75,34 +77,6 @@ export const Switch = ({
     }
   };
 
-  // 트랙 색상 계산
-  const currentTrackColor = value
-    ? trackColor?.true || '#e3f2fd' // 활성화 시 연한 파란색 배경
-    : trackColor?.false || '#ffffff'; // 비활성화 시 흰색 배경
-
-  // 트랙 테두리 색상
-  const trackBorderColor = value
-    ? 'transparent' // 활성화 시 테두리 없음
-    : '#64b5f6'; // 비활성화 시 하늘색 테두리
-
-  // 썸 색상 계산
-  const currentThumbColor = value
-    ? thumbColor?.true || '#2196f3' // 활성화 시 진한 파란색
-    : thumbColor?.false || '#64b5f6'; // 비활성화 시 하늘색
-
-  // 썸의 위치 계산
-  const translateXInterpolate = translateX.interpolate({
-    inputRange: [0, 1],
-    outputRange: [4, sizeStyle.width - sizeStyle.thumbSize - 4],
-  });
-
-  // 스위치 상태 변경 핸들러
-  const handleToggle = () => {
-    if (!disabled && onValueChange) {
-      onValueChange(!value);
-    }
-  };
-
   return (
     <View style={[getContainerStyle(), containerStyle]}>
       {label && (
@@ -120,7 +94,7 @@ export const Switch = ({
 
       <TouchableOpacity
         activeOpacity={0.8}
-        onPress={handleToggle}
+        onPress={() => !disabled && onValueChange && onValueChange(!value)}
         disabled={disabled}
         style={[style]}
       >
@@ -131,9 +105,11 @@ export const Switch = ({
               width: sizeStyle.width,
               height: sizeStyle.height,
               borderRadius: sizeStyle.borderRadius,
-              backgroundColor: currentTrackColor,
-              borderColor: trackBorderColor,
-              borderWidth: value ? 0 : 1,
+              // 활성화 상태: 연한 파란색(#C9EAFC) 배경, 비활성화 상태: 흰색 배경
+              backgroundColor: value ? '#C9EAFC' : '#FFFFFF',
+              // 테두리 설정: 활성화 시 #83C8F5 테두리, 비활성화 시 하늘색(#A7DAF9) 테두리
+              borderColor: value ? '#83C8F5' : '#A7DAF9',
+              borderWidth: 1,
             },
             disabled && styles.disabledTrack,
           ]}
@@ -145,8 +121,16 @@ export const Switch = ({
                 width: sizeStyle.thumbSize,
                 height: sizeStyle.thumbSize,
                 borderRadius: sizeStyle.thumbSize / 2,
-                backgroundColor: currentThumbColor,
-                transform: [{ translateX: translateXInterpolate }],
+                // 활성화 상태: 중간 파란색(#83C8F5), 비활성화 상태: 하늘색(#A7DAF9)
+                backgroundColor: value ? '#83C8F5' : '#A7DAF9',
+                transform: [
+                  {
+                    translateX: translateX.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [4, sizeStyle.width - sizeStyle.thumbSize - 4],
+                    }),
+                  },
+                ],
               },
               disabled && styles.disabledThumb,
             ]}
@@ -189,11 +173,11 @@ const styles = StyleSheet.create({
   },
   thumb: {
     position: 'absolute',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
   },
   disabledTrack: {
     opacity: 0.8,
