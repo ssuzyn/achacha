@@ -124,18 +124,6 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
-    
-    // React Native Vector Icons 설정 추가
-    applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            // React Native Vector Icons 복사 설정
-            def outputDir = file(output.sourceDirAsFileDir)
-            copy {
-                from "${rootDir}/node_modules/react-native-vector-icons/Fonts"
-                into "${outputDir}/assets/fonts"
-            }
-        }
-    }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
