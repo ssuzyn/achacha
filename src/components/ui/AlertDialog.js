@@ -1,6 +1,7 @@
 import React from 'react';
 import { Overlay } from 'react-native-elements';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 알림 다이얼로그 컴포넌트
@@ -17,16 +18,29 @@ export const AlertDialog = ({
   type = 'info', // info, success, warning, error
   hideCancel = false,
 }) => {
+  const { theme } = useTheme();
+
+  // 타입에 따른 버튼 색상 매핑
+  const buttonColorMap = {
+    info: theme.colors.secondary,
+    success: theme.colors.success,
+    warning: theme.colors.warning,
+    error: theme.colors.error,
+  };
+
   return (
     <Overlay isVisible={isVisible} onBackdropPress={onBackdropPress} overlayStyle={styles.overlay}>
       <View style={styles.container}>
-        <Text style={styles.title}>{title}</Text>
-        {message && <Text style={styles.message}>{message}</Text>}
+        <Text style={[styles.title, { color: theme.colors.black }]}>{title}</Text>
+        {message && <Text style={[styles.message, { color: theme.colors.grey5 }]}>{message}</Text>}
 
         <View style={[styles.buttonContainer, hideCancel && styles.singleButtonContainer]}>
           {!hideCancel && (
-            <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={onCancel}>
-              <Text style={styles.cancelText}>{cancelText}</Text>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton, { backgroundColor: theme.colors.grey1 }]}
+              onPress={onCancel}
+            >
+              <Text style={[styles.cancelText, { color: theme.colors.grey5 }]}>{cancelText}</Text>
             </TouchableOpacity>
           )}
 
@@ -34,12 +48,12 @@ export const AlertDialog = ({
             style={[
               styles.button,
               styles.confirmButton,
-              styles[`${type}Button`],
+              { backgroundColor: buttonColorMap[type] || buttonColorMap.info },
               hideCancel && styles.fullWidthButton,
             ]}
             onPress={onConfirm}
           >
-            <Text style={styles.confirmText}>{confirmText}</Text>
+            <Text style={[styles.confirmText, { color: theme.colors.white }]}>{confirmText}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -61,11 +75,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333',
   },
   message: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 20,
   },
   buttonContainer: {
@@ -88,30 +100,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   cancelButton: {
-    backgroundColor: '#F2F2F2',
     marginRight: 10,
   },
-  confirmButton: {
-    backgroundColor: '#278CCC',
-  },
-  infoButton: {
-    backgroundColor: '#278CCC',
-  },
-  successButton: {
-    backgroundColor: '#28a745',
-  },
-  warningButton: {
-    backgroundColor: '#ffc107',
-  },
-  errorButton: {
-    backgroundColor: '#dc3545',
-  },
   cancelText: {
-    color: '#333',
     fontWeight: '500',
   },
   confirmText: {
-    color: 'white',
     fontWeight: '500',
   },
 });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Slider as RNESlider } from 'react-native-elements';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 슬라이더 컴포넌트
@@ -20,15 +21,16 @@ export const Slider = ({
   trackStyle,
   thumbStyle,
   containerStyle,
-  minimumTrackTintColor = '#278CCC',
-  maximumTrackTintColor = '#D3D3D3',
-  thumbTintColor = '#278CCC',
+  minimumTrackTintColor,
+  maximumTrackTintColor,
+  thumbTintColor,
   valueTextStyle,
   labelTextStyle,
   minMaxTextStyle,
   ...props
 }) => {
   const [localValue, setLocalValue] = useState(value);
+  const { theme } = useTheme();
 
   // 로컬 값 변경 핸들러
   const handleValueChange = newValue => {
@@ -44,12 +46,23 @@ export const Slider = ({
     return localValue;
   };
 
+  // 테마 기반 색상 설정
+  const trackTintColors = {
+    min: minimumTrackTintColor || theme.colors.primary,
+    max: maximumTrackTintColor || theme.colors.grey2,
+    thumb: thumbTintColor || theme.colors.primary,
+  };
+
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
         <View style={styles.labelContainer}>
-          <Text style={[styles.label, labelTextStyle]}>{label}</Text>
-          {showValue && <Text style={[styles.value, valueTextStyle]}>{renderValueText()}</Text>}
+          <Text style={[styles.label, { color: theme.colors.black }, labelTextStyle]}>{label}</Text>
+          {showValue && (
+            <Text style={[styles.value, { color: theme.colors.primary }, valueTextStyle]}>
+              {renderValueText()}
+            </Text>
+          )}
         </View>
       )}
 
@@ -62,17 +75,21 @@ export const Slider = ({
         onSlidingComplete={onSlidingComplete}
         disabled={disabled}
         trackStyle={[styles.track, trackStyle]}
-        thumbStyle={[styles.thumb, thumbStyle]}
-        minimumTrackTintColor={minimumTrackTintColor}
-        maximumTrackTintColor={maximumTrackTintColor}
-        thumbTintColor={thumbTintColor}
+        thumbStyle={[styles.thumb, { backgroundColor: trackTintColors.thumb }, thumbStyle]}
+        minimumTrackTintColor={trackTintColors.min}
+        maximumTrackTintColor={trackTintColors.max}
+        thumbTintColor={trackTintColors.thumb}
         {...props}
       />
 
       {showMinMax && (
         <View style={styles.minMaxContainer}>
-          <Text style={[styles.minMaxText, minMaxTextStyle]}>{minimumValue}</Text>
-          <Text style={[styles.minMaxText, minMaxTextStyle]}>{maximumValue}</Text>
+          <Text style={[styles.minMaxText, { color: theme.colors.grey5 }, minMaxTextStyle]}>
+            {minimumValue}
+          </Text>
+          <Text style={[styles.minMaxText, { color: theme.colors.grey5 }, minMaxTextStyle]}>
+            {maximumValue}
+          </Text>
         </View>
       )}
     </View>
@@ -93,12 +110,10 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333333',
   },
   value: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#278CCC',
   },
   track: {
     height: 4,
@@ -108,7 +123,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     borderRadius: 10,
-    backgroundColor: '#278CCC',
   },
   minMaxContainer: {
     flexDirection: 'row',
@@ -117,7 +131,6 @@ const styles = StyleSheet.create({
   },
   minMaxText: {
     fontSize: 12,
-    color: '#666666',
   },
 });
 

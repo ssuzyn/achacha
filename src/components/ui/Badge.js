@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge as RNEBadge } from 'react-native-elements';
 import { StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 뱃지 컴포넌트
@@ -14,14 +15,16 @@ export const Badge = ({
   textStyle,
   ...props
 }) => {
+  const { theme } = useTheme();
+
   // 변형과 상태에 따른 배경 및 텍스트 색상 설정
   const getStatusColor = () => {
     const colors = {
-      primary: '#278CCC',
-      success: '#28a745',
-      warning: '#ffc107',
-      error: '#dc3545',
-      info: '#17a2b8',
+      primary: theme.colors.primary,
+      success: theme.colors.success,
+      warning: theme.colors.warning,
+      error: theme.colors.error,
+      info: theme.colors.secondary,
     };
 
     return colors[status] || colors.primary;
@@ -74,7 +77,7 @@ export const Badge = ({
       textStyle={[
         styles.text,
         {
-          color: variant === 'outline' ? badgeColor : 'white',
+          color: variant === 'outline' ? badgeColor : theme.colors.white,
           fontSize: sizeStyle.fontSize,
         },
         textStyle,

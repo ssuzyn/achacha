@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Skeleton as RNESkeleton } from 'react-native-elements';
+import { Skeleton as RNESkeleton, useTheme } from 'react-native-elements';
 
 /**
  * 스켈레톤 로딩 컴포넌트
@@ -14,6 +14,8 @@ export const Skeleton = ({
   borderRadius,
   ...props
 }) => {
+  const { theme } = useTheme();
+
   // 변형에 따른 스타일 계산
   const getVariantStyle = () => {
     switch (variant) {
@@ -58,6 +60,8 @@ export const SkeletonGroup = ({
   count = 1,
   style,
 }) => {
+  const { theme } = useTheme();
+
   const renderItems = () => {
     const items = [];
 

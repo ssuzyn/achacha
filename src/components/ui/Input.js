@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 기본 입력 컴포넌트
@@ -28,15 +29,42 @@ export const Input = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(!secureTextEntry);
+  const { theme } = useTheme();
+
+  const colors = {
+    border: theme.colors.grey3,
+    borderFocused: theme.colors.primary,
+    borderInvalid: theme.colors.error,
+    background: theme.colors.white,
+    backgroundFilled: theme.colors.grey0,
+    backgroundDisabled: theme.colors.grey1,
+    text: theme.colors.black,
+    textDisabled: theme.colors.grey4,
+    placeholder: theme.colors.grey4,
+    icon: theme.colors.grey5,
+    required: theme.colors.error,
+    helperText: theme.colors.grey5,
+    errorText: theme.colors.error,
+  };
 
   // 입력창 스타일 가져오기
   const containerStyle = [
     styles.container,
     styles[variant],
     styles[`${size}Container`],
-    isFocused && styles.focused,
-    isInvalid && styles.invalid,
-    isDisabled && styles.disabled,
+    {
+      borderColor: isInvalid
+        ? colors.borderInvalid
+        : isFocused
+          ? colors.borderFocused
+          : colors.border,
+      backgroundColor:
+        variant === 'filled'
+          ? colors.backgroundFilled
+          : isDisabled
+            ? colors.backgroundDisabled
+            : colors.background,
+    },
     style,
   ];
 
@@ -44,7 +72,7 @@ export const Input = ({
   const textInputStyle = [
     styles.input,
     styles[`${size}Input`],
-    isDisabled && styles.disabledText,
+    { color: isDisabled ? colors.textDisabled : colors.text },
     leftIcon && styles.inputWithLeftIcon,
     rightIcon && styles.inputWithRightIcon,
     inputStyle,
@@ -58,7 +86,11 @@ export const Input = ({
           onPress={() => setIsPasswordVisible(!isPasswordVisible)}
           style={styles.iconContainer}
         >
-          <Icon name={isPasswordVisible ? 'visibility' : 'visibility-off'} size={20} color="#666" />
+          <Icon
+            name={isPasswordVisible ? 'visibility' : 'visibility-off'}
+            size={20}
+            color={colors.icon}
+          />
         </TouchableOpacity>
       );
     }
@@ -73,9 +105,9 @@ export const Input = ({
   return (
     <View style={styles.wrapper}>
       {label && (
-        <Text style={[styles.label, labelStyle]}>
+        <Text style={[styles.label, { color: colors.text }, labelStyle]}>
           {label}
-          {isRequired && <Text style={styles.required}> *</Text>}
+          {isRequired && <Text style={[styles.required, { color: colors.required }]}> *</Text>}
         </Text>
       )}
 
@@ -92,7 +124,7 @@ export const Input = ({
           editable={!isDisabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholderTextColor="#999999"
+          placeholderTextColor={colors.placeholder}
           {...props}
         />
 
@@ -100,7 +132,9 @@ export const Input = ({
       </View>
 
       {(helperText || errorText) && (
-        <Text style={[styles.helperText, isInvalid && styles.errorText]}>
+        <Text
+          style={[styles.helperText, { color: isInvalid ? colors.errorText : colors.helperText }]}
+        >
           {isInvalid ? errorText : helperText}
         </Text>
       )}
@@ -118,8 +152,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#FFFFFF',
   },
   // 변형 스타일
   outline: {
@@ -127,23 +159,11 @@ const styles = StyleSheet.create({
   },
   filled: {
     borderRadius: 8,
-    backgroundColor: '#F8F9FA',
   },
   underlined: {
     borderWidth: 0,
     borderBottomWidth: 1,
     borderRadius: 0,
-  },
-  // 상태 스타일
-  focused: {
-    borderColor: '#278CCC',
-  },
-  invalid: {
-    borderColor: '#FF3B30',
-  },
-  disabled: {
-    backgroundColor: '#F0F2F5',
-    borderColor: '#E5E5E5',
   },
   // 크기 스타일
   smContainer: {
@@ -158,7 +178,6 @@ const styles = StyleSheet.create({
   // 입력 필드 스타일
   input: {
     flex: 1,
-    color: '#333333',
     paddingHorizontal: 12,
   },
   smInput: {
@@ -181,23 +200,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontSize: 14,
     fontWeight: '500',
-    color: '#333333',
   },
   required: {
-    color: '#FF3B30',
+    // 색상은 테마에서 적용
   },
   // 헬퍼 텍스트 스타일
   helperText: {
     fontSize: 12,
-    color: '#666666',
     marginTop: 4,
-  },
-  errorText: {
-    color: '#FF3B30',
-  },
-  // 비활성화 텍스트
-  disabledText: {
-    color: '#999999',
   },
   // 아이콘 컨테이너
   iconContainer: {

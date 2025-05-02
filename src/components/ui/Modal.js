@@ -1,6 +1,7 @@
 import React from 'react';
 import { Overlay } from 'react-native-elements';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 모달 컴포넌트
@@ -22,13 +23,15 @@ export const Modal = ({
   containerStyle,
   onClose,
 }) => {
+  const { theme } = useTheme();
+
   return (
     <Overlay
       isVisible={isVisible}
       onBackdropPress={onBackdropPress || onClose}
       overlayStyle={[
         styles.overlay,
-        { width, height: height || 'auto', padding: 0 },
+        { width, height: height || 'auto', padding: 0, backgroundColor: theme.colors.white },
         containerStyle,
       ]}
       backdropStyle={{ opacity: backdropOpacity }}
@@ -36,8 +39,8 @@ export const Modal = ({
     >
       <View style={styles.container}>
         {title && (
-          <View style={[styles.header, headerStyle]}>
-            <Text style={styles.title}>{title}</Text>
+          <View style={[styles.header, { borderBottomColor: theme.colors.grey1 }, headerStyle]}>
+            <Text style={[styles.title, { color: theme.colors.black }]}>{title}</Text>
             {closeButton && (
               <TouchableOpacity
                 style={[
@@ -46,7 +49,7 @@ export const Modal = ({
                 ]}
                 onPress={onClose || onBackdropPress}
               >
-                <Text style={styles.closeButtonText}>✕</Text>
+                <Text style={[styles.closeButtonText, { color: theme.colors.grey5 }]}>✕</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -60,7 +63,6 @@ export const Modal = ({
 const styles = StyleSheet.create({
   overlay: {
     borderRadius: 10,
-    backgroundColor: 'white',
     overflow: 'hidden',
   },
   container: {
@@ -73,13 +75,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
     position: 'relative',
   },
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333333',
   },
   closeButton: {
     position: 'absolute',
@@ -96,7 +96,6 @@ const styles = StyleSheet.create({
   },
   closeButtonText: {
     fontSize: 18,
-    color: '#666666',
     fontWeight: 'normal',
   },
   content: {

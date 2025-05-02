@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 기본 버튼 컴포넌트
@@ -17,6 +18,8 @@ export const Button = ({
   textStyle,
   ...props
 }) => {
+  const { theme } = useTheme();
+
   // 버튼 스타일 가져오기
   const buttonStyle = [
     styles.button,
@@ -35,11 +38,27 @@ export const Button = ({
     textStyle,
   ];
 
+  // 색상 객체 생성
+  const colors = {
+    primary: theme.colors.secondary,
+    secondary: theme.colors.primary,
+    disabled: theme.colors.disabled,
+    text: theme.colors.white,
+    textDisabled: theme.colors.grey4,
+  };
+
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled || isLoading}
-      style={buttonStyle}
+      style={[
+        buttonStyle,
+        // variant에 따른 색상 설정 적용
+        variant === 'primary' && { backgroundColor: colors.primary },
+        variant === 'secondary' && { backgroundColor: colors.secondary },
+        variant === 'outline' && { borderColor: colors.primary },
+        isDisabled && { backgroundColor: colors.disabled, borderColor: 'transparent' },
+      ]}
       activeOpacity={0.7}
       {...props}
     >
@@ -47,13 +66,27 @@ export const Button = ({
         <ActivityIndicator
           size="small"
           color={
-            variant === 'outline' || variant === 'ghost' || variant === 'link' ? '#278CCC' : 'white'
+            variant === 'outline' || variant === 'ghost' || variant === 'link'
+              ? colors.primary
+              : colors.text
           }
         />
       ) : (
         <View style={styles.contentContainer}>
           {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
-          <Text style={buttonTextStyle}>{title}</Text>
+          <Text
+            style={[
+              buttonTextStyle,
+              variant === 'primary' && { color: colors.text },
+              variant === 'secondary' && { color: colors.text },
+              variant === 'outline' && { color: colors.primary },
+              variant === 'ghost' && { color: colors.primary },
+              variant === 'link' && { color: colors.primary },
+              isDisabled && { color: colors.textDisabled },
+            ]}
+          >
+            {title}
+          </Text>
           {rightIcon && <View style={styles.iconRight}>{rightIcon}</View>}
         </View>
       )}
@@ -74,15 +107,15 @@ const styles = StyleSheet.create({
   },
   // 버튼 변형
   primary: {
-    backgroundColor: '#278CCC',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   secondary: {
-    backgroundColor: '#56AEE9',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#278CCC',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -111,19 +144,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   primaryText: {
-    color: '#FFFFFF',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   secondaryText: {
-    color: '#FFFFFF',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   outlineText: {
-    color: '#278CCC',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   ghostText: {
-    color: '#278CCC',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   linkText: {
-    color: '#278CCC',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
     textDecorationLine: 'underline',
   },
   // 텍스트 사이즈
@@ -138,11 +171,10 @@ const styles = StyleSheet.create({
   },
   // 비활성화 스타일
   disabled: {
-    backgroundColor: '#E5E5E5',
-    borderColor: 'transparent',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   disabledText: {
-    color: '#999999',
+    // 테마 적용으로 인해 색상 제거, 직접 설정
   },
   // 아이콘 스타일
   iconLeft: {

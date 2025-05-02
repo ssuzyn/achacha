@@ -1,6 +1,7 @@
 import React from 'react';
 import { Switch as RNESwitch } from 'react-native-elements';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 스위치 컴포넌트
@@ -9,9 +10,9 @@ export const Switch = ({
   value,
   onValueChange,
   disabled = false,
-  trackColor = { false: '#D3D3D3', true: '#278CCC' },
-  thumbColor = { false: '#FFFFFF', true: '#FFFFFF' },
-  ios_backgroundColor = '#D3D3D3',
+  trackColor,
+  thumbColor,
+  ios_backgroundColor,
   label,
   labelPosition = 'left', // left, right, top, bottom
   size = 'md', // sm, md, lg
@@ -20,6 +21,21 @@ export const Switch = ({
   containerStyle,
   ...props
 }) => {
+  const { theme } = useTheme();
+
+  // 테마 기반 색상 설정
+  const defaultTrackColor = {
+    false: theme.colors.grey2,
+    true: theme.colors.primary,
+  };
+
+  const defaultThumbColor = {
+    false: theme.colors.white,
+    true: theme.colors.white,
+  };
+
+  const defaultIosBackgroundColor = theme.colors.grey2;
+
   // 사이즈에 따른 스타일 결정
   const getSizeStyle = () => {
     switch (size) {
@@ -57,16 +73,16 @@ export const Switch = ({
   // 현재 상태에 따른 썸 색상 결정
   const currentThumbColor = value
     ? disabled
-      ? '#E5E5E5'
-      : thumbColor.true
+      ? theme.colors.grey1
+      : thumbColor?.true || defaultThumbColor.true
     : disabled
-      ? '#E5E5E5'
-      : thumbColor.false;
+      ? theme.colors.grey1
+      : thumbColor?.false || defaultThumbColor.false;
 
   // 현재 상태에 따른 트랙 색상 결정
   const currentTrackColor = {
-    false: disabled ? '#F0F0F0' : trackColor.false,
-    true: disabled ? '#AAAAAA' : trackColor.true,
+    false: disabled ? theme.colors.grey1 : trackColor?.false || defaultTrackColor.false,
+    true: disabled ? theme.colors.grey3 : trackColor?.true || defaultTrackColor.true,
   };
 
   return (
@@ -75,7 +91,7 @@ export const Switch = ({
         <Text
           style={[
             styles.label,
-            disabled && styles.disabledLabel,
+            { color: disabled ? theme.colors.grey4 : theme.colors.black },
             ['top', 'bottom'].includes(labelPosition) && styles.verticalLabel,
             labelStyle,
           ]}
@@ -90,7 +106,7 @@ export const Switch = ({
         disabled={disabled}
         trackColor={currentTrackColor}
         thumbColor={currentThumbColor}
-        ios_backgroundColor={ios_backgroundColor}
+        ios_backgroundColor={ios_backgroundColor || defaultIosBackgroundColor}
         style={[getSizeStyle(), style]}
         {...props}
       />
@@ -119,11 +135,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#333333',
     marginHorizontal: 8,
-  },
-  disabledLabel: {
-    color: '#999999',
   },
   verticalLabel: {
     marginVertical: 4,

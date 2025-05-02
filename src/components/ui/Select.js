@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { useTheme } from 'react-native-elements';
 
 /**
  * 셀렉트(드롭다운) 컴포넌트
@@ -27,6 +28,7 @@ export const Select = ({
   const [open, setOpen] = useState(false);
   const [localValue, setLocalValue] = useState(value);
   const [localItems, setLocalItems] = useState(items);
+  const { theme } = useTheme();
 
   // 값 변경 핸들러
   const handleValueChange = selectedValue => {
@@ -49,6 +51,8 @@ export const Select = ({
 
   // 변형에 따른 스타일 설정
   const getVariantStyle = () => {
+    const borderColor = error ? theme.colors.error : theme.colors.grey3;
+
     switch (variant) {
       case 'filled':
         return {
@@ -56,11 +60,12 @@ export const Select = ({
             ...styles.dropdown,
             ...styles.filled,
             minHeight: getHeight(),
-            borderColor: error ? '#FF3B30' : '#DDDDDD',
+            borderColor: borderColor,
+            backgroundColor: theme.colors.grey0,
           },
           dropDownContainerStyle: {
             ...styles.dropdownContainer,
-            borderColor: error ? '#FF3B30' : '#DDDDDD',
+            borderColor: borderColor,
           },
         };
       case 'underlined':
@@ -69,11 +74,11 @@ export const Select = ({
             ...styles.dropdown,
             ...styles.underlined,
             minHeight: getHeight(),
-            borderColor: error ? '#FF3B30' : '#DDDDDD',
+            borderColor: borderColor,
           },
           dropDownContainerStyle: {
             ...styles.dropdownContainer,
-            borderColor: error ? '#FF3B30' : '#DDDDDD',
+            borderColor: borderColor,
           },
         };
       case 'outline':
@@ -83,11 +88,12 @@ export const Select = ({
             ...styles.dropdown,
             ...styles.outline,
             minHeight: getHeight(),
-            borderColor: error ? '#FF3B30' : '#DDDDDD',
+            borderColor: borderColor,
+            backgroundColor: theme.colors.white,
           },
           dropDownContainerStyle: {
             ...styles.dropdownContainer,
-            borderColor: error ? '#FF3B30' : '#DDDDDD',
+            borderColor: borderColor,
           },
         };
     }
@@ -97,7 +103,9 @@ export const Select = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && <Text style={[styles.label, labelStyle]}>{label}</Text>}
+      {label && (
+        <Text style={[styles.label, { color: theme.colors.black }, labelStyle]}>{label}</Text>
+      )}
 
       <DropDownPicker
         open={open}
@@ -109,7 +117,7 @@ export const Select = ({
         onChangeValue={handleValueChange}
         placeholder={placeholder}
         disabled={disabled}
-        disabledStyle={styles.disabled}
+        disabledStyle={[styles.disabled, { backgroundColor: theme.colors.grey1 }]}
         multiple={multiple}
         searchable={searchable}
         listMode="SCROLLVIEW"
@@ -118,16 +126,23 @@ export const Select = ({
         }}
         style={variantStyle.style}
         dropDownContainerStyle={[variantStyle.dropDownContainerStyle, dropDownContainerStyle]}
-        textStyle={[styles.text, textStyle]}
-        placeholderStyle={styles.placeholderText}
-        disabledTextStyle={styles.disabledText}
-        selectedItemContainerStyle={styles.selectedItem}
-        selectedItemLabelStyle={styles.selectedItemLabel}
+        textStyle={[styles.text, { color: theme.colors.black }, textStyle]}
+        placeholderStyle={[styles.placeholderText, { color: theme.colors.grey4 }]}
+        disabledTextStyle={[styles.disabledText, { color: theme.colors.grey4 }]}
+        selectedItemContainerStyle={[
+          styles.selectedItem,
+          { backgroundColor: `${theme.colors.primary}20` },
+        ]}
+        selectedItemLabelStyle={[styles.selectedItemLabel, { color: theme.colors.primary }]}
         {...props}
       />
 
       {(error || helper) && (
-        <Text style={[styles.helperText, error && styles.errorText]}>{error || helper}</Text>
+        <Text
+          style={[styles.helperText, { color: error ? theme.colors.error : theme.colors.grey5 }]}
+        >
+          {error || helper}
+        </Text>
       )}
     </View>
   );
@@ -140,7 +155,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333333',
     marginBottom: 6,
   },
   dropdown: {
@@ -148,11 +162,9 @@ const styles = StyleSheet.create({
   },
   // 변형 스타일
   outline: {
-    backgroundColor: 'white',
     borderRadius: 0.8,
   },
   filled: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 8,
   },
   underlined: {
@@ -163,40 +175,33 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     borderWidth: 1,
-    backgroundColor: 'white',
   },
   // 텍스트 스타일
   text: {
     fontSize: 14,
-    color: '#333333',
   },
   placeholderText: {
-    color: '#999999',
+    // 색상은 테마로 적용
   },
   // 비활성화 스타일
   disabled: {
-    backgroundColor: '#F0F2F5',
     opacity: 0.8,
   },
   disabledText: {
-    color: '#999999',
+    // 색상은 테마로 적용
   },
   // 선택된 아이템 스타일
   selectedItem: {
-    backgroundColor: 'rgba(39, 140, 204, 0.1)',
+    // 배경색은 테마로 적용
   },
   selectedItemLabel: {
     fontWeight: 'bold',
-    color: '#278CCC',
+    // 색상은 테마로 적용
   },
   // 헬퍼 텍스트 스타일
   helperText: {
     fontSize: 12,
-    color: '#666666',
     marginTop: 4,
-  },
-  errorText: {
-    color: '#FF3B30',
   },
 });
 
