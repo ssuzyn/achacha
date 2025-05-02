@@ -11,3 +11,4 @@ export { default as Switch } from './Switch';
 export { default as Card } from './Card';
 export { default as Chip } from './Chip';
 export { default as ListItem } from './ListItem';
+export { default as CheckBox } from './CheckBox';

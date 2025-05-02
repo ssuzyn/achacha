@@ -525,3 +525,82 @@ export const chipUtils = {
       },
     }),
 };
+
+/**
+ * 체크박스 컴포넌트 스타일 관련 유틸리티 함수
+ */
+export const checkboxUtils = {
+  getVariantStyle: (variant = 'default', size = 'medium') => {
+    // 사이즈에 따른 스타일 설정
+    const sizeMap = {
+      small: 18,
+      medium: 24,
+      large: 32,
+    };
+
+    const iconSize = sizeMap[size] || sizeMap.medium;
+
+    // 기본 스타일 설정
+    const baseStyle = {
+      size: iconSize,
+      iconType: 'material',
+      containerStyle: {},
+    };
+
+    // 변형에 따른 스타일 및 아이콘 설정
+    switch (variant) {
+      case 'square':
+        return {
+          ...baseStyle,
+          checkedIcon: 'check-box',
+          uncheckedIcon: 'check-box-outline-blank',
+        };
+      case 'circle':
+        return {
+          ...baseStyle,
+          iconType: 'material-community',
+          checkedIcon: 'checkbox-marked-circle',
+          uncheckedIcon: 'checkbox-blank-circle-outline',
+        };
+      case 'default':
+      default:
+        return {
+          ...baseStyle,
+          checkedIcon: 'check-box',
+          uncheckedIcon: 'check-box-outline-blank',
+        };
+    }
+  },
+
+  getStyles: () =>
+    StyleSheet.create({
+      container: {
+        width: '100%',
+      },
+      checkboxContainer: {
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        padding: 0,
+        margin: 0,
+        marginLeft: 0,
+        marginRight: 0,
+      },
+      text: {
+        fontWeight: '400',
+        marginLeft: 8,
+      },
+      disabledContainer: {
+        opacity: 0.6,
+      },
+    }),
+};
+
+export default {
+  buttonUtils,
+  inputUtils,
+  skeletonUtils,
+  cardUtils,
+  listItemUtils,
+  chipUtils,
+  checkboxUtils,
+};

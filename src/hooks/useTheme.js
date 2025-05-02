@@ -1,6 +1,6 @@
 import { useTheme as useRNETheme } from 'react-native-elements';
 import defaultTheme from '../theme/theme';
-import { cardUtils, listItemUtils, chipUtils } from '../theme/themeUtils';
+import { cardUtils, listItemUtils, chipUtils, checkboxUtils } from '../theme/themeUtils';
 
 /**
  * 테마 설정과 관련된 커스텀 훅
@@ -68,6 +68,12 @@ export const useTheme = () => {
     chip: {
       getVariantStyle: (variant, color) => chipUtils.getChipVariantStyle(theme, variant, color),
       getStyles: () => chipUtils.getChipStyles(),
+    },
+
+    // CheckBox 관련 유틸리티 함수들
+    checkbox: {
+      getVariantStyle: (variant, size) => checkboxUtils.getVariantStyle(variant, size),
+      getStyles: () => checkboxUtils.getStyles(),
     },
   };
 };

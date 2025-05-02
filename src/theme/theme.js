@@ -195,6 +195,27 @@ const theme = {
       marginRight: 4,
     },
   },
+  CheckBox: {
+    containerStyle: {
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      padding: 8,
+      paddingLeft: 0,
+      marginLeft: 0,
+      marginRight: 0,
+    },
+    textStyle: {
+      fontWeight: '400',
+      fontSize: 14,
+      color: '#000000',
+    },
+    checkedColor: '#56AEE9',
+    uncheckedColor: '#718096',
+    iconType: 'material',
+    checkedIcon: 'check-box',
+    uncheckedIcon: 'check-box-outline-blank',
+    size: 24,
+  },
 };
 
 export default theme;
