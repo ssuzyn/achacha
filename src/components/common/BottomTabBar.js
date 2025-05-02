@@ -184,13 +184,17 @@ const BottomTabBar = () => {
         },
         tabBarStyle: {
           ...styles.tabBar,
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: '#56AEE9',
           backgroundColor: theme.colors.white,
           display: isTabBarVisible ? 'flex' : 'none',
         },
         headerShown: false,
         tabBarHideOnKeyboard: true,
-        tabBarItemStyle: styles.tabBarItem,
+        tabBarItemStyle: {
+          ...styles.tabBarItem,
+          justifyContent: 'center',
+        },
         tabBarButton: renderTabBarButton,
         tabBarPressColor: 'transparent',
         tabBarPressOpacity: 1,
@@ -270,8 +274,12 @@ const styles = StyleSheet.create({
     }),
   },
   tabBarItem: {
-    paddingTop: 8,
+    paddingTop: 2,
+    paddingBottom: 0,
     height: 65,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tabBarLabel: {
     marginTop: 0,
