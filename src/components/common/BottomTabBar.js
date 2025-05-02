@@ -5,6 +5,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
+import { GluestackUIProvider } from '@gluestack-ui/themed';
+import { config } from '../../components/ui/gluestack-ui-provider';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
@@ -16,7 +18,7 @@ const GifticonManageScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '$background',
+      backgroundColor: 'white',
     }}
   >
     <Text>기프티콘 관리 화면</Text>
@@ -29,7 +31,7 @@ const MapScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '$background',
+      backgroundColor: 'white',
     }}
   >
     <Text>기프티콘 MAP 화면</Text>
@@ -42,7 +44,7 @@ const ShareboxScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '$background',
+      backgroundColor: 'white',
     }}
   >
     <Text>쉐어박스 화면</Text>
@@ -55,7 +57,7 @@ const SettingsScreen = () => (
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: '$background',
+      backgroundColor: 'white',
     }}
   >
     <Text>설정 화면</Text>
@@ -88,14 +90,14 @@ const HIDDEN_TAB_BAR_SCREENS = [
 
 // 헤더바가 포함된 스크린 컴포넌트
 const ScreenWithHeader = ({ children }) => (
-  <View style={{ flex: 1, backgroundColor: '$background' }}>
+  <View style={{ flex: 1, backgroundColor: 'white' }}>
     <HeaderBar notificationCount={3} />
     <View
       style={{
         flex: 1,
         paddingTop: 12,
         paddingHorizontal: 16,
-        backgroundColor: '$background',
+        backgroundColor: 'white',
       }}
     >
       {children}
@@ -103,10 +105,22 @@ const ScreenWithHeader = ({ children }) => (
   </View>
 );
 
+// GluestackUIProvider로 감싸는 HOC
+const withGluestack = Component => {
+  return props => (
+    <GluestackUIProvider config={config}>
+      <Component {...props} />
+    </GluestackUIProvider>
+  );
+};
+
 // 탭 스크린 래퍼 컴포넌트 - 탭바 표시 여부를 조절하는 로직 포함
 const TabScreenWrapper = ({ component: Component, name }) => {
   const { hideTabBar, showTabBar } = useTabBar();
   const navigation = useNavigation();
+
+  // GluestackUIProvider로 감싼 컴포넌트
+  const WrappedComponent = withGluestack(Component);
 
   // 현재 화면의 포커스 상태 변경 감지하여 탭바 표시 여부 설정
   useEffect(() => {
@@ -125,7 +139,7 @@ const TabScreenWrapper = ({ component: Component, name }) => {
 
   return (
     <ScreenWithHeader>
-      <Component />
+      <WrappedComponent />
     </ScreenWithHeader>
   );
 };
@@ -167,8 +181,8 @@ const BottomTabBar = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color }) => renderTabBarIcon(route, focused, color),
-        tabBarActiveTintColor: '$primary400',
-        tabBarInactiveTintColor: '$border',
+        tabBarActiveTintColor: '#56AEE9',
+        tabBarInactiveTintColor: '#718096',
         tabBarLabelStyle: {
           ...styles.tabBarLabel,
           fontSize: LABEL_FONTSIZE,
@@ -177,7 +191,7 @@ const BottomTabBar = () => {
           ...styles.tabBar,
           // 테두리 제거
           borderTopWidth: 0,
-          backgroundColor: '$background',
+          backgroundColor: 'white',
           // 탭바 표시 여부에 따라 동적으로 스타일 변경
           display: isTabBarVisible ? 'flex' : 'none',
         },
@@ -240,7 +254,7 @@ const BottomTabBar = () => {
 const styles = StyleSheet.create({
   tabBar: {
     height: 65, // 안드로이드/iOS 일관된 높이
-    backgroundColor: '$background',
+    backgroundColor: 'white',
     ...Platform.select({
       ios: {
         shadowColor: 'transparent', // 그림자 제거
@@ -252,28 +266,18 @@ const styles = StyleSheet.create({
         elevation: 0, // 그림자 제거
       },
     }),
-    paddingTop: 0,
-    paddingBottom: 0,
-  },
-  tabBarLabel: {
-    fontWeight: '500',
-    marginBottom: 4,
-    marginTop: 4,
-    paddingBottom: 3,
   },
   tabBarItem: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
+    paddingTop: 8,
+    height: 65,
+  },
+  tabBarLabel: {
+    marginTop: 0,
+    marginBottom: 6,
+    fontWeight: '500',
   },
   iconContainer: {
-    width: ICON_SIZE + 8,
-    height: ICON_SIZE + 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 7,
-    marginBottom: 2,
+    marginBottom: -4,
   },
 });
 

@@ -29,18 +29,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   icon: {
-    color: '$textSecondary',
+    color: '#666666', // $textSecondary 색상값
     marginRight: ICON_MARGIN_RIGHT,
   },
   permissionTitle: {
-    fontSize: '$fontSizeLg',
-    fontWeight: '$fontWeightBold',
-    color: '$text',
+    fontSize: 16, // $fontSizeLg
+    fontWeight: '700', // $fontWeightBold
+    color: '#000000', // $text
   },
   permissionDescription: {
-    fontSize: '$fontSizeMd',
-    fontWeight: '$fontWeightRegular',
-    color: '$textSecondary',
+    fontSize: 14, // $fontSizeMd
+    fontWeight: '400', // $fontWeightRegular
+    color: '#666666', // $textSecondary
     textAlign: 'left', // 왼쪽 정렬 유지
   },
 });

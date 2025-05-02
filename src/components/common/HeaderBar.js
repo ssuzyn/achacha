@@ -47,7 +47,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
       <View style={styles.iconContainer}>
         {/* 추가 버튼 */}
         <TouchableOpacity style={styles.iconButton} onPress={handleAddPress} activeOpacity={0.7}>
-          <Icon name="add-circle-outline" size={ICON_SIZE} color="$primary400" />
+          <Icon name="add-circle-outline" size={ICON_SIZE} color="#56AEE9" />
         </TouchableOpacity>
 
         {/* 알림 버튼 */}
@@ -56,7 +56,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
           onPress={handleNotificationPress}
           activeOpacity={0.7}
         >
-          <Icon name="notifications-none" size={ICON_SIZE} color="$primary400" />
+          <Icon name="notifications-none" size={ICON_SIZE} color="#56AEE9" />
           {/* 알림 뱃지 */}
           {notificationCount > 0 && (
             <View style={styles.badge}>
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 24,
-    backgroundColor: '$background',
+    backgroundColor: 'white',
     borderBottomWidth: 0,
     marginTop: 30,
     ...Platform.select({
