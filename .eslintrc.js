@@ -28,7 +28,6 @@ module.exports = {
     'react-hooks/rules-of-hooks': 'error',
     'react-hooks/exhaustive-deps': 'warn',
     'react-native/no-unused-styles': 'warn',
-    'react-native/no-inline-styles': 'warn',
   },
   settings: {
     react: {
