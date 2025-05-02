@@ -6,6 +6,7 @@ import LoginScreen from '../screens/LoginScreen';
 import SplashScreenComponent from '../screens/SplashScreen';
 import GuideFirstScreen from '../screens/GuideScreen';
 import BottomTabBar from '../components/common/BottomTabBar';
+import NotificationScreen from '../screens/NotificationScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +18,9 @@ const AppNavigator = () => {
       <Stack.Screen name="GuideFirst" component={GuideFirstScreen} />
       <Stack.Screen name="Permission" component={PermissionScreen} />
       <Stack.Screen name="Login" component={LoginScreen} />
+
+      {/* 기타 화면 */}
+      <Stack.Screen name="Notification" component={NotificationScreen} />
 
       {/* 메인 탭바 화면 */}
       <Stack.Screen name="Main" component={MainNavigator} />
