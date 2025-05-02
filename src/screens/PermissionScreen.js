@@ -1,14 +1,7 @@
 import React, { useEffect } from 'react';
-import {
-  NativeModules,
-  NativeEventEmitter,
-  Image,
-  View,
-  Text,
-  TouchableOpacity,
-  SafeAreaView,
-  StyleSheet,
-} from 'react-native';
+import { NativeModules, NativeEventEmitter, Image, StyleSheet } from 'react-native';
+import { View, Text, SafeAreaView } from 'react-native-elements';
+import { Button } from '../components/ui';
 // import * as Notifications from 'expo-notifications';
 // import * as Location from 'expo-location';
 // import * as ImagePicker from 'expo-image-picker';
@@ -117,19 +110,14 @@ const PermissionScreen = () => {
             </View>
           </View>
 
-          <TouchableOpacity
-            style={[
-              styles.button,
-              { backgroundColor: theme.colors.primary },
-              permissionsStatus === 'checking' && styles.buttonDisabled,
-            ]}
+          <Button
+            title={permissionsStatus === 'checking' ? '권한 확인 중...' : '다음'}
             onPress={handlePressNext}
-            disabled={permissionsStatus === 'checking'}
-          >
-            <Text style={[styles.buttonText, { color: theme.colors.white }]}>
-              {permissionsStatus === 'checking' ? '권한 확인 중...' : '다음'}
-            </Text>
-          </TouchableOpacity>
+            variant="primary"
+            size="lg"
+            isDisabled={permissionsStatus === 'checking'}
+            style={permissionsStatus === 'checking' && styles.buttonDisabled}
+          />
         </View>
       </SafeAreaView>
     </View>
@@ -179,17 +167,8 @@ const styles = StyleSheet.create({
   permissionsContainer: {
     width: '100%',
   },
-  button: {
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
   buttonDisabled: {
     opacity: 0.6,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
 

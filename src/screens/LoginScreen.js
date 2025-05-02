@@ -1,13 +1,7 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  ActivityIndicator,
-  SafeAreaView,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { Image, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, SafeAreaView } from 'react-native-elements';
+import { Button } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';
 
@@ -38,41 +32,31 @@ const LoginScreen = () => {
 
           {/* 버튼 영역 */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity
+            <Button
+              title={isLoading ? null : '카카오톡 로그인'}
+              onPress={signInWithKakao}
+              isDisabled={isLoading}
+              isLoading={isLoading}
               style={[
                 styles.kakaoButton,
                 { backgroundColor: theme.colors.loginYellow },
                 isLoading && styles.disabledButton,
               ]}
-              onPress={signInWithKakao}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={theme.colors.textBrown} />
-              ) : (
-                <Text style={[styles.kakaoButtonText, { color: theme.colors.textBrown }]}>
-                  카카오톡 로그인
-                </Text>
-              )}
-            </TouchableOpacity>
+              textStyle={{ color: theme.colors.textBrown, fontWeight: 'bold', fontSize: 16 }}
+            />
 
-            <TouchableOpacity
+            <Button
+              title={isLoading ? null : 'Google 로그인'}
+              onPress={signInWithGoogle}
+              isDisabled={isLoading}
+              isLoading={isLoading}
               style={[
                 styles.googleButton,
                 { backgroundColor: theme.colors.loginRed },
                 isLoading && styles.disabledButton,
               ]}
-              onPress={signInWithGoogle}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color={theme.colors.white} />
-              ) : (
-                <Text style={[styles.googleButtonText, { color: theme.colors.white }]}>
-                  Google 로그인
-                </Text>
-              )}
-            </TouchableOpacity>
+              textStyle={{ color: theme.colors.white, fontWeight: 'bold', fontSize: 16 }}
+            />
           </View>
         </View>
       </SafeAreaView>
@@ -126,14 +110,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  kakaoButtonText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  googleButtonText: {
-    fontWeight: 'bold',
-    fontSize: 16,
   },
   disabledButton: {
     opacity: 0.6,

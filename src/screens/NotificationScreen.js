@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, Text, FlatList, TouchableOpacity, StatusBar } from 'react-native';
-import { Icon, useTheme } from 'react-native-elements';
+import { StyleSheet, FlatList, StatusBar } from 'react-native';
+import { Icon, useTheme, View, Text } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Button, ListItem, Badge } from '../components/ui';
 
 // 더미 알림 데이터
 const dummyNotifications = [
@@ -81,23 +82,25 @@ const NotificationScreen = () => {
 
   // 알림 아이템 렌더링
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={[
+    <ListItem
+      title={item.title}
+      subtitle={
+        <>
+          <Text style={[styles.notificationMessage, { color: theme.colors.grey }]}>
+            {item.message}
+          </Text>
+          <Text style={[styles.notificationTime, { color: theme.colors.grey2 }]}>{item.time}</Text>
+        </>
+      }
+      onPress={() => handleNotificationPress(item)}
+      containerStyle={[
         styles.notificationItem,
         { backgroundColor: item.read ? theme.colors.white : theme.colors.lightBlue },
       ]}
-      onPress={() => handleNotificationPress(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.notificationContent}>
-        <Text style={[styles.notificationTitle, { color: theme.colors.black }]}>{item.title}</Text>
-        <Text style={[styles.notificationMessage, { color: theme.colors.grey }]}>
-          {item.message}
-        </Text>
-        <Text style={[styles.notificationTime, { color: theme.colors.grey2 }]}>{item.time}</Text>
-      </View>
-      {!item.read && <View style={[styles.unreadDot, { backgroundColor: theme.colors.primary }]} />}
-    </TouchableOpacity>
+      rightElement={
+        !item.read ? <Badge status="primary" size="sm" containerStyle={styles.unreadDot} /> : null
+      }
+    />
   );
 
   return (
@@ -109,9 +112,14 @@ const NotificationScreen = () => {
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.white }]}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <Icon name="arrow-back-ios" type="material" size={28} color={theme.colors.black} />
-        </TouchableOpacity>
+        <Button
+          variant="ghost"
+          onPress={handleGoBack}
+          style={styles.backButton}
+          leftIcon={
+            <Icon name="arrow-back-ios" type="material" size={28} color={theme.colors.black} />
+          }
+        />
         <Text style={[styles.headerTitle, { color: theme.colors.black }]}>알림함</Text>
         <View style={styles.rightPlaceholder} />
       </View>
@@ -143,7 +151,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#EEEEEE',
   },
   backButton: {
-    padding: 10,
+    padding: 0,
+    backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 20,
@@ -157,18 +166,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   notificationItem: {
-    flexDirection: 'row',
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
-  },
-  notificationContent: {
-    flex: 1,
-  },
-  notificationTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
   },
   notificationMessage: {
     fontSize: 14,
@@ -181,7 +181,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    alignSelf: 'center',
     marginLeft: 10,
   },
   emptyContainer: {

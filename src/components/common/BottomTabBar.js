@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, View, Platform, Dimensions, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Platform, Dimensions, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
-import { Icon, useTheme } from 'react-native-elements';
+import { Icon, useTheme, View, Text } from 'react-native-elements';
+import { Button } from '../ui';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
@@ -161,7 +162,7 @@ const BottomTabBar = () => {
     );
   };
 
-  // 커스텀 탭바 버튼 렌더링 함수
+  // 커스텀 탭바 버튼 렌더링 함수 - TabNavigator와의 호환성을 위해 TouchableOpacity 유지
   const renderTabBarButton = props => {
     return <TouchableOpacity {...props} activeOpacity={1} style={props.style} />;
   };

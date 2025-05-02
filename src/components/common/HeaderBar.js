@@ -1,16 +1,8 @@
 import React from 'react';
-import {
-  StyleSheet,
-  View,
-  Image,
-  TouchableOpacity,
-  Platform,
-  Dimensions,
-  Alert,
-} from 'react-native';
+import { StyleSheet, Image, Platform, Dimensions, Alert } from 'react-native';
 import { useTabBar } from '../../context/TabBarContext';
-import { Icon, useTheme } from 'react-native-elements';
-import Badge from '../ui/Badge';
+import { Icon, useTheme, View } from 'react-native-elements';
+import { Badge, Button } from '../ui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -60,27 +52,34 @@ const HeaderBar = ({ notificationCount = 3 }) => {
         {/* 우측 아이콘 버튼 영역 */}
         <View style={styles.iconContainer}>
           {/* 추가 버튼 */}
-          <TouchableOpacity style={styles.iconButton} onPress={handleAddPress} activeOpacity={0.7}>
-            <Icon
-              name="add-circle-outline"
-              size={ICON_SIZE}
-              color={theme.colors.primary}
-              type="material"
-            />
-          </TouchableOpacity>
+          <Button
+            variant="ghost"
+            style={styles.iconButton}
+            onPress={handleAddPress}
+            leftIcon={
+              <Icon
+                name="add-circle-outline"
+                size={ICON_SIZE}
+                color={theme.colors.primary}
+                type="material"
+              />
+            }
+          />
 
           {/* 알림 버튼 */}
-          <TouchableOpacity
+          <Button
+            variant="ghost"
             style={styles.iconButton}
             onPress={handleNotificationPress}
-            activeOpacity={0.7}
+            leftIcon={
+              <Icon
+                name="notifications-none"
+                size={ICON_SIZE}
+                color={theme.colors.primary}
+                type="material"
+              />
+            }
           >
-            <Icon
-              name="notifications-none"
-              size={ICON_SIZE}
-              color={theme.colors.primary}
-              type="material"
-            />
             {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
             {notificationCount > 0 && (
               <View style={styles.badgeContainer}>
@@ -92,7 +91,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
                 />
               </View>
             )}
-          </TouchableOpacity>
+          </Button>
         </View>
       </View>
     </View>
@@ -135,6 +134,7 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: 8,
     position: 'relative',
+    backgroundColor: 'transparent',
   },
   badgeContainer: {
     position: 'absolute',

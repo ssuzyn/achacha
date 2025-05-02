@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { View, Text } from 'react-native-elements';
+import { Button } from '../ui';
 import { useTheme } from '../../hooks/useTheme';
 
 /**
@@ -27,11 +29,11 @@ const CategoryTabs = ({ categories = [], selectedId, onSelectCategory }) => {
       {categories.map(category => {
         const isSelected = selected === category.id;
         return (
-          <TouchableOpacity
+          <Button
             key={category.id}
             style={styles.tab}
             onPress={() => handleSelectCategory(category.id)}
-            activeOpacity={0.7}
+            variant="ghost"
           >
             {isSelected ? (
               <View style={[styles.activeTabIndicator, { backgroundColor: colors.secondary }]}>
@@ -40,7 +42,7 @@ const CategoryTabs = ({ categories = [], selectedId, onSelectCategory }) => {
             ) : (
               <Text style={[styles.tabText, { color: colors.white }]}>{category.name}</Text>
             )}
-          </TouchableOpacity>
+          </Button>
         );
       })}
     </View>
@@ -62,6 +64,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: '100%',
     paddingBottom: 2,
+    backgroundColor: 'transparent',
   },
   activeTabIndicator: {
     width: '90%',

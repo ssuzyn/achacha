@@ -1,14 +1,7 @@
 import React from 'react';
-import {
-  Image,
-  Dimensions,
-  StatusBar,
-  View as RNView,
-  Text as RNText,
-  TouchableOpacity,
-  SafeAreaView as RNSafeAreaView,
-  StyleSheet,
-} from 'react-native';
+import { Image, Dimensions, StatusBar, StyleSheet } from 'react-native';
+import { View, Text, SafeAreaView } from 'react-native-elements';
+import { Button } from '../components/ui';
 import { useGuideSteps } from '../hooks/useGuideSteps';
 import { useTheme } from 'react-native-elements';
 
@@ -19,13 +12,13 @@ const GuideFirstScreen = () => {
   const { theme } = useTheme();
 
   return (
-    <RNView style={[styles.container, { backgroundColor: theme.colors.white }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
-      <RNSafeAreaView style={styles.safeArea}>
-        <RNView style={styles.content}>
-          <RNView style={styles.mainContainer}>
-            <RNView style={styles.imageWrapper}>
-              <RNView style={styles.imageContainer}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.content}>
+          <View style={styles.mainContainer}>
+            <View style={styles.imageWrapper}>
+              <View style={styles.imageContainer}>
                 {currentStep === 0 ? (
                   <>
                     <Image
@@ -46,26 +39,26 @@ const GuideFirstScreen = () => {
                     resizeMode="contain"
                   />
                 )}
-              </RNView>
-            </RNView>
+              </View>
+            </View>
 
-            <RNView style={styles.textContainer}>
-              <RNText style={[styles.title, { color: theme.colors.black }]}>
+            <View style={styles.textContainer}>
+              <Text style={[styles.title, { color: theme.colors.black }]}>
                 {currentContent.title}
-              </RNText>
-              <RNText style={[styles.subText, { color: theme.colors.grey5 }]}>
+              </Text>
+              <Text style={[styles.subText, { color: theme.colors.grey5 }]}>
                 {currentContent.subText1}
-              </RNText>
+              </Text>
               {currentContent.subText2 ? (
-                <RNText style={[styles.subText, { color: theme.colors.grey5 }]}>
+                <Text style={[styles.subText, { color: theme.colors.grey5 }]}>
                   {currentContent.subText2}
-                </RNText>
+                </Text>
               ) : null}
-            </RNView>
+            </View>
 
-            <RNView style={styles.indicatorContainer}>
+            <View style={styles.indicatorContainer}>
               {[...Array(totalSteps)].map((_, index) => (
-                <RNView
+                <View
                   key={index}
                   style={[
                     styles.indicator,
@@ -78,20 +71,19 @@ const GuideFirstScreen = () => {
                   ]}
                 />
               ))}
-            </RNView>
-          </RNView>
+            </View>
+          </View>
 
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.colors.primary }]}
+          <Button
+            title={isLastStep ? '시작하기' : '다음'}
             onPress={handleNext}
-          >
-            <RNText style={[styles.buttonText, { color: theme.colors.white }]}>
-              {isLastStep ? '시작하기' : '다음'}
-            </RNText>
-          </TouchableOpacity>
-        </RNView>
-      </RNSafeAreaView>
-    </RNView>
+            variant="primary"
+            size="lg"
+            style={styles.button}
+          />
+        </View>
+      </SafeAreaView>
+    </View>
   );
 };
 
@@ -173,13 +165,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   button: {
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    width: '100%',
   },
 });
 

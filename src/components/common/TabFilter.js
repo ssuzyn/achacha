@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { View, Text } from 'react-native-elements';
+import { Chip } from '../ui';
 import useTheme from '../../hooks/useTheme';
 
 /**
@@ -25,32 +27,27 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
       {tabs.map(tab => {
         const isSelected = tab.id === selectedTabId;
         return (
-          <TouchableOpacity
+          <Chip
             key={tab.id}
-            style={[
+            title={tab.title}
+            variant="tab"
+            isSelected={isSelected}
+            onPress={() => handleTabPress(tab.id)}
+            containerStyle={[
               styles.tab,
               {
                 borderColor: isSelected ? colors.primary : colors.grey2,
                 borderWidth: theme.Chip.buttonStyle.borderWidth,
               },
             ]}
-            onPress={() => handleTabPress(tab.id)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.textContainer}>
-              <Text
-                style={[
-                  styles.tabText,
-                  theme.Chip.titleStyle,
-                  {
-                    color: isSelected ? colors.black : colors.grey3,
-                  },
-                ]}
-              >
-                {tab.title}
-              </Text>
-            </View>
-          </TouchableOpacity>
+            titleStyle={[
+              styles.tabText,
+              theme.Chip.titleStyle,
+              {
+                color: isSelected ? colors.black : colors.grey3,
+              },
+            ]}
+          />
         );
       })}
     </View>
@@ -69,11 +66,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginRight: 10,
     backgroundColor: 'white',
-  },
-  textContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   tabText: {
     fontWeight: '400',

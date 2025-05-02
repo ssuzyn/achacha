@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Image, Alert, View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Image, Alert, StyleSheet, ScrollView } from 'react-native';
+import { View, Text } from 'react-native-elements';
+import { Button } from '../components/ui';
 import * as ImagePicker from 'expo-image-picker';
 
 const HomeScreen = () => {
@@ -61,11 +63,16 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.centerContainer}>
-          <Text style={styles.title}>홈 스크린</Text>
+          <Text h4 style={styles.title}>
+            홈 스크린
+          </Text>
 
-          <TouchableOpacity style={styles.button} onPress={pickImage}>
-            <Text style={styles.buttonText}>갤러리에서 이미지 선택</Text>
-          </TouchableOpacity>
+          <Button
+            title="갤러리에서 이미지 선택"
+            onPress={pickImage}
+            variant="primary"
+            style={styles.button}
+          />
 
           {image && (
             <View style={styles.imageContainer}>
@@ -99,16 +106,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#278CCC',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
+    width: '100%',
     marginBottom: 20,
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
   imageContainer: {
     marginTop: 20,
