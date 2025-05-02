@@ -1,5 +1,14 @@
 import React from 'react';
-import { StyleSheet, View, Image, TouchableOpacity, Platform, Dimensions } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Image,
+  TouchableOpacity,
+  Platform,
+  Dimensions,
+  Alert,
+  Text,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTabBar } from '../../context/TabBarContext';
@@ -18,13 +27,17 @@ const HeaderBar = ({ notificationCount = 3 }) => {
     // 추가 메뉴 또는 추가 화면으로 이동
     console.log('추가 버튼 클릭');
     // 예: navigation.navigate('AddNew');
+    Alert.alert('안내', '추가 기능은 준비 중입니다.');
   };
 
   // 알림 버튼 클릭 핸들러
   const handleNotificationPress = () => {
     // 알림 화면으로 이동
     console.log('알림 버튼 클릭');
-    navigation.navigate('Notification');
+    // 아직 구현되지 않은 화면이므로 임시 알림 표시
+    Alert.alert('안내', '알림 기능은 준비 중입니다.');
+    // 아래 코드는 Notification 화면이 구현되면 주석 해제
+    // navigation.navigate('Notification');
   };
 
   // 탭바가 숨겨져 있을 때는 헤더도 숨김
@@ -63,12 +76,11 @@ const HeaderBar = ({ notificationCount = 3 }) => {
               <View style={styles.badgeInner}>
                 <Icon name="circle" size={18} color="red" style={styles.badgeBackground} />
                 <View style={styles.badgeTextContainer}>
-                  <Icon
-                    name={notificationCount > 9 ? 'add' : `${notificationCount}`}
-                    size={12}
-                    color="white"
-                    style={styles.badgeText}
-                  />
+                  {notificationCount > 9 ? (
+                    <Icon name="add" size={12} color="white" style={styles.badgeText} />
+                  ) : (
+                    <Text style={styles.badgeNumber}>{notificationCount}</Text>
+                  )}
                 </View>
               </View>
             </View>
@@ -144,6 +156,12 @@ const styles = StyleSheet.create({
   badgeText: {
     textAlign: 'center',
     fontWeight: 'bold',
+  },
+  badgeNumber: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
 
