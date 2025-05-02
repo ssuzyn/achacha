@@ -4,7 +4,7 @@ pipeline {
         jdk "JDK17"
     }
     environment {
-        DOCKER_IMAGE = 'ssuzyn/achacha-backend' // <- Docker 이미지 이름 변수
+        DOCKER_IMAGE = 'ssuzyn/achacha-backend'
         SERVER_HOST = credentials('EC2_HOST')
         SPRING_DATABASE = credentials('SPRING_DATABASE')
         SPRING_DATABASE_URL = credentials('SPRING_DATABASE_URL')
@@ -54,14 +54,23 @@ pipeline {
                 sshagent(['EC2_SSH']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_HOST} "
+                            # 네트워크가 없으면 생성
+                            docker network inspect achacha-network >/dev/null 2>&1 || docker network create achacha-network
+
+                            # MySQL 컨테이너 실행 상태 확인 및 네트워크 연결
+                            if docker ps | grep achacha-mysql; then
+                                docker network connect achacha-network achacha-mysql || true
+                            fi
+
+                            # 백엔드 컨테이너 배포
                             docker pull ${DOCKER_IMAGE}:latest
                             docker stop achacha-backend || true
                             docker rm achacha-backend || true
                             docker run -d --name achacha-backend \\
                                 -e SPRING_PROFILES_ACTIVE=prod \\
-                                -e SPRING_DATABASE_URL=${SPRING_DATABASE_URL} \\
-                                -e SPRING_DATABASE_USERNAME=${SPRING_DATABASE_USR} \\
-                                -e SPRING_DATABASE_PASSWORD=${SPRING_DATABASE_PSW} \\
+                                -e SPRING_DATASOURCE_URL=${SPRING_DATABASE_URL} \\
+                                -e SPRING_DATASOURCE_USERNAME=${SPRING_DATABASE_USR} \\
+                                -e SPRING_DATASOURCE_PASSWORD=${SPRING_DATABASE_PSW} \\
                                 -p 8081:8080 \\
                                 --network achacha-network \\
                                 --restart unless-stopped \\
