@@ -83,16 +83,16 @@ const Slider = ({
   };
 
   // 조정값 텍스트 포맷 함수
-  const formatAdjustmentText = value => {
-    if (value === 0) return '당일';
-    if (value === 1) return '1일 전';
-    if (value === 2) return '2일 전';
-    if (value === 3) return '3일 전';
-    if (value === 7) return '일주일 전';
-    if (value === 30) return '30일 전';
-    if (value === 60) return '60일 전';
-    if (value === 90) return '90일 전';
-    return `${value}일 전`;
+  const formatAdjustmentText = val => {
+    if (val === 0) return '당일';
+    if (val === 1) return '1일 전';
+    if (val === 2) return '2일 전';
+    if (val === 3) return '3일 전';
+    if (val === 7) return '일주일 전';
+    if (val === 30) return '30일 전';
+    if (val === 60) return '60일 전';
+    if (val === 90) return '90일 전';
+    return `${val}일 전`;
   };
 
   // values 배열을 사용하는 경우, min/max 값을 조정
