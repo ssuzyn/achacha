@@ -13,6 +13,8 @@ const SettingScreen = () => {
   const [giftSharingNotification, setGiftSharingNotification] = useState(true);
   const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
   const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(1);
+  const [usageCompletionNotification, setUsageCompletionNotification] = useState(true);
+  const [shareboxNotification, setShareboxNotification] = useState(true);
 
   // 슬라이더 마커 값
   const markers = [0, 1, 2, 3, 7, 30, 60, 90];
@@ -104,6 +106,35 @@ const SettingScreen = () => {
             </Text>
           </View>
           <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
+        </View>
+
+        {/* 사용 완료 여부 알림 */}
+        <View style={styles.notificationItem}>
+          <View style={styles.notificationInfo}>
+            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+              사용완료 여부 알림
+            </Text>
+            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+              해제 시 사용완료 여부 확인 알림이 중단됩니다.
+            </Text>
+          </View>
+          <Switch
+            value={usageCompletionNotification}
+            onValueChange={setUsageCompletionNotification}
+          />
+        </View>
+
+        {/* 쉐어박스 알림 */}
+        <View style={styles.notificationItem}>
+          <View style={styles.notificationInfo}>
+            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+              쉐어박스 알림
+            </Text>
+            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+              해제 시 쉐어박스 관련 알림이 모두 중단됩니다.
+            </Text>
+          </View>
+          <Switch value={shareboxNotification} onValueChange={setShareboxNotification} />
         </View>
       </View>
 
