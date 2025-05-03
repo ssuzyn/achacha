@@ -34,7 +34,7 @@ const SettingScreen = () => {
       <View style={[styles.section, styles.firstSection]}>
         <Text style={[styles.sectionTitle, { color: theme.colors.black }]}>회원정보</Text>
         <View style={styles.infoItem}>
-          <Text style={[styles.infoLabel, { color: theme.colors.grey1 }]}>연결된 소셜 계정</Text>
+          <Text style={[styles.infoLabel, { color: theme.colors.grey3 }]}>연결된 소셜 계정</Text>
           <Text style={[styles.infoValue, { color: theme.colors.black }]}>qwer@kakao.com</Text>
         </View>
       </View>
