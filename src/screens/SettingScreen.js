@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   customSliderContainer: {
-    marginTop: 8,
+    marginTop: 20,
     marginBottom: 0,
     width: '100%',
     justifyContent: 'center',
