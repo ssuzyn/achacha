@@ -1,116 +1,85 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, PanResponder } from 'react-native';
+import React, { useState } from 'react';
+import { Slider as RNESlider } from 'react-native-elements';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from 'react-native-elements';
 
 /**
- * 커스텀 슬라이더 컴포넌트
- * 지정된 값에만 동그라미 표시하고 드래그로 슬라이드 가능
+ * 슬라이더 컴포넌트
  */
-export const Slider = ({
+const Slider = ({
   value,
-  values = [0, 1, 2, 3, 7, 30, 60, 90], // 기본 값 배열
+  values = [0, 1, 2, 3, 7, 30, 60, 90], // 기존 코드와의 호환성을 위한 값 배열
+  minimumValue = 0,
+  maximumValue = 100,
+  step = 1,
   onValueChange,
+  onSlidingComplete,
   disabled = false,
   label,
   showValue = true,
+  showMinMax = false,
   renderValue,
+  trackStyle,
+  thumbStyle,
   containerStyle,
+  activeColor, // 기존 코드와의 호환성
+  inactiveColor, // 기존 코드와의 호환성
+  minimumTrackTintColor,
+  maximumTrackTintColor,
+  thumbTintColor,
   valueTextStyle,
   labelTextStyle,
-  activeColor,
-  inactiveColor,
+  minMaxTextStyle,
   ...props
 }) => {
+  // 값 배열(values)이 제공된 경우 이를 처리하는 로직
+  const useValueArray = values && values.length > 0;
+
+  // values 배열이 제공된 경우, 해당 배열의 인덱스로 변환
+  const [localIndex, setLocalIndex] = useState(() => {
+    if (useValueArray) {
+      const index = values.indexOf(value);
+      return index !== -1 ? index : 0;
+    }
+    return 0;
+  });
+
+  // 초기 로컬 값 설정
+  const [localValue, setLocalValue] = useState(useValueArray ? values[localIndex] : value);
+
   const { theme } = useTheme();
-  const [localValue, setLocalValue] = useState(value);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const sliderWidth = useRef(0);
 
-  // 초기값 설정 및 변경 시 activeIndex 업데이트
-  useEffect(() => {
-    const index = values.indexOf(value);
-    if (index !== -1) {
-      setActiveIndex(index);
-      setLocalValue(value);
+  // 로컬 값 변경 핸들러
+  const handleValueChange = newValue => {
+    if (useValueArray) {
+      // values 배열을 사용하는 경우, 정확한 인덱스로 변환
+      // 반올림하여 가장 가까운 스텝으로 이동
+      const index = Math.round(newValue);
+      const valueFromArray = values[index];
+
+      setLocalIndex(index);
+      setLocalValue(valueFromArray);
+      onValueChange && onValueChange(valueFromArray);
     } else {
-      // 가장 가까운 값 찾기
-      const closestIndex = findClosestValueIndex(value, values);
-      setActiveIndex(closestIndex);
-      setLocalValue(values[closestIndex]);
-    }
-  }, [value, values]);
-
-  // 가장 가까운 값의 인덱스 찾기
-  const findClosestValueIndex = (val, arr) => {
-    let closest = 0;
-    let minDiff = Math.abs(val - arr[0]);
-
-    for (let i = 1; i < arr.length; i++) {
-      const diff = Math.abs(val - arr[i]);
-      if (diff < minDiff) {
-        minDiff = diff;
-        closest = i;
-      }
-    }
-
-    return closest;
-  };
-
-  // 위치에서 인덱스 계산
-  const getIndexFromPosition = positionX => {
-    if (sliderWidth.current === 0) return 0;
-
-    // 슬라이더 내 상대적 위치 계산 (0~1 사이 값)
-    const ratio = Math.max(0, Math.min(1, positionX / sliderWidth.current));
-
-    // 가장 가까운 인덱스 찾기
-    const exactIndex = ratio * (values.length - 1);
-    return Math.round(exactIndex);
-  };
-
-  // 팬 제스처 핸들러 설정
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabled,
-      onMoveShouldSetPanResponder: () => !disabled,
-      onPanResponderGrant: (evt, gestureState) => {
-        // 터치 시작 위치에서 가장 가까운 인덱스 계산
-        const touchX = evt.nativeEvent.locationX;
-        const newIndex = getIndexFromPosition(touchX);
-        updateValue(newIndex);
-      },
-      onPanResponderMove: (evt, gestureState) => {
-        // 드래그 위치에서 가장 가까운 인덱스 계산
-        const touchX = Math.max(
-          0,
-          Math.min(
-            sliderWidth.current,
-            gestureState.moveX - evt.nativeEvent.locationX + gestureState.dx
-          )
-        );
-        const newIndex = getIndexFromPosition(touchX);
-        updateValue(newIndex);
-      },
-      onPanResponderRelease: () => {
-        // 터치 종료
-      },
-    })
-  ).current;
-
-  // 값 업데이트 함수
-  const updateValue = index => {
-    if (index !== activeIndex) {
-      setActiveIndex(index);
-      const newValue = values[index];
+      // 일반 슬라이더로 사용하는 경우
       setLocalValue(newValue);
       onValueChange && onValueChange(newValue);
     }
   };
 
-  // 마커 클릭 핸들러
-  const handleMarkerPress = index => {
-    if (disabled) return;
-    updateValue(index);
+  // 슬라이딩 완료 핸들러
+  const handleSlidingComplete = newValue => {
+    if (useValueArray) {
+      // 정확한 인덱스로 이동
+      const index = Math.round(newValue);
+      const valueFromArray = values[index];
+
+      setLocalIndex(index);
+      setLocalValue(valueFromArray);
+      onSlidingComplete && onSlidingComplete(valueFromArray);
+    } else {
+      onSlidingComplete && onSlidingComplete(newValue);
+    }
   };
 
   // 렌더링할 값 텍스트 결정
@@ -121,34 +90,13 @@ export const Slider = ({
     return localValue;
   };
 
-  // 활성화/비활성화 색상 설정
-  const activeTrackColor = activeColor || theme.colors.secondary || '#278CCC';
-  const inactiveTrackColor = inactiveColor || '#E4E4E4';
-  const activeBubbleColor = '#B3DEFF';
-  const inactiveBubbleColor = '#E4E4E4';
-  const textColor = '#8A8A8F';
-  const activeTextColor = theme.colors.secondary || '#278CCC';
+  // values 배열을 사용하는 경우, min/max 값을 조정
+  const effectiveMinValue = useValueArray ? 0 : minimumValue;
+  const effectiveMaxValue = useValueArray ? values.length - 1 : maximumValue;
 
-  // 라벨 간격 계산을 위한 함수
-  const getLabelPosition = index => {
-    const basePosition = (index / (values.length - 1)) * 85 + 10;
-
-    // 간격 조정 (작은 값으로 설정)
-    const spacing = 0.3; // 아주 작은 값 (%)
-
-    // 첫 번째와 마지막 라벨은 위치 그대로 유지, 나머지는 간격 조절
-    if (index === 0) return basePosition;
-    if (index === values.length - 1) return basePosition;
-
-    // 중간 값들은 인덱스에 따라 좌우로 약간 이동
-    const middleIndex = Math.floor((values.length - 1) / 2);
-    if (index < middleIndex) {
-      return basePosition - (middleIndex - index) * spacing;
-    } else if (index > middleIndex) {
-      return basePosition + (index - middleIndex) * spacing;
-    }
-    return basePosition;
-  };
+  // 테마에서 색상 가져오기
+  const secondaryColor = theme.colors.secondary; // '#278CCC'
+  const backgroundColor = theme.colors.background; // '#A7DAF9'
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -156,103 +104,92 @@ export const Slider = ({
         <View style={styles.labelContainer}>
           <Text style={[styles.label, { color: theme.colors.black }, labelTextStyle]}>{label}</Text>
           {showValue && (
-            <Text style={[styles.value, { color: activeTrackColor }, valueTextStyle]}>
+            <Text style={[styles.value, { color: secondaryColor }, valueTextStyle]}>
               {renderValueText()}
             </Text>
           )}
         </View>
       )}
 
-      <View style={styles.sliderWrapper}>
-        <View
-          style={styles.sliderContainer}
-          onLayout={e => {
-            sliderWidth.current = e.nativeEvent.layout.width;
-          }}
-          {...panResponder.panHandlers}
-        >
-          {/* 트랙 배경 */}
-          <View
-            style={[
-              styles.track,
-              {
-                backgroundColor: inactiveTrackColor,
-                width: '85%',
-                marginLeft: '10%',
-                marginRight: '5%',
-              },
-            ]}
-          />
-
-          {/* 활성화된 트랙 */}
-          <View
-            style={[
-              styles.activeTrack,
-              {
-                width: `${(activeIndex / (values.length - 1)) * 85}%`,
-                backgroundColor: activeTrackColor,
-                marginLeft: '10%',
-              },
-            ]}
-          />
-
-          {/* 마커들 */}
-          <View style={styles.markersContainer}>
-            {values.map((markerValue, index) => {
-              const isCurrentActive = index === activeIndex;
-              const shouldShowMarker = index >= activeIndex;
-
-              if (!shouldShowMarker) {
-                return null;
-              }
-
-              return (
-                <TouchableOpacity
-                  key={index}
-                  activeOpacity={disabled ? 1 : 0.7}
-                  onPress={() => handleMarkerPress(index)}
-                  style={[
-                    styles.markerTouchable,
-                    { left: `${(index / (values.length - 1)) * 85 + 10}%` },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.marker,
-                      {
-                        backgroundColor: isCurrentActive ? activeBubbleColor : inactiveBubbleColor,
-                        width: isCurrentActive ? 18 : 6,
-                        height: isCurrentActive ? 18 : 6,
-                        borderRadius: isCurrentActive ? 9 : 3,
-                        transform: [{ translateX: isCurrentActive ? -8 : -2 }],
-                      },
-                    ]}
-                  />
-                </TouchableOpacity>
-              );
-            })}
+      <View style={styles.sliderArea}>
+        {/* 슬라이더 위치에 스텝 마커 표시 */}
+        {useValueArray && (
+          <View style={styles.stepMarkersContainer}>
+            {values.map((_, index) => (
+              <View
+                key={index}
+                style={[
+                  styles.stepMarker,
+                  {
+                    left: `${(index / (values.length - 1)) * 100}%`,
+                    backgroundColor:
+                      index <= localIndex ? secondaryColor : inactiveColor || theme.colors.grey2,
+                    transform: [{ translateX: -3 }],
+                  },
+                ]}
+              />
+            ))}
           </View>
-        </View>
+        )}
 
-        {/* 값 라벨 */}
-        <View style={styles.valuesContainer}>
-          {values.map((val, index) => (
-            <Text
-              key={index}
-              style={[
-                styles.valueLabel,
-                {
-                  left: `${getLabelPosition(index)}%`,
-                  color: index === activeIndex ? activeTextColor : textColor,
-                  transform: [{ translateX: -2 }],
-                },
-              ]}
-            >
-              {val}
-            </Text>
-          ))}
-        </View>
+        <RNESlider
+          value={useValueArray ? localIndex : localValue}
+          minimumValue={effectiveMinValue}
+          maximumValue={effectiveMaxValue}
+          step={useValueArray ? 1 : step} // values 배열 사용 시 정수 인덱스만 사용
+          onValueChange={handleValueChange}
+          onSlidingComplete={handleSlidingComplete}
+          disabled={disabled}
+          trackStyle={[styles.track, trackStyle]}
+          thumbStyle={[
+            styles.thumb,
+            { backgroundColor: thumbTintColor || backgroundColor },
+            thumbStyle,
+          ]}
+          minimumTrackTintColor={secondaryColor}
+          maximumTrackTintColor={inactiveColor || theme.colors.grey2}
+          thumbTintColor={backgroundColor}
+          {...props}
+        />
       </View>
+
+      {/* values 배열 사용 시, 각 값 위치에 라벨 표시 */}
+      {useValueArray && (
+        <View style={styles.valuesContainer}>
+          {values.map((val, index) => {
+            // 각 값의 상대적 위치 계산
+            const position = (index / (values.length - 1)) * 100;
+
+            return (
+              <Text
+                key={index}
+                style={[
+                  styles.valueLabel,
+                  {
+                    left: `${position}%`,
+                    color: index === localIndex ? secondaryColor : theme.colors.grey3,
+                    fontWeight: index === localIndex ? 'bold' : 'normal',
+                    transform: [{ translateX: -10 }],
+                  },
+                ]}
+              >
+                {val}
+              </Text>
+            );
+          })}
+        </View>
+      )}
+
+      {!useValueArray && showMinMax && (
+        <View style={styles.minMaxContainer}>
+          <Text style={[styles.minMaxText, { color: theme.colors.grey5 }, minMaxTextStyle]}>
+            {minimumValue}
+          </Text>
+          <Text style={[styles.minMaxText, { color: theme.colors.grey5 }, minMaxTextStyle]}>
+            {maximumValue}
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -260,63 +197,48 @@ export const Slider = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    marginVertical: 10,
   },
-  sliderWrapper: {
-    paddingTop: 8,
-    paddingBottom: 0,
-    width: '100%',
+  sliderArea: {
+    position: 'relative',
+    paddingTop: 8, // 마커 공간 확보
+    paddingBottom: 8,
   },
   labelContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
-    paddingHorizontal: 10,
+    marginBottom: 8,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
   },
   value: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
   },
-  sliderContainer: {
-    position: 'relative',
-    height: 20,
-    justifyContent: 'center',
-    width: '100%',
-  },
   track: {
-    width: '100%',
-    height: 3,
-    borderRadius: 0,
-    position: 'absolute',
+    height: 4,
+    borderRadius: 2,
   },
-  activeTrack: {
-    height: 3,
-    borderRadius: 0,
-    position: 'absolute',
-    left: 0,
+  thumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
   },
-  markersContainer: {
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
+  minMaxContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 4,
   },
-  markerTouchable: {
-    position: 'absolute',
-    padding: 8,
-    zIndex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  marker: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  minMaxText: {
+    fontSize: 12,
   },
   valuesContainer: {
     flexDirection: 'row',
@@ -329,8 +251,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     position: 'absolute',
     textAlign: 'center',
-    color: '#8A8A8F',
-    width: 16,
+    width: 20,
+  },
+  stepMarkersContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    position: 'absolute',
+    top: 21, // 슬라이더 트랙 위치와 일치
+    zIndex: 1,
+    height: 6,
+  },
+  stepMarker: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    position: 'absolute',
+    backgroundColor: '#ddd',
   },
 });
 
