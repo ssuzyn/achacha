@@ -92,14 +92,14 @@ const HomeScreen = () => {
           />
         </View>
 
-        {/* 중간 카드 섹션 (쉐어박스, 나누기, 레이더) */}
+        {/* 중간 카드 섹션 (쉐어박스, 나누기) */}
         <View style={styles.middleCardSection}>
           <View style={styles.middleCardRow}>
             {/* 쉐어박스 & 나누기 카드 */}
             <View style={styles.featureCard}>
-              <Text style={styles.featureTitle}>나누면</Text>
-              <Text style={styles.featureTitle}>즐거운 두배,</Text>
-              <Text style={styles.featureTitle}>쉐어박스</Text>
+              <Text style={styles.featureTitle}>
+                나누면{'\n'}즐거움 두배,{'\n'}쉐어박스
+              </Text>
               <View style={styles.shareBoxIcon}>
                 <Icon name="share" size={24} color="#888" />
                 <Text style={styles.shareBoxCount}>34개 쉐어 중</Text>
@@ -238,12 +238,14 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#f0f4ff',
     borderRadius: 10,
+    justifyContent: 'start',
   },
   featureTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 6,
+    marginBottom: 10,
+    lineHeight: 24,
   },
   shareBoxIcon: {
     flexDirection: 'row',
