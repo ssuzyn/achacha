@@ -30,6 +30,8 @@ const Slider = ({
   valueTextStyle,
   labelTextStyle,
   minMaxTextStyle,
+  showThumbLabel = true, // thumb에 값 표시 여부
+  thumbLabelStyle, // thumb 라벨 스타일
   ...props
 }) => {
   // 값 배열(values)이 제공된 경우 이를 처리하는 로직
@@ -103,6 +105,17 @@ const Slider = ({
   const primaryColor = theme.colors.primary;
   const backgroundColor = theme.colors.background;
 
+  // 커스텀 썸네일 렌더링 (값 표시 포함)
+  const renderThumbComponent = () => {
+    if (!showThumbLabel || !useValueArray) return null;
+
+    return (
+      <View style={[styles.customThumb, { backgroundColor: thumbTintColor || backgroundColor }]}>
+        <Text style={[styles.thumbLabel, thumbLabelStyle]}>{localValue}</Text>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, containerStyle]}>
       {/* 슬라이더 위에 중앙 정렬된 "당일 ~ [조정값]" 텍스트 */}
@@ -130,6 +143,16 @@ const Slider = ({
           minimumTrackTintColor={minimumTrackTintColor || primaryColor}
           maximumTrackTintColor={maximumTrackTintColor || inactiveColor || theme.colors.grey2}
           thumbTintColor={thumbTintColor || backgroundColor}
+          thumbProps={{
+            children:
+              showThumbLabel && useValueArray ? (
+                <View style={styles.thumbLabelContainer}>
+                  <Text style={[styles.thumbLabel, { color: theme.colors.white }, thumbLabelStyle]}>
+                    {localValue}
+                  </Text>
+                </View>
+              ) : null,
+          }}
           {...props}
         />
       </View>
@@ -172,14 +195,41 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   thumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1,
+  },
+  customThumb: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1,
+  },
+  thumbLabelContainer: {
+    position: 'absolute',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  thumbLabel: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    color: '#000',
+    textAlign: 'center',
   },
   minMaxContainer: {
     flexDirection: 'row',
