@@ -225,13 +225,10 @@ const styles = StyleSheet.create({
   },
   customSliderContainer: {
     marginTop: 20,
-    marginBottom: 0,
+    marginBottom: 2,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  sliderStyle: {
-    // 슬라이더 중앙 정렬을 위해 marginLeft 제거
   },
   buttonContainer: {
     marginVertical: 24,
