@@ -54,29 +54,31 @@ const SettingScreen = () => {
           <Switch value={expiryNotification} onValueChange={setExpiryNotification} />
         </View>
 
-        {/* 유효기간 알림 주기 설정 */}
-        <View style={styles.sliderContainer}>
-          <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
-              유효기간 알림 주기 설정
-            </Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              만료 알림은 오전 9시에 전송됩니다.
-            </Text>
-          </View>
+        {/* 유효기간 알림 주기 설정 - 만료 알림이 활성화된 경우에만 표시 */}
+        {expiryNotification && (
+          <View style={styles.sliderContainer}>
+            <View style={styles.notificationInfo}>
+              <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+                유효기간 알림 주기 설정
+              </Text>
+              <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+                만료 알림은 오전 9시에 전송됩니다.
+              </Text>
+            </View>
 
-          <View style={styles.customSliderContainer}>
-            <Slider
-              value={expiryNotificationInterval}
-              values={markers}
-              onValueChange={value => setExpiryNotificationInterval(value)}
-              minimumTrackTintColor={theme.colors.primary}
-              maximumTrackTintColor={theme.colors.grey2}
-              showValue={false}
-              containerStyle={styles.sliderStyle}
-            />
+            <View style={styles.customSliderContainer}>
+              <Slider
+                value={expiryNotificationInterval}
+                values={markers}
+                onValueChange={value => setExpiryNotificationInterval(value)}
+                minimumTrackTintColor={theme.colors.primary}
+                maximumTrackTintColor={theme.colors.grey2}
+                showValue={false}
+                containerStyle={styles.sliderStyle}
+              />
+            </View>
           </View>
-        </View>
+        )}
 
         {/* 선물 나누기 알림 */}
         <View style={styles.notificationItem}>
