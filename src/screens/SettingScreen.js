@@ -64,7 +64,7 @@ const SettingScreen = () => {
                 유효기간 알림 주기 설정
               </Text>
               <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-                만료 알림은 오전 9시에 전송됩니다.
+                만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90 일 단위
               </Text>
             </View>
 
