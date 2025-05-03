@@ -82,12 +82,17 @@ const Slider = ({
     }
   };
 
-  // 렌더링할 값 텍스트 결정
-  const renderValueText = () => {
-    if (renderValue) {
-      return renderValue(localValue);
-    }
-    return localValue;
+  // 조정값 텍스트 포맷 함수
+  const formatAdjustmentText = value => {
+    if (value === 0) return '당일';
+    if (value === 1) return '1일 전';
+    if (value === 2) return '2일 전';
+    if (value === 3) return '3일 전';
+    if (value === 7) return '일주일 전';
+    if (value === 30) return '30일 전';
+    if (value === 60) return '60일 전';
+    if (value === 90) return '90일 전';
+    return `${value}일 전`;
   };
 
   // values 배열을 사용하는 경우, min/max 값을 조정
@@ -95,43 +100,19 @@ const Slider = ({
   const effectiveMaxValue = useValueArray ? values.length - 1 : maximumValue;
 
   // 테마에서 색상 가져오기
-  const secondaryColor = theme.colors.secondary; // '#278CCC'
-  const backgroundColor = theme.colors.background; // '#A7DAF9'
+  const primaryColor = theme.colors.primary;
+  const backgroundColor = theme.colors.background;
 
   return (
     <View style={[styles.container, containerStyle]}>
-      {label && (
-        <View style={styles.labelContainer}>
-          <Text style={[styles.label, { color: theme.colors.black }, labelTextStyle]}>{label}</Text>
-          {showValue && (
-            <Text style={[styles.value, { color: secondaryColor }, valueTextStyle]}>
-              {renderValueText()}
-            </Text>
-          )}
-        </View>
-      )}
+      {/* 슬라이더 위에 중앙 정렬된 "당일 ~ [조정값]" 텍스트 */}
+      <View style={styles.adjustmentTextContainer}>
+        <Text style={[styles.adjustmentText, { color: primaryColor }]}>
+          {localValue === 0 ? '당일만' : `당일 ~ ${formatAdjustmentText(localValue)}`}
+        </Text>
+      </View>
 
       <View style={styles.sliderArea}>
-        {/* 슬라이더 위치에 스텝 마커 표시 */}
-        {useValueArray && (
-          <View style={styles.stepMarkersContainer}>
-            {values.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.stepMarker,
-                  {
-                    left: `${(index / (values.length - 1)) * 100}%`,
-                    backgroundColor:
-                      index <= localIndex ? secondaryColor : inactiveColor || theme.colors.grey2,
-                    transform: [{ translateX: -3 }],
-                  },
-                ]}
-              />
-            ))}
-          </View>
-        )}
-
         <RNESlider
           value={useValueArray ? localIndex : localValue}
           minimumValue={effectiveMinValue}
@@ -146,39 +127,12 @@ const Slider = ({
             { backgroundColor: thumbTintColor || backgroundColor },
             thumbStyle,
           ]}
-          minimumTrackTintColor={secondaryColor}
-          maximumTrackTintColor={inactiveColor || theme.colors.grey2}
-          thumbTintColor={backgroundColor}
+          minimumTrackTintColor={minimumTrackTintColor || primaryColor}
+          maximumTrackTintColor={maximumTrackTintColor || inactiveColor || theme.colors.grey2}
+          thumbTintColor={thumbTintColor || backgroundColor}
           {...props}
         />
       </View>
-
-      {/* values 배열 사용 시, 각 값 위치에 라벨 표시 */}
-      {useValueArray && (
-        <View style={styles.valuesContainer}>
-          {values.map((val, index) => {
-            // 각 값의 상대적 위치 계산
-            const position = (index / (values.length - 1)) * 100;
-
-            return (
-              <Text
-                key={index}
-                style={[
-                  styles.valueLabel,
-                  {
-                    left: `${position}%`,
-                    color: index === localIndex ? secondaryColor : theme.colors.grey3,
-                    fontWeight: index === localIndex ? 'bold' : 'normal',
-                    transform: [{ translateX: -10 }],
-                  },
-                ]}
-              >
-                {val}
-              </Text>
-            );
-          })}
-        </View>
-      )}
 
       {!useValueArray && showMinMax && (
         <View style={styles.minMaxContainer}>
@@ -197,26 +151,21 @@ const Slider = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    marginVertical: 10,
+    marginVertical: 0,
   },
   sliderArea: {
     position: 'relative',
-    paddingTop: 8, // 마커 공간 확보
-    paddingBottom: 8,
+    paddingVertical: 2,
+    marginHorizontal: 10, // 슬라이더 양쪽 여백
   },
-  labelContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  adjustmentTextContainer: {
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 2,
   },
-  label: {
-    fontSize: 14,
+  adjustmentText: {
+    fontSize: 16,
     fontWeight: '500',
-  },
-  value: {
-    fontSize: 14,
-    fontWeight: '500',
+    textAlign: 'center',
   },
   track: {
     height: 4,
@@ -236,37 +185,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 4,
+    paddingHorizontal: 20, // 최소/최대값 컨테이너 여백
   },
   minMaxText: {
     fontSize: 12,
-  },
-  valuesContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    position: 'relative',
-    marginTop: 10,
-    height: 20,
-  },
-  valueLabel: {
-    fontSize: 12,
-    position: 'absolute',
-    textAlign: 'center',
-    width: 20,
-  },
-  stepMarkersContainer: {
-    flexDirection: 'row',
-    width: '100%',
-    position: 'absolute',
-    top: 21, // 슬라이더 트랙 위치와 일치
-    zIndex: 1,
-    height: 6,
-  },
-  stepMarker: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    position: 'absolute',
-    backgroundColor: '#ddd',
   },
 });
 

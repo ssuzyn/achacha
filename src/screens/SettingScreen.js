@@ -70,8 +70,8 @@ const SettingScreen = () => {
               value={expiryNotificationInterval}
               values={markers}
               onValueChange={value => setExpiryNotificationInterval(value)}
-              activeColor="#0F84FE"
-              inactiveColor="#D8D8D8"
+              minimumTrackTintColor={theme.colors.primary}
+              maximumTrackTintColor={theme.colors.grey2}
               showValue={false}
               containerStyle={styles.sliderStyle}
             />
@@ -181,18 +181,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   sliderContainer: {
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingVertical: 5,
+    marginBottom: 5,
   },
   customSliderContainer: {
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 0,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
   sliderStyle: {
-    marginLeft: -35,
+    // 슬라이더 중앙 정렬을 위해 marginLeft 제거
   },
   buttonContainer: {
     marginVertical: 24,
