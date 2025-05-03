@@ -50,7 +50,7 @@ const SettingScreen = () => {
               유효기간 만료 알림
             </Text>
             <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              해제 시 유효기간 만료 알림이 중단됩니다.
+              유효기간 임박 시 알림
             </Text>
           </View>
           <Switch value={expiryNotification} onValueChange={setExpiryNotification} />
@@ -82,14 +82,14 @@ const SettingScreen = () => {
           </View>
         )}
 
-        {/* 근접 매장 알림 */}
+        {/* 주변 매장 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
-              근접 매장 알림
+              주변 매장 알림
             </Text>
             <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              해제 시 근접 매장 알림이 중단됩니다.
+              각 매장 기준 150m 이내 접근 시 알림
             </Text>
           </View>
           <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
@@ -102,7 +102,7 @@ const SettingScreen = () => {
               사용완료 여부 알림
             </Text>
             <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              해제 시 사용완료 여부 확인 알림이 중단됩니다.
+              사용완료 처리 여부 알림
             </Text>
           </View>
           <Switch
@@ -118,7 +118,7 @@ const SettingScreen = () => {
               기프티콘 나누기 알림
             </Text>
             <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              해제 시 기프티콘 나누기 알림이 중단됩니다.
+              기프티콘 나누기 수신 알림
             </Text>
           </View>
           <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
@@ -131,7 +131,7 @@ const SettingScreen = () => {
               쉐어박스 알림
             </Text>
             <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              해제 시 쉐어박스 관련 알림이 모두 중단됩니다.
+              쉐어박스 등록, 사용완료, 새 멤버 참여 알림
             </Text>
           </View>
           <Switch value={shareboxNotification} onValueChange={setShareboxNotification} />
