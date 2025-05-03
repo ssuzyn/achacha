@@ -145,10 +145,13 @@ const SettingScreen = () => {
           type="outline"
           buttonStyle={[styles.withdrawButton, { borderColor: theme.colors.grey4 }]}
           titleStyle={{ color: theme.colors.grey3 }}
+          containerStyle={styles.buttonStyle}
         />
+        <View style={styles.buttonSpacer} />
         <Button
           title="로그아웃"
           buttonStyle={[styles.logoutButton, { backgroundColor: theme.colors.primary }]}
+          containerStyle={styles.buttonStyle}
         />
       </View>
     </ScrollView>
@@ -230,7 +233,15 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginVertical: 24,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  buttonStyle: {
+    flex: 1,
+    maxWidth: '45%',
+  },
+  buttonSpacer: {
+    width: 16,
   },
   withdrawButton: {
     paddingHorizontal: 20,
