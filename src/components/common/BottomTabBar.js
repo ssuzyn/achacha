@@ -5,7 +5,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
 import { Icon, useTheme } from 'react-native-elements';
-import { Button } from '../ui';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
