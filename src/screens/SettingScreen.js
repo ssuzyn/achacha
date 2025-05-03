@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-elements';
 import Slider from '../components/ui/Slider';
-import { Button } from '../components/ui';
+import { Button, Divider } from '../components/ui';
 import Switch from '../components/ui/Switch';
 
 const SettingScreen = () => {
@@ -38,6 +38,9 @@ const SettingScreen = () => {
           <Text style={[styles.infoValue, { color: theme.colors.black }]}>qwer@kakao.com</Text>
         </View>
       </View>
+
+      {/* 회원정보와 알림 사이 구분선 */}
+      <Divider style={styles.sectionDivider} />
 
       {/* 알림 섹션 */}
       <View style={styles.section}>
@@ -176,7 +179,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 2,
   },
   firstSection: {
     marginTop: 10,
@@ -249,6 +252,9 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     paddingHorizontal: 20,
+  },
+  sectionDivider: {
+    marginBottom: 20,
   },
 });
 
