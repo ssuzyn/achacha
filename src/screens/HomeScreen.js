@@ -1,83 +1,137 @@
-import React, { useState } from 'react';
-import { Image, Alert, StyleSheet, ScrollView, View, Text } from 'react-native';
-import { Button } from '../components/ui';
-import * as ImagePicker from 'expo-image-picker';
+import React from 'react';
+import { Image, StyleSheet, ScrollView, View, Text, FlatList } from 'react-native';
+import { useTheme } from '../hooks/useTheme';
+import { Icon } from 'react-native-elements';
+
+// 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
+const SAMPLE_GIFTICONS = [
+  {
+    id: '1',
+    brand: '맥도날드',
+    name: '모바일 금액권 20,000원',
+    image: require('../assets/images/giftscan.png'),
+    expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5일 후
+  },
+  {
+    id: '2',
+    brand: '메가MGC커피',
+    name: '(자바)아이스라떼',
+    image: require('../assets/images/giftbox1.png'),
+    expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3일 후
+  },
+  {
+    id: '3',
+    brand: '스타벅스',
+    name: '아메리카노 Tall',
+    image: require('../assets/images/giftbox2.png'),
+    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후
+  },
+];
 
 const HomeScreen = () => {
-  const [image, setImage] = useState(null);
+  const { theme } = useTheme();
+  const username = '으라차차'; // 실제 앱에서는 로그인된 사용자 이름을 가져옵니다
 
-  const pickImage = async () => {
-    console.log('[HomeScreen] pickImage function started.'); // 함수 시작 로그
+  // 날짜 간격 계산 함수
+  const calculateDaysLeft = expiryDate => {
+    const today = new Date();
+    const diffTime = expiryDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
 
-    try {
-      // 오류 처리를 위해 try...catch 추가
-      // 갤러리 접근 권한 확인
-      console.log('[HomeScreen] Checking media library permissions...');
-      const { status: currentStatus } = await ImagePicker.getMediaLibraryPermissionsAsync();
-      console.log(`[HomeScreen] Current permission status: ${currentStatus}`);
-
-      let finalStatus = currentStatus;
-      if (currentStatus !== 'granted') {
-        console.log('[HomeScreen] Permission not granted, requesting again...');
-        // 권한 재요청
-        const { status: newStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        console.log(`[HomeScreen] Requested permission status: ${newStatus}`);
-        finalStatus = newStatus; // 최종 상태 업데이트
-      }
-
-      // 최종 권한 상태 확인
-      if (finalStatus !== 'granted') {
-        Alert.alert(
-          '권한 필요',
-          '갤러리에 접근하려면 권한이 필요합니다. 앱 설정에서 허용해주세요.'
-        );
-        console.log('[HomeScreen] Final permission status is not granted. Aborting.');
-        return; // 권한 없으면 여기서 종료
-      }
-
-      // 권한이 있으면 이미지 라이브러리 실행
-      console.log('[HomeScreen] Permission granted. Launching image library...');
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      console.log('[HomeScreen] ImagePicker result:', result); // 결과 로그 상세 확인
-
-      if (!result.canceled && result.assets && result.assets.length > 0) {
-        console.log('[HomeScreen] Image selected:', result.assets[0].uri);
-        setImage(result.assets[0].uri);
-      } else {
-        console.log('[HomeScreen] Image selection cancelled or failed.');
-      }
-    } catch (error) {
-      console.error('[HomeScreen] Error in pickImage function:', error); // 오류 로그 출력
-      Alert.alert('오류 발생', '이미지를 선택하는 중 오류가 발생했습니다.');
-    }
+  // 기프티콘 아이템 렌더링
+  const renderGiftItem = ({ item }) => {
+    const daysLeft = calculateDaysLeft(item.expiryDate);
+    return (
+      <View style={styles.giftCard}>
+        <View style={styles.giftImageContainer}>
+          <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
+        </View>
+        <View style={styles.giftInfo}>
+          <Text style={styles.giftBrand}>{item.brand}</Text>
+          <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
+            {item.name}
+          </Text>
+        </View>
+        <View style={styles.dDayContainer}>
+          <Text style={styles.dDayText}>D-{daysLeft}</Text>
+        </View>
+      </View>
+    );
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.centerContainer}>
-          <Text h4 style={styles.title}>
-            홈 스크린
+      {/* 헤더 */}
+      <View style={styles.headerSection}>
+        <Text style={styles.headerTitle}>홈</Text>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      >
+        {/* 환영 메시지 */}
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeText}>
+            어서오세요! <Text style={{ color: theme.colors.primary }}>{username}</Text> 님,
           </Text>
+          <Text style={styles.subWelcomeText}>당신을 위한 기프티콘이 기다려요.</Text>
+        </View>
 
-          <Button
-            title="갤러리에서 이미지 선택"
-            onPress={pickImage}
-            variant="primary"
-            style={styles.button}
+        {/* 만료 임박 기프티콘 섹션 */}
+        <View style={styles.giftListContainer}>
+          <FlatList
+            data={SAMPLE_GIFTICONS}
+            renderItem={renderGiftItem}
+            keyExtractor={item => item.id}
+            horizontal={true}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.giftListContent}
           />
+        </View>
 
-          {image && (
-            <View style={styles.imageContainer}>
-              <Image source={{ uri: image }} style={styles.image} resizeMode="contain" />
+        {/* 중간 카드 섹션 (쉐어박스, 나누기, 레이더) */}
+        <View style={styles.middleCardSection}>
+          <View style={styles.middleCardRow}>
+            {/* 쉐어박스 & 나누기 카드 */}
+            <View style={styles.featureCard}>
+              <Text style={styles.featureTitle}>나누면</Text>
+              <Text style={styles.featureTitle}>즐거운 두배,</Text>
+              <Text style={styles.featureTitle}>쉐어박스</Text>
+              <View style={styles.shareBoxIcon}>
+                <Icon name="share" size={24} color="#888" />
+                <Text style={styles.shareBoxCount}>34개 쉐어 중</Text>
+              </View>
             </View>
-          )}
+
+            {/* 레이더 카드 */}
+            <View style={styles.radarCard}>
+              <Image
+                source={require('../assets/images/home-radar.png')}
+                style={styles.radarImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.radarText}>쑥 - 뿌리기</Text>
+              <Text style={styles.radarText}>행운의 주인공은?</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* 하단 선물 카드 */}
+        <View style={styles.giftCard2}>
+          <View style={styles.giftCard2Content}>
+            <View>
+              <Text style={styles.giftCard2Text}>기프티콘 선물해봐요!</Text>
+              <Text style={styles.giftCard2SubText}>포장은 저희가 해드릴게요.</Text>
+            </View>
+            <Image
+              source={require('../assets/images/home-gift.png')}
+              style={styles.giftCard2Image}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -87,34 +141,167 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 16,
     backgroundColor: 'white',
   },
-  scrollContainer: {
-    flexGrow: 1,
+  contentContainer: {
+    paddingBottom: 30,
   },
-  centerContainer: {
-    flex: 1,
+  headerSection: {
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'black',
+  },
+  welcomeSection: {
+    alignItems: 'flex-end',
+    marginTop: 5,
+    marginBottom: 24,
+  },
+  welcomeText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: 'black',
+  },
+  subWelcomeText: {
+    fontSize: 18,
+    fontWeight: '400',
+    marginTop: 4,
+    color: 'black',
+  },
+  giftListContainer: {
+    marginBottom: 20,
+  },
+  giftListContent: {
+    paddingRight: 16,
+  },
+  giftCard: {
+    width: 190,
+    height: 220,
+    marginRight: 12,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#f0f4ff',
+  },
+  giftImageContainer: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    margin: 10,
+    borderRadius: 8,
+  },
+  giftImage: {
+    width: '70%',
+    height: '70%',
+  },
+  giftInfo: {
+    paddingHorizontal: 10,
+  },
+  giftBrand: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  giftName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'black',
+    textAlign: 'center',
+  },
+  dDayContainer: {
+    backgroundColor: '#F6C5C5',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'center',
+    marginTop: 8,
+  },
+  dDayText: {
+    color: '#D33434',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  middleCardSection: {
+    marginBottom: 20,
+  },
+  middleCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  featureCard: {
+    width: '47%',
+    height: 160,
+    padding: 16,
+    backgroundColor: '#f0f4ff',
+    borderRadius: 10,
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 6,
+  },
+  shareBoxIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+  },
+  shareBoxCount: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 6,
+  },
+  radarCard: {
+    width: '47%',
+    height: 160,
+    padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#f0f4ff',
+    borderRadius: 10,
+  },
+  radarImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+  },
+  radarText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    textAlign: 'center',
+  },
+  giftCard2: {
     padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333333',
     marginBottom: 20,
+    backgroundColor: '#f0f4ff',
+    borderRadius: 10,
   },
-  button: {
-    width: '100%',
-    marginBottom: 20,
+  giftCard2Content: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  imageContainer: {
-    marginTop: 20,
+  giftCard2Text: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
   },
-  image: {
-    width: 300,
-    height: 300,
-    borderRadius: 8,
+  giftCard2SubText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  giftCard2Image: {
+    width: 140,
+    height: 80,
   },
 });
 
