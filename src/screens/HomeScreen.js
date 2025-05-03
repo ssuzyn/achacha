@@ -108,13 +108,12 @@ const HomeScreen = () => {
 
             {/* 레이더 카드 */}
             <View style={styles.radarCard}>
+              <Text style={styles.radarText}>쓱 - 나누기{'\n'}행운의 주인공은?</Text>
               <Image
                 source={require('../assets/images/home-radar.png')}
-                style={styles.radarImage}
+                style={styles.fullRadarImage}
                 resizeMode="contain"
               />
-              <Text style={styles.radarText}>쑥 - 뿌리기</Text>
-              <Text style={styles.radarText}>행운의 주인공은?</Text>
             </View>
           </View>
         </View>
@@ -261,22 +260,27 @@ const styles = StyleSheet.create({
   radarCard: {
     width: '47%',
     height: 160,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: '#f0f4ff',
     borderRadius: 10,
-  },
-  radarImage: {
-    width: 80,
-    height: 80,
-    marginBottom: 10,
+    overflow: 'hidden',
+    padding: 0,
+    position: 'relative',
   },
   radarText: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#333',
-    textAlign: 'center',
+    textAlign: 'right',
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 16,
+    zIndex: 1,
+    lineHeight: 24,
+  },
+  fullRadarImage: {
+    width: '100%',
+    height: '100%',
   },
   giftCard2: {
     padding: 20,
