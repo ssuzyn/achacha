@@ -82,7 +82,7 @@ const SettingScreen = () => {
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
-              선물 나누기 알림
+              기프티콘 나누기 알림
             </Text>
             <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
               해제 시 기프티콘 나누기 알림이 중단됩니다.
