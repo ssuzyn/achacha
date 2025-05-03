@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 12,
-    marginBottom: 8,
+    marginBottom: 4,
   },
   notificationInfo: {
     flex: 1,
