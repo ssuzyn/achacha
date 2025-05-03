@@ -101,7 +101,7 @@ const HomeScreen = () => {
                 나누면{'\n'}즐거움 두배,{'\n'}쉐어박스
               </Text>
               <View style={styles.shareBoxIcon}>
-                <Icon name="share" size={24} color="#888" />
+                <Icon name="inventory-2" size={24} color="#888" />
                 <Text style={styles.shareBoxCount}>34개 쉐어 중</Text>
               </View>
             </View>
