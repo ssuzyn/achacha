@@ -95,19 +95,6 @@ const SettingScreen = () => {
           <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
         </View>
 
-        {/* 기프티콘 나누기 알림 */}
-        <View style={styles.notificationItem}>
-          <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
-              기프티콘 나누기 알림
-            </Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
-              해제 시 기프티콘 나누기 알림이 중단됩니다.
-            </Text>
-          </View>
-          <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
-        </View>
-
         {/* 사용 완료 여부 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
@@ -122,6 +109,19 @@ const SettingScreen = () => {
             value={usageCompletionNotification}
             onValueChange={setUsageCompletionNotification}
           />
+        </View>
+
+        {/* 기프티콘 나누기 알림 */}
+        <View style={styles.notificationItem}>
+          <View style={styles.notificationInfo}>
+            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+              기프티콘 나누기 알림
+            </Text>
+            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+              해제 시 기프티콘 나누기 알림이 중단됩니다.
+            </Text>
+          </View>
+          <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
         </View>
 
         {/* 쉐어박스 알림 */}
