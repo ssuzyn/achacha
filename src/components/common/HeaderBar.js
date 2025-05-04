@@ -37,9 +37,9 @@ const HeaderBar = ({ notificationCount = 3 }) => {
   return (
     <View>
       {/* 안전 영역 고려한 상단 여백 */}
-      <View style={{ height: insets.top, backgroundColor: theme.colors.white }} />
+      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
-      <View style={[styles.header, { backgroundColor: theme.colors.white }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         {/* 로고 영역 */}
         <View style={styles.logoContainer}>
           <Image

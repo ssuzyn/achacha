@@ -11,8 +11,8 @@ const GuideFirstScreen = () => {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.mainContainer}>

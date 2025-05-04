@@ -95,7 +95,7 @@ const NotificationScreen = () => {
       onPress={() => handleNotificationPress(item)}
       containerStyle={[
         styles.notificationItem,
-        { backgroundColor: item.read ? theme.colors.white : theme.colors.lightBlue },
+        { backgroundColor: item.read ? theme.colors.background : theme.colors.lightBlue },
       ]}
       rightElement={
         !item.read ? <Badge status="primary" size="sm" containerStyle={styles.unreadDot} /> : null
@@ -104,14 +104,14 @@ const NotificationScreen = () => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
       {/* 안전 영역 고려한 상단 여백 */}
-      <View style={{ height: insets.top, backgroundColor: theme.colors.white }} />
+      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
       {/* 커스텀 헤더 */}
-      <View style={[styles.header, { backgroundColor: theme.colors.white }]}>
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <Button
           variant="ghost"
           onPress={handleGoBack}

@@ -75,7 +75,7 @@ const PermissionScreen = () => {
   }, [permissionsStatus, navigation]);
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.centerContainer}>

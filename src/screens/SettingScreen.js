@@ -21,7 +21,7 @@ const SettingScreen = () => {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.white }]}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >

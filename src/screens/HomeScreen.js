@@ -49,7 +49,7 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 헤더 */}
       <View style={styles.headerSection}>
         <Text style={styles.headerTitle}>홈</Text>
@@ -112,7 +112,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
-    backgroundColor: 'white',
   },
   contentContainer: {
     paddingBottom: 30,

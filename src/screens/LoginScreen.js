@@ -14,7 +14,7 @@ const LoginScreen = () => {
   const isLoading = authState === 'loading';
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           {/* 로고 영역 */}

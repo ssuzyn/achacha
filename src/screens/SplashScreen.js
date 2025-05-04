@@ -73,8 +73,8 @@ const SplashScreenComponent = ({ navigation }) => {
 
   // Always show logo (no loading indicator needed as check is bypassed)
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.white }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.white} />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.centerContainer}>
           <View style={styles.imageContainer}>

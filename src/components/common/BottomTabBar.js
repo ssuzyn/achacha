@@ -15,7 +15,7 @@ const GifticonManageScreen = () => {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.screenText, { color: theme.colors.black }]}>기프티콘 관리 화면</Text>
     </View>
   );
@@ -25,7 +25,7 @@ const MapScreen = () => {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.screenText, { color: theme.colors.black }]}>기프티콘 MAP 화면</Text>
     </View>
   );
@@ -35,7 +35,7 @@ const ShareboxScreen = () => {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.white }]}>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
       <Text style={[styles.screenText, { color: theme.colors.black }]}>쉐어박스 화면</Text>
     </View>
   );
@@ -70,9 +70,9 @@ const ScreenWithHeader = ({ children }) => {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.headerContainer, { backgroundColor: theme.colors.white }]}>
+    <View style={[styles.headerContainer, { backgroundColor: theme.colors.background }]}>
       <HeaderBar notificationCount={3} />
-      <View style={[styles.contentContainer, { backgroundColor: theme.colors.white }]}>
+      <View style={[styles.contentContainer, { backgroundColor: theme.colors.background }]}>
         {children}
       </View>
     </View>
@@ -171,7 +171,7 @@ const BottomTabBar = () => {
           ...styles.tabBar,
           borderTopWidth: 1,
           borderTopColor: theme.colors.primary,
-          backgroundColor: theme.colors.white,
+          backgroundColor: theme.colors.background,
           display: isTabBarVisible ? 'flex' : 'none',
         },
         headerShown: false,

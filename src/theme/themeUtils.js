@@ -280,7 +280,7 @@ export const cardUtils = {
       shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
-      backgroundColor: theme.colors.white,
+      backgroundColor: theme.colors.background,
     };
 
     switch (variant) {
@@ -364,7 +364,7 @@ export const listItemUtils = {
     const baseStyle = {
       borderBottomWidth: 1,
       borderColor: theme.colors.grey3,
-      backgroundColor: theme.colors.white,
+      backgroundColor: theme.colors.background,
     };
 
     switch (variant) {
