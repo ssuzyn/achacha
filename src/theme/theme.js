@@ -1,6 +1,4 @@
 // React Native Elements 테마 설정
-import Fonts from '../constants/fonts';
-
 const theme = {
   colors: {
     // 메인 색상
@@ -39,43 +37,10 @@ const theme = {
     error: '#EF4040',
     disabled: '#cccccc',
   },
-  // 폰트 설정 추가
-  fonts: {
-    thin: {
-      fontFamily: Fonts.thin,
-    },
-    extraLight: {
-      fontFamily: Fonts.extraLight,
-    },
-    light: {
-      fontFamily: Fonts.light,
-    },
-    regular: {
-      fontFamily: Fonts.regular,
-    },
-    medium: {
-      fontFamily: Fonts.medium,
-    },
-    semiBold: {
-      fontFamily: Fonts.semiBold,
-    },
-    bold: {
-      fontFamily: Fonts.bold,
-    },
-    extraBold: {
-      fontFamily: Fonts.extraBold,
-    },
-    black: {
-      fontFamily: Fonts.black,
-    },
-  },
   Button: {
     raised: true,
     buttonStyle: {
       borderRadius: 10,
-    },
-    titleStyle: {
-      fontFamily: Fonts.medium,
     },
   },
   Card: {
@@ -96,7 +61,6 @@ const theme = {
       fontWeight: 'bold',
       marginBottom: 8,
       color: '#000000',
-      fontFamily: Fonts.bold,
     },
     dividerStyle: {
       marginVertical: 8,
@@ -109,7 +73,6 @@ const theme = {
       textShadowColor: 'rgba(0, 0, 0, 0.75)',
       textShadowOffset: { width: -1, height: 1 },
       textShadowRadius: 5,
-      fontFamily: Fonts.bold,
     },
     featuredSubtitleStyle: {
       fontSize: 14,
@@ -117,7 +80,6 @@ const theme = {
       textShadowColor: 'rgba(0, 0, 0, 0.75)',
       textShadowOffset: { width: -1, height: 1 },
       textShadowRadius: 5,
-      fontFamily: Fonts.regular,
     },
     imageStyle: {
       borderTopLeftRadius: 10,
@@ -127,23 +89,18 @@ const theme = {
   Text: {
     style: {
       color: '#000000',
-      fontFamily: Fonts.regular,
     },
     h1Style: {
       fontWeight: 'bold',
-      fontFamily: Fonts.bold,
     },
     h2Style: {
       fontWeight: 'bold',
-      fontFamily: Fonts.bold,
     },
     h3Style: {
       fontWeight: 'bold',
-      fontFamily: Fonts.semiBold,
     },
     h4Style: {
       fontWeight: 'bold',
-      fontFamily: Fonts.semiBold,
     },
   },
   Input: {
@@ -151,22 +108,10 @@ const theme = {
       borderBottomWidth: 1,
       borderColor: '#718096',
     },
-    inputStyle: {
-      fontFamily: Fonts.regular,
-    },
-    labelStyle: {
-      fontFamily: Fonts.medium,
-    },
-    errorStyle: {
-      fontFamily: Fonts.regular,
-    },
   },
   Badge: {
     badgeStyle: {
       borderRadius: 5,
-    },
-    textStyle: {
-      fontFamily: Fonts.medium,
     },
   },
   Avatar: {
@@ -190,12 +135,10 @@ const theme = {
       fontSize: 16,
       color: '#000000',
       fontWeight: '500',
-      fontFamily: Fonts.medium,
     },
     subtitleStyle: {
       fontSize: 14,
       color: '#737373',
-      fontFamily: Fonts.regular,
     },
     chevronStyle: {
       color: '#56AEE9',
@@ -214,7 +157,6 @@ const theme = {
     },
     inputStyle: {
       fontSize: 14,
-      fontFamily: Fonts.regular,
     },
   },
   Divider: {
@@ -233,9 +175,6 @@ const theme = {
       backgroundColor: '#f9f9f9',
       borderRadius: 10,
     },
-    inputStyle: {
-      fontFamily: Fonts.regular,
-    },
   },
   Chip: {
     buttonStyle: {
@@ -249,7 +188,6 @@ const theme = {
     titleStyle: {
       fontSize: 14,
       color: '#000000',
-      fontFamily: Fonts.medium,
     },
     containerStyle: {
       marginRight: 8,
@@ -272,7 +210,6 @@ const theme = {
       fontWeight: '400',
       fontSize: 14,
       color: '#000000',
-      fontFamily: Fonts.regular,
     },
     checkedColor: '#56AEE9',
     uncheckedColor: '#718096',

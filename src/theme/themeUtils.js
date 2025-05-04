@@ -1,92 +1,5 @@
 // 테마 관련 유틸리티 함수 모음
 import { StyleSheet } from 'react-native';
-import Fonts from '../constants/fonts';
-
-/**
- * 폰트 관련 유틸리티 함수
- */
-export const fontUtils = {
-  getFontStyles: theme =>
-    StyleSheet.create({
-      thin: {
-        fontFamily: Fonts.thin,
-      },
-      extraLight: {
-        fontFamily: Fonts.extraLight,
-      },
-      light: {
-        fontFamily: Fonts.light,
-      },
-      regular: {
-        fontFamily: Fonts.regular,
-      },
-      medium: {
-        fontFamily: Fonts.medium,
-      },
-      semiBold: {
-        fontFamily: Fonts.semiBold,
-      },
-      bold: {
-        fontFamily: Fonts.bold,
-      },
-      extraBold: {
-        fontFamily: Fonts.extraBold,
-      },
-      black: {
-        fontFamily: Fonts.black,
-      },
-      h1: {
-        fontFamily: Fonts.bold,
-        fontSize: 28,
-        lineHeight: 36,
-      },
-      h2: {
-        fontFamily: Fonts.bold,
-        fontSize: 24,
-        lineHeight: 32,
-      },
-      h3: {
-        fontFamily: Fonts.semiBold,
-        fontSize: 20,
-        lineHeight: 28,
-      },
-      h4: {
-        fontFamily: Fonts.semiBold,
-        fontSize: 18,
-        lineHeight: 24,
-      },
-      subtitle1: {
-        fontFamily: Fonts.medium,
-        fontSize: 16,
-        lineHeight: 22,
-      },
-      subtitle2: {
-        fontFamily: Fonts.medium,
-        fontSize: 14,
-        lineHeight: 20,
-      },
-      body1: {
-        fontFamily: Fonts.regular,
-        fontSize: 16,
-        lineHeight: 24,
-      },
-      body2: {
-        fontFamily: Fonts.regular,
-        fontSize: 14,
-        lineHeight: 20,
-      },
-      caption: {
-        fontFamily: Fonts.light,
-        fontSize: 12,
-        lineHeight: 16,
-      },
-      button: {
-        fontFamily: Fonts.medium,
-        fontSize: 14,
-        lineHeight: 20,
-      },
-    }),
-};
 
 /**
  * 버튼 스타일 관련 유틸리티 함수
@@ -147,7 +60,6 @@ export const buttonUtils = {
       },
       // 텍스트 스타일
       text: {
-        fontFamily: Fonts.medium,
         fontWeight: '600',
         textAlign: 'center',
       },
@@ -171,15 +83,12 @@ export const buttonUtils = {
       // 텍스트 크기 스타일
       smText: {
         fontSize: 12,
-        fontFamily: Fonts.medium,
       },
       mdText: {
         fontSize: 14,
-        fontFamily: Fonts.medium,
       },
       lgText: {
         fontSize: 16,
-        fontFamily: Fonts.medium,
       },
       // 아이콘 스타일
       iconLeft: {
@@ -252,19 +161,15 @@ export const inputUtils = {
       input: {
         flex: 1,
         paddingHorizontal: 12,
-        fontFamily: Fonts.regular,
       },
       smInput: {
         fontSize: 12,
-        fontFamily: Fonts.regular,
       },
       mdInput: {
         fontSize: 14,
-        fontFamily: Fonts.regular,
       },
       lgInput: {
         fontSize: 16,
-        fontFamily: Fonts.regular,
       },
       inputWithLeftIcon: {
         paddingLeft: 8,
@@ -276,7 +181,6 @@ export const inputUtils = {
         marginBottom: 6,
         fontSize: 14,
         fontWeight: '500',
-        fontFamily: Fonts.medium,
       },
       required: {
         // 색상은 테마에서 적용
@@ -284,7 +188,6 @@ export const inputUtils = {
       helperText: {
         fontSize: 12,
         marginTop: 4,
-        fontFamily: Fonts.regular,
       },
       iconContainer: {
         paddingHorizontal: 10,
@@ -697,7 +600,6 @@ export const checkboxUtils = {
 };
 
 export default {
-  fontUtils,
   buttonUtils,
   inputUtils,
   skeletonUtils,
