@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   welcomeSection: {
     alignItems: 'flex-end',
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 15,
   },
   welcomeText: {
     fontSize: 20,
@@ -155,13 +155,15 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   giftListContainer: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   giftListContent: {
+    paddingTop: 10,
     paddingRight: 10,
+    paddingBottom: 10,
   },
   middleCardSection: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   middleCardRow: {
     flexDirection: 'row',
