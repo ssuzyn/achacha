@@ -4,44 +4,53 @@ import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, ListItem, Badge, Text } from '../components/ui';
+import { Button, ListItem, Text } from '../components/ui';
+
+// 알림 타입에 따른 아이콘 정의
+const NOTIFICATION_ICONS = {
+  EXPIRY: 'calendar-month', // 유효기간 만료 알림
+  NEARBY: 'share-location', // 주변 매장 알림
+  USED: 'schedule', // 사용완료 여부 알림
+  SHARE: 'tap-and-play', // 기프티콘 나누기 알림
+  SHAREBOX: 'inventory-2', // 쉐어박스 알림
+};
 
 // 더미 알림 데이터
 const dummyNotifications = [
   {
     id: '1',
-    title: '새로운 매칭이 있습니다',
-    message: '새로운 매칭 요청이 왔습니다. 확인해보세요!',
-    time: '10분 전',
-    read: false,
+    type: 'EXPIRY',
+    title: '유효기간 만료 알림',
+    message: '아이스 카페 아메리카노 T 의 유효기간이 7일 남았습니다.',
+    time: '25년 4월 15일',
   },
   {
     id: '2',
-    title: '커뮤니티 인기글',
-    message: '회원님의 게시글이 인기글로 선정되었습니다.',
-    time: '1시간 전',
-    read: false,
+    type: 'NEARBY',
+    title: '주변 매장 알림',
+    message: '스타벅스 삼성점이 주변에 있습니다. 기프티콘을 사용해보세요!',
+    time: '3시간 전',
   },
   {
     id: '3',
-    title: '상대방이 매칭을 수락했습니다',
-    message: '상대방이 회원님의 매칭 요청을 수락했습니다. 대화를 시작해보세요!',
-    time: '3시간 전',
-    read: true,
+    type: 'USED',
+    title: '사용완료 여부 알림',
+    message: '굽네치킨 허니테이크아웃 기프티콘이 사용되었습니다.',
+    time: '어제',
   },
   {
     id: '4',
-    title: '서비스 점검 안내',
-    message: '내일 오전 2시부터 4시까지 서비스 점검이 있을 예정입니다.',
-    time: '어제',
-    read: true,
+    type: 'SHARE',
+    title: '기프티콘 나누기 알림',
+    message: '회원님의 나누기가 성공적으로 완료되었습니다.',
+    time: '2일 전',
   },
   {
     id: '5',
-    title: '포인트 적립 안내',
-    message: '출석체크로 100포인트가 적립되었습니다.',
-    time: '2일 전',
-    read: true,
+    type: 'SHAREBOX',
+    title: '쉐어박스 알림',
+    message: '박준우님이 쉐어박스에 새로운 기프티콘을 공유했습니다.',
+    time: '3일 전',
   },
 ];
 
@@ -82,28 +91,33 @@ const NotificationScreen = () => {
     // 예: navigation.navigate('TargetScreen', { data: item });
   };
 
+  // 알림 유형에 따른 아이콘 색상 가져오기
+  const getIconColorByType = type => {
+    switch (type) {
+      case 'EXPIRY':
+        return '#FF9500'; // 오렌지색
+      case 'NEARBY':
+        return '#4CAF50'; // 초록색
+      case 'USED':
+        return '#2196F3'; // 파란색
+      case 'SHARE':
+        return '#9C27B0'; // 보라색
+      case 'SHAREBOX':
+        return '#FF5722'; // 주황색
+      default:
+        return '#4B9CFF'; // 기본색
+    }
+  };
+
   // 알림 아이템 렌더링
   const renderItem = ({ item }) => (
-    <ListItem
+    <ListItem.NotificationCard
       title={item.title}
-      subtitle={
-        <>
-          <Text variant="body2" style={styles.notificationMessage} color="grey">
-            {item.message}
-          </Text>
-          <Text variant="caption" style={styles.notificationTime} color="grey2">
-            {item.time}
-          </Text>
-        </>
-      }
+      message={item.message}
+      time={item.time}
       onPress={() => handleNotificationPress(item)}
-      containerStyle={[
-        styles.notificationItem,
-        { backgroundColor: item.read ? theme.colors.background : theme.colors.lightBlue },
-      ]}
-      rightElement={
-        !item.read ? <Badge status="primary" size="sm" containerStyle={styles.unreadDot} /> : null
-      }
+      icon={NOTIFICATION_ICONS[item.type]}
+      iconColor={getIconColorByType(item.type)}
     />
   );
 
@@ -121,7 +135,7 @@ const NotificationScreen = () => {
           onPress={handleGoBack}
           style={styles.backButton}
           leftIcon={
-            <Icon name="arrow-back-ios" type="material" size={28} color={theme.colors.black} />
+            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
           }
         />
         <Text variant="h3" style={styles.headerTitle}>
@@ -148,11 +162,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: 70,
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
@@ -161,33 +175,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
   },
   rightPlaceholder: {
-    width: 48, // 뒤로가기 버튼과 동일한 너비
+    width: 48,
   },
   listContainer: {
     flexGrow: 1,
-    paddingVertical: 8,
-  },
-  notificationItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  notificationMessage: {
-    fontSize: 14,
-    marginBottom: 6,
-  },
-  notificationTime: {
-    fontSize: 12,
-  },
-  unreadDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginLeft: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
   },
   emptyContainer: {
     flex: 1,

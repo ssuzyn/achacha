@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { ListItem as RNEListItem, Icon, ButtonGroup, CheckBox, Input } from 'react-native-elements';
+import { Shadow } from 'react-native-shadow-2';
 import useTheme from '../../hooks/useTheme';
+import Text from './Text';
 
 /**
  * 기본 ListItem 컴포넌트
@@ -308,6 +310,64 @@ const ListItemSwipeable = ({
   );
 };
 
+/**
+ * ListItem.NotificationCard 컴포넌트
+ */
+const ListItemNotificationCard = ({
+  title,
+  message,
+  time,
+  onPress,
+  containerStyle,
+  titleStyle,
+  messageStyle,
+  timeStyle,
+  icon,
+  iconType = 'material',
+  iconColor = '#4B9CFF',
+  iconSize = 24,
+  iconContainerStyle,
+  ...props
+}) => {
+  return (
+    <View style={styles.notificationCardContainer}>
+      <Shadow
+        distance={5}
+        startColor={'rgba(0, 0, 0, 0.03)'}
+        offset={[0, 2]}
+        style={styles.shadowContainer}
+      >
+        <TouchableOpacity
+          style={[styles.notificationCard, containerStyle]}
+          onPress={onPress}
+          activeOpacity={0.85}
+          {...props}
+        >
+          <View style={styles.notificationCardRow}>
+            {icon && (
+              <View style={[styles.iconContainer, iconContainerStyle]}>
+                <Icon name={icon} type={iconType} color={iconColor} size={iconSize} />
+              </View>
+            )}
+
+            <View style={[styles.notificationCardContent, icon ? styles.withIconSpacing : null]}>
+              <Text variant="body1" weight="bold" style={[styles.notificationTitle, titleStyle]}>
+                {title}
+              </Text>
+              <Text variant="body2" style={[styles.notificationMessage, messageStyle]}>
+                {message}
+              </Text>
+              <Text variant="caption" style={[styles.notificationTime, timeStyle]}>
+                {time}
+              </Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Shadow>
+    </View>
+  );
+};
+
 // 컴포넌트 연결
 ListItem.Content = ListItemContent;
 ListItem.Title = ListItemTitle;
@@ -318,6 +378,7 @@ ListItem.ButtonGroup = ListItemButtonGroup;
 ListItem.Input = ListItemInput;
 ListItem.Accordion = ListItemAccordion;
 ListItem.Swipeable = ListItemSwipeable;
+ListItem.NotificationCard = ListItemNotificationCard;
 
 const styles = StyleSheet.create({
   accordionContainer: {
@@ -334,6 +395,52 @@ const styles = StyleSheet.create({
   },
   inputText: {
     fontSize: 14,
+  },
+  // NotificationCard 스타일
+  notificationCardContainer: {
+    marginBottom: 14,
+  },
+  shadowContainer: {
+    borderRadius: 14,
+    width: '100%',
+  },
+  notificationCard: {
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+  },
+  notificationCardRow: {
+    flexDirection: 'row',
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F0F8FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  notificationCardContent: {
+    flex: 1,
+  },
+  withIconSpacing: {
+    paddingLeft: 0,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    marginBottom: 8,
+    color: '#3B3B3B',
+  },
+  notificationMessage: {
+    fontSize: 14,
+    marginBottom: 10,
+    lineHeight: 20,
+    color: '#555555',
+  },
+  notificationTime: {
+    fontSize: 12,
+    color: '#888888',
   },
 });
 
