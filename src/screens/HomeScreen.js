@@ -46,7 +46,7 @@ const HomeScreen = () => {
   const renderGiftItem = ({ item }) => {
     const daysLeft = calculateDaysLeft(item.expiryDate);
     return (
-      <View style={{ width: 180, marginRight: 10 }}>
+      <View style={styles.giftItemContainer}>
         <Shadow
           distance={12}
           startColor={'rgba(0, 0, 0, 0.008)'}
@@ -250,6 +250,10 @@ const styles = StyleSheet.create({
   shadowContainer: {
     borderRadius: 12,
     width: '100%',
+  },
+  giftItemContainer: {
+    width: 180,
+    marginRight: 10,
   },
 });
 
