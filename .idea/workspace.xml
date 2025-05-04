@@ -5,28 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="643ce2da-126f-4978-988f-3264d55bbfcd" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/PermissionItem.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/PermissionItem.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/common/BottomTabBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/common/BottomTabBar.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/common/CategoryTabs.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/common/CategoryTabs.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/common/TabFilter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/common/TabFilter.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/AlertDialog.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/AlertDialog.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/Card.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/Card.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/Chip.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/Chip.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/Input.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/Input.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/Modal.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/Modal.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/Select.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/Select.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/ui/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/hooks/useTheme.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/hooks/useTheme.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/HomeScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/NotificationScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/NotificationScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/PermissionScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/PermissionScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/SettingScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SettingScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/theme/theme.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/theme/theme.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

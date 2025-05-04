@@ -51,18 +51,28 @@ const HomeScreen = () => {
           distance={12}
           startColor={'rgba(0, 0, 0, 0.008)'}
           offset={[0, 1]}
-          style={{ borderRadius: 12, width: '100%' }}
+          style={styles.shadowContainer}
         >
           <View style={styles.giftCard}>
             <View style={styles.giftImageContainer}>
               <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
             </View>
-            <Text style={styles.giftBrand}>{item.brand}</Text>
-            <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
+            <Text variant="body1" weight="semiBold" style={styles.giftBrand}>
+              {item.brand}
+            </Text>
+            <Text
+              variant="body2"
+              weight="regular"
+              style={styles.giftName}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {item.name}
             </Text>
             <View style={styles.dDayContainer}>
-              <Text style={styles.dDayText}>D-{daysLeft}</Text>
+              <Text variant="body2" weight="bold" style={styles.dDayText}>
+                D-{daysLeft}
+              </Text>
             </View>
           </View>
         </Shadow>
@@ -74,7 +84,7 @@ const HomeScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 헤더 */}
       <View style={styles.headerSection}>
-        <Text variant="h2" style={styles.headerTitle}>
+        <Text variant="h2" weight="bold" style={styles.headerTitle}>
           홈
         </Text>
       </View>
@@ -85,14 +95,14 @@ const HomeScreen = () => {
       >
         {/* 환영 메시지 */}
         <View style={styles.welcomeSection}>
-          <Text variant="h3" style={styles.welcomeText}>
+          <Text variant="h2" weight="medium" style={styles.welcomeText}>
             어서오세요!{' '}
-            <Text variant="h3" color="primary" style={styles.welcomeText}>
+            <Text variant="h2" weight="bold" color="primary" style={styles.welcomeText}>
               {username}
             </Text>{' '}
             님,
           </Text>
-          <Text variant="h3" style={styles.subWelcomeText}>
+          <Text variant="h2" weight="medium" style={styles.subWelcomeText}>
             당신을 위한 기프티콘이 기다려요.
           </Text>
         </View>
@@ -155,23 +165,19 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 26,
+    letterSpacing: -0.5,
   },
   welcomeSection: {
     alignItems: 'flex-end',
     marginBottom: 10,
   },
   welcomeText: {
-    fontSize: 22,
-    fontWeight: '500',
-    color: 'black',
+    letterSpacing: -0.3,
   },
   subWelcomeText: {
-    fontSize: 22,
-    fontWeight: '500',
+    letterSpacing: -0.3,
     marginTop: 4,
-    color: 'black',
   },
   giftListContainer: {
     marginBottom: 10,
@@ -213,36 +219,37 @@ const styles = StyleSheet.create({
     height: '85%',
   },
   giftBrand: {
-    fontSize: 13,
-    fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    marginTop: 8,
+    marginTop: 2,
+    letterSpacing: -0.2,
   },
   giftName: {
-    fontSize: 12,
     color: '#666',
     textAlign: 'center',
-    marginTop: 3,
     paddingHorizontal: 10,
+    letterSpacing: -0.1,
   },
   dDayContainer: {
     backgroundColor: '#FCD9D9',
     width: '45%',
     paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingVertical: 1,
     borderRadius: 5,
     alignSelf: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   dDayText: {
     color: '#D33434',
-    fontSize: 13,
     alignSelf: 'center',
-    fontWeight: '600',
+    letterSpacing: -0.1,
   },
   bottomCardSection: {
     paddingHorizontal: 5,
+  },
+  shadowContainer: {
+    borderRadius: 12,
+    width: '100%',
   },
 });
 
