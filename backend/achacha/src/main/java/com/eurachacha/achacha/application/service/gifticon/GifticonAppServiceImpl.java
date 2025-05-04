@@ -51,7 +51,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.name(requestDto.getName())
 			.barcode(requestDto.getBarcode())
 			.type(requestDto.getType())
-			.expireDate(requestDto.getExpireDate())
+			.expiryDate(requestDto.getExpiryDate())
 			.originalAmount(requestDto.getOriginalAmount())
 			.remainingAmount(requestDto.getOriginalAmount())
 			.sharebox(null)
