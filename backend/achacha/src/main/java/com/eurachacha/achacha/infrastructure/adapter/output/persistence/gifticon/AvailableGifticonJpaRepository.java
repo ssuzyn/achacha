@@ -1,6 +1,6 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AvailableGifticonJpaRepository extends JpaRepository<Gifticon, Integer> {
     @Query("""
-SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDto(
+SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto(
       g.id,
       g.name,
       g.type,
@@ -29,13 +29,13 @@ SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.A
       sb.name,
       (
         SELECT f.path
-          FROM ImageFile f
+          FROM File f
          WHERE f.referenceEntityType = 'GIFTICON'
            AND f.referenceEntityId = g.id
            AND f.type = :fileType
            AND f.id = (
              SELECT MIN(f2.id)
-               FROM ImageFile f2
+               FROM File f2
               WHERE f2.referenceEntityType = 'GIFTICON'
                 AND f2.referenceEntityId = g.id
                 AND f2.type = :fileType
@@ -58,7 +58,7 @@ SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.A
     )
     AND (:type IS NULL OR g.type = :type)
 """)
-    Slice<AvailableGifticonDto> findAvailableGifticons(
+    Slice<AvailableGifticonResponseDto> findAvailableGifticons(
             @Param("userId") Integer userId,
             @Param("scope") GifticonScopeType scope,
             @Param("type") GifticonType type,

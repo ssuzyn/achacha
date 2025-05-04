@@ -1,6 +1,6 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.AvailableGifticonRepository;
 import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -17,7 +17,7 @@ public class AvailableGifticonPersistenceAdapter implements AvailableGifticonRep
     private final AvailableGifticonJpaRepository availableGifticonJpaRepository;
 
     @Override
-    public Slice<AvailableGifticonDto> getAvailableGifticons(Integer userId, GifticonScopeType scope, GifticonType type, Pageable pageable) {
+    public Slice<AvailableGifticonResponseDto> getAvailableGifticons(Integer userId, GifticonScopeType scope, GifticonType type, Pageable pageable) {
         return availableGifticonJpaRepository.findAvailableGifticons(userId, scope, type, FileType.THUMBNAIL, pageable);
     }
 }

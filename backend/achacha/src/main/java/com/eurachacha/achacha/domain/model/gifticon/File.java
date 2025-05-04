@@ -6,12 +6,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "file")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Getter
-public class ImageFile extends TimeStampEntity {
+public class File extends TimeStampEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

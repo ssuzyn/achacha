@@ -1,7 +1,7 @@
 package com.eurachacha.achacha.web.gifticon;
 
 import com.eurachacha.achacha.application.port.input.gifticon.AvailableGifticonAppService;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
@@ -21,7 +21,7 @@ public class AvailableGifticonController {
     private final AvailableGifticonAppService availableGifticonAppService;
 
     @GetMapping
-    public ResponseEntity<AvailableGifticonResponseDto> getAvailableGifticons(
+    public ResponseEntity<AvailableGifticonsResponseDto> getAvailableGifticons(
             @RequestParam(required = false) GifticonScopeType scope,
             @RequestParam(required = false) GifticonType type,
             @RequestParam(required = false) GifticonSortType sort,
