@@ -20,6 +20,15 @@ export const useTheme = () => {
       return theme.colors[colorName] || theme.colors.primary;
     },
 
+    // 폰트 유틸리티 함수들
+    getFontFamily: weight => {
+      return theme.fonts.fontWeight[weight] || theme.fonts.fontWeight.regular;
+    },
+
+    getTypography: variant => {
+      return theme.typography[variant] || theme.typography.body1;
+    },
+
     // 스타일 유틸리티 함수들
     getTextStyle: (variant = 'body') => {
       switch (variant) {

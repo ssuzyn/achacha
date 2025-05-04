@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { View, Text } from 'react-native-elements';
-import { Button } from '../ui';
+import { View } from 'react-native-elements';
+import { Button, Text } from '../ui';
 import { useTheme } from '../../hooks/useTheme';
 
 /**
@@ -37,10 +37,14 @@ const CategoryTabs = ({ categories = [], selectedId, onSelectCategory }) => {
           >
             {isSelected ? (
               <View style={[styles.activeTabIndicator, { backgroundColor: colors.secondary }]}>
-                <Text style={[styles.tabText, { color: colors.white }]}>{category.name}</Text>
+                <Text variant="button" style={styles.tabText} color="white">
+                  {category.name}
+                </Text>
               </View>
             ) : (
-              <Text style={[styles.tabText, { color: colors.white }]}>{category.name}</Text>
+              <Text variant="button" style={styles.tabText} color="white">
+                {category.name}
+              </Text>
             )}
           </Button>
         );

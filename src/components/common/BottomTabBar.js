@@ -1,10 +1,11 @@
 import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { StyleSheet, Platform, Dimensions, TouchableOpacity, View, Text } from 'react-native';
+import { StyleSheet, Platform, Dimensions, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
 import { Icon, useTheme } from 'react-native-elements';
+import { Text } from '../ui';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
@@ -16,7 +17,9 @@ const GifticonManageScreen = () => {
 
   return (
     <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.screenText, { color: theme.colors.black }]}>기프티콘 관리 화면</Text>
+      <Text variant="body1" style={styles.screenText}>
+        기프티콘 관리 화면
+      </Text>
     </View>
   );
 };
@@ -26,7 +29,9 @@ const MapScreen = () => {
 
   return (
     <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.screenText, { color: theme.colors.black }]}>기프티콘 MAP 화면</Text>
+      <Text variant="body1" style={styles.screenText}>
+        기프티콘 MAP 화면
+      </Text>
     </View>
   );
 };
@@ -36,7 +41,9 @@ const ShareboxScreen = () => {
 
   return (
     <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text style={[styles.screenText, { color: theme.colors.black }]}>쉐어박스 화면</Text>
+      <Text variant="body1" style={styles.screenText}>
+        쉐어박스 화면
+      </Text>
     </View>
   );
 };

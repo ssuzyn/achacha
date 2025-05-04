@@ -1,7 +1,8 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { Text, Icon } from 'react-native-elements';
+import { Icon } from 'react-native-elements';
 import useTheme from '../../hooks/useTheme';
+import { Text } from './index';
 
 /**
  * Chip 컴포넌트
@@ -97,7 +98,14 @@ const Chip = ({
       {...props}
     >
       {renderIcon()}
-      <Text style={[chipStyles.title, { color: variantStyle.textColor }, titleStyle]}>{title}</Text>
+      <Text
+        variant="caption"
+        weight={variant === 'tab' && isSelected ? 'semiBold' : 'regular'}
+        style={[chipStyles.title, titleStyle]}
+        color={variantStyle.textColor}
+      >
+        {title}
+      </Text>
       {renderCloseIcon()}
     </TouchableOpacity>
   );

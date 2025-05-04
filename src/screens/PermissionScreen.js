@@ -5,10 +5,9 @@ import {
   Image,
   StyleSheet,
   View,
-  Text,
   SafeAreaView,
 } from 'react-native';
-import { Button } from '../components/ui';
+import { Button, Text } from '../components/ui';
 // import * as Notifications from 'expo-notifications';
 // import * as Location from 'expo-location';
 // import * as ImagePicker from 'expo-image-picker';
@@ -86,9 +85,11 @@ const PermissionScreen = () => {
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
-                <Text style={[styles.titleText, { color: theme.colors.black }]}>이용을 위해</Text>
+                <Text variant="h1" style={styles.titleText}>
+                  이용을 위해
+                </Text>
               </View>
-              <Text style={[styles.titleText, styles.textCenter, { color: theme.colors.black }]}>
+              <Text variant="h1" style={[styles.titleText, styles.textCenter]}>
                 아래 권한을 허용해주세요.
               </Text>
             </View>

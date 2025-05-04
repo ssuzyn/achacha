@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, TextInput, Text, TouchableOpacity } from 'react-native';
+import { View, TextInput, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useTheme } from '../../hooks/useTheme';
 import { inputUtils } from '../../theme/themeUtils';
+import { Text } from './index';
 
 /**
  * 기본 입력 컴포넌트
@@ -76,9 +77,14 @@ export const Input = ({
   return (
     <View style={styles.wrapper}>
       {label && (
-        <Text style={[styles.label, { color: theme.colors.black }, labelStyle]}>
+        <Text variant="body2" weight="medium" style={[styles.label, labelStyle]}>
           {label}
-          {isRequired && <Text style={[styles.required, { color: theme.colors.error }]}> *</Text>}
+          {isRequired && (
+            <Text variant="body2" color="error" style={styles.required}>
+              {' '}
+              *
+            </Text>
+          )}
         </Text>
       )}
 
@@ -103,12 +109,7 @@ export const Input = ({
       </View>
 
       {(helperText || errorText) && (
-        <Text
-          style={[
-            styles.helperText,
-            { color: isInvalid ? theme.colors.error : theme.colors.grey5 },
-          ]}
-        >
+        <Text variant="caption" color={isInvalid ? 'error' : 'grey5'} style={styles.helperText}>
           {isInvalid ? errorText : helperText}
         </Text>
       )}

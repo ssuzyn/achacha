@@ -1,7 +1,8 @@
 import React from 'react';
 import { Overlay } from 'react-native-elements';
-import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-elements';
+import { Text } from './index';
 
 /**
  * 모달 컴포넌트
@@ -40,7 +41,9 @@ export const Modal = ({
       <View style={styles.container}>
         {title && (
           <View style={[styles.header, { borderBottomColor: theme.colors.grey1 }, headerStyle]}>
-            <Text style={[styles.title, { color: theme.colors.black }]}>{title}</Text>
+            <Text variant="subtitle1" weight="bold" style={styles.title}>
+              {title}
+            </Text>
             {closeButton && (
               <TouchableOpacity
                 style={[
@@ -49,7 +52,9 @@ export const Modal = ({
                 ]}
                 onPress={onClose || onBackdropPress}
               >
-                <Text style={[styles.closeButtonText, { color: theme.colors.grey5 }]}>✕</Text>
+                <Text variant="body1" color="grey5" style={styles.closeButtonText}>
+                  ✕
+                </Text>
               </TouchableOpacity>
             )}
           </View>

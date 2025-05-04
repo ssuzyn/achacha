@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useTheme } from 'react-native-elements';
+import { Text } from './index';
 
 /**
  * 셀렉트(드롭다운) 컴포넌트
@@ -104,7 +105,9 @@ export const Select = ({
   return (
     <View style={[styles.container, containerStyle]}>
       {label && (
-        <Text style={[styles.label, { color: theme.colors.black }, labelStyle]}>{label}</Text>
+        <Text variant="body2" weight="medium" style={[styles.label, labelStyle]}>
+          {label}
+        </Text>
       )}
 
       <DropDownPicker
@@ -138,9 +141,7 @@ export const Select = ({
       />
 
       {(error || helper) && (
-        <Text
-          style={[styles.helperText, { color: error ? theme.colors.error : theme.colors.grey5 }]}
-        >
+        <Text variant="caption" color={error ? 'error' : 'grey5'} style={styles.helperText}>
           {error || helper}
         </Text>
       )}

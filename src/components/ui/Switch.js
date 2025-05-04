@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { useTheme } from 'react-native-elements';
+import { Text } from './index';
 
 /**
  * 커스텀 스위치 컴포넌트
@@ -81,9 +82,10 @@ export const Switch = ({
     <View style={[getContainerStyle(), containerStyle]}>
       {label && (
         <Text
+          variant="body2"
+          color={disabled ? 'grey4' : 'black'}
           style={[
             styles.label,
-            { color: disabled ? theme.colors.grey4 : theme.colors.black },
             ['top', 'bottom'].includes(labelPosition) && styles.verticalLabel,
             labelStyle,
           ]}

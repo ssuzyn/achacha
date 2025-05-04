@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View, Text, FlatList, Image } from 'react-native';
+import { StyleSheet, ScrollView, View, FlatList, Image } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
+import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
@@ -73,7 +74,9 @@ const HomeScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 헤더 */}
       <View style={styles.headerSection}>
-        <Text style={[styles.headerTitle, { color: theme.colors.black }]}>홈</Text>
+        <Text variant="h2" style={styles.headerTitle}>
+          홈
+        </Text>
       </View>
 
       <ScrollView
@@ -82,10 +85,16 @@ const HomeScreen = () => {
       >
         {/* 환영 메시지 */}
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeText}>
-            어서오세요! <Text style={{ color: theme.colors.primary }}>{username}</Text> 님,
+          <Text variant="h3" style={styles.welcomeText}>
+            어서오세요!{' '}
+            <Text variant="h3" color="primary" style={styles.welcomeText}>
+              {username}
+            </Text>{' '}
+            님,
           </Text>
-          <Text style={styles.subWelcomeText}>당신을 위한 기프티콘이 기다려요.</Text>
+          <Text variant="h3" style={styles.subWelcomeText}>
+            당신을 위한 기프티콘이 기다려요.
+          </Text>
         </View>
 
         {/* 만료 임박 기프티콘 섹션 */}

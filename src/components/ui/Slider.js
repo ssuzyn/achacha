@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Slider as RNESlider } from 'react-native-elements';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useTheme } from 'react-native-elements';
+import { Text } from './index';
 
 /**
  * 슬라이더 컴포넌트
@@ -34,10 +35,7 @@ const Slider = ({
   thumbLabelStyle, // thumb 라벨 스타일
   ...props
 }) => {
-  // 값 배열(values)이 제공된 경우 이를 처리하는 로직
-  const useValueArray = values && values.length > 0;
-
-  // values 배열이 제공된 경우, 해당 배열의 인덱스로 변환
+  // 값 배열(values)이 제공된 경우, 해당 배열의 인덱스로 변환
   const [localIndex, setLocalIndex] = useState(() => {
     if (useValueArray) {
       const index = values.indexOf(value);
@@ -45,6 +43,9 @@ const Slider = ({
     }
     return 0;
   });
+
+  // 값 배열(values)이 제공된 경우 이를 처리하는 로직
+  const useValueArray = values && values.length > 0;
 
   // 초기 로컬 값 설정
   const [localValue, setLocalValue] = useState(useValueArray ? values[localIndex] : value);
@@ -111,7 +112,9 @@ const Slider = ({
 
     return (
       <View style={[styles.customThumb, { backgroundColor: thumbTintColor || backgroundColor }]}>
-        <Text style={[styles.thumbLabel, thumbLabelStyle]}>{localValue}</Text>
+        <Text variant="caption" weight="bold" style={[styles.thumbLabel, thumbLabelStyle]}>
+          {localValue}
+        </Text>
       </View>
     );
   };
@@ -120,7 +123,7 @@ const Slider = ({
     <View style={[styles.container, containerStyle]}>
       {/* 슬라이더 위에 중앙 정렬된 "당일 ~ [조정값]" 텍스트 */}
       <View style={styles.adjustmentTextContainer}>
-        <Text style={[styles.adjustmentText, { color: primaryColor }]}>
+        <Text variant="body1" weight="medium" color={primaryColor} style={styles.adjustmentText}>
           {localValue === 0 ? '당일만' : `당일 ~ ${formatAdjustmentText(localValue)}`}
         </Text>
       </View>
@@ -147,7 +150,7 @@ const Slider = ({
             children:
               showThumbLabel && useValueArray ? (
                 <View style={styles.thumbLabelContainer}>
-                  <Text style={[styles.thumbLabel, { color: theme.colors.white }, thumbLabelStyle]}>
+                  <Text variant="caption" weight="bold" color="white" style={styles.thumbLabel}>
                     {localValue}
                   </Text>
                 </View>
@@ -159,10 +162,10 @@ const Slider = ({
 
       {!useValueArray && showMinMax && (
         <View style={styles.minMaxContainer}>
-          <Text style={[styles.minMaxText, { color: theme.colors.grey5 }, minMaxTextStyle]}>
+          <Text variant="caption" color="grey5" style={[styles.minMaxText, minMaxTextStyle]}>
             {minimumValue}
           </Text>
-          <Text style={[styles.minMaxText, { color: theme.colors.grey5 }, minMaxTextStyle]}>
+          <Text variant="caption" color="grey5" style={[styles.minMaxText, minMaxTextStyle]}>
             {maximumValue}
           </Text>
         </View>

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useTheme } from 'react-native-elements';
 import Slider from '../components/ui/Slider';
-import { Button, Divider } from '../components/ui';
+import { Button, Divider, Text } from '../components/ui';
 import Switch from '../components/ui/Switch';
 
 const SettingScreen = () => {
@@ -27,15 +27,23 @@ const SettingScreen = () => {
     >
       {/* 설정 헤더 */}
       <View style={styles.headerSection}>
-        <Text style={[styles.headerTitle, { color: theme.colors.black }]}>설정</Text>
+        <Text variant="h2" style={styles.headerTitle}>
+          설정
+        </Text>
       </View>
 
       {/* 회원정보 섹션 */}
       <View style={[styles.section, styles.firstSection]}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.black }]}>회원정보</Text>
+        <Text variant="h3" style={styles.sectionTitle}>
+          회원정보
+        </Text>
         <View style={styles.infoItem}>
-          <Text style={[styles.infoLabel, { color: theme.colors.grey3 }]}>연결된 소셜 계정</Text>
-          <Text style={[styles.infoValue, { color: theme.colors.black }]}>qwer@kakao.com</Text>
+          <Text variant="body1" color="grey3" style={styles.infoLabel}>
+            연결된 소셜 계정
+          </Text>
+          <Text variant="body1" style={styles.infoValue}>
+            qwer@kakao.com
+          </Text>
         </View>
       </View>
 
@@ -44,15 +52,17 @@ const SettingScreen = () => {
 
       {/* 알림 섹션 */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.colors.black }]}>알림</Text>
+        <Text variant="h3" style={styles.sectionTitle}>
+          알림
+        </Text>
 
         {/* 유효기간 만료 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+            <Text variant="body1" style={styles.notificationLabel}>
               유효기간 만료 알림
             </Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
               유효기간 임박 시 알림
             </Text>
           </View>
@@ -63,10 +73,10 @@ const SettingScreen = () => {
         {expiryNotification && (
           <View style={styles.sliderContainer}>
             <View style={styles.notificationInfo}>
-              <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+              <Text variant="body1" style={styles.notificationLabel}>
                 유효기간 알림 주기 설정
               </Text>
-              <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
                 만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90 일 단위
               </Text>
             </View>
@@ -88,10 +98,10 @@ const SettingScreen = () => {
         {/* 주변 매장 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+            <Text variant="body1" style={styles.notificationLabel}>
               주변 매장 알림
             </Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
               각 매장 기준 150m 이내 접근 시 알림
             </Text>
           </View>
@@ -101,10 +111,10 @@ const SettingScreen = () => {
         {/* 사용 완료 여부 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+            <Text variant="body1" style={styles.notificationLabel}>
               사용완료 여부 알림
             </Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
               사용완료 처리 여부 알림
             </Text>
           </View>
@@ -117,10 +127,10 @@ const SettingScreen = () => {
         {/* 기프티콘 나누기 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+            <Text variant="body1" style={styles.notificationLabel}>
               기프티콘 나누기 알림
             </Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
               기프티콘 나누기 수신 알림
             </Text>
           </View>
@@ -130,10 +140,10 @@ const SettingScreen = () => {
         {/* 쉐어박스 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
-            <Text style={[styles.notificationLabel, { color: theme.colors.black }]}>
+            <Text variant="body1" style={styles.notificationLabel}>
               쉐어박스 알림
             </Text>
-            <Text style={[styles.notificationDescription, { color: theme.colors.grey3 }]}>
+            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
               쉐어박스 등록, 사용완료, 새 멤버 참여 알림
             </Text>
           </View>

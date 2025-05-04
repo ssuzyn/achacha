@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Image, Text } from 'react-native';
+import { View, StyleSheet, Image } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { Shadow } from 'react-native-shadow-2';
+import { Text } from './index';
 
 /**
  * 기본 Card 컴포넌트
@@ -38,13 +39,17 @@ const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
             <Image source={image} style={styles.giftImage} resizeMode="contain" />
           </View>
           <View style={styles.giftInfo}>
-            <Text style={styles.giftBrand}>{brand}</Text>
-            <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
+            <Text variant="caption" weight="semiBold" style={styles.giftBrand}>
+              {brand}
+            </Text>
+            <Text variant="body2" style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
               {name}
             </Text>
           </View>
           <View style={styles.dDayContainer}>
-            <Text style={styles.dDayText}>D-{daysLeft}</Text>
+            <Text variant="caption" weight="semiBold" style={styles.dDayText}>
+              D-{daysLeft}
+            </Text>
           </View>
         </View>
       </Shadow>
@@ -65,11 +70,15 @@ const FeatureCard = ({ title, iconName, count, style, ...props }) => {
         style={{ borderRadius: 10, width: '100%', height: 160 }}
       >
         <View style={[styles.featureCard, style]} {...props}>
-          <Text style={styles.featureTitle}>{title}</Text>
+          <Text variant="body1" weight="semiBold" style={styles.featureTitle}>
+            {title}
+          </Text>
           {iconName && count && (
             <View style={styles.shareBoxIcon}>
               <Icon name={iconName} size={24} color="#888" />
-              <Text style={styles.shareBoxCount}>{count}</Text>
+              <Text variant="caption" style={styles.shareBoxCount}>
+                {count}
+              </Text>
             </View>
           )}
         </View>
@@ -91,7 +100,9 @@ const RadarCard = ({ text, image, style, ...props }) => {
         style={{ borderRadius: 10, width: '100%', height: 160 }}
       >
         <View style={[styles.radarCard, style]} {...props}>
-          <Text style={styles.radarText}>{text}</Text>
+          <Text variant="subtitle1" weight="bold" style={styles.radarText}>
+            {text}
+          </Text>
           <Image source={image} style={styles.fullRadarImage} />
         </View>
       </Shadow>
@@ -113,8 +124,12 @@ const GiftCard2 = ({ title, subtitle, image, style, ...props }) => {
       <View style={[styles.giftCard2, style]} {...props}>
         <View style={styles.giftCard2Content}>
           <View>
-            <Text style={styles.giftCard2Text}>{title}</Text>
-            <Text style={styles.giftCard2SubText}>{subtitle}</Text>
+            <Text variant="subtitle1" weight="semiBold" style={styles.giftCard2Text}>
+              {title}
+            </Text>
+            <Text variant="body2" style={styles.giftCard2SubText}>
+              {subtitle}
+            </Text>
           </View>
           <Image source={image} style={styles.giftCard2Image} resizeMode="contain" />
         </View>

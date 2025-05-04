@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, FlatList, StatusBar, View, Text } from 'react-native';
+import { StyleSheet, FlatList, StatusBar, View } from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, ListItem, Badge } from '../components/ui';
+import { Button, ListItem, Badge, Text } from '../components/ui';
 
 // 더미 알림 데이터
 const dummyNotifications = [
@@ -49,7 +49,9 @@ const dummyNotifications = [
 const EmptyNotifications = ({ theme }) => (
   <View style={styles.emptyContainer}>
     <Icon name="notifications-off" type="material" size={50} color={theme.colors.grey3} />
-    <Text style={[styles.emptyText, { color: theme.colors.grey2 }]}>새로운 알림이 없습니다</Text>
+    <Text variant="body1" style={styles.emptyText} color={theme.colors.grey2}>
+      새로운 알림이 없습니다
+    </Text>
   </View>
 );
 
@@ -86,10 +88,12 @@ const NotificationScreen = () => {
       title={item.title}
       subtitle={
         <>
-          <Text style={[styles.notificationMessage, { color: theme.colors.grey }]}>
+          <Text variant="body2" style={styles.notificationMessage} color="grey">
             {item.message}
           </Text>
-          <Text style={[styles.notificationTime, { color: theme.colors.grey2 }]}>{item.time}</Text>
+          <Text variant="caption" style={styles.notificationTime} color="grey2">
+            {item.time}
+          </Text>
         </>
       }
       onPress={() => handleNotificationPress(item)}
@@ -120,7 +124,9 @@ const NotificationScreen = () => {
             <Icon name="arrow-back-ios" type="material" size={28} color={theme.colors.black} />
           }
         />
-        <Text style={[styles.headerTitle, { color: theme.colors.black }]}>알림함</Text>
+        <Text variant="h3" style={styles.headerTitle}>
+          알림함
+        </Text>
         <View style={styles.rightPlaceholder} />
       </View>
 

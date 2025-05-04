@@ -1,4 +1,6 @@
 // React Native Elements 테마 설정
+import { fontConfig, typography } from './fonts';
+
 const theme = {
   colors: {
     // 메인 색상
@@ -37,10 +39,40 @@ const theme = {
     error: '#EF4040',
     disabled: '#cccccc',
   },
+  // 폰트 설정 추가
+  fonts: fontConfig,
+  typography: typography,
   Button: {
     raised: true,
     buttonStyle: {
       borderRadius: 10,
+    },
+  },
+  // 기존의 Text 주석을 풀고 수정
+  Text: {
+    style: {
+      fontFamily: fontConfig.fontWeight.regular,
+      color: '#000000',
+    },
+    h1Style: {
+      fontFamily: fontConfig.fontWeight.bold,
+      fontSize: 28,
+      lineHeight: 36,
+    },
+    h2Style: {
+      fontFamily: fontConfig.fontWeight.bold,
+      fontSize: 24,
+      lineHeight: 32,
+    },
+    h3Style: {
+      fontFamily: fontConfig.fontWeight.semiBold,
+      fontSize: 20,
+      lineHeight: 28,
+    },
+    h4Style: {
+      fontFamily: fontConfig.fontWeight.semiBold,
+      fontSize: 18,
+      lineHeight: 26,
     },
   },
   Card: {
@@ -84,23 +116,6 @@ const theme = {
     imageStyle: {
       borderTopLeftRadius: 10,
       borderTopRightRadius: 10,
-    },
-  },
-  Text: {
-    style: {
-      color: '#000000',
-    },
-    h1Style: {
-      fontWeight: 'bold',
-    },
-    h2Style: {
-      fontWeight: 'bold',
-    },
-    h3Style: {
-      fontWeight: 'bold',
-    },
-    h4Style: {
-      fontWeight: 'bold',
     },
   },
   Input: {

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Text } from './ui';
 
 const ICON_SIZE = 28; // 아이콘 크기 상수
 const ICON_MARGIN_RIGHT = 5; // 아이콘 오른쪽 마진 상수
@@ -10,10 +11,14 @@ const PermissionItem = ({ iconName, title, description }) => (
     {/* 상단 행: 아이콘 + 제목 */}
     <View style={styles.itemTopRow}>
       <MaterialIcons name={iconName} size={ICON_SIZE} style={styles.icon} />
-      <Text style={styles.permissionTitle}>{title}</Text>
+      <Text variant="subtitle1" weight="bold" style={styles.permissionTitle}>
+        {title}
+      </Text>
     </View>
     {/* 하단 행: 설명 */}
-    <Text style={styles.permissionDescription}>{description}</Text>
+    <Text variant="body2" color="#666666" style={styles.permissionDescription}>
+      {description}
+    </Text>
   </View>
 );
 
@@ -33,14 +38,9 @@ const styles = StyleSheet.create({
     marginRight: ICON_MARGIN_RIGHT,
   },
   permissionTitle: {
-    fontSize: 16, // $fontSizeLg
     fontWeight: '700', // $fontWeightBold
-    color: '#000000', // $text
   },
   permissionDescription: {
-    fontSize: 14, // $fontSizeMd
-    fontWeight: '400', // $fontWeightRegular
-    color: '#666666', // $textSecondary
     textAlign: 'left', // 왼쪽 정렬 유지
   },
 });

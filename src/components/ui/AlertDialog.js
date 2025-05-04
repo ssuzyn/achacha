@@ -1,7 +1,8 @@
 import React from 'react';
 import { Overlay } from 'react-native-elements';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-elements';
+import { Text } from './index';
 
 /**
  * 알림 다이얼로그 컴포넌트
@@ -35,8 +36,14 @@ export const AlertDialog = ({
   return (
     <Overlay isVisible={isVisible} onBackdropPress={onBackdropPress} overlayStyle={styles.overlay}>
       <View style={styles.container}>
-        <Text style={[styles.title, { color: theme.colors.black }]}>{title}</Text>
-        {message && <Text style={[styles.message, { color: theme.colors.grey5 }]}>{message}</Text>}
+        <Text variant="subtitle1" weight="bold" style={styles.title}>
+          {title}
+        </Text>
+        {message && (
+          <Text variant="body2" color="grey5" style={styles.message}>
+            {message}
+          </Text>
+        )}
 
         <View style={[styles.buttonContainer, hideCancel && styles.singleButtonContainer]}>
           {!hideCancel && (
@@ -44,7 +51,9 @@ export const AlertDialog = ({
               style={[styles.button, styles.cancelButton, { backgroundColor: theme.colors.grey1 }]}
               onPress={onCancel}
             >
-              <Text style={[styles.cancelText, { color: theme.colors.grey5 }]}>{cancelText}</Text>
+              <Text variant="button" color="grey5" style={styles.cancelText}>
+                {cancelText}
+              </Text>
             </TouchableOpacity>
           )}
 
@@ -57,7 +66,9 @@ export const AlertDialog = ({
             ]}
             onPress={onConfirm}
           >
-            <Text style={[styles.confirmText, { color: theme.colors.white }]}>{confirmText}</Text>
+            <Text variant="button" color="white" style={styles.confirmText}>
+              {confirmText}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

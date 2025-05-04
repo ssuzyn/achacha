@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { View, Text } from 'react-native-elements';
+import { View } from 'react-native-elements';
 import { Chip } from '../ui';
 import useTheme from '../../hooks/useTheme';
 
