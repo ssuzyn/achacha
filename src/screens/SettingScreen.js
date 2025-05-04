@@ -164,7 +164,7 @@ const SettingScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 0,
   },
   contentContainer: {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     maxWidth: '45%',
   },
   buttonSpacer: {
-    width: 16,
+    width: 12,
   },
   withdrawButton: {
     paddingHorizontal: 20,

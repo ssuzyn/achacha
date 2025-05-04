@@ -122,7 +122,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingTop: 0,
   },
   contentContainer: {
@@ -158,7 +158,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   giftListContent: {
-    paddingRight: 14,
+    paddingRight: 10,
   },
   middleCardSection: {
     marginBottom: 20,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     height: 200,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    marginRight: 10,
+    marginRight: 8,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
