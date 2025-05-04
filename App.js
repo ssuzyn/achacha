@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
 import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -21,11 +22,13 @@ export default function App() {
   }, []);
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
-      <NavigationContainer>
-        <AppNavigator />
-        <StatusBar style="auto" />
-      </NavigationContainer>
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <NavigationContainer>
+          <AppNavigator />
+          <StatusBar style="auto" />
+        </NavigationContainer>
+      </View>
+    </GestureHandlerRootView>
   );
 }
