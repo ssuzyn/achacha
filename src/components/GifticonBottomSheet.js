@@ -1,10 +1,9 @@
-// GifticonBottomSheet.js
 import React, { useCallback, useMemo, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import MapGifticonList from './MapGifticonList';
 
-const GifticonBottomSheet = ({ gifticons, onUseGifticon }) => {
+const GifticonBottomSheet = ({ gifticons, onUseGifticon, onSelectBrand, selectedBrand }) => {
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ['4%', '25%', '50%'], []);
 
@@ -23,7 +22,12 @@ const GifticonBottomSheet = ({ gifticons, onUseGifticon }) => {
       backgroundStyle={styles.background}
     >
       <View style={styles.contentContainer}>
-        <MapGifticonList gifticons={gifticons} onUseGifticon={onUseGifticon} />
+        <MapGifticonList
+          gifticons={gifticons}
+          onUseGifticon={onUseGifticon}
+          onSelectBrand={onSelectBrand}
+          selectedBrand={selectedBrand}
+        />
       </View>
     </BottomSheet>
   );
@@ -32,10 +36,10 @@ const GifticonBottomSheet = ({ gifticons, onUseGifticon }) => {
 const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: 'white',
   },
   handle: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: 'white',
     borderTopLeftRadius: 14,
     borderTopRightRadius: 14,
     paddingVertical: 10,
