@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.infrastructure.util;
+package com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util;
 
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import org.springframework.data.domain.PageRequest;
