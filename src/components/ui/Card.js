@@ -85,9 +85,14 @@ const GiftCard2 = ({ title, subtitle, image, style, ...props }) => {
 const styles = StyleSheet.create({
   card: {
     borderRadius: 10,
-    backgroundColor: '#f0f4ff',
+    backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     marginBottom: 12,
+    shadowColor: '#000000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   // GiftCard 스타일
   giftCard: {
@@ -96,7 +101,12 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderRadius: 10,
     overflow: 'hidden',
-    backgroundColor: '#f0f4ff',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   giftImageContainer: {
     height: 160,
@@ -143,9 +153,14 @@ const styles = StyleSheet.create({
     width: '47%',
     height: 160,
     padding: 16,
-    backgroundColor: '#f0f4ff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     justifyContent: 'start',
+    shadowColor: '#000000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   featureTitle: {
     fontSize: 16,
@@ -170,11 +185,16 @@ const styles = StyleSheet.create({
   radarCard: {
     width: '47%',
     height: 160,
-    backgroundColor: '#f0f4ff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     overflow: 'hidden',
     padding: 0,
     position: 'relative',
+    shadowColor: '#000000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   radarText: {
     fontSize: 18,
@@ -196,8 +216,13 @@ const styles = StyleSheet.create({
   giftCard2: {
     padding: 20,
     marginBottom: 20,
-    backgroundColor: '#f0f4ff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.02,
+    shadowRadius: 4,
+    elevation: 1,
   },
   giftCard2Content: {
     flexDirection: 'row',
