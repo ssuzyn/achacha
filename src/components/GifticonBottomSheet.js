@@ -1,15 +1,13 @@
+// GifticonBottomSheet.js
 import React, { useCallback, useMemo, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import MapGifticonList from './MapGifticonList';
 
 const GifticonBottomSheet = ({ gifticons, onUseGifticon }) => {
-  // ref
   const bottomSheetRef = useRef(null);
-  // 스냅 포인트 설정 (화면 높이의 비율)
-  const snapPoints = useMemo(() => ['17%', '50%', '85%'], []);
+  const snapPoints = useMemo(() => ['4%', '25%', '50%'], []);
 
-  // 콜백
   const handleSheetChanges = useCallback(index => {
     console.log('handleSheetChanges', index);
   }, []);
@@ -17,11 +15,12 @@ const GifticonBottomSheet = ({ gifticons, onUseGifticon }) => {
   return (
     <BottomSheet
       ref={bottomSheetRef}
-      index={0}
+      index={1}
       snapPoints={snapPoints}
       onChange={handleSheetChanges}
       handleStyle={styles.handle}
       handleIndicatorStyle={styles.indicator}
+      backgroundStyle={styles.background}
     >
       <View style={styles.contentContainer}>
         <MapGifticonList gifticons={gifticons} onUseGifticon={onUseGifticon} />
@@ -33,9 +32,10 @@ const GifticonBottomSheet = ({ gifticons, onUseGifticon }) => {
 const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
+    backgroundColor: '#F9F9F9',
   },
   handle: {
-    backgroundColor: 'white',
+    backgroundColor: '#F9F9F9',
     borderTopLeftRadius: 14,
     borderTopRightRadius: 14,
     paddingVertical: 10,
@@ -44,6 +44,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#CCCCCC',
     width: 40,
     height: 4,
+  },
+  background: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
   },
 });
 
