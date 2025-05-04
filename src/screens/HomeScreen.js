@@ -17,14 +17,14 @@ const SAMPLE_GIFTICONS = [
     id: '2',
     brand: '메가MGC커피',
     name: '(자바)아이스라떼',
-    image: require('../assets/images/giftbox1.png'),
+    image: require('../assets/images/giftbox.png'),
     expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3일 후
   },
   {
     id: '3',
     brand: '스타벅스',
     name: '아메리카노 Tall',
-    image: require('../assets/images/giftbox2.png'),
+    image: require('../assets/images/giftbox.png'),
     expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후
   },
 ];

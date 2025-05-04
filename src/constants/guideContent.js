@@ -8,8 +8,8 @@ export const guideSteps = [
     title: '아차차!',
     subText1: '또 기프티콘 유효기간을',
     subText2: '놓치셨다구요?',
-    image: require('../assets/images/giftbox1.png'),
-    // 첫 화면 이미지는 컴포넌트에서 조건부 렌더링, 이 경로는 현재 사용 안 함
+    image: require('../assets/images/giftbox.png'),
+    imageStyle: { width: width * 0.8, height: width * 0.8 },
   },
   // Step 2: 이미지 업로드
   {
@@ -24,7 +24,7 @@ export const guideSteps = [
     subText1: '원하는 시간에 똑똑하게',
     subText2: '알려드릴게요.',
     image: require('../assets/images/bell.png'),
-    imageStyle: { width: width * 0.5, height: width * 0.5 }, // 개별 스타일 예시
+    imageStyle: { width: width * 0.5, height: width * 0.5 },
   },
   // Step 4: 기프티콘 전달
   {
@@ -32,6 +32,7 @@ export const guideSteps = [
     subText1: '기프티콘이 누군가에게 🎁',
     subText2: '',
     image: require('../assets/images/gesture.png'),
+    imageStyle: { width: width * 0.7, height: width * 0.7 },
   },
   // Step 5: 쉐어박스
   {

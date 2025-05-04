@@ -18,26 +18,11 @@ const GuideFirstScreen = () => {
           <View style={styles.mainContainer}>
             <View style={styles.imageWrapper}>
               <View style={styles.imageContainer}>
-                {currentStep === 0 ? (
-                  <>
-                    <Image
-                      source={require('../assets/images/giftbox1.png')}
-                      style={[styles.giftbox1]}
-                      resizeMode="contain"
-                    />
-                    <Image
-                      source={require('../assets/images/giftbox2.png')}
-                      style={[styles.giftbox2]}
-                      resizeMode="contain"
-                    />
-                  </>
-                ) : (
-                  <Image
-                    source={currentContent.image}
-                    style={[styles.contentImage, currentContent.imageStyle]}
-                    resizeMode="contain"
-                  />
-                )}
+                <Image
+                  source={currentContent.image}
+                  style={[styles.contentImage, currentContent.imageStyle]}
+                  resizeMode="contain"
+                />
               </View>
             </View>
 
@@ -114,18 +99,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     minHeight: width * 0.6,
     marginBottom: 8,
-  },
-  giftbox1: {
-    width: width * 0.5,
-    height: width * 0.5,
-    position: 'absolute',
-    transform: [{ translateX: -80 }, { translateY: 50 }],
-  },
-  giftbox2: {
-    width: width * 0.5,
-    height: width * 0.5,
-    position: 'absolute',
-    transform: [{ translateX: 80 }, { translateY: -width * 0.1 }],
   },
   contentImage: {
     width: width * 0.6,
