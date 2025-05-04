@@ -17,6 +17,6 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	// 기프티콘 만료 여부 확인
 	@Override
 	public boolean isExpired(Gifticon gifticon) {
-		return gifticon.getExpireDate().isBefore(LocalDate.now());
+		return gifticon.getExpiryDate().isBefore(LocalDate.now());
 	}
 }
