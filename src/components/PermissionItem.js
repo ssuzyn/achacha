@@ -1,10 +1,11 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text } from './ui';
 
 const ICON_SIZE = 28; // 아이콘 크기 상수
-const ICON_MARGIN_RIGHT = 5; // 아이콘 오른쪽 마진 상수
+const ICON_MARGIN_RIGHT = 12; // 아이콘 오른쪽 마진 상수
+const { width } = Dimensions.get('window');
 
 const PermissionItem = ({ iconName, title, description }) => (
   <View style={styles.permissionItemContainer}>
@@ -26,7 +27,8 @@ const styles = StyleSheet.create({
   permissionItemContainer: {
     marginBottom: 25,
     alignItems: 'flex-start', // 왼쪽 정렬 유지
-    width: '90%', // 너비 유지
+    width: '100%', // 너비 유지
+    paddingHorizontal: 4,
   },
   itemTopRow: {
     flexDirection: 'row',
@@ -42,6 +44,10 @@ const styles = StyleSheet.create({
   },
   permissionDescription: {
     textAlign: 'left', // 왼쪽 정렬 유지
+    paddingLeft: ICON_SIZE + ICON_MARGIN_RIGHT, // 아이콘과 제목을 같은 라인에 맞춤
+    paddingRight: 10,
+    lineHeight: 22,
+    width: width * 0.85,
   },
 });
 
