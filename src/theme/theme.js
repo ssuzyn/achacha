@@ -6,7 +6,9 @@ const theme = {
     // 강조 색상
     secondary: '#278CCC',
     // 백그라운드
-    background: '#A7DAF9',
+    tertiary: '#A7DAF9',
+    // 배경 색상
+    background: '#FAFAFA',
     // 텍스트 색상
     black: '#000000',
     white: '#FFFFFF',
