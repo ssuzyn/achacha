@@ -10,6 +10,8 @@ services:
       - "8080:8080"  # Spring Boot 애플리케이션 포트 매핑
     environment:
       SPRING_PROFILES_ACTIVE: local
+      CLOVA_OCR_API_URL: ${CLOVA_OCR_API_URL}
+      CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
     depends_on:
       - mysql
 

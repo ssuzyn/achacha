@@ -1,9 +1,14 @@
 package com.eurachacha.achacha.application.port.input.gifticon;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 public interface GifticonAppService {
-	GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto);
+	GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType);
 
+	GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto);
 }
