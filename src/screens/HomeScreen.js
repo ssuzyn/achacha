@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     paddingTop: 0,
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
   headerTitle: {
     fontSize: 24,
@@ -151,7 +151,6 @@ const styles = StyleSheet.create({
   },
   welcomeSection: {
     alignItems: 'flex-end',
-    marginTop: 5,
     marginBottom: 10,
   },
   welcomeText: {
