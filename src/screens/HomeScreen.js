@@ -73,7 +73,7 @@ const HomeScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 헤더 */}
       <View style={styles.headerSection}>
-        <Text style={styles.headerTitle}>홈</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.black }]}>홈</Text>
       </View>
 
       <ScrollView
@@ -134,7 +134,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 6,
+    paddingHorizontal: 12,
     paddingTop: 0,
   },
   contentContainer: {
@@ -143,17 +143,16 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     paddingTop: 0,
-    paddingBottom: 5,
+    paddingBottom: 10,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: 'black',
   },
   welcomeSection: {
     alignItems: 'flex-end',
-    marginTop: 10,
-    marginBottom: 15,
+    marginTop: 5,
+    marginBottom: 10,
   },
   welcomeText: {
     fontSize: 22,
