@@ -123,13 +123,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingTop: 0,
   },
   contentContainer: {
+    paddingTop: 0,
     paddingBottom: 30,
   },
   headerSection: {
-    paddingTop: 10,
-    paddingBottom: 10,
+    paddingTop: 0,
+    paddingBottom: 20,
   },
   headerTitle: {
     fontSize: 24,
@@ -138,28 +140,28 @@ const styles = StyleSheet.create({
   },
   welcomeSection: {
     alignItems: 'flex-end',
-    marginTop: 5,
+    marginTop: 10,
     marginBottom: 20,
   },
   welcomeText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '500',
     color: 'black',
   },
   subWelcomeText: {
-    fontSize: 18,
-    fontWeight: '400',
+    fontSize: 20,
+    fontWeight: '500',
     marginTop: 4,
     color: 'black',
   },
   giftListContainer: {
-    marginBottom: 15,
+    marginBottom: 20,
   },
   giftListContent: {
     paddingRight: 14,
   },
   middleCardSection: {
-    marginBottom: 15,
+    marginBottom: 20,
   },
   middleCardRow: {
     flexDirection: 'row',
