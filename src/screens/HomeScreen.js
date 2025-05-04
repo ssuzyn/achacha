@@ -1,7 +1,7 @@
 import React from 'react';
-import { Image, StyleSheet, ScrollView, View, Text, FlatList } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, FlatList } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
-import { Icon } from 'react-native-elements';
+import Card from '../components/ui/Card';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -44,20 +44,7 @@ const HomeScreen = () => {
   const renderGiftItem = ({ item }) => {
     const daysLeft = calculateDaysLeft(item.expiryDate);
     return (
-      <View style={styles.giftCard}>
-        <View style={styles.giftImageContainer}>
-          <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
-        </View>
-        <View style={styles.giftInfo}>
-          <Text style={styles.giftBrand}>{item.brand}</Text>
-          <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
-            {item.name}
-          </Text>
-        </View>
-        <View style={styles.dDayContainer}>
-          <Text style={styles.dDayText}>D-{daysLeft}</Text>
-        </View>
-      </View>
+      <Card.GiftCard brand={item.brand} name={item.name} image={item.image} daysLeft={daysLeft} />
     );
   };
 
@@ -96,42 +83,26 @@ const HomeScreen = () => {
         <View style={styles.middleCardSection}>
           <View style={styles.middleCardRow}>
             {/* 쉐어박스 & 나누기 카드 */}
-            <View style={styles.featureCard}>
-              <Text style={styles.featureTitle}>
-                나누면{'\n'}즐거움 두배,{'\n'}쉐어박스
-              </Text>
-              <View style={styles.shareBoxIcon}>
-                <Icon name="inventory-2" size={24} color="#888" />
-                <Text style={styles.shareBoxCount}>34개 쉐어 중</Text>
-              </View>
-            </View>
+            <Card.FeatureCard
+              title={`나누면\n즐거움 두배,\n쉐어박스`}
+              iconName="inventory-2"
+              count="34개 쉐어 중"
+            />
 
             {/* 레이더 카드 */}
-            <View style={styles.radarCard}>
-              <Text style={styles.radarText}>쓱 - 나누기{'\n'}행운의 주인공은?</Text>
-              <Image
-                source={require('../assets/images/home-radar.png')}
-                style={styles.fullRadarImage}
-                resizeMode="contain"
-              />
-            </View>
+            <Card.RadarCard
+              text={`쓱 - 나누기\n행운의 주인공은?`}
+              image={require('../assets/images/home-radar.png')}
+            />
           </View>
         </View>
 
         {/* 하단 선물 카드 */}
-        <View style={styles.giftCard2}>
-          <View style={styles.giftCard2Content}>
-            <View>
-              <Text style={styles.giftCard2Text}>기프티콘 선물해봐요!</Text>
-              <Text style={styles.giftCard2SubText}>포장은 저희가 해드릴게요.</Text>
-            </View>
-            <Image
-              source={require('../assets/images/home-gift.png')}
-              style={styles.giftCard2Image}
-              resizeMode="contain"
-            />
-          </View>
-        </View>
+        <Card.GiftCard2
+          title="기프티콘 선물해봐요!"
+          subtitle="포장은 저희가 해드릴게요."
+          image={require('../assets/images/home-gift.png')}
+        />
       </ScrollView>
     </View>
   );
@@ -177,137 +148,12 @@ const styles = StyleSheet.create({
   giftListContent: {
     paddingRight: 16,
   },
-  giftCard: {
-    width: 190,
-    height: 220,
-    marginRight: 12,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#f0f4ff',
-  },
-  giftImageContainer: {
-    height: 160,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    margin: 10,
-    borderRadius: 8,
-  },
-  giftImage: {
-    width: '70%',
-    height: '70%',
-  },
-  giftInfo: {
-    paddingHorizontal: 10,
-  },
-  giftBrand: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  giftName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: 'black',
-    textAlign: 'center',
-  },
-  dDayContainer: {
-    backgroundColor: '#F6C5C5',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'center',
-    marginTop: 8,
-  },
-  dDayText: {
-    color: '#D33434',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   middleCardSection: {
     marginBottom: 20,
   },
   middleCardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  featureCard: {
-    width: '47%',
-    height: 160,
-    padding: 16,
-    backgroundColor: '#f0f4ff',
-    borderRadius: 10,
-    justifyContent: 'start',
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 10,
-    lineHeight: 24,
-  },
-  shareBoxIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-  },
-  shareBoxCount: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 6,
-  },
-  radarCard: {
-    width: '47%',
-    height: 160,
-    backgroundColor: '#f0f4ff',
-    borderRadius: 10,
-    overflow: 'hidden',
-    padding: 0,
-    position: 'relative',
-  },
-  radarText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#333',
-    textAlign: 'right',
-    position: 'absolute',
-    top: 60,
-    left: 0,
-    right: 16,
-    zIndex: 1,
-    lineHeight: 24,
-  },
-  fullRadarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  giftCard2: {
-    padding: 20,
-    marginBottom: 20,
-    backgroundColor: '#f0f4ff',
-    borderRadius: 10,
-  },
-  giftCard2Content: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  giftCard2Text: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  giftCard2SubText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-  },
-  giftCard2Image: {
-    width: 140,
-    height: 80,
   },
 });
 
