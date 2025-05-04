@@ -34,7 +34,4 @@ public class Brand extends TimeStampEntity {
 
 	@Column(length = 64)
 	private String name;
-
-	@OneToMany(mappedBy = "brand")
-	private List<Gifticon> gifticons = new ArrayList<>();
 }

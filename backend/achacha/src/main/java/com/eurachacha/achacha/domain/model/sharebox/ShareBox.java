@@ -49,7 +49,4 @@ public class ShareBox extends TimeStampEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
-
-	@OneToMany(mappedBy = "sharebox")
-	private List<Gifticon> gifticons = new ArrayList<>();
 }

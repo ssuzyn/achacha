@@ -42,12 +42,6 @@ public class User extends TimeStampEntity {
 	@Builder.Default
 	private Boolean isDeleted = false;
 
-	@OneToMany(mappedBy = "user")
-	private List<ShareBox> sharebox = new ArrayList<>();
-
-	@OneToMany(mappedBy = "user")
-	private List<Gifticon> gifticons = new ArrayList<>();
-
 	/**
 	 * 사용자 논리 삭제 메서드
 	 * 사용자를 삭제 상태로 변경
