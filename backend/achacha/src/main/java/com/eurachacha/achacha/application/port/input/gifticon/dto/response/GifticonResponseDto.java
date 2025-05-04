@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
+// @AllArgsConstructor // 이후에 필드가 생기면, 해제 할 것
 @Builder
 public class GifticonResponseDto {
 	public static GifticonResponseDto from(Gifticon gifticon) {
