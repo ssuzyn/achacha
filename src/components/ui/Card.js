@@ -1,112 +1,229 @@
 import React from 'react';
-import { View, Image as RNImage } from 'react-native';
-import { Card as RNECard, Text, Divider } from 'react-native-elements';
-import useTheme from '../../hooks/useTheme';
+import { View, StyleSheet, Image, Text } from 'react-native';
+import { Icon } from 'react-native-elements';
 
 /**
  * 기본 Card 컴포넌트
  */
-const Card = ({ children, containerStyle, wrapperStyle, variant = 'default', ...props }) => {
-  const { card } = useTheme();
-  const cardStyles = card.getStyles();
-  const variantStyle = card.getVariantStyle(variant);
-
+const Card = ({ children, style, ...props }) => {
   return (
-    <RNECard
-      containerStyle={[variantStyle, cardStyles.container, containerStyle]}
-      wrapperStyle={[cardStyles.wrapper, wrapperStyle]}
-      {...props}
-    >
+    <View style={[styles.card, style]} {...props}>
       {children}
-    </RNECard>
-  );
-};
-
-/**
- * Card.Title 컴포넌트
- */
-const CardTitle = ({ children, style, ...props }) => {
-  const { card } = useTheme();
-  const cardStyles = card.getStyles();
-
-  return (
-    <Text style={[cardStyles.title, style]} {...props}>
-      {children}
-    </Text>
-  );
-};
-
-/**
- * Card.Divider 컴포넌트
- */
-const CardDivider = ({ style, ...props }) => {
-  const { card } = useTheme();
-  const cardStyles = card.getStyles();
-
-  return <Divider style={[cardStyles.divider, style]} {...props} />;
-};
-
-/**
- * Card.Image 컴포넌트
- */
-const CardImage = ({ source, style, ...props }) => {
-  const { card } = useTheme();
-  const cardStyles = card.getStyles();
-
-  return (
-    <RNImage source={source} style={[cardStyles.image, style]} resizeMode="cover" {...props} />
-  );
-};
-
-/**
- * Card.FeaturedTitle 컴포넌트
- */
-const CardFeaturedTitle = ({ children, style, ...props }) => {
-  const { card } = useTheme();
-  const cardStyles = card.getStyles();
-
-  return (
-    <Text style={[cardStyles.featuredTitle, style]} {...props}>
-      {children}
-    </Text>
-  );
-};
-
-/**
- * Card.FeaturedSubtitle 컴포넌트
- */
-const CardFeaturedSubtitle = ({ children, style, ...props }) => {
-  const { card } = useTheme();
-  const cardStyles = card.getStyles();
-
-  return (
-    <Text style={[cardStyles.featuredSubtitle, style]} {...props}>
-      {children}
-    </Text>
-  );
-};
-
-/**
- * 피처링된 카드 컨텐츠를 위한 래퍼 컴포넌트
- */
-const FeaturedWrapper = ({ children, style, ...props }) => {
-  const { card } = useTheme();
-  const cardStyles = card.getStyles();
-
-  return (
-    <View style={[cardStyles.featuredContainer, style]} {...props}>
-      {children}
-      <View style={cardStyles.featuredContent}>{children}</View>
     </View>
   );
 };
 
+/**
+ * GiftCard 컴포넌트 - HomeScreen의 기프티콘 카드
+ */
+const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
+  return (
+    <View style={[styles.giftCard, style]} {...props}>
+      <View style={styles.giftImageContainer}>
+        <Image source={image} style={styles.giftImage} resizeMode="contain" />
+      </View>
+      <View style={styles.giftInfo}>
+        <Text style={styles.giftBrand}>{brand}</Text>
+        <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
+          {name}
+        </Text>
+      </View>
+      <View style={styles.dDayContainer}>
+        <Text style={styles.dDayText}>D-{daysLeft}</Text>
+      </View>
+    </View>
+  );
+};
+
+/**
+ * FeatureCard 컴포넌트 - HomeScreen의 쉐어박스 카드
+ */
+const FeatureCard = ({ title, iconName, count, style, ...props }) => {
+  return (
+    <View style={[styles.featureCard, style]} {...props}>
+      <Text style={styles.featureTitle}>{title}</Text>
+      {iconName && count && (
+        <View style={styles.shareBoxIcon}>
+          <Icon name={iconName} size={24} color="#888" />
+          <Text style={styles.shareBoxCount}>{count}</Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+/**
+ * RadarCard 컴포넌트 - HomeScreen의 레이더 카드
+ */
+const RadarCard = ({ text, image, style, ...props }) => {
+  return (
+    <View style={[styles.radarCard, style]} {...props}>
+      <Text style={styles.radarText}>{text}</Text>
+      <Image source={image} style={styles.fullRadarImage} resizeMode="contain" />
+    </View>
+  );
+};
+
+/**
+ * GiftCard2 컴포넌트 - HomeScreen의 하단 선물 카드
+ */
+const GiftCard2 = ({ title, subtitle, image, style, ...props }) => {
+  return (
+    <View style={[styles.giftCard2, style]} {...props}>
+      <View style={styles.giftCard2Content}>
+        <View>
+          <Text style={styles.giftCard2Text}>{title}</Text>
+          <Text style={styles.giftCard2SubText}>{subtitle}</Text>
+        </View>
+        <Image source={image} style={styles.giftCard2Image} resizeMode="contain" />
+      </View>
+    </View>
+  );
+};
+
+// 스타일 정의
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 10,
+    backgroundColor: '#f0f4ff',
+    overflow: 'hidden',
+    marginBottom: 12,
+  },
+  // GiftCard 스타일
+  giftCard: {
+    width: 190,
+    height: 220,
+    marginRight: 12,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#f0f4ff',
+  },
+  giftImageContainer: {
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    margin: 10,
+    borderRadius: 8,
+  },
+  giftImage: {
+    width: '70%',
+    height: '70%',
+  },
+  giftInfo: {
+    paddingHorizontal: 10,
+  },
+  giftBrand: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 2,
+    textAlign: 'center',
+  },
+  giftName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'black',
+    textAlign: 'center',
+  },
+  dDayContainer: {
+    backgroundColor: '#F6C5C5',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+    alignSelf: 'center',
+    marginTop: 8,
+  },
+  dDayText: {
+    color: '#D33434',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // FeatureCard 스타일
+  featureCard: {
+    width: '47%',
+    height: 160,
+    padding: 16,
+    backgroundColor: '#f0f4ff',
+    borderRadius: 10,
+    justifyContent: 'start',
+  },
+  featureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+    lineHeight: 24,
+  },
+  shareBoxIcon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+  },
+  shareBoxCount: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 6,
+  },
+  // RadarCard 스타일
+  radarCard: {
+    width: '47%',
+    height: 160,
+    backgroundColor: '#f0f4ff',
+    borderRadius: 10,
+    overflow: 'hidden',
+    padding: 0,
+    position: 'relative',
+  },
+  radarText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#333',
+    textAlign: 'right',
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    right: 16,
+    zIndex: 1,
+    lineHeight: 24,
+  },
+  fullRadarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  // GiftCard2 스타일
+  giftCard2: {
+    padding: 20,
+    marginBottom: 20,
+    backgroundColor: '#f0f4ff',
+    borderRadius: 10,
+  },
+  giftCard2Content: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  giftCard2Text: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  giftCard2SubText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  giftCard2Image: {
+    width: 140,
+    height: 80,
+  },
+});
+
 // 컴포넌트 연결
-Card.Title = CardTitle;
-Card.Divider = CardDivider;
-Card.Image = CardImage;
-Card.FeaturedTitle = CardFeaturedTitle;
-Card.FeaturedSubtitle = CardFeaturedSubtitle;
-Card.FeaturedWrapper = FeaturedWrapper;
+Card.GiftCard = GiftCard;
+Card.FeatureCard = FeatureCard;
+Card.RadarCard = RadarCard;
+Card.GiftCard2 = GiftCard2;
 
 export default Card;
