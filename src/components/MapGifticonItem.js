@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 16,
     backgroundColor: 'white',
     borderRadius: 8,
     marginBottom: 8,
@@ -53,9 +53,9 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
+    gap: 8,
   },
   brand: {
     fontSize: 14,
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   dday: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#278CCC',
     fontWeight: '500',
   },

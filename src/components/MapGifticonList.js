@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import MapGifticonItem from './MapGifticonItem';
 
 const MapGifticonList = ({ gifticons, onUseGifticon }) => {
@@ -15,7 +16,7 @@ const MapGifticonList = ({ gifticons, onUseGifticon }) => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>사용 가능한 기프티콘</Text>
-      <FlatList
+      <BottomSheetFlatList
         data={gifticons}
         renderItem={({ item }) => <MapGifticonItem gifticon={item} onUse={onUseGifticon} />}
         keyExtractor={item => item.id}
@@ -30,10 +31,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 12,
-    marginHorizontal: 16,
+    marginBottom: 14,
+    marginHorizontal: 20,
+    marginTop: 4,
   },
   listContent: {
     paddingHorizontal: 16,
