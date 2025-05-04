@@ -29,21 +29,21 @@ const PermissionScreen = () => {
   useEffect(() => {
     BleManager.start({ showAlert: false })
       .then(() => {
-        console.log('BleManager initialized');
+        // 콘솔 로그 제거
       })
       .catch(error => {
-        console.error('BleManager initialization error:', error);
+        // 콘솔 에러 로그 제거
       });
 
     // 이벤트 리스너 등록 (옵션)
     const handlerDiscover = bleManagerEmitter.addListener(
       'BleManagerDiscoverPeripheral',
       peripheral => {
-        console.log('Discovered peripheral: ', peripheral);
+        // 콘솔 로그 제거
       }
     );
     const handlerStop = bleManagerEmitter.addListener('BleManagerStopScan', () => {
-      console.log('Scan stopped');
+      // 콘솔 로그 제거
     });
 
     // 컴포넌트 언마운트 시 리스너 제거
@@ -63,11 +63,11 @@ const PermissionScreen = () => {
   // permissionsStatus 상태 변경 감지하여 네비게이션 처리
   useEffect(() => {
     if (permissionsStatus === 'success') {
-      console.log('Permission request process finished, navigating to Login.');
+      // 콘솔 로그 제거
       navigation.navigate('Login');
     } else if (permissionsStatus === 'fail') {
       // 심각한 오류 발생 시 (훅 내부 Alert 후 추가 동작 필요 시)
-      console.error('Permission request process failed critically.');
+      // 콘솔 에러 로그 제거
       // Alert.alert(...) 제거 또는 다른 오류 처리 로직 추가
     }
     // 'checking' 이나 'idle' 상태에서는 아무것도 하지 않음
