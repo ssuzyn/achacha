@@ -248,17 +248,6 @@ const KakaoMapWebView = () => {
           console.error('HTTP 오류:', nativeEvent);
         }}
       />
-
-      {/* 디버그용 정보 표시 (개발 중 확인용) */}
-      <View style={styles.debugContainer}>
-        <Text style={styles.debugText}>
-          맵 로드: {mapLoaded ? '완료' : '대기중'} | 위치:{' '}
-          {location
-            ? `${location.coords.latitude.toFixed(4)}, ${location.coords.longitude.toFixed(4)}`
-            : '없음'}
-        </Text>
-        <Text style={styles.debugText}>{debugMessage}</Text>
-      </View>
     </View>
   );
 };
@@ -267,7 +256,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: width,
-    height: height * 0.9,
   },
   webView: {
     flex: 1,

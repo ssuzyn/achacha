@@ -2,29 +2,44 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { calculateDday } from '../utils/dateUtils';
 
-const MapGifticonItem = ({ gifticon, onUse }) => {
-  // 브랜드명, 만료 날짜, 메뉴명, 이미지
-  const { brand, expiryDate, menuName, imageUrl, id } = gifticon;
+const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
+  const { brandName, gifticonExpiryDate, gifticonName, thumbnailPath, gifticonId, brandId } =
+    gifticon;
 
-  const dday = calculateDday(expiryDate);
+  const dday = calculateDday(gifticonExpiryDate);
+
+  // 아이템 클릭 핸들러
+  const handleItemPress = () => {
+    onSelectBrand(brandId);
+  };
 
   return (
-    <View style={styles.container}>
-      <Image source={imageUrl} style={styles.image} />
+    <TouchableOpacity
+      style={[styles.container, isSelected && styles.selectedContainer]}
+      onPress={handleItemPress}
+      activeOpacity={0.7}
+    >
+      <Image source={{ uri: `https://example.com${thumbnailPath}` }} style={styles.image} />
       {/* 기프티콘 정보 */}
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>
-          <Text style={styles.brand}>{brand}</Text>
+          <Text style={styles.brand}>{brandName}</Text>
           <Text style={styles.dday}>{dday}</Text>
         </View>
-        <Text style={styles.menuName}>{menuName}</Text>
+        <Text style={styles.menuName}>{gifticonName}</Text>
       </View>
 
       {/* 사용 버튼 */}
-      <TouchableOpacity style={styles.useButton} onPress={() => onUse(id)}>
+      <TouchableOpacity
+        style={styles.useButton}
+        onPress={e => {
+          e.stopPropagation(); // 부모 터치 이벤트 전파 중단
+          onUse(gifticonId);
+        }}
+      >
         <Text style={styles.buttonText}>사용</Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -35,12 +50,18 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: 'white',
     borderRadius: 8,
-    marginBottom: 8,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  selectedContainer: {
+    borderColor: '#56AEE9',
+    backgroundColor: '#F8FBFF',
   },
   image: {
     width: 40,
