@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, FlatList, StatusBar, View } from 'react-native';
+import { StyleSheet, FlatList, StatusBar, View, TouchableOpacity } from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
@@ -85,6 +85,12 @@ const NotificationScreen = () => {
     navigation.goBack();
   };
 
+  // 설정 버튼 처리
+  const handleSettingsPress = () => {
+    // 설정 화면으로 이동 또는 설정 메뉴 표시
+    console.log('Settings button pressed');
+  };
+
   // 알림 항목 선택 처리
   const handleNotificationPress = item => {
     // 여기서 알림에 따른 화면 전환 로직 구현 가능
@@ -139,7 +145,9 @@ const NotificationScreen = () => {
         <Text variant="h3" style={styles.headerTitle}>
           알림함
         </Text>
-        <View style={styles.rightPlaceholder} />
+        <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
+          <Icon name="settings" type="material" size={24} color={theme.colors.grey3} />
+        </TouchableOpacity>
       </View>
 
       {/* 알림 목록 */}
@@ -176,8 +184,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  rightPlaceholder: {
+  settingsButton: {
     width: 48,
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContainer: {
     flexGrow: 1,
