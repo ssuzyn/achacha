@@ -1,15 +1,23 @@
 import React from 'react';
 import { View, StyleSheet, Image, Text } from 'react-native';
 import { Icon } from 'react-native-elements';
+import { Shadow } from 'react-native-shadow-2';
 
 /**
  * 기본 Card 컴포넌트
  */
 const Card = ({ children, style, ...props }) => {
   return (
-    <View style={[styles.card, style]} {...props}>
-      {children}
-    </View>
+    <Shadow
+      distance={12}
+      startColor={'rgba(0, 0, 0, 0.007)'}
+      offset={[0, 1]}
+      style={{ borderRadius: 10, width: '100%' }}
+    >
+      <View style={[styles.card, style]} {...props}>
+        {children}
+      </View>
+    </Shadow>
   );
 };
 
@@ -18,19 +26,28 @@ const Card = ({ children, style, ...props }) => {
  */
 const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
   return (
-    <View style={[styles.giftCard, style]} {...props}>
-      <View style={styles.giftImageContainer}>
-        <Image source={image} style={styles.giftImage} resizeMode="contain" />
-      </View>
-      <View style={styles.giftInfo}>
-        <Text style={styles.giftBrand}>{brand}</Text>
-        <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
-          {name}
-        </Text>
-      </View>
-      <View style={styles.dDayContainer}>
-        <Text style={styles.dDayText}>D-{daysLeft}</Text>
-      </View>
+    <View style={{ width: 180, height: 200, marginRight: 10 }}>
+      <Shadow
+        distance={12}
+        startColor={'rgba(0, 0, 0, 0.008)'}
+        offset={[0, 1]}
+        style={{ borderRadius: 10, width: '100%', height: '100%' }}
+      >
+        <View style={[styles.giftCard, style]} {...props}>
+          <View style={styles.giftImageContainer}>
+            <Image source={image} style={styles.giftImage} resizeMode="contain" />
+          </View>
+          <View style={styles.giftInfo}>
+            <Text style={styles.giftBrand}>{brand}</Text>
+            <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
+              {name}
+            </Text>
+          </View>
+          <View style={styles.dDayContainer}>
+            <Text style={styles.dDayText}>D-{daysLeft}</Text>
+          </View>
+        </View>
+      </Shadow>
     </View>
   );
 };
@@ -40,14 +57,23 @@ const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
  */
 const FeatureCard = ({ title, iconName, count, style, ...props }) => {
   return (
-    <View style={[styles.featureCard, style]} {...props}>
-      <Text style={styles.featureTitle}>{title}</Text>
-      {iconName && count && (
-        <View style={styles.shareBoxIcon}>
-          <Icon name={iconName} size={24} color="#888" />
-          <Text style={styles.shareBoxCount}>{count}</Text>
+    <View style={{ width: '48%' }}>
+      <Shadow
+        distance={12}
+        startColor={'rgba(0, 0, 0, 0.008)'}
+        offset={[0, 1]}
+        style={{ borderRadius: 10, width: '100%', height: 160 }}
+      >
+        <View style={[styles.featureCard, style]} {...props}>
+          <Text style={styles.featureTitle}>{title}</Text>
+          {iconName && count && (
+            <View style={styles.shareBoxIcon}>
+              <Icon name={iconName} size={24} color="#888" />
+              <Text style={styles.shareBoxCount}>{count}</Text>
+            </View>
+          )}
         </View>
-      )}
+      </Shadow>
     </View>
   );
 };
@@ -57,9 +83,18 @@ const FeatureCard = ({ title, iconName, count, style, ...props }) => {
  */
 const RadarCard = ({ text, image, style, ...props }) => {
   return (
-    <View style={[styles.radarCard, style]} {...props}>
-      <Text style={styles.radarText}>{text}</Text>
-      <Image source={image} style={styles.fullRadarImage} />
+    <View style={{ width: '48%' }}>
+      <Shadow
+        distance={12}
+        startColor={'rgba(0, 0, 0, 0.008)'}
+        offset={[0, 1]}
+        style={{ borderRadius: 10, width: '100%', height: 160 }}
+      >
+        <View style={[styles.radarCard, style]} {...props}>
+          <Text style={styles.radarText}>{text}</Text>
+          <Image source={image} style={styles.fullRadarImage} />
+        </View>
+      </Shadow>
     </View>
   );
 };
@@ -69,45 +104,41 @@ const RadarCard = ({ text, image, style, ...props }) => {
  */
 const GiftCard2 = ({ title, subtitle, image, style, ...props }) => {
   return (
-    <View style={[styles.giftCard2, style]} {...props}>
-      <View style={styles.giftCard2Content}>
-        <View>
-          <Text style={styles.giftCard2Text}>{title}</Text>
-          <Text style={styles.giftCard2SubText}>{subtitle}</Text>
+    <Shadow
+      distance={12}
+      startColor={'rgba(0, 0, 0, 0.008)'}
+      offset={[0, 1]}
+      style={{ borderRadius: 10, width: '100%' }}
+    >
+      <View style={[styles.giftCard2, style]} {...props}>
+        <View style={styles.giftCard2Content}>
+          <View>
+            <Text style={styles.giftCard2Text}>{title}</Text>
+            <Text style={styles.giftCard2SubText}>{subtitle}</Text>
+          </View>
+          <Image source={image} style={styles.giftCard2Image} resizeMode="contain" />
         </View>
-        <Image source={image} style={styles.giftCard2Image} resizeMode="contain" />
       </View>
-    </View>
+    </Shadow>
   );
 };
 
 // 스타일 정의
 const styles = StyleSheet.create({
   card: {
+    width: '100%',
     borderRadius: 10,
     backgroundColor: '#FFFFFF',
     overflow: 'hidden',
     marginBottom: 12,
-    shadowColor: '#000000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 1,
   },
   // GiftCard 스타일
   giftCard: {
-    width: 180,
-    height: 200,
-    marginRight: 10,
+    width: '100%',
+    height: '100%',
     borderRadius: 10,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    margin: 1,
   },
   giftImageContainer: {
     height: 140,
@@ -151,19 +182,13 @@ const styles = StyleSheet.create({
   },
   // FeatureCard 스타일
   featureCard: {
-    width: '48%',
-    height: 160,
+    width: '100%',
+    height: '100%',
     paddingVertical: 14,
     paddingHorizontal: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     justifyContent: 'start',
-    shadowColor: '#000000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    margin: 1,
   },
   featureTitle: {
     fontSize: 16,
@@ -186,19 +211,13 @@ const styles = StyleSheet.create({
   },
   // RadarCard 스타일
   radarCard: {
-    width: '48%',
-    height: 160,
+    width: '100%',
+    height: '100%',
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     overflow: 'hidden',
     padding: 0,
     position: 'relative',
-    shadowColor: '#000000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    margin: 1,
   },
   radarText: {
     fontSize: 18,
@@ -223,15 +242,10 @@ const styles = StyleSheet.create({
   // GiftCard2 스타일
   giftCard2: {
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 0,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
-    shadowColor: '#000000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-    margin: 1,
+    width: '100%',
   },
   giftCard2Content: {
     flexDirection: 'row',

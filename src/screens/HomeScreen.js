@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, ScrollView, View, Text, FlatList, Image } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
+import { Shadow } from 'react-native-shadow-2';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -44,17 +45,26 @@ const HomeScreen = () => {
   const renderGiftItem = ({ item }) => {
     const daysLeft = calculateDaysLeft(item.expiryDate);
     return (
-      <View style={styles.giftCard}>
-        <View style={styles.giftImageContainer}>
-          <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
-        </View>
-        <Text style={styles.giftBrand}>{item.brand}</Text>
-        <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
-          {item.name}
-        </Text>
-        <View style={styles.dDayContainer}>
-          <Text style={styles.dDayText}>D-{daysLeft}</Text>
-        </View>
+      <View style={{ width: 180, marginRight: 10 }}>
+        <Shadow
+          distance={12}
+          startColor={'rgba(0, 0, 0, 0.008)'}
+          offset={[0, 1]}
+          style={{ borderRadius: 12, width: '100%' }}
+        >
+          <View style={styles.giftCard}>
+            <View style={styles.giftImageContainer}>
+              <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
+            </View>
+            <Text style={styles.giftBrand}>{item.brand}</Text>
+            <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
+              {item.name}
+            </Text>
+            <View style={styles.dDayContainer}>
+              <Text style={styles.dDayText}>D-{daysLeft}</Text>
+            </View>
+          </View>
+        </Shadow>
       </View>
     );
   };
@@ -177,19 +187,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   giftCard: {
-    width: 180,
+    width: '100%',
     height: 180,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    marginRight: 10,
     paddingVertical: 5,
-    shadowColor: '#000000',
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
     overflow: 'visible',
-    margin: 1,
   },
   giftImageContainer: {
     width: '100%',
