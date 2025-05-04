@@ -1,5 +1,13 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, FlatList, StatusBar, View, TouchableOpacity } from 'react-native';
+import React, { useEffect, useCallback, memo, useState } from 'react';
+import {
+  StyleSheet,
+  FlatList,
+  StatusBar,
+  View,
+  TouchableOpacity,
+  ActivityIndicator,
+  Platform,
+} from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
@@ -49,55 +57,72 @@ const dummyNotifications = [
     id: '5',
     type: 'SHAREBOX',
     title: '쉐어박스 알림',
-    message: '‘으라차차’ 쉐어박스에 류잼문 님이 참여했어요. 기프티콘을 공유해볼까요?',
+    message: '으라차차 쉐어박스에 류잼문 님이 참여했어요. 기프티콘을 공유해볼까요?',
     time: '3일 전',
   },
 ];
 
-// 알림이 없을 때 표시할 컴포넌트
-const EmptyNotifications = ({ theme }) => (
+// 알림이 없을 때 표시할 컴포넌트 - memo로 최적화
+const EmptyNotifications = memo(({ theme }) => (
   <View style={styles.emptyContainer}>
     <Icon name="notifications-off" type="material" size={50} color={theme.colors.grey3} />
     <Text variant="body1" style={styles.emptyText} color={theme.colors.grey2}>
       새로운 알림이 없습니다
     </Text>
   </View>
-);
+));
 
 const NotificationScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
-  const { hideTabBar } = useTabBar();
+  const { hideTabBar, showTabBar } = useTabBar();
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
+  const [isLoading, setIsLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
 
-  // 화면 진입 시 탭바 숨기기
+  // 화면 진입 시 탭바 숨기기 및 데이터 로딩
   useEffect(() => {
     hideTabBar();
 
-    // 컴포넌트 언마운트 시 필요한 정리 작업이 있다면 여기서 처리
-    return () => {
-      // 예: 화면에서 나갈 때 필요한 정리 작업
+    // 데이터 로딩 시뮬레이션 - 실제로는 API 호출 등으로 대체
+    const loadData = async () => {
+      try {
+        // 잠시 대기 후 데이터 설정 (네트워크 요청 시뮬레이션)
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setNotifications(dummyNotifications);
+      } catch (error) {
+        console.error('알림 데이터 로드 실패:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-  }, [hideTabBar]);
+
+    loadData();
+
+    // 화면 이탈 시 탭바 복원
+    return () => {
+      showTabBar();
+    };
+  }, [hideTabBar, showTabBar]);
 
   // 뒤로가기 처리
-  const handleGoBack = () => {
+  const handleGoBack = useCallback(() => {
     navigation.goBack();
-  };
+  }, [navigation]);
 
   // 설정 버튼 처리
-  const handleSettingsPress = () => {
+  const handleSettingsPress = useCallback(() => {
     // 설정 화면으로 이동 또는 설정 메뉴 표시
-  };
+  }, []);
 
   // 알림 항목 선택 처리
-  const handleNotificationPress = item => {
+  const handleNotificationPress = useCallback(item => {
     // 여기서 알림에 따른 화면 전환 로직 구현 가능
     // 예: navigation.navigate('TargetScreen', { data: item });
-  };
+  }, []);
 
   // 알림 유형에 따른 아이콘 색상 가져오기
-  const getIconColorByType = type => {
+  const getIconColorByType = useCallback(type => {
     switch (type) {
       case 'EXPIRY':
         return '#EF9696';
@@ -109,20 +134,27 @@ const NotificationScreen = () => {
         return '#D095EE';
       case 'SHAREBOX':
         return '#F1A9D5';
+      default:
+        return '#4B9CFF';
     }
-  };
+  }, []);
 
-  // 알림 아이템 렌더링
-  const renderItem = ({ item }) => (
-    <ListItem.NotificationCard
-      title={item.title}
-      message={item.message}
-      time={item.time}
-      onPress={() => handleNotificationPress(item)}
-      icon={NOTIFICATION_ICONS[item.type]}
-      iconColor={getIconColorByType(item.type)}
-    />
+  // 알림 아이템 렌더링 - 직접 ListItem.NotificationCard 사용
+  const renderItem = useCallback(
+    ({ item }) => (
+      <ListItem.NotificationCard
+        title={item.title}
+        message={item.message}
+        time={item.time}
+        onPress={() => handleNotificationPress(item)}
+        icon={NOTIFICATION_ICONS[item.type]}
+        iconColor={getIconColorByType(item.type)}
+      />
+    ),
+    [handleNotificationPress, getIconColorByType]
   );
+
+  const keyExtractor = useCallback(item => item.id, []);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -149,15 +181,24 @@ const NotificationScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* 알림 목록 */}
-      <FlatList
-        data={dummyNotifications}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<EmptyNotifications theme={theme} />}
-      />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
+          ListEmptyComponent={<EmptyNotifications theme={theme} />}
+        />
+      )}
     </View>
   );
 };
@@ -203,6 +244,11 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 16,
     fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

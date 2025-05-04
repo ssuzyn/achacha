@@ -1,0 +1,103 @@
+import { createRef } from 'react';
+import { CommonActions, StackActions } from '@react-navigation/native';
+import { InteractionManager } from 'react-native';
+
+/**
+ * 네비게이션 Ref (네비게이터에 연결할 ref)
+ */
+export const navigationRef = createRef();
+
+/**
+ * 스크린으로 이동하는 함수
+ * @param {string} routeName - 라우트 이름
+ * @param {Object} params - 파라미터 객체
+ * @param {boolean} waitForInteraction - 인터랙션 완료 후 이동 여부
+ */
+export function navigate(routeName, params = {}, waitForInteraction = true) {
+  if (waitForInteraction) {
+    InteractionManager.runAfterInteractions(() => {
+      navigationRef.current?.navigate(routeName, params);
+    });
+  } else {
+    navigationRef.current?.navigate(routeName, params);
+  }
+}
+
+/**
+ * 중첩된 스크린으로 이동하는 함수
+ * @param {string} parentRouteName - 부모 라우트 이름
+ * @param {string} childRouteName - 자식 라우트 이름
+ * @param {Object} params - 파라미터 객체
+ * @param {boolean} waitForInteraction - 인터랙션 완료 후 이동 여부
+ */
+export function navigateNested(
+  parentRouteName,
+  childRouteName,
+  params = {},
+  waitForInteraction = true
+) {
+  const navigateAction = () => {
+    navigationRef.current?.navigate(parentRouteName, {
+      screen: childRouteName,
+      params,
+      initial: false,
+    });
+  };
+
+  if (waitForInteraction) {
+    InteractionManager.runAfterInteractions(navigateAction);
+  } else {
+    navigateAction();
+  }
+}
+
+/**
+ * 현재 화면을 교체하는 함수 (히스토리 남기지 않음)
+ * @param {string} routeName - 라우트 이름
+ * @param {Object} params - 파라미터 객체
+ */
+export function replace(routeName, params = {}) {
+  navigationRef.current?.dispatch(StackActions.replace(routeName, params));
+}
+
+/**
+ * 뒤로 가는 함수
+ */
+export function goBack() {
+  navigationRef.current?.goBack();
+}
+
+/**
+ * 특정 화면으로 바로 이동하는 함수 (모든 중간 스택을 지우고)
+ * @param {string} routeName - 라우트 이름
+ * @param {Object} params - 파라미터 객체
+ */
+export function resetTo(routeName, params = {}) {
+  navigationRef.current?.dispatch(
+    CommonActions.reset({
+      index: 0,
+      routes: [{ name: routeName, params }],
+    })
+  );
+}
+
+/**
+ * 현재 라우트 정보 가져오기
+ * @returns {Object} 현재 라우트 정보
+ */
+export function getCurrentRoute() {
+  return navigationRef.current?.getCurrentRoute();
+}
+
+// 네비게이션 서비스 객체
+const NavigationService = {
+  navigate,
+  navigateNested,
+  replace,
+  goBack,
+  resetTo,
+  getCurrentRoute,
+  navigationRef,
+};
+
+export default NavigationService;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { ListItem as RNEListItem, Icon, ButtonGroup, CheckBox, Input } from 'react-native-elements';
 import { Shadow } from 'react-native-shadow-2';
@@ -331,41 +331,39 @@ const ListItemNotificationCard = ({
 }) => {
   return (
     <View style={styles.notificationCardContainer}>
-      <Shadow
-        distance={5}
-        startColor={'rgba(0, 0, 0, 0.03)'}
-        offset={[0, 2]}
-        style={styles.shadowContainer}
+      <TouchableOpacity
+        style={[styles.notificationCard, containerStyle]}
+        onPress={onPress}
+        activeOpacity={0.85}
+        {...props}
       >
-        <TouchableOpacity
-          style={[styles.notificationCard, containerStyle]}
-          onPress={onPress}
-          activeOpacity={0.85}
-          {...props}
-        >
-          <View style={styles.notificationCardRow}>
-            {icon && (
-              <View style={[styles.iconContainer, iconContainerStyle]}>
-                <Icon name={icon} type={iconType} color={iconColor} size={iconSize} />
-              </View>
-            )}
+        <View style={styles.notificationCardRow}>
+          {icon && (
+            <View style={[styles.iconContainer, iconContainerStyle]}>
+              <Icon name={icon} type={iconType} color={iconColor} size={iconSize} />
+            </View>
+          )}
 
-            <View style={[styles.notificationCardContent, icon ? styles.withIconSpacing : null]}>
-              <View style={styles.titleRow}>
-                <Text variant="body1" weight="bold" style={[styles.notificationTitle, titleStyle]}>
-                  {title}
-                </Text>
-                <Text variant="caption" style={[styles.notificationTime, timeStyle]}>
-                  {time}
-                </Text>
-              </View>
-              <Text variant="body2" style={[styles.notificationMessage, messageStyle]}>
-                {message}
+          <View style={[styles.notificationCardContent, icon ? styles.withIconSpacing : null]}>
+            <View style={styles.titleRow}>
+              <Text variant="body1" weight="bold" style={[styles.notificationTitle, titleStyle]}>
+                {title}
+              </Text>
+              <Text variant="caption" style={[styles.notificationTime, timeStyle]}>
+                {time}
               </Text>
             </View>
+            <Text
+              variant="body2"
+              style={[styles.notificationMessage, messageStyle]}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {message}
+            </Text>
           </View>
-        </TouchableOpacity>
-      </Shadow>
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -402,14 +400,18 @@ const styles = StyleSheet.create({
   notificationCardContainer: {
     marginBottom: 12,
   },
-  shadowContainer: {
-    borderRadius: 14,
-    width: '100%',
-  },
   notificationCard: {
     padding: 15,
     borderRadius: 14,
     backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   notificationCardRow: {
     flexDirection: 'row',

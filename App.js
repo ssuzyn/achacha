@@ -3,13 +3,21 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBarProvider } from './src/context/TabBarContext';
 import { HeaderBarProvider } from './src/context/HeaderBarContext';
 import { ThemeProvider } from 'react-native-elements';
 import theme from './src/theme/theme';
 import * as Font from 'expo-font';
+import { navigationRef } from './src/navigation/NavigationService';
+
+// 특정 경고 무시 설정
+LogBox.ignoreLogs([
+  'Unexpected call to useState in a strict pure component',
+  'Non-serializable values were found in the navigation state',
+  'Component is not a function',
+]);
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -31,9 +39,8 @@ export default function App() {
         'Pretendard-ExtraBold': require('./src/assets/fonts/Pretendard-ExtraBold.otf'),
         'Pretendard-Black': require('./src/assets/fonts/Pretendard-Black.otf'),
       });
-      console.log('Fonts loaded successfully');
     } catch (error) {
-      console.error('Error loading fonts:', error);
+      // 오류 처리
     } finally {
       setIsReady(true);
     }
@@ -49,9 +56,8 @@ export default function App() {
     if (isReady) {
       try {
         await SplashScreen.hideAsync();
-        console.log('Native splash screen hidden by App.js');
       } catch (e) {
-        console.warn('Failed to hide native splash screen:', e);
+        // 오류 처리
       }
     }
   }, [isReady]);
@@ -67,7 +73,7 @@ export default function App() {
         <View style={styles.container} onLayout={onLayoutRootView}>
           <HeaderBarProvider>
             <TabBarProvider>
-              <NavigationContainer>
+              <NavigationContainer ref={navigationRef}>
                 <AppNavigator />
                 <StatusBar style="auto" />
               </NavigationContainer>

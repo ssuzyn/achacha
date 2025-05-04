@@ -1,10 +1,19 @@
-import React from 'react';
-import { StyleSheet, Image, Platform, Dimensions, Alert, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import {
+  StyleSheet,
+  Image,
+  Platform,
+  Dimensions,
+  Alert,
+  View,
+  InteractionManager,
+} from 'react-native';
 import { useTabBar } from '../../context/TabBarContext';
 import { Icon, useTheme } from 'react-native-elements';
 import { Badge } from '../ui';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import NavigationService from '../../navigation/NavigationService';
 
 // 화면 크기 계산
 const { width } = Dimensions.get('window');
@@ -18,16 +27,27 @@ const HeaderBar = ({ notificationCount = 3 }) => {
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
 
   // 추가 버튼 클릭 핸들러
-  const handleAddPress = () => {
+  const handleAddPress = useCallback(() => {
     // 예: navigation.navigate('AddNew');
     Alert.alert('안내', '추가 기능은 준비 중입니다.');
-  };
+  }, []);
 
-  // 알림 버튼 클릭 핸들러
-  const handleNotificationPress = () => {
-    // 알림 화면으로 이동
-    navigation.navigate('Notification');
-  };
+  // 알림 버튼 클릭 핸들러 - 성능 최적화
+  const handleNotificationPress = useCallback(() => {
+    // NavigationService를 사용하여 성능 최적화
+    NavigationService.navigate('Notification', {}, true);
+  }, []);
+
+  // 메모이제이션된 뱃지 카운트 컴포넌트
+  const BadgeComponent = useMemo(() => {
+    if (notificationCount <= 0) return null;
+
+    return (
+      <View style={styles.badgeContainer}>
+        <Badge value={notificationCount.toString()} status="error" size="sm" />
+      </View>
+    );
+  }, [notificationCount]);
 
   // 탭바가 숨겨져 있을 때는 헤더도 숨김
   if (!isTabBarVisible) {
@@ -72,11 +92,7 @@ const HeaderBar = ({ notificationCount = 3 }) => {
               onPress={handleNotificationPress}
             />
             {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
-            {notificationCount > 0 && (
-              <View style={styles.badgeContainer}>
-                <Badge value={notificationCount.toString()} status="error" size="sm" />
-              </View>
-            )}
+            {BadgeComponent}
           </View>
         </View>
       </View>

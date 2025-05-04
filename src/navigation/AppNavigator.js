@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import PermissionScreen from '../screens/PermissionScreen';
-// import HomeScreen from '../screens/HomeScreen';
-import LoginScreen from '../screens/LoginScreen';
+import { ActivityIndicator, View } from 'react-native';
 import SplashScreenComponent from '../screens/SplashScreen';
-import GuideFirstScreen from '../screens/GuideScreen';
 import BottomTabBar from '../components/common/BottomTabBar';
+
+// 일반 import로 변경
+import PermissionScreen from '../screens/PermissionScreen';
+import LoginScreen from '../screens/LoginScreen';
+import GuideFirstScreen from '../screens/GuideScreen';
 import NotificationScreen from '../screens/NotificationScreen';
+
+// 로딩 컴포넌트
+const LoadingScreen = () => (
+  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <ActivityIndicator size="large" color="#0000ff" />
+  </View>
+);
 
 const Stack = createNativeStackNavigator();
 
@@ -20,7 +29,14 @@ const AppNavigator = () => {
       <Stack.Screen name="Login" component={LoginScreen} />
 
       {/* 기타 화면 */}
-      <Stack.Screen name="Notification" component={NotificationScreen} />
+      <Stack.Screen
+        name="Notification"
+        component={NotificationScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
 
       {/* 메인 탭바 화면 */}
       <Stack.Screen name="Main" component={MainNavigator} />
