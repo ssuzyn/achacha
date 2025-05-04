@@ -47,10 +47,7 @@ const GuideFirstScreen = () => {
                   style={[
                     styles.indicator,
                     {
-                      backgroundColor:
-                        index === currentStep
-                          ? theme.colors.primary
-                          : `${theme.colors.background}4D`,
+                      backgroundColor: index === currentStep ? theme.colors.primary : '#e0e0e0',
                     },
                   ]}
                 />
