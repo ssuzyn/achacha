@@ -109,11 +109,13 @@ const HomeScreen = () => {
         </View>
 
         {/* 하단 선물 카드 */}
-        <Card.GiftCard2
-          title="기프티콘 선물해봐요!"
-          subtitle="포장은 저희가 해드릴게요."
-          image={require('../assets/images/home-gift.png')}
-        />
+        <View style={styles.bottomCardSection}>
+          <Card.GiftCard2
+            title="기프티콘 선물해봐요!"
+            subtitle="포장은 저희가 해드릴게요."
+            image={require('../assets/images/home-gift.png')}
+          />
+        </View>
       </ScrollView>
     </View>
   );
@@ -122,7 +124,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 6,
     paddingTop: 0,
   },
   contentContainer: {
@@ -144,26 +146,29 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   welcomeText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '500',
     color: 'black',
   },
   subWelcomeText: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '500',
     marginTop: 4,
     color: 'black',
   },
   giftListContainer: {
     marginBottom: 10,
+    paddingHorizontal: 5,
   },
   giftListContent: {
     paddingTop: 10,
+    paddingLeft: 5,
     paddingRight: 10,
     paddingBottom: 10,
   },
   middleCardSection: {
     marginBottom: 10,
+    paddingHorizontal: 5,
   },
   middleCardRow: {
     flexDirection: 'row',
@@ -172,57 +177,62 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   giftCard: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    marginRight: 8,
+    marginRight: 10,
+    paddingVertical: 5,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
     overflow: 'visible',
+    margin: 1,
   },
   giftImageContainer: {
     width: '100%',
-    height: 90,
+    height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 10,
+    paddingTop: 8,
   },
   giftImage: {
-    width: '60%',
-    height: '90%',
+    width: '55%',
+    height: '85%',
   },
   giftBrand: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#333',
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   giftName: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#666',
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: 3,
     paddingHorizontal: 10,
   },
   dDayContainer: {
     backgroundColor: '#FCD9D9',
-    width: '50%',
-    paddingHorizontal: 14,
-    paddingVertical: 4,
+    width: '45%',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 5,
     alignSelf: 'center',
-    marginTop: 12,
+    marginTop: 10,
   },
   dDayText: {
     color: '#D33434',
-    fontSize: 14,
+    fontSize: 13,
     alignSelf: 'center',
     fontWeight: '600',
+  },
+  bottomCardSection: {
+    paddingHorizontal: 5,
   },
 });
 

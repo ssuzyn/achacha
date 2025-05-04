@@ -59,7 +59,7 @@ const RadarCard = ({ text, image, style, ...props }) => {
   return (
     <View style={[styles.radarCard, style]} {...props}>
       <Text style={styles.radarText}>{text}</Text>
-      <Image source={image} style={styles.fullRadarImage} resizeMode="contain" />
+      <Image source={image} style={styles.fullRadarImage} />
     </View>
   );
 };
@@ -96,20 +96,21 @@ const styles = StyleSheet.create({
   },
   // GiftCard 스타일
   giftCard: {
-    width: 190,
-    height: 220,
-    marginRight: 12,
+    width: 180,
+    height: 200,
+    marginRight: 10,
     borderRadius: 10,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
     shadowColor: '#000000',
     shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.02,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
+    margin: 1,
   },
   giftImageContainer: {
-    height: 160,
+    height: 140,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
@@ -117,8 +118,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   giftImage: {
-    width: '70%',
-    height: '70%',
+    width: '65%',
+    height: '65%',
   },
   giftInfo: {
     paddingHorizontal: 10,
@@ -151,16 +152,18 @@ const styles = StyleSheet.create({
   // FeatureCard 스타일
   featureCard: {
     width: '48%',
-    height: 170,
-    padding: 16,
+    height: 160,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     justifyContent: 'start',
     shadowColor: '#000000',
     shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.02,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
+    margin: 1,
   },
   featureTitle: {
     fontSize: 16,
@@ -173,8 +176,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 16,
-    left: 16,
+    bottom: 14,
+    left: 12,
   },
   shareBoxCount: {
     fontSize: 12,
@@ -184,7 +187,7 @@ const styles = StyleSheet.create({
   // RadarCard 스타일
   radarCard: {
     width: '48%',
-    height: 170,
+    height: 160,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     overflow: 'hidden',
@@ -192,9 +195,10 @@ const styles = StyleSheet.create({
     position: 'relative',
     shadowColor: '#000000',
     shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.02,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
+    margin: 1,
   },
   radarText: {
     fontSize: 18,
@@ -211,18 +215,23 @@ const styles = StyleSheet.create({
   fullRadarImage: {
     width: '100%',
     height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    resizeMode: 'cover',
   },
   // GiftCard2 스타일
   giftCard2: {
-    padding: 18,
+    padding: 16,
     marginBottom: 20,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     shadowColor: '#000000',
     shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.02,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
-    elevation: 1,
+    elevation: 2,
+    margin: 1,
   },
   giftCard2Content: {
     flexDirection: 'row',
