@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import MapGifticonItem from './MapGifticonItem';
 
-const MapGifticonList = ({ gifticons, onUseGifticon }) => {
+const MapGifticonList = ({ gifticons, onUseGifticon, onSelectBrand, selectedBrand }) => {
   // 보유하고 있는 기프티콘이 없을 때
   if (!gifticons || gifticons.length === 0) {
     return (
@@ -18,14 +18,22 @@ const MapGifticonList = ({ gifticons, onUseGifticon }) => {
       <Text style={styles.header}>사용 가능한 기프티콘</Text>
       <BottomSheetFlatList
         data={gifticons}
-        renderItem={({ item }) => <MapGifticonItem gifticon={item} onUse={onUseGifticon} />}
-        keyExtractor={item => item.id}
+        renderItem={({ item }) => (
+          <MapGifticonItem
+            gifticon={item}
+            onUse={onUseGifticon}
+            onSelectBrand={onSelectBrand}
+            isSelected={selectedBrand === item.brandId}
+          />
+        )}
+        keyExtractor={item => String(item.gifticonId)}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
     </View>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
