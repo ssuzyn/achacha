@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { useTheme } from 'react-native-elements';
 import { Text } from './index';
 
 /**
@@ -22,7 +21,6 @@ export const Switch = ({
   containerStyle,
   ...props
 }) => {
-  const { theme } = useTheme();
   const translateX = React.useRef(new Animated.Value(value ? 1 : 0)).current;
 
   React.useEffect(() => {
@@ -103,6 +101,7 @@ export const Switch = ({
         <View
           style={[
             styles.track,
+            // eslint-disable-next-line react-native/no-inline-styles
             {
               width: sizeStyle.width,
               height: sizeStyle.height,
@@ -119,6 +118,7 @@ export const Switch = ({
           <Animated.View
             style={[
               styles.thumb,
+              // eslint-disable-next-line react-native/no-inline-styles
               {
                 width: sizeStyle.thumbSize,
                 height: sizeStyle.thumbSize,

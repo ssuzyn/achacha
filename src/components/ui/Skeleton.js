@@ -1,7 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
 import { Skeleton as RNESkeleton } from 'react-native-elements';
-import { useTheme } from '../../hooks/useTheme';
 import { skeletonUtils } from '../../theme/themeUtils';
 
 /**
@@ -16,8 +15,6 @@ export const Skeleton = ({
   borderRadius,
   ...props
 }) => {
-  const { theme } = useTheme();
-
   // themeUtils를 사용하여 변형에 따른 스타일 계산
   const variantStyle = skeletonUtils.getVariantStyle(variant, width, height, borderRadius);
 
@@ -38,7 +35,6 @@ export const SkeletonGroup = ({
   count = 1,
   style,
 }) => {
-  const { theme } = useTheme();
   const styles = skeletonUtils.getSkeletonStyles();
 
   const renderItems = () => {

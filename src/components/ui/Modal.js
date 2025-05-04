@@ -32,7 +32,8 @@ export const Modal = ({
       onBackdropPress={onBackdropPress || onClose}
       overlayStyle={[
         styles.overlay,
-        { width, height: height || 'auto', padding: 0, backgroundColor: theme.colors.white },
+        styles.overlayBase,
+        { width, height: height || 'auto', backgroundColor: theme.colors.white },
         containerStyle,
       ]}
       backdropStyle={{ opacity: backdropOpacity }}
@@ -69,6 +70,9 @@ const styles = StyleSheet.create({
   overlay: {
     borderRadius: 10,
     overflow: 'hidden',
+  },
+  overlayBase: {
+    padding: 0,
   },
   container: {
     flex: 1,

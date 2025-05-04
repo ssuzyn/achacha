@@ -13,7 +13,7 @@ const Card = ({ children, style, ...props }) => {
       distance={12}
       startColor={'rgba(0, 0, 0, 0.007)'}
       offset={[0, 1]}
-      style={{ borderRadius: 10, width: '100%' }}
+      style={styles.shadowContainer}
     >
       <View style={[styles.card, style]} {...props}>
         {children}
@@ -27,12 +27,13 @@ const Card = ({ children, style, ...props }) => {
  */
 const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
   return (
+    // eslint-disable-next-line react-native/no-inline-styles
     <View style={{ width: 180, height: 200, marginRight: 10 }}>
       <Shadow
         distance={12}
         startColor={'rgba(0, 0, 0, 0.008)'}
         offset={[0, 1]}
-        style={{ borderRadius: 10, width: '100%', height: '100%' }}
+        style={styles.giftShadowContainer}
       >
         <View style={[styles.giftCard, style]} {...props}>
           <View style={styles.giftImageContainer}>
@@ -62,12 +63,13 @@ const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
  */
 const FeatureCard = ({ title, iconName, count, style, ...props }) => {
   return (
+    // eslint-disable-next-line react-native/no-inline-styles
     <View style={{ width: '48%' }}>
       <Shadow
         distance={12}
         startColor={'rgba(0, 0, 0, 0.008)'}
         offset={[0, 1]}
-        style={{ borderRadius: 10, width: '100%', height: 160 }}
+        style={styles.featureShadowContainer}
       >
         <View style={[styles.featureCard, style]} {...props}>
           <Text variant="body1" weight="semiBold" style={styles.featureTitle}>
@@ -92,12 +94,13 @@ const FeatureCard = ({ title, iconName, count, style, ...props }) => {
  */
 const RadarCard = ({ text, image, style, ...props }) => {
   return (
+    // eslint-disable-next-line react-native/no-inline-styles
     <View style={{ width: '48%' }}>
       <Shadow
         distance={12}
         startColor={'rgba(0, 0, 0, 0.008)'}
         offset={[0, 1]}
-        style={{ borderRadius: 10, width: '100%', height: 160 }}
+        style={styles.featureShadowContainer}
       >
         <View style={[styles.radarCard, style]} {...props}>
           <Text variant="subtitle1" weight="bold" style={styles.radarText}>
@@ -119,7 +122,7 @@ const GiftCard2 = ({ title, subtitle, image, style, ...props }) => {
       distance={12}
       startColor={'rgba(0, 0, 0, 0.008)'}
       offset={[0, 1]}
-      style={{ borderRadius: 10, width: '100%' }}
+      style={styles.shadowContainer}
     >
       <View style={[styles.giftCard2, style]} {...props}>
         <View style={styles.giftCard2Content}>
@@ -280,6 +283,20 @@ const styles = StyleSheet.create({
   giftCard2Image: {
     width: 140,
     height: 80,
+  },
+  shadowContainer: {
+    borderRadius: 10,
+    width: '100%',
+  },
+  giftShadowContainer: {
+    borderRadius: 10,
+    width: '100%',
+    height: '100%',
+  },
+  featureShadowContainer: {
+    borderRadius: 10,
+    width: '100%',
+    height: 160,
   },
 });
 

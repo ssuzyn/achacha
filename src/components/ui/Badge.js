@@ -51,29 +51,25 @@ export const Badge = ({
   const badgeColor = getStatusColor();
   const sizeStyle = getSizeStyle();
 
+  const badgeStyles = {
+    backgroundColor: variant === 'outline' ? 'transparent' : badgeColor,
+    borderColor: badgeColor,
+    borderWidth: variant === 'outline' ? 1 : 0,
+    height: sizeStyle.height,
+    minWidth: sizeStyle.minWidth,
+    borderRadius: sizeStyle.borderRadius,
+  };
+
+  const textStyles = {
+    color: variant === 'outline' ? badgeColor : theme.colors.white,
+    fontSize: sizeStyle.fontSize,
+  };
+
   return (
     <RNEBadge
       value={value}
-      badgeStyle={[
-        styles.badge,
-        {
-          backgroundColor: variant === 'outline' ? 'transparent' : badgeColor,
-          borderColor: badgeColor,
-          borderWidth: variant === 'outline' ? 1 : 0,
-          height: sizeStyle.height,
-          minWidth: sizeStyle.minWidth,
-          borderRadius: sizeStyle.borderRadius,
-        },
-        containerStyle,
-      ]}
-      textStyle={[
-        styles.text,
-        {
-          color: variant === 'outline' ? badgeColor : theme.colors.white,
-          fontSize: sizeStyle.fontSize,
-        },
-        textStyle,
-      ]}
+      badgeStyle={[styles.badge, badgeStyles, containerStyle]}
+      textStyle={[styles.text, textStyles, textStyle]}
       {...props}
     />
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { CheckBox as RNECheckBox } from 'react-native-elements';
 import { useTheme } from '../../hooks/useTheme';
 
