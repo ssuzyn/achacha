@@ -351,14 +351,16 @@ const ListItemNotificationCard = ({
             )}
 
             <View style={[styles.notificationCardContent, icon ? styles.withIconSpacing : null]}>
-              <Text variant="body1" weight="bold" style={[styles.notificationTitle, titleStyle]}>
-                {title}
-              </Text>
+              <View style={styles.titleRow}>
+                <Text variant="body1" weight="bold" style={[styles.notificationTitle, titleStyle]}>
+                  {title}
+                </Text>
+                <Text variant="caption" style={[styles.notificationTime, timeStyle]}>
+                  {time}
+                </Text>
+              </View>
               <Text variant="body2" style={[styles.notificationMessage, messageStyle]}>
                 {message}
-              </Text>
-              <Text variant="caption" style={[styles.notificationTime, timeStyle]}>
-                {time}
               </Text>
             </View>
           </View>
@@ -416,7 +418,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F0F8FF',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -427,10 +429,17 @@ const styles = StyleSheet.create({
   withIconSpacing: {
     paddingLeft: 0,
   },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   notificationTitle: {
     fontSize: 16,
-    marginBottom: 8,
     color: '#3B3B3B',
+    flex: 1,
+    marginRight: 8,
   },
   notificationMessage: {
     fontSize: 14,

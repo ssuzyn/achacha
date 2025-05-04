@@ -91,6 +91,12 @@ const NotificationScreen = () => {
     // 예: navigation.navigate('TargetScreen', { data: item });
   };
 
+  // 알림 더보기 버튼 처리
+  const handleMorePress = item => {
+    // 더보기 버튼 처리 로직
+    console.log('More button pressed for notification:', item.id);
+  };
+
   // 알림 유형에 따른 아이콘 색상 가져오기
   const getIconColorByType = type => {
     switch (type) {
@@ -116,6 +122,8 @@ const NotificationScreen = () => {
       message={item.message}
       time={item.time}
       onPress={() => handleNotificationPress(item)}
+      onMorePress={() => handleMorePress(item)}
+      showMoreButton={false}
       icon={NOTIFICATION_ICONS[item.type]}
       iconColor={getIconColorByType(item.type)}
     />
