@@ -400,14 +400,14 @@ const styles = StyleSheet.create({
   },
   // NotificationCard 스타일
   notificationCardContainer: {
-    marginBottom: 14,
+    marginBottom: 12,
   },
   shadowContainer: {
     borderRadius: 14,
     width: '100%',
   },
   notificationCard: {
-    padding: 16,
+    padding: 15,
     borderRadius: 14,
     backgroundColor: '#FFFFFF',
   },
@@ -443,13 +443,14 @@ const styles = StyleSheet.create({
   },
   notificationMessage: {
     fontSize: 14,
-    marginBottom: 10,
+    marginBottom: 5,
     lineHeight: 20,
     color: '#555555',
   },
   notificationTime: {
     fontSize: 12,
     color: '#888888',
+    marginRight: 5,
   },
 });
 

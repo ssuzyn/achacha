@@ -22,34 +22,34 @@ const dummyNotifications = [
     type: 'EXPIRY',
     title: '유효기간 만료 알림',
     message: '아이스 카페 아메리카노 T 의 유효기간이 7일 남았습니다.',
-    time: '25년 4월 15일',
+    time: '3분 전',
   },
   {
     id: '2',
     type: 'NEARBY',
     title: '주변 매장 알림',
-    message: '스타벅스 삼성점이 주변에 있습니다. 기프티콘을 사용해보세요!',
+    message: '반경 150m 내에 기프티콘을 사용할 수 있는 스타벅스 매장이 있어요!',
     time: '3시간 전',
   },
   {
     id: '3',
     type: 'USED',
     title: '사용완료 여부 알림',
-    message: '굽네치킨 허니테이크아웃 기프티콘이 사용되었습니다.',
+    message: '방금 기프티콘을 사용하셨나요? 완료 처리가 되지 않은 것 같아요. 확인해볼까요?',
     time: '어제',
   },
   {
     id: '4',
     type: 'SHARE',
     title: '기프티콘 나누기 알림',
-    message: '회원님의 나누기가 성공적으로 완료되었습니다.',
+    message: '나누기 성공! 아이스 카페 라떼 T가 무사히 나눔되었어요.',
     time: '2일 전',
   },
   {
     id: '5',
     type: 'SHAREBOX',
     title: '쉐어박스 알림',
-    message: '박준우님이 쉐어박스에 새로운 기프티콘을 공유했습니다.',
+    message: '‘으라차차’ 쉐어박스에 류잼문 님이 참여했어요. 기프티콘을 공유해볼까요?',
     time: '3일 전',
   },
 ];
@@ -91,27 +91,19 @@ const NotificationScreen = () => {
     // 예: navigation.navigate('TargetScreen', { data: item });
   };
 
-  // 알림 더보기 버튼 처리
-  const handleMorePress = item => {
-    // 더보기 버튼 처리 로직
-    console.log('More button pressed for notification:', item.id);
-  };
-
   // 알림 유형에 따른 아이콘 색상 가져오기
   const getIconColorByType = type => {
     switch (type) {
       case 'EXPIRY':
-        return '#FF9500'; // 오렌지색
+        return '#EF9696';
       case 'NEARBY':
-        return '#4CAF50'; // 초록색
+        return '#8CDA8F';
       case 'USED':
-        return '#2196F3'; // 파란색
+        return '#6BB2EA';
       case 'SHARE':
-        return '#9C27B0'; // 보라색
+        return '#D095EE';
       case 'SHAREBOX':
-        return '#FF5722'; // 주황색
-      default:
-        return '#4B9CFF'; // 기본색
+        return '#F1A9D5';
     }
   };
 
@@ -122,8 +114,6 @@ const NotificationScreen = () => {
       message={item.message}
       time={item.time}
       onPress={() => handleNotificationPress(item)}
-      onMorePress={() => handleMorePress(item)}
-      showMoreButton={false}
       icon={NOTIFICATION_ICONS[item.type]}
       iconColor={getIconColorByType(item.type)}
     />
