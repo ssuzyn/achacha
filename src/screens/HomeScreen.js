@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View, Text, FlatList } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, FlatList, Image } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
 
@@ -44,7 +44,18 @@ const HomeScreen = () => {
   const renderGiftItem = ({ item }) => {
     const daysLeft = calculateDaysLeft(item.expiryDate);
     return (
-      <Card.GiftCard brand={item.brand} name={item.name} image={item.image} daysLeft={daysLeft} />
+      <View style={styles.giftCard}>
+        <View style={styles.giftImageContainer}>
+          <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
+        </View>
+        <Text style={styles.giftBrand}>{item.brand}</Text>
+        <Text style={styles.giftName} numberOfLines={1} ellipsizeMode="tail">
+          {item.name}
+        </Text>
+        <View style={styles.dDayContainer}>
+          <Text style={styles.dDayText}>D-{daysLeft}</Text>
+        </View>
+      </View>
     );
   };
 
@@ -128,7 +139,7 @@ const styles = StyleSheet.create({
   welcomeSection: {
     alignItems: 'flex-end',
     marginTop: 5,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   welcomeText: {
     fontSize: 18,
@@ -142,17 +153,72 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   giftListContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   giftListContent: {
-    paddingRight: 16,
+    paddingRight: 14,
   },
   middleCardSection: {
-    marginBottom: 20,
+    marginBottom: 15,
   },
   middleCardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  giftCard: {
+    width: 200,
+    height: 200,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginRight: 10,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'visible',
+  },
+  giftImageContainer: {
+    width: '100%',
+    height: 90,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 10,
+  },
+  giftImage: {
+    width: '60%',
+    height: '90%',
+  },
+  giftBrand: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  giftName: {
+    fontSize: 13,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 10,
+  },
+  dDayContainer: {
+    backgroundColor: '#FCD9D9',
+    width: '50%',
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderRadius: 5,
+    alignSelf: 'center',
+    marginTop: 12,
+  },
+  dDayText: {
+    color: '#D33434',
+    fontSize: 14,
+    alignSelf: 'center',
+    fontWeight: '600',
   },
 });
 

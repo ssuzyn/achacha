@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
   },
   // FeatureCard 스타일
   featureCard: {
-    width: '47%',
-    height: 160,
+    width: '48%',
+    height: 170,
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
@@ -183,8 +183,8 @@ const styles = StyleSheet.create({
   },
   // RadarCard 스타일
   radarCard: {
-    width: '47%',
-    height: 160,
+    width: '48%',
+    height: 170,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
     overflow: 'hidden',
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   },
   // GiftCard2 스타일
   giftCard2: {
-    padding: 20,
+    padding: 18,
     marginBottom: 20,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
