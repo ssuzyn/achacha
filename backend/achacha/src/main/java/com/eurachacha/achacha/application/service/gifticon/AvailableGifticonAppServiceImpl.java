@@ -42,7 +42,7 @@ public class AvailableGifticonAppServiceImpl implements AvailableGifticonAppServ
         return AvailableGifticonResponseDto.builder()
                 .gifticons(gifticonSlice.getContent())
                 .hasNextPage(gifticonSlice.hasNext())
-                .nextPage(gifticonSlice.hasNext() ? (page != null ? page : 0) : null)
+                .nextPage(gifticonSlice.hasNext() ? (page != null ? page : 1) : null)
                 .build();
     }
 }
