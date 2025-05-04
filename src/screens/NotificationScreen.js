@@ -88,7 +88,6 @@ const NotificationScreen = () => {
   // 설정 버튼 처리
   const handleSettingsPress = () => {
     // 설정 화면으로 이동 또는 설정 메뉴 표시
-    console.log('Settings button pressed');
   };
 
   // 알림 항목 선택 처리

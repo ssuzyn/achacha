@@ -1,6 +1,6 @@
 import React from 'react';
-import { Image, Dimensions, StatusBar, StyleSheet, View, Text, SafeAreaView } from 'react-native';
-import { Button } from '../components/ui';
+import { Image, Dimensions, StatusBar, StyleSheet, View, SafeAreaView } from 'react-native';
+import { Button, Text } from '../components/ui';
 import { useGuideSteps } from '../hooks/useGuideSteps';
 import { useTheme } from 'react-native-elements';
 
@@ -27,14 +27,14 @@ const GuideFirstScreen = () => {
             </View>
 
             <View style={styles.textContainer}>
-              <Text style={[styles.title, { color: theme.colors.black }]}>
+              <Text variant="h1" style={styles.title}>
                 {currentContent.title}
               </Text>
-              <Text style={[styles.subText, { color: theme.colors.grey5 }]}>
+              <Text variant="body1" style={styles.subText} color={theme.colors.grey5}>
                 {currentContent.subText1}
               </Text>
               {currentContent.subText2 ? (
-                <Text style={[styles.subText, { color: theme.colors.grey5 }]}>
+                <Text variant="body1" style={styles.subText} color={theme.colors.grey5}>
                   {currentContent.subText2}
                 </Text>
               ) : null}
@@ -112,12 +112,9 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
     textAlign: 'center',
   },
   subText: {
-    fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
     marginTop: 8,

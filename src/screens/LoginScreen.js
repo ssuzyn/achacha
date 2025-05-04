@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, StyleSheet, View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { Image, StyleSheet, View, SafeAreaView, TouchableOpacity } from 'react-native';
+import { Text } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';
 
@@ -24,8 +25,12 @@ const LoginScreen = () => {
 
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
-            <Text style={[styles.title, { color: theme.colors.black }]}>소셜 계정으로</Text>
-            <Text style={[styles.title, { color: theme.colors.black }]}>간편한 로그인</Text>
+            <Text variant="h1" style={styles.title}>
+              소셜 계정으로
+            </Text>
+            <Text variant="h1" style={styles.title}>
+              간편한 로그인
+            </Text>
           </View>
 
           {/* 버튼 영역 */}
@@ -41,7 +46,12 @@ const LoginScreen = () => {
               ]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.buttonText, { color: theme.colors.textBrown }]}>
+              <Text
+                variant="button"
+                weight="bold"
+                style={styles.buttonText}
+                color={theme.colors.textBrown}
+              >
                 카카오톡 로그인
               </Text>
             </TouchableOpacity>
@@ -57,7 +67,14 @@ const LoginScreen = () => {
               ]}
               activeOpacity={0.7}
             >
-              <Text style={[styles.buttonText, { color: theme.colors.white }]}>Google 로그인</Text>
+              <Text
+                variant="button"
+                weight="bold"
+                style={styles.buttonText}
+                color={theme.colors.white}
+              >
+                Google 로그인
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -92,8 +109,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
     textAlign: 'center',
   },
   buttonContainer: {
@@ -110,7 +125,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: 16,
-    fontWeight: 'bold',
   },
   disabledButton: {
     opacity: 0.6,
