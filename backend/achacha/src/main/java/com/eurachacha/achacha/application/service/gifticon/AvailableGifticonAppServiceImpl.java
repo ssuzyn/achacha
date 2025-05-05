@@ -29,15 +29,11 @@ public class AvailableGifticonAppServiceImpl implements AvailableGifticonAppServ
 
         Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
-        // 디폴트 값 설정
-        GifticonScopeType effectiveScope = scope != null ? scope : GifticonScopeType.ALL;
-        GifticonSortType effectiveSort = sort != null ? sort : GifticonSortType.CREATED_DESC;
-
         // 페이징 처리
-        Pageable pageable = pageableFactory.createPageable(page, size, effectiveSort);
+        Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
         // 쿼리 실행
-        Slice<AvailableGifticonResponseDto> gifticonSlice = availableGifticonRepository.getAvailableGifticons(userId, effectiveScope, type, pageable);
+        Slice<AvailableGifticonResponseDto> gifticonSlice = availableGifticonRepository.getAvailableGifticons(userId, scope, type, pageable);
 
         return AvailableGifticonsResponseDto.builder()
                 .gifticons(gifticonSlice.getContent())
