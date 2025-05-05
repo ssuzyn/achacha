@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
 import com.eurachacha.achacha.application.port.input.gifticon.AvailableGifticonAppService;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.AvailableGifticonRepository;
@@ -40,5 +41,18 @@ public class AvailableGifticonAppServiceImpl implements AvailableGifticonAppServ
                 .hasNextPage(gifticonSlice.hasNext())
                 .nextPage(gifticonSlice.hasNext() ? (page != null ? page + 1 : 1) : null)
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
+
+        Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+        AvailableGifticonDetailResponseDto detailResponseDto = availableGifticonRepository.getAvailableGifticonDetail(userId, gifticonId);
+
+        availableGifticonDomainService.validateGifticonAccess(userId, detailResponseDto.getUserId());
+
+        return detailResponseDto;
     }
 }
