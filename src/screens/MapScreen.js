@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import KakaoMapWebView from '../components/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const MapScreen = () => {
   const [selectedBrand, setSelectedBrand] = useState(null);
+  const mapRef = useRef(null);
 
   // 목데이터
   const [gifticons] = useState([
@@ -154,6 +156,13 @@ const MapScreen = () => {
     setSelectedBrand(selectedBrand === brandId ? null : brandId);
   };
 
+  // 현재 위치로 이동하는 함수
+  const moveToCurrentLocation = () => {
+    if (mapRef.current && mapRef.current.moveToCurrentLocation) {
+      mapRef.current.moveToCurrentLocation();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -163,14 +172,12 @@ const MapScreen = () => {
       </SafeAreaView>
 
       <View style={styles.mapContainer}>
-        {/* KakaoMapWebView에 브랜드 목록과 선택한 브랜드 넘겨줌 */}
-        <KakaoMapWebView
-          uniqueBrands={uniqueBrands}
-          selectedBrand={selectedBrand}
-          onSelectBrand={handleSelectBrand}
-        />
+        {/* 브랜드 목록과 선택한 브랜드 넘겨줌 */}
+        <KakaoMapWebView ref={mapRef} uniqueBrands={uniqueBrands} selectedBrand={selectedBrand} />
       </View>
-
+      <TouchableOpacity style={styles.locationButton} onPress={moveToCurrentLocation}>
+        <Icon name="my-location" size={24} color="#278CCC" />
+      </TouchableOpacity>
       <GifticonBottomSheet
         gifticons={filteredGifticons}
         onUseGifticon={handleUseGifticon}
@@ -201,6 +208,19 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
+  },
+  locationButton: {
+    position: 'absolute',
+    top: 100,
+    right: 13,
+    width: 45,
+    height: 45,
+    borderRadius: 24,
+    backgroundColor: 'rgba(229, 244, 254, 0.8)',
+    borderColor: '#56AEE9',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
