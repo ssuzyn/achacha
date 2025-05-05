@@ -22,11 +22,11 @@ public class AvailableGifticonController {
 
     @GetMapping
     public ResponseEntity<AvailableGifticonsResponseDto> getAvailableGifticons(
-            @RequestParam(required = false) GifticonScopeType scope,
+            @RequestParam(required = false, defaultValue = "ALL") GifticonScopeType scope,
             @RequestParam(required = false) GifticonType type,
-            @RequestParam(required = false) GifticonSortType sort,
-            @RequestParam(required = false) @Min(0) Integer page,
-            @RequestParam(required = false) @Min(1) Integer size) {
+            @RequestParam(required = false, defaultValue = "CREATED_DESC") GifticonSortType sort,
+            @RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+            @RequestParam(required = false, defaultValue = "10") @Min(1) Integer size) {
         return ResponseEntity.ok(availableGifticonAppService.getAvailableGifticons(scope, type, sort, page, size));
     }
 }
