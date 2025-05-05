@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class AvailableGifticonsResponseDto {
-    private List<AvailableGifticonResponseDto> gifticons;
-    private Boolean hasNextPage;
-    private Integer nextPage;
+	private List<AvailableGifticonResponseDto> gifticons;
+	private Boolean hasNextPage;
+	private Integer nextPage;
 }
