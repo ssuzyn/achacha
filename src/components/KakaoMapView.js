@@ -6,7 +6,7 @@ import useLocationTracking from '../hooks/useLocationTracking';
 
 const { width, height } = Dimensions.get('window');
 
-const KakaoMapWebView = ({ uniqueBrands, selectedBrand }) => {
+const KakaoMapWebView = ({ uniqueBrands, selectedBrand, onSelectBrand }) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const webViewRef = useRef(null);
   const { location, errorMsg } = useLocationTracking();
@@ -30,6 +30,15 @@ const KakaoMapWebView = ({ uniqueBrands, selectedBrand }) => {
             moveToCurrentLocation();
           }
         }, 1000);
+      }
+      // 마커 클릭 이벤트
+      if (data.type === 'markerClick') {
+        // 부모 컴포넌트로 브랜드 id 전달, 선택된 마커 다시 클릭할 경우 null 전달 (선택 해제)
+        if (selectedBrand === data.brandId) {
+          onSelectBrand(null);
+        } else {
+          onSelectBrand(data.brandId);
+        }
       }
     } catch (error) {
       console.error('메시지 파싱 오류:', error);
