@@ -64,7 +64,80 @@ const MapScreen = () => {
       shareBoxName: null,
       thumbnailPath: '/images/gifticons/thumbnail/126.jpg',
     },
+    {
+      gifticonId: 127,
+      gifticonName: '델리시볼 도시락',
+      gifticonType: 'PRODUCT',
+      gifticonExpiryDate: '2025-05-18',
+      brandId: 48,
+      brandName: 'CU',
+      scope: 'MY_BOX',
+      userId: 78,
+      userName: '홍길동',
+      shareBoxId: null,
+      shareBoxName: null,
+      thumbnailPath: '/images/gifticons/thumbnail/127.jpg',
+    },
+    {
+      gifticonId: 128,
+      gifticonName: '김혜자도시락',
+      gifticonType: 'PRODUCT',
+      gifticonExpiryDate: '2025-05-25',
+      brandId: 48,
+      brandName: 'CU',
+      scope: 'SHARE_BOX',
+      userId: 78,
+      userName: '홍길동',
+      shareBoxId: 91,
+      shareBoxName: '동기 모임',
+      thumbnailPath: '/images/gifticons/thumbnail/128.jpg',
+    },
+    {
+      gifticonId: 129,
+      gifticonName: '햄부리또',
+      gifticonType: 'PRODUCT',
+      gifticonExpiryDate: '2025-05-12',
+      brandId: 48,
+      brandName: 'CU',
+      scope: 'MY_BOX',
+      userId: 78,
+      userName: '홍길동',
+      shareBoxId: null,
+      shareBoxName: null,
+      thumbnailPath: '/images/gifticons/thumbnail/129.jpg',
+    },
+    {
+      gifticonId: 130,
+      gifticonName: 'CU 모바일 상품권 5천원권',
+      gifticonType: 'VOUCHER',
+      gifticonExpiryDate: '2025-12-31',
+      brandId: 48,
+      brandName: 'CU',
+      scope: 'MY_BOX',
+      userId: 78,
+      userName: '홍길동',
+      shareBoxId: null,
+      shareBoxName: null,
+      thumbnailPath: '/images/gifticons/thumbnail/130.jpg',
+    },
   ]);
+
+  // 기프티콘 목록에서 브랜드 정보 추출(중복 없이)
+  const getUniqueBrands = () => {
+    const uniqueBrands = gifticons.reduce((acc, gifticon) => {
+      if (!acc[gifticon.brandId]) {
+        acc[gifticon.brandId] = {
+          brandId: gifticon.brandId,
+          brandName: gifticon.brandName,
+        };
+      }
+      return acc;
+    }, {});
+
+    return Object.values(uniqueBrands);
+  };
+
+  const uniqueBrands = getUniqueBrands();
 
   // 선택된 브랜드에 따라 필터링
   const filteredGifticons = selectedBrand
@@ -90,7 +163,8 @@ const MapScreen = () => {
       </SafeAreaView>
 
       <View style={styles.mapContainer}>
-        <KakaoMapWebView />
+        {/* KakaoMapWebView에 브랜드 목록과 선택한 브랜드 넘겨줌 */}
+        <KakaoMapWebView uniqueBrands={uniqueBrands} selectedBrand={selectedBrand} />
       </View>
 
       <GifticonBottomSheet
