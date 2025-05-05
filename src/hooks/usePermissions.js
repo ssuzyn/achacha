@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { PermissionsAndroid, Platform, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import * as ImagePicker from 'expo-image-picker';
+import ImagePicker from 'react-native-image-crop-picker';
 // BleManager 관련 코드는 이 훅에서 직접 사용하지 않으므로 제거합니다.
 // BleManager 초기화는 앱의 다른 부분(예: PermissionScreen 또는 App.js)에서 관리되어야 합니다.
 
@@ -77,13 +77,32 @@ export const usePermissions = () => {
 
       // 3. 갤러리 권한 요청 - 이전 결과와 관계없이 실행
       console.log('[usePermissions] Requesting Media Library permissions...');
-      const { status: mediaLibraryStatus } =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-      finalOutcome.mediaLibrary = mediaLibraryStatus === 'granted';
-      if (!finalOutcome.mediaLibrary) {
-        console.warn('[usePermissions] Media Library permission denied.'); // Alert 대신 경고 로그
+      // react-native-image-crop-picker는 권한 요청 API가 다릅니다
+      try {
+        // 갤러리 권한을 요청하는 방법으로, 갤러리를 열었다가 취소하는 방식 사용
+        // openPicker를 호출하면 자동으로 권한 요청이 이루어집니다
+        await ImagePicker.openPicker({
+          mediaType: 'photo',
+        })
+          .then(image => {
+            console.log(image);
+            finalOutcome.mediaLibrary = true;
+          })
+          .catch(e => {
+            // 사용자가 취소하거나 권한이 거부된 경우
+            if (e.code !== 'E_PICKER_CANCELLED') {
+              console.warn('[usePermissions] Media Library permission denied:', e);
+              finalOutcome.mediaLibrary = false;
+            } else {
+              // 사용자가 취소했지만 권한은 부여된 것으로 간주
+              finalOutcome.mediaLibrary = true;
+            }
+          });
+      } catch (e) {
+        console.warn('[usePermissions] Media Library permission request failed:', e);
+        finalOutcome.mediaLibrary = false;
       }
-      console.log(`[usePermissions] Media Library permission: ${mediaLibraryStatus}`);
+      console.log(`[usePermissions] Media Library permission status:`, finalOutcome.mediaLibrary);
 
       // 모든 요청 시도 후 상태를 'success'로 설정 (프로세스 완료 의미)
       setPermissionsStatus('success');
