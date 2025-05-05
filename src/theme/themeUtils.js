@@ -152,8 +152,10 @@ export const inputUtils = {
     };
   },
 
-  getInputStyles: () =>
-    StyleSheet.create({
+  getInputStyles: () => {
+    // 시스템 폰트를 사용하여 정의
+    // 실제 테마의 폰트를 여기서 정의할 수 없으므로 Input.js에서 적용
+    return StyleSheet.create({
       wrapper: {
         width: '100%',
         marginBottom: 16,
@@ -179,14 +181,8 @@ export const inputUtils = {
       },
       label: {
         marginBottom: 6,
-        fontSize: 14,
-        fontWeight: '500',
-      },
-      required: {
-        // 색상은 테마에서 적용
       },
       helperText: {
-        fontSize: 12,
         marginTop: 4,
       },
       iconContainer: {
@@ -194,7 +190,8 @@ export const inputUtils = {
         justifyContent: 'center',
         alignItems: 'center',
       },
-    }),
+    });
+  },
 };
 
 /**

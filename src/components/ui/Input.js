@@ -44,11 +44,17 @@ export const Input = ({
   const textInputStyle = [
     styles.input,
     styles[`${size}Input`],
-    { color: isDisabled ? theme.colors.grey4 : theme.colors.black },
+    {
+      color: isDisabled ? theme.colors.grey4 : theme.colors.black,
+      fontFamily: theme.fonts.fontWeight.regular, // 전역 폰트 적용
+    },
     leftIcon && styles.inputWithLeftIcon,
     rightIcon && styles.inputWithRightIcon,
     inputStyle,
   ];
+
+  // 사용할 placeholderTextColor 값 설정
+  const placeholderTextColorValue = theme.colors.grey4;
 
   // 아이콘 및 비밀번호 토글 버튼 처리
   const renderRightElement = () => {
@@ -77,10 +83,10 @@ export const Input = ({
   return (
     <View style={styles.wrapper}>
       {label && (
-        <Text variant="body2" weight="medium" style={[styles.label, labelStyle]}>
+        <Text variant="body2" weight="medium" style={[{ marginBottom: 6 }, labelStyle]}>
           {label}
           {isRequired && (
-            <Text variant="body2" color="error" style={styles.required}>
+            <Text variant="body2" color="error">
               {' '}
               *
             </Text>
@@ -101,7 +107,7 @@ export const Input = ({
           editable={!isDisabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholderTextColor={theme.colors.grey4}
+          placeholderTextColor={placeholderTextColorValue}
           {...props}
         />
 
@@ -109,7 +115,7 @@ export const Input = ({
       </View>
 
       {(helperText || errorText) && (
-        <Text variant="caption" color={isInvalid ? 'error' : 'grey5'} style={styles.helperText}>
+        <Text variant="caption" color={isInvalid ? 'error' : 'grey5'} style={{ marginTop: 4 }}>
           {isInvalid ? errorText : helperText}
         </Text>
       )}
