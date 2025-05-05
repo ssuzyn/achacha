@@ -7,6 +7,8 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 public interface AvailableGifticonAppService {
-    AvailableGifticonsResponseDto getAvailableGifticons(GifticonScopeType scope, GifticonType type, GifticonSortType sort, Integer page, Integer size);
-    AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId);
+	AvailableGifticonsResponseDto getAvailableGifticons(GifticonScopeType scope, GifticonType type,
+		GifticonSortType sort, Integer page, Integer size);
+
+	AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId);
 }

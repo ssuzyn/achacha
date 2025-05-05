@@ -1,5 +1,5 @@
 package com.eurachacha.achacha.domain.service.gifticon;
 
 public interface AvailableGifticonDomainService {
-    void validateGifticonAccess(Integer requestUserId, Integer gifticonUserId);
+	void validateGifticonAccess(Integer requestUserId, Integer gifticonUserId);
 }

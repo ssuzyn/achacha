@@ -1,10 +1,6 @@
 package com.eurachacha.achacha.domain.model.sharebox;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
-import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.user.User;
 
 import jakarta.persistence.Column;
@@ -15,7 +11,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
