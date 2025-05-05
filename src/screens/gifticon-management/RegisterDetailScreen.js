@@ -9,23 +9,27 @@ import {
   Image,
   Platform,
   Modal,
+  StatusBar,
 } from 'react-native';
 import { Button, Input, Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Icon as RNEIcon } from 'react-native-elements';
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [barcodeNumber, setBarcodeNumber] = useState('');
   const [brandName, setBrandName] = useState('');
   const [productName, setProductName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [date, setDate] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('상품형'); // '상품권' 또는 '금액권'
+  const [activeTab, setActiveTab] = useState('상품형'); // '상품형' 또는 '금액형'
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -77,11 +81,17 @@ const RegisterDetailScreen = () => {
             <View style={styles.iosPickerContent}>
               <View style={styles.iosPickerHeader}>
                 <TouchableOpacity onPress={() => setDatePickerVisible(false)}>
-                  <Text style={styles.iosPickerCancel}>취소</Text>
+                  <Text variant="body1" weight="bold" color="#56AEE9">
+                    취소
+                  </Text>
                 </TouchableOpacity>
-                <Text style={styles.iosPickerTitle}>날짜 선택</Text>
+                <Text variant="h4" weight="bold">
+                  날짜 선택
+                </Text>
                 <TouchableOpacity onPress={handleIOSConfirm}>
-                  <Text style={styles.iosPickerConfirm}>확인</Text>
+                  <Text variant="body1" weight="bold" color="#56AEE9">
+                    확인
+                  </Text>
                 </TouchableOpacity>
               </View>
               <DateTimePicker
@@ -101,13 +111,26 @@ const RegisterDetailScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color={theme.colors.black} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>기프티콘 등록</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+
+      {/* 안전 영역 고려한 상단 여백 */}
+      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <Button
+          variant="ghost"
+          onPress={handleGoBack}
+          style={styles.backButton}
+          leftIcon={
+            <RNEIcon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+          }
+        />
+        <Text variant="h3" weight="bold" style={styles.headerTitle}>
+          기프티콘 등록
+        </Text>
+        <View style={styles.rightPlaceholder} />
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
@@ -128,7 +151,11 @@ const RegisterDetailScreen = () => {
             style={[styles.tab, activeTab === '상품형' && styles.activeTab]}
             onPress={() => setActiveTab('상품형')}
           >
-            <Text style={activeTab === '상품형' ? styles.activeTabText : styles.tabText}>
+            <Text
+              variant="body1"
+              weight={activeTab === '상품형' ? 'bold' : 'regular'}
+              color={activeTab === '상품형' ? '#00B388' : '#666666'}
+            >
               상품형
             </Text>
           </TouchableOpacity>
@@ -136,7 +163,11 @@ const RegisterDetailScreen = () => {
             style={[styles.tab, activeTab === '금액형' && styles.activeTab]}
             onPress={() => setActiveTab('금액형')}
           >
-            <Text style={activeTab === '금액형' ? styles.activeTabText : styles.tabText}>
+            <Text
+              variant="body1"
+              weight={activeTab === '금액형' ? 'bold' : 'regular'}
+              color={activeTab === '금액형' ? '#00B388' : '#666666'}
+            >
               금액형
             </Text>
           </TouchableOpacity>
@@ -144,7 +175,9 @@ const RegisterDetailScreen = () => {
 
         {/* 바코드 번호 입력 */}
         <View style={styles.inputSection}>
-          <Text style={styles.sectionTitle}>바코드 번호 입력</Text>
+          <Text variant="h4" weight="bold" style={styles.sectionTitle}>
+            바코드 번호 입력
+          </Text>
           <Input
             placeholder="바코드 번호를 입력해주세요."
             value={barcodeNumber}
@@ -156,7 +189,9 @@ const RegisterDetailScreen = () => {
 
         {/* 기프티콘 정보 입력 */}
         <View style={styles.inputSection}>
-          <Text style={styles.sectionTitle}>기프티콘 정보 입력</Text>
+          <Text variant="h4" weight="bold" style={styles.sectionTitle}>
+            기프티콘 정보 입력
+          </Text>
           <Input
             placeholder="브랜드명을 입력해주세요."
             value={brandName}
@@ -190,14 +225,22 @@ const RegisterDetailScreen = () => {
       <View style={styles.footer}>
         <View style={styles.tabBar}>
           <TouchableOpacity style={styles.tabItem}>
-            <Text style={styles.tabText}>기본</Text>
+            <Text variant="body2" color="#666666">
+              기본
+            </Text>
           </TouchableOpacity>
-          <Text style={styles.tabDivider}>|</Text>
+          <Text variant="body2" color="#EEEEEE">
+            |
+          </Text>
           <TouchableOpacity style={styles.tabItem}>
-            <Text style={styles.activeTabTextBottom}>내 보관함</Text>
+            <Text variant="body2" weight="bold" color="#00B388">
+              내 보관함
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.selectButton}>
-            <Text style={styles.selectButtonText}>선택</Text>
+            <Text variant="body2" color="#333333" style={{ marginRight: 4 }}>
+              선택
+            </Text>
             <Icon name="chevron-right" size={20} color="#333333" />
           </TouchableOpacity>
         </View>
@@ -216,22 +259,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   header: {
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
   backButton: {
-    padding: 8,
-    marginRight: 8,
+    padding: 0,
+    backgroundColor: 'transparent',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    flex: 1,
     textAlign: 'center',
-    marginRight: 40,
+    flex: 1,
+  },
+  rightPlaceholder: {
+    width: 48,
   },
   content: {
     flex: 1,
@@ -281,20 +326,10 @@ const styles = StyleSheet.create({
   activeTab: {
     backgroundColor: '#E6F7F2',
   },
-  tabText: {
-    fontSize: 14,
-    color: '#666666',
-  },
-  activeTabText: {
-    fontWeight: 'bold',
-    color: '#00B388',
-  },
   inputSection: {
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
     marginBottom: 8,
   },
   inputMargin: {
@@ -314,7 +349,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   tabDivider: {
-    color: '#EEEEEE',
     marginHorizontal: 4,
   },
   selectButton: {
@@ -322,18 +356,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 'auto',
   },
-  selectButtonText: {
-    fontSize: 14,
-    color: '#333333',
-    marginRight: 4,
-  },
   registerButton: {
     width: '100%',
     backgroundColor: '#56AEE9',
-  },
-  activeTabTextBottom: {
-    fontWeight: 'bold',
-    color: '#00B388',
   },
   iosPickerContainer: {
     flex: 1,
@@ -355,20 +380,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
-  },
-  iosPickerCancel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#56AEE9',
-  },
-  iosPickerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  iosPickerConfirm: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#56AEE9',
   },
   iosPicker: {
     width: '100%',
