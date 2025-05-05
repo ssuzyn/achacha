@@ -164,7 +164,11 @@ const MapScreen = () => {
 
       <View style={styles.mapContainer}>
         {/* KakaoMapWebView에 브랜드 목록과 선택한 브랜드 넘겨줌 */}
-        <KakaoMapWebView uniqueBrands={uniqueBrands} selectedBrand={selectedBrand} />
+        <KakaoMapWebView
+          uniqueBrands={uniqueBrands}
+          selectedBrand={selectedBrand}
+          onSelectBrand={handleSelectBrand}
+        />
       </View>
 
       <GifticonBottomSheet
