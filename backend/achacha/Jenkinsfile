@@ -5,9 +5,14 @@ pipeline {
     }
     environment {
         DOCKER_IMAGE = 'ssuzyn/achacha-backend'
-        SERVER_HOST = credentials('EC2_HOST')
+
+        // 데이터베이스 환경 변수
         SPRING_DATABASE = credentials('SPRING_DATABASE')
         SPRING_DATABASE_URL = credentials('SPRING_DATABASE_URL')
+
+        // 클로바 OCR 환경 변수
+        CLOVA_OCR_API_URL = credentials('CLOVA_OCR_API_URL')
+        CLOVA_OCR_SECRET_KEY = credentials('CLOVA_OCR_SECRET_KEY')
     }
     stages {
         stage('Clone Repository') {
@@ -71,6 +76,8 @@ pipeline {
                                       -e SPRING_DATABASE_URL="${SPRING_DATABASE_URL}" \\
                                       -e SPRING_DATABASE_USERNAME="${SPRING_DATABASE_USR}" \\
                                       -e SPRING_DATABASE_PASSWORD="${SPRING_DATABASE_PSW}" \\
+                                      -e CLOVA_OCR_API_URL="${CLOVA_OCR_API_URL}" \\
+                                      -e CLOVA_OCR_SECRET_KEY="${CLOVA_OCR_SECRET_KEY}" \\
                                       -p 8081:8080 \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
