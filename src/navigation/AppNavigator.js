@@ -1,6 +1,5 @@
-import React, { lazy, Suspense } from 'react';
+import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { ActivityIndicator, View } from 'react-native';
 import SplashScreenComponent from '../screens/SplashScreen';
 import BottomTabBar from '../components/common/BottomTabBar';
 
@@ -9,13 +8,7 @@ import PermissionScreen from '../screens/PermissionScreen';
 import LoginScreen from '../screens/LoginScreen';
 import GuideFirstScreen from '../screens/GuideScreen';
 import NotificationScreen from '../screens/NotificationScreen';
-
-// 로딩 컴포넌트
-const LoadingScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-    <ActivityIndicator size="large" color="#0000ff" />
-  </View>
-);
+import RegisterScreen from '../screens/gifticon-management/RegisterMainScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +25,14 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Notification"
         component={NotificationScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="Register"
+        component={RegisterScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,

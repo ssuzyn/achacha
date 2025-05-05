@@ -28,8 +28,8 @@ const HeaderBar = ({ notificationCount = 3 }) => {
 
   // 추가 버튼 클릭 핸들러
   const handleAddPress = useCallback(() => {
-    // 예: navigation.navigate('AddNew');
-    Alert.alert('안내', '추가 기능은 준비 중입니다.');
+    // RegisterScreen 화면으로 이동
+    NavigationService.navigate('Register', {}, true);
   }, []);
 
   // 알림 버튼 클릭 핸들러 - 성능 최적화
