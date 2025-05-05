@@ -24,7 +24,8 @@ const RegisterScreen = () => {
   // 수동 등록 처리
   const handleManualRegister = useCallback(() => {
     // 수동 등록 화면으로 이동
-  }, []);
+    navigation.navigate('RegisterDetail');
+  }, [navigation]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -60,24 +61,26 @@ const RegisterScreen = () => {
           offset={[0, 1]}
           style={styles.shadowContainer}
         >
-          <Card style={styles.uploadCard}>
-            <View style={styles.uploadContent}>
-              <Image
-                source={require('../../assets/images/gifticon-upload.png')}
-                style={styles.uploadIcon}
-                resizeMode="contain"
-              />
-              <Text variant="h2" weight="bold" style={styles.uploadTitleMargin}>
-                기프티콘 업로드
-              </Text>
-              <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
-                지금 바로 갤러리에 저장된
-              </Text>
-              <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
-                기프티콘을 업로드 해보세요.
-              </Text>
-            </View>
-          </Card>
+          <TouchableOpacity onPress={() => navigation.navigate('RegisterDetail')}>
+            <Card style={styles.uploadCard}>
+              <View style={styles.uploadContent}>
+                <Image
+                  source={require('../../assets/images/gifticon-upload.png')}
+                  style={styles.uploadIcon}
+                  resizeMode="contain"
+                />
+                <Text variant="h2" weight="bold" style={styles.uploadTitleMargin}>
+                  기프티콘 업로드
+                </Text>
+                <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
+                  지금 바로 갤러리에 저장된
+                </Text>
+                <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
+                  기프티콘을 업로드 해보세요.
+                </Text>
+              </View>
+            </Card>
+          </TouchableOpacity>
         </Shadow>
 
         {/* 수동 등록 버튼 - TouchableOpacity로 간단하게 구현 */}
