@@ -19,12 +19,12 @@ public class PageableFactory {
 
 	private Sort createSortOption(GifticonSortType sort) {
 		if (sort == null) {
-			return Sort.by("id").descending();
+			return Sort.by("createdAt").descending();
 		}
 
 		return switch (sort) {
 			case EXPIRY_ASC -> Sort.by("expiryDate").ascending().and(Sort.by("id").ascending());
-			case CREATED_DESC -> Sort.by("id").descending();
+			case CREATED_DESC -> Sort.by("createdAt").descending();
 		};
 	}
 }
