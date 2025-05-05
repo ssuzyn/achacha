@@ -1,12 +1,8 @@
 import React from 'react';
-import { Image, StyleSheet, View, SafeAreaView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, SafeAreaView, TouchableOpacity } from 'react-native';
 import { Text } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';
-
-// --- 로고 이미지 경로 ---
-const LOGIN_LOGO_URL = '../assets/images/login_logo.png';
-// -----------------------
 
 const LoginScreen = () => {
   const { authState, signInWithKakao, signInWithGoogle } = useAuth();
@@ -18,19 +14,19 @@ const LoginScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
-          {/* 로고 영역 */}
-          <View style={styles.logoContainer}>
-            <Image source={require(LOGIN_LOGO_URL)} style={styles.logo} resizeMode="contain" />
-          </View>
-
-          {/* 텍스트 영역 */}
-          <View style={styles.textContainer}>
-            <Text variant="h1" weight="bold" size={22} center>
-              소셜 계정으로
-            </Text>
-            <Text variant="h1" weight="bold" size={22} center>
-              간편한 로그인
-            </Text>
+          <View style={styles.centerContainer}>
+            {/* 텍스트 영역 */}
+            <View style={styles.textContainer}>
+              <Text variant="h1" weight="bold" size={20} center style={styles.loginText}>
+                소셜 계정으로
+              </Text>
+              <Text variant="h1" weight="bold" size={20} center style={styles.loginText}>
+                간편하게 로그인하고
+              </Text>
+              <Text variant="h1" weight="bold" size={20} center style={styles.loginText}>
+                더 나은 서비스를 경험해보세요.
+              </Text>
+            </View>
           </View>
 
           {/* 버튼 영역 */}
@@ -83,12 +79,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
+    paddingVertical: 25,
+    justifyContent: 'space-between',
+  },
+  centerContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 45,
   },
   logo: {
     width: 400,
@@ -96,11 +97,14 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+  },
+  loginText: {
+    marginBottom: 6,
+    lineHeight: 30,
   },
   buttonContainer: {
     width: '100%',
-    marginTop: 16,
+    marginBottom: 20,
   },
   button: {
     width: '100%',

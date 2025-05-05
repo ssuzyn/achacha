@@ -85,11 +85,11 @@ const PermissionScreen = () => {
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
-                <Text variant="h1" weight="bold" size={22}>
+                <Text variant="h1" weight="bold" size={24} style={styles.permissionText}>
                   이용을 위해
                 </Text>
               </View>
-              <Text variant="h1" weight="bold" size={22} center>
+              <Text variant="h1" weight="bold" size={24} center style={styles.permissionText}>
                 아래 권한을 허용해주세요.
               </Text>
             </View>
@@ -124,7 +124,7 @@ const PermissionScreen = () => {
             variant="primary"
             size="lg"
             isDisabled={permissionsStatus === 'checking'}
-            style={permissionsStatus === 'checking' && styles.buttonDisabled}
+            style={[styles.button, permissionsStatus === 'checking' && styles.buttonDisabled]}
           />
         </View>
       </SafeAreaView>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 28,
+    paddingVertical: 25,
     justifyContent: 'space-between',
   },
   centerContainer: {
@@ -152,24 +152,35 @@ const styles = StyleSheet.create({
   headerContainer: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 45,
   },
   titleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   logoImage: {
     width: 80,
     height: 30,
+    marginBottom: 7,
     marginRight: 10,
+  },
+  permissionText: {
+    lineHeight: 30,
+    marginBottom: 6,
   },
   permissionsContainer: {
     width: '100%',
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  button: {
+    width: '100%',
+    height: 56,
+    borderRadius: 8,
+    marginBottom: 20,
   },
 });
 

@@ -27,14 +27,14 @@ const GuideFirstScreen = () => {
             </View>
 
             <View style={styles.textContainer}>
-              <Text variant="h1" weight="bold" size={22} center style={styles.guideText}>
+              <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
                 {currentContent.title}
               </Text>
-              <Text variant="h1" weight="bold" size={22} center style={styles.guideText}>
+              <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
                 {currentContent.subText1}
               </Text>
               {currentContent.subText2 ? (
-                <Text variant="h1" weight="bold" size={22} center style={styles.guideText}>
+                <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
                   {currentContent.subText2}
                 </Text>
               ) : null}
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 28,
+    paddingVertical: 25,
     justifyContent: 'space-between',
   },
   mainContainer: {
@@ -86,31 +86,33 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
+    paddingTop: 0,
   },
   imageWrapper: {
     width: '100%',
     alignItems: 'center',
+    height: width * 0.9,
+    justifyContent: 'center',
+    marginTop: 0,
   },
   imageContainer: {
     width: '100%',
     alignItems: 'center',
-    minHeight: width * 0.6,
-    marginBottom: 30,
+    justifyContent: 'center',
   },
   contentImage: {
-    width: width * 0.6,
-    height: width * 0.6,
+    width: width * 0.7,
+    height: width * 0.7,
   },
   textContainer: {
     width: '100%',
     alignItems: 'center',
-    paddingBottom: 24,
-    marginTop: 20,
-    minHeight: 100,
+    marginTop: 30,
+    height: 150,
   },
   guideText: {
-    marginBottom: 4,
-    lineHeight: 26,
+    marginBottom: 6,
+    lineHeight: 30,
   },
   indicatorContainer: {
     flexDirection: 'row',
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 24,
     position: 'absolute',
-    bottom: 80,
+    bottom: 70,
   },
   indicator: {
     width: 8,
@@ -128,6 +130,9 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
+    height: 56,
+    borderRadius: 8,
+    marginBottom: 20,
   },
 });
 
