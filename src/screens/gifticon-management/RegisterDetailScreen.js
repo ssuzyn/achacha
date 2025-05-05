@@ -1,11 +1,20 @@
 // 기프티콘 등록 상세 스크린
 
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Platform,
+  Modal,
+} from 'react-native';
 import { Button, Input, Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
@@ -14,8 +23,9 @@ const RegisterDetailScreen = () => {
   const [brandName, setBrandName] = useState('');
   const [productName, setProductName] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [date, setDate] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
-  const [activeTab, setActiveTab] = useState('상품권'); // '상품권' 또는 '금액권'
+  const [activeTab, setActiveTab] = useState('상품형'); // '상품권' 또는 '금액권'
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -25,16 +35,69 @@ const RegisterDetailScreen = () => {
     setDatePickerVisible(true);
   };
 
-  const handleCloseDatePicker = () => {
+  const handleDateChange = (event, selectedDate) => {
+    if (event.type === 'dismissed') {
+      setDatePickerVisible(false);
+      return;
+    }
+
+    const currentDate = selectedDate || date;
+    setDate(currentDate);
+
+    // 선택한 날짜를 년.월.일 형식으로 포맷팅
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    setExpiryDate(`${year}.${month}.${day}`);
+
+    if (Platform.OS === 'android') {
+      setDatePickerVisible(false);
+    }
+  };
+
+  // iOS에서 DatePicker 닫기
+  const handleIOSConfirm = () => {
     setDatePickerVisible(false);
   };
 
-  // 간단한 날짜 선택 예시 (실제로는 더 정교한 DatePicker 구현이 필요)
-  const handleSelectDate = () => {
-    const today = new Date();
-    const formattedDate = `${today.getFullYear()}.${(today.getMonth() + 1).toString().padStart(2, '0')}.${today.getDate().toString().padStart(2, '0')}`;
-    setExpiryDate(formattedDate);
-    setDatePickerVisible(false);
+  // DatePicker 렌더링
+  const renderDatePicker = () => {
+    // 공통 DateTimePicker 속성
+    const dateTimePickerProps = {
+      value: date,
+      mode: 'date',
+      onChange: handleDateChange,
+    };
+
+    if (Platform.OS === 'ios') {
+      // iOS는 모달로 표시하지 않고 항상 화면에 표시
+      return (
+        <Modal visible={isDatePickerVisible} transparent animationType="slide">
+          <View style={styles.iosPickerContainer}>
+            <View style={styles.iosPickerContent}>
+              <View style={styles.iosPickerHeader}>
+                <TouchableOpacity onPress={() => setDatePickerVisible(false)}>
+                  <Text style={styles.iosPickerCancel}>취소</Text>
+                </TouchableOpacity>
+                <Text style={styles.iosPickerTitle}>날짜 선택</Text>
+                <TouchableOpacity onPress={handleIOSConfirm}>
+                  <Text style={styles.iosPickerConfirm}>확인</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                {...dateTimePickerProps}
+                display="spinner"
+                themeVariant="light"
+                style={styles.iosPicker}
+              />
+            </View>
+          </View>
+        </Modal>
+      );
+    }
+
+    // Android는 네이티브 다이얼로그로 표시
+    return isDatePickerVisible && <DateTimePicker {...dateTimePickerProps} display="default" />;
   };
 
   return (
@@ -62,19 +125,19 @@ const RegisterDetailScreen = () => {
         {/* 탭 필터 */}
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tab, activeTab === '상품권' && styles.activeTab]}
-            onPress={() => setActiveTab('상품권')}
+            style={[styles.tab, activeTab === '상품형' && styles.activeTab]}
+            onPress={() => setActiveTab('상품형')}
           >
-            <Text style={activeTab === '상품권' ? styles.activeTabText : styles.tabText}>
-              상품권
+            <Text style={activeTab === '상품형' ? styles.activeTabText : styles.tabText}>
+              상품형
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tab, activeTab === '금액권' && styles.activeTab]}
-            onPress={() => setActiveTab('금액권')}
+            style={[styles.tab, activeTab === '금액형' && styles.activeTab]}
+            onPress={() => setActiveTab('금액형')}
           >
-            <Text style={activeTab === '금액권' ? styles.activeTabText : styles.tabText}>
-              금액권
+            <Text style={activeTab === '금액형' ? styles.activeTabText : styles.tabText}>
+              금액형
             </Text>
           </TouchableOpacity>
         </View>
@@ -141,31 +204,8 @@ const RegisterDetailScreen = () => {
         <Button title="등록" variant="primary" size="lg" style={styles.registerButton} />
       </View>
 
-      {/* 간단한 날짜 선택 모달 */}
-      <Modal visible={isDatePickerVisible} transparent={true} animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>날짜 선택</Text>
-            <Text style={styles.modalText}>현재 날짜를 유효기간으로 설정합니다.</Text>
-            <View style={styles.modalButtons}>
-              <Button
-                title="취소"
-                variant="outline"
-                size="sm"
-                style={styles.modalButton}
-                onPress={handleCloseDatePicker}
-              />
-              <Button
-                title="확인"
-                variant="primary"
-                size="sm"
-                style={styles.modalButton}
-                onPress={handleSelectDate}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
+      {/* DateTimePicker */}
+      {renderDatePicker()}
     </View>
   );
 };
@@ -291,43 +331,49 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#56AEE9',
   },
-  // 모달 스타일
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '80%',
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  modalText: {
-    fontSize: 14,
-    color: '#666666',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  modalButton: {
-    flex: 1,
-    marginHorizontal: 8,
-  },
   activeTabTextBottom: {
     fontWeight: 'bold',
     color: '#00B388',
+  },
+  iosPickerContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  iosPickerContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    width: '100%',
+  },
+  iosPickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  iosPickerCancel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#56AEE9',
+  },
+  iosPickerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  iosPickerConfirm: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#56AEE9',
+  },
+  iosPicker: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#FFFFFF',
   },
 });
 
