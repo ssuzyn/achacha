@@ -8,10 +8,7 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/api/available-gifticons")
 @RestController
@@ -28,5 +25,12 @@ public class AvailableGifticonController {
             @RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
             @RequestParam(required = false, defaultValue = "10") @Min(1) Integer size) {
         return ResponseEntity.ok(availableGifticonAppService.getAvailableGifticons(scope, type, sort, page, size));
+    }
+
+    @GetMapping("/{gifticonId}")
+    public ResponseEntity<?> getAvailableGifticon(
+            @PathVariable Integer gifticonId
+    ) {
+        return ResponseEntity.ok(availableGifticonAppService.getAvailableGifticonDetail(gifticonId));
     }
 }
