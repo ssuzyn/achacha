@@ -23,7 +23,7 @@ const theme = {
     cardTeal: '#30B0C7',
     cardPink: '#FF2DC3',
     // 로그인 버튼 색상
-    loginYellow: '#FCE642',
+    loginYellow: '#FFEB00',
     loginRed: '#EF4040',
     // 하단 탭 및 보더 색상
     grey0: '#f9f9f9',
