@@ -29,9 +29,8 @@ export const guideSteps = [
   },
   // Step 4: 기프티콘 전달
   {
-    title: '쓱- 하고 넘기면,',
+    title: '쓱- 하고 나누면,',
     subText1: '기프티콘이 누군가에게 🎁',
-    subText2: '',
     image: require('../assets/images/gesture.png'),
     imageStyle: { width: width * 0.7, height: width * 0.7 },
   },
@@ -39,7 +38,6 @@ export const guideSteps = [
   {
     title: '연인도, 가족도, 친구도.',
     subText1: '모두 함께 쓰는 쉐어박스',
-    subText2: '',
     image: require('../assets/images/share.png'),
   },
 ];

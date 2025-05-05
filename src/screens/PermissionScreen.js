@@ -85,11 +85,11 @@ const PermissionScreen = () => {
                   style={styles.logoImage}
                   resizeMode="contain"
                 />
-                <Text variant="h1" style={styles.titleText}>
+                <Text variant="h1" weight="bold" size={22}>
                   이용을 위해
                 </Text>
               </View>
-              <Text variant="h1" style={[styles.titleText, styles.textCenter]}>
+              <Text variant="h1" weight="bold" size={22} center>
                 아래 권한을 허용해주세요.
               </Text>
             </View>
@@ -164,12 +164,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 30,
     marginRight: 10,
-  },
-  titleText: {
-    fontWeight: 'bold',
-  },
-  textCenter: {
-    textAlign: 'center',
   },
   permissionsContainer: {
     width: '100%',

@@ -25,10 +25,10 @@ const LoginScreen = () => {
 
           {/* 텍스트 영역 */}
           <View style={styles.textContainer}>
-            <Text variant="h1" style={styles.title}>
+            <Text variant="h1" weight="bold" size={22} center>
               소셜 계정으로
             </Text>
-            <Text variant="h1" style={styles.title}>
+            <Text variant="h1" weight="bold" size={22} center>
               간편한 로그인
             </Text>
           </View>
@@ -46,12 +46,7 @@ const LoginScreen = () => {
               ]}
               activeOpacity={0.7}
             >
-              <Text
-                variant="button"
-                weight="bold"
-                style={styles.buttonText}
-                color={theme.colors.textBrown}
-              >
+              <Text variant="button" weight="bold" size={16} color={theme.colors.textBrown}>
                 카카오톡 로그인
               </Text>
             </TouchableOpacity>
@@ -67,12 +62,7 @@ const LoginScreen = () => {
               ]}
               activeOpacity={0.7}
             >
-              <Text
-                variant="button"
-                weight="bold"
-                style={styles.buttonText}
-                color={theme.colors.white}
-              >
+              <Text variant="button" weight="bold" size={16} color={theme.colors.white}>
                 Google 로그인
               </Text>
             </TouchableOpacity>
@@ -108,9 +98,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 32,
   },
-  title: {
-    textAlign: 'center',
-  },
   buttonContainer: {
     width: '100%',
     marginTop: 16,
@@ -122,9 +109,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-  },
-  buttonText: {
-    fontSize: 16,
   },
   disabledButton: {
     opacity: 0.6,
