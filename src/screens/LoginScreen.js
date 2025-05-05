@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, Image } from 'react-native';
-import { Text } from '../components/ui';
+import { Text, Divider } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';
 import Svg, { Path } from 'react-native-svg';
@@ -36,67 +36,84 @@ const LoginScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
-          <View style={styles.centerContainer}>
+          <View style={styles.mainContainer}>
+            {/* 로고 영역
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../assets/images/splash-icon.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View> */}
+
             {/* 텍스트 영역 */}
             <View style={styles.textContainer}>
-              <Text variant="h1" weight="bold" size={20} center style={styles.loginText}>
-                소셜 계정으로
+              <View style={styles.mainTextContainer}>
+                <Text variant="h1" weight="bold" center color="primary" style={styles.brandText}>
+                  아차차
+                </Text>
+                <Text variant="h1" weight="bold" center style={styles.mainText}>
+                  {' 하나로 쉽고 편하게'}
+                </Text>
+              </View>
+              <Text variant="h4" weight="semibold" center style={styles.subText}>
+                기프티콘 관리부터 나눔까지,
               </Text>
-              <Text variant="h1" weight="bold" size={20} center style={styles.loginText}>
-                간편하게 로그인하고
-              </Text>
-              <Text variant="h1" weight="bold" size={20} center style={styles.loginText}>
-                더 나은 서비스를 경험해보세요.
+              <Text variant="h4" weight="semibold" center style={styles.subText}>
+                지금 바로 시작해보세요!
               </Text>
             </View>
-          </View>
 
-          {/* 버튼 영역 */}
-          <View style={styles.buttonContainer}>
-            {/* 카카오톡 로그인 버튼 */}
-            <TouchableOpacity
-              onPress={signInWithKakao}
-              disabled={isLoading}
-              style={[
-                styles.button,
-                { backgroundColor: theme.colors.loginYellow },
-                isLoading && styles.disabledButton,
-              ]}
-              activeOpacity={0.7}
-            >
-              <View style={styles.buttonContentContainer}>
-                <Image
-                  source={require('../assets/images/login-kakaotalk.png')}
-                  style={styles.buttonIcon}
-                  resizeMode="contain"
-                />
-                <Text variant="button" weight="bold" size={18} color={theme.colors.textBrown}>
-                  카카오톡 로그인
-                </Text>
-              </View>
-            </TouchableOpacity>
+            {/* 구분선 */}
+            <Divider style={styles.divider} />
 
-            {/* 구글 로그인 버튼 */}
-            <TouchableOpacity
-              onPress={signInWithGoogle}
-              disabled={isLoading}
-              style={[
-                styles.button,
-                // eslint-disable-next-line react-native/no-inline-styles
-                { backgroundColor: 'white', borderWidth: 1, borderColor: '#ddd' },
-                isLoading && styles.disabledButton,
-              ]}
-              activeOpacity={0.7}
-            >
-              <View style={styles.buttonContentContainer}>
-                <View style={styles.googleIconContainer}>
-                  <GoogleIcon />
+            {/* 버튼 영역 */}
+            <View style={styles.buttonContainer}>
+              {/* 카카오톡 로그인 버튼 */}
+              <TouchableOpacity
+                onPress={signInWithKakao}
+                disabled={isLoading}
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.colors.loginYellow },
+                  isLoading && styles.disabledButton,
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={styles.buttonContentContainer}>
+                  <Image
+                    source={require('../assets/images/login-kakaotalk.png')}
+                    style={styles.buttonIcon}
+                    resizeMode="contain"
+                  />
+                  <Text variant="button" weight="bold" size={18} color={theme.colors.textBrown}>
+                    카카오톡 로그인
+                  </Text>
                 </View>
-                <Text variant="button" weight="bold" size={18} color="#5F6368">
-                  Google 로그인
-                </Text>
-              </View>
-            </TouchableOpacity>
+              </TouchableOpacity>
+
+              {/* 구글 로그인 버튼 */}
+              <TouchableOpacity
+                onPress={signInWithGoogle}
+                disabled={isLoading}
+                style={[
+                  styles.button,
+                  // eslint-disable-next-line react-native/no-inline-styles
+                  { backgroundColor: 'white', borderWidth: 1, borderColor: '#ddd' },
+                  isLoading && styles.disabledButton,
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={styles.buttonContentContainer}>
+                  <View style={styles.googleIconContainer}>
+                    <GoogleIcon />
+                  </View>
+                  <Text variant="button" weight="bold" size={18} color="#5F6368">
+                    Google 로그인
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </SafeAreaView>
@@ -115,23 +132,32 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingVertical: 25,
-    justifyContent: 'space-between',
-  },
-  centerContainer: {
-    flex: 1,
     justifyContent: 'center',
+  },
+  mainContainer: {
     alignItems: 'center',
   },
   textContainer: {
     alignItems: 'center',
+    marginBottom: 10,
   },
-  loginText: {
-    marginBottom: 6,
-    lineHeight: 30,
+  mainTextContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 10,
+  },
+  subText: {
+    marginBottom: 3,
+  },
+  divider: {
+    width: '40%',
+    marginBottom: 40,
+    marginTop: 20,
   },
   buttonContainer: {
     width: '100%',
-    marginBottom: 20,
+    marginTop: 0,
   },
   button: {
     width: '100%',
