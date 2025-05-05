@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { View, StyleSheet, Dimensions, Text } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { KAKAO_MAP_API_KEY, KAKAO_REST_API_KEY } from '@env';
@@ -6,11 +6,16 @@ import useLocationTracking from '../hooks/useLocationTracking';
 
 const { width, height } = Dimensions.get('window');
 
-const KakaoMapWebView = ({ uniqueBrands, selectedBrand, onSelectBrand }) => {
+const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand }, ref) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const webViewRef = useRef(null);
   const { location, errorMsg } = useLocationTracking();
   const [debugMessage, setDebugMessage] = useState('');
+
+  // mapScreen의 moveToCurrentLocation에 접근
+  useImperativeHandle(ref, () => ({
+    moveToCurrentLocation: () => moveToCurrentLocation(),
+  }));
 
   // 웹뷰에서 메시지를 받아 처리하는 함수
   const handleMessage = event => {
@@ -71,11 +76,15 @@ const KakaoMapWebView = ({ uniqueBrands, selectedBrand, onSelectBrand }) => {
           
           if (typeof map !== 'undefined') {
             map.setCenter(moveLatLng);
+          
+          if (window.currentLocationMarker) {
+            window.currentLocationMarker.setMap(null);
+          }
             
           // 사용자 현재 위치 표시  
           window.currentLocationMarker = new kakao.maps.Circle({
             center: new kakao.maps.LatLng(${latitude}, ${longitude}),
-            radius: 8, // 실제 위치 표시는 더 작은 반경
+            radius: 8, 
             strokeWeight: 10,
             strokeColor: '#4A90E2',
             strokeOpacity: 1,
@@ -304,7 +313,7 @@ const KakaoMapWebView = ({ uniqueBrands, selectedBrand, onSelectBrand }) => {
                
                var mapOption = { 
                  center: new kakao.maps.LatLng(37.566826, 126.9786567),
-                 level: 3
+                 level: 4
                };
 
                debugLog('지도 생성 중...');
@@ -371,7 +380,7 @@ const KakaoMapWebView = ({ uniqueBrands, selectedBrand, onSelectBrand }) => {
       />
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
