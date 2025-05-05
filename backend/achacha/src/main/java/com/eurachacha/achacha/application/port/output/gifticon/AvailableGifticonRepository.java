@@ -12,5 +12,6 @@ public interface AvailableGifticonRepository {
 	Slice<AvailableGifticonResponseDto> getAvailableGifticons(Integer userId, GifticonScopeType scope,
 		GifticonType type, Pageable pageable);
 
-	AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer userId, Integer gifticonId);
+	AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId);
+
 }

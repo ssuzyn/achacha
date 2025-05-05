@@ -125,10 +125,9 @@ public interface AvailableGifticonJpaRepository extends JpaRepository<Gifticon, 
 		    AND (g.remainingAmount > 0 OR g.remainingAmount = -1)
 		    AND g.expiryDate > CURRENT_DATE
 		    AND g.id = :gifticonId
-		    AND g.user.id = :userId
 		""")
 	Optional<AvailableGifticonDetailResponseDto> findAvailableGifticonDetail(
-		@Param("gifticonId") Integer gifticonId,
-		@Param("userId") Integer userId
+		@Param("gifticonId") Integer gifticonId
 	);
+
 }
