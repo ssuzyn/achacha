@@ -173,7 +173,12 @@ const MapScreen = () => {
 
       <View style={styles.mapContainer}>
         {/* 브랜드 목록과 선택한 브랜드 넘겨줌 */}
-        <KakaoMapWebView ref={mapRef} uniqueBrands={uniqueBrands} selectedBrand={selectedBrand} />
+        <KakaoMapWebView
+          ref={mapRef}
+          uniqueBrands={uniqueBrands}
+          selectedBrand={selectedBrand}
+          onSelectBrand={handleSelectBrand}
+        />
       </View>
       <TouchableOpacity style={styles.locationButton} onPress={moveToCurrentLocation}>
         <Icon name="my-location" size={24} color="#278CCC" />
