@@ -1,14 +1,14 @@
 package com.eurachacha.achacha.application.port.input.gifticon.dto.response;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
-import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Getter
 @Builder
@@ -29,9 +29,6 @@ public class AvailableGifticonDetailResponseDto {
 	private String thumbnailPath;
 	private String originalImagePath;
 	private LocalDateTime gifticonCreatedAt;
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private Integer gifticonOriginalAmount;
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	private Integer gifticonRemainingAmount;
 }
