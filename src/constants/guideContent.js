@@ -9,7 +9,7 @@ export const guideSteps = [
     subText1: '또 기프티콘 유효기간을',
     subText2: '놓치셨다구요?',
     image: require('../assets/images/giftbox.png'),
-    imageStyle: { width: width * 0.8, height: width * 0.8 },
+    imageStyle: { width: width * 0.9, height: width * 0.9 },
   },
   // Step 2: 이미지 업로드
   {
@@ -17,6 +17,7 @@ export const guideSteps = [
     subText1: '브랜드, 상품, 유효기간까지',
     subText2: '자동 인식',
     image: require('../assets/images/giftscan.png'),
+    imageStyle: { width: width * 0.7, height: width * 0.7 },
   },
   // Step 3: 유효기간 알림
   {
@@ -24,7 +25,7 @@ export const guideSteps = [
     subText1: '원하는 시간에 똑똑하게',
     subText2: '알려드릴게요.',
     image: require('../assets/images/bell.png'),
-    imageStyle: { width: width * 0.5, height: width * 0.5 },
+    imageStyle: { width: width * 0.7, height: width * 0.7 },
   },
   // Step 4: 기프티콘 전달
   {

@@ -27,16 +27,10 @@ const GuideFirstScreen = () => {
             </View>
 
             <View style={styles.textContainer}>
-              <Text variant="h1" style={styles.title}>
-                {currentContent.title}
-              </Text>
-              <Text variant="body1" style={styles.subText} color={theme.colors.grey5}>
-                {currentContent.subText1}
-              </Text>
+              <Text style={styles.text}>{currentContent.title}</Text>
+              <Text style={styles.text}>{currentContent.subText1}</Text>
               {currentContent.subText2 ? (
-                <Text variant="body1" style={styles.subText} color={theme.colors.grey5}>
-                  {currentContent.subText2}
-                </Text>
+                <Text style={styles.text}>{currentContent.subText2}</Text>
               ) : null}
             </View>
 
@@ -95,7 +89,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     minHeight: width * 0.6,
-    marginBottom: 8,
+    marginBottom: 30,
   },
   contentImage: {
     width: width * 0.6,
@@ -105,16 +99,16 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingBottom: 24,
-    marginTop: 8,
+    marginTop: 20,
     minHeight: 100,
   },
-  title: {
+  text: {
     textAlign: 'center',
-  },
-  subText: {
-    textAlign: 'center',
-    lineHeight: 24,
-    marginTop: 8,
+    fontSize: 22,
+    fontWeight: 'bold',
+    lineHeight: 26,
+    marginBottom: 4,
+    color: '#000000',
   },
   indicatorContainer: {
     flexDirection: 'row',
