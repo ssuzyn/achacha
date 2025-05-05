@@ -46,6 +46,7 @@ const GuideFirstScreen = () => {
                   key={index}
                   style={[
                     styles.indicator,
+                    // eslint-disable-next-line react-native/no-inline-styles
                     {
                       backgroundColor: index === currentStep ? theme.colors.primary : '#e0e0e0',
                     },
