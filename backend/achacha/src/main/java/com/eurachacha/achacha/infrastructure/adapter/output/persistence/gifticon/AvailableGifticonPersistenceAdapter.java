@@ -29,14 +29,7 @@ public class AvailableGifticonPersistenceAdapter implements AvailableGifticonRep
 
 	@Override
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer userId, Integer gifticonId) {
-
-		AvailableGifticonDetailResponseDto availableGifticonDetail = availableGifticonJpaRepository.findAvailableGifticonDetail(
-			gifticonId, userId);
-
-		if (availableGifticonDetail == null) {
-			throw new CustomException(ErrorCode.GIFTICON_NOT_FOUND);
-		}
-
-		return availableGifticonDetail;
+		return availableGifticonJpaRepository.findAvailableGifticonDetail(
+			gifticonId, userId).orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
 	}
 }

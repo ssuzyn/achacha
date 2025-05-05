@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
+import java.util.Optional;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -125,7 +127,7 @@ public interface AvailableGifticonJpaRepository extends JpaRepository<Gifticon, 
 		    AND g.id = :gifticonId
 		    AND g.user.id = :userId
 		""")
-	AvailableGifticonDetailResponseDto findAvailableGifticonDetail(
+	Optional<AvailableGifticonDetailResponseDto> findAvailableGifticonDetail(
 		@Param("gifticonId") Integer gifticonId,
 		@Param("userId") Integer userId
 	);
