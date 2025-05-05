@@ -11,7 +11,7 @@ import {
   Modal,
   StatusBar,
 } from 'react-native';
-import { Button, Input, Text } from '../../components/ui';
+import { Button, InputLine, Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
@@ -178,12 +178,10 @@ const RegisterDetailScreen = () => {
           <Text variant="h4" weight="bold" style={styles.sectionTitle}>
             바코드 번호 입력
           </Text>
-          <Input
+          <InputLine
             placeholder="바코드 번호를 입력해주세요."
             value={barcodeNumber}
             onChangeText={setBarcodeNumber}
-            variant="outline"
-            size="md"
           />
         </View>
 
@@ -192,29 +190,23 @@ const RegisterDetailScreen = () => {
           <Text variant="h4" weight="bold" style={styles.sectionTitle}>
             기프티콘 정보 입력
           </Text>
-          <Input
+          <InputLine
             placeholder="브랜드명을 입력해주세요."
             value={brandName}
             onChangeText={setBrandName}
-            variant="outline"
-            size="md"
             style={styles.inputMargin}
           />
-          <Input
+          <InputLine
             placeholder="상품명을 입력해주세요."
             value={productName}
             onChangeText={setProductName}
-            variant="outline"
-            size="md"
             style={styles.inputMargin}
           />
           <TouchableOpacity onPress={handleShowDatePicker} style={styles.inputMargin}>
-            <Input
+            <InputLine
               placeholder="유효기간을 선택해주세요."
               value={expiryDate}
               editable={false}
-              variant="outline"
-              size="md"
               rightIcon={<Icon name="calendar-today" size={20} color={theme.colors.grey5} />}
             />
           </TouchableOpacity>
