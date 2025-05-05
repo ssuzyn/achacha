@@ -1,7 +1,15 @@
 // 기프티콘 등록 스크린
 
-import React, { useCallback } from 'react';
-import { View, StyleSheet, ScrollView, StatusBar, TouchableOpacity, Image } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+  Image,
+  Modal,
+} from 'react-native';
 import { Text } from '../../components/ui';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -10,11 +18,13 @@ import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
+import ImagePicker from 'react-native-image-crop-picker';
 
 const RegisterScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const [isImageOptionVisible, setImageOptionVisible] = useState(false);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -25,6 +35,51 @@ const RegisterScreen = () => {
   const handleManualRegister = useCallback(() => {
     // 수동 등록 화면으로 이동
     navigation.navigate('RegisterDetail');
+  }, [navigation]);
+
+  // 이미지 선택 모달 표시
+  const showImageOptions = useCallback(() => {
+    setImageOptionVisible(true);
+  }, []);
+
+  // 갤러리에서 이미지 선택
+  const handlePickImage = useCallback(() => {
+    ImagePicker.openPicker({
+      width: 300,
+      height: 400,
+      cropping: true,
+      cropperCircleOverlay: false,
+      compressImageQuality: 0.8,
+      mediaType: 'photo',
+    })
+      .then(image => {
+        // 선택한 이미지와 함께 상세 화면으로 이동
+        navigation.navigate('RegisterDetail', { selectedImage: { uri: image.path } });
+      })
+      .catch(error => {
+        if (error.code !== 'E_PICKER_CANCELLED') {
+          console.error('이미지 선택 오류:', error);
+        }
+      });
+  }, [navigation]);
+
+  // 카메라로 촬영
+  const handleOpenCamera = useCallback(() => {
+    ImagePicker.openCamera({
+      width: 300,
+      height: 400,
+      cropping: true,
+      compressImageQuality: 0.8,
+    })
+      .then(image => {
+        // 촬영한 이미지와 함께 상세 화면으로 이동
+        navigation.navigate('RegisterDetail', { selectedImage: { uri: image.path } });
+      })
+      .catch(error => {
+        if (error.code !== 'E_PICKER_CANCELLED') {
+          console.error('카메라 오류:', error);
+        }
+      });
   }, [navigation]);
 
   return (
@@ -61,7 +116,7 @@ const RegisterScreen = () => {
           offset={[0, 1]}
           style={styles.shadowContainer}
         >
-          <TouchableOpacity onPress={() => navigation.navigate('RegisterDetail')}>
+          <TouchableOpacity onPress={showImageOptions}>
             <Card style={styles.uploadCard}>
               <View style={styles.uploadContent}>
                 <Image
@@ -159,6 +214,64 @@ const RegisterScreen = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* 이미지 옵션 모달 */}
+      <Modal
+        visible={isImageOptionVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setImageOptionVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setImageOptionVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text variant="h4" weight="bold" style={styles.modalTitle}>
+              이미지 선택
+            </Text>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setImageOptionVisible(false);
+                handlePickImage();
+              }}
+            >
+              <Icon
+                name="photo-library"
+                type="material"
+                size={24}
+                color="#333333"
+                style={styles.modalOptionIcon}
+              />
+              <Text variant="body1">갤러리에서 선택</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setImageOptionVisible(false);
+                handleOpenCamera();
+              }}
+            >
+              <Icon
+                name="camera-alt"
+                type="material"
+                size={24}
+                color="#333333"
+                style={styles.modalOptionIcon}
+              />
+              <Text variant="body1">카메라로 촬영</Text>
+            </TouchableOpacity>
+            <Button
+              title="취소"
+              variant="outline"
+              onPress={() => setImageOptionVisible(false)}
+              style={styles.modalCancelButton}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -250,21 +363,50 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   stepCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-    marginRight: 16,
+    justifyContent: 'center',
+    marginRight: 14,
   },
   stepContent: {
     flex: 1,
-    paddingTop: 5,
+    justifyContent: 'center',
   },
   shadowContainer: {
-    borderRadius: 10,
     width: '100%',
     marginBottom: 20,
+    borderRadius: 10,
+  },
+  // 모달 관련 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  modalOptionIcon: {
+    marginRight: 16,
+  },
+  modalCancelButton: {
+    marginTop: 16,
   },
 });
 

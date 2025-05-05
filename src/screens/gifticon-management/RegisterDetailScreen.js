@@ -1,6 +1,6 @@
 // 기프티콘 등록 상세 스크린
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -14,14 +14,16 @@ import {
 import { Button, InputLine, Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon as RNEIcon } from 'react-native-elements';
+import ImagePicker from 'react-native-image-crop-picker';
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
   const [barcodeNumber, setBarcodeNumber] = useState('');
   const [brandName, setBrandName] = useState('');
@@ -30,6 +32,14 @@ const RegisterDetailScreen = () => {
   const [date, setDate] = useState(new Date());
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('상품형'); // '상품형' 또는 '금액형'
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  // 네비게이션으로부터 선택된 이미지 불러오기
+  useEffect(() => {
+    if (route.params?.selectedImage) {
+      setSelectedImage(route.params.selectedImage);
+    }
+  }, [route.params]);
 
   const handleGoBack = () => {
     navigation.goBack();
@@ -62,6 +72,51 @@ const RegisterDetailScreen = () => {
   // iOS에서 DatePicker 닫기
   const handleIOSConfirm = () => {
     setDatePickerVisible(false);
+  };
+
+  // 이미지 선택 핸들러 추가
+  const handlePickImage = () => {
+    ImagePicker.openPicker({
+      width: 300,
+      height: 400,
+      cropping: true,
+      cropperCircleOverlay: false,
+      compressImageQuality: 0.8,
+      mediaType: 'photo',
+    })
+      .then(image => {
+        setSelectedImage({ uri: image.path });
+      })
+      .catch(error => {
+        if (error.code !== 'E_PICKER_CANCELLED') {
+          console.error('이미지 선택 오류:', error);
+        }
+      });
+  };
+
+  // 카메라 실행 핸들러 추가
+  const handleOpenCamera = () => {
+    ImagePicker.openCamera({
+      width: 300,
+      height: 400,
+      cropping: true,
+      compressImageQuality: 0.8,
+    })
+      .then(image => {
+        setSelectedImage({ uri: image.path });
+      })
+      .catch(error => {
+        if (error.code !== 'E_PICKER_CANCELLED') {
+          console.error('카메라 오류:', error);
+        }
+      });
+  };
+
+  // 이미지 선택 옵션 모달
+  const [isImageOptionVisible, setImageOptionVisible] = useState(false);
+
+  const showImageOptions = () => {
+    setImageOptionVisible(true);
   };
 
   // DatePicker 렌더링
@@ -138,11 +193,17 @@ const RegisterDetailScreen = () => {
         <View style={styles.imageContainer}>
           <View style={styles.image}>
             <Image
-              source={require('../../assets/images/dummy-starbucks.png')}
+              source={selectedImage || require('../../assets/images/dummy-starbucks.png')}
               style={styles.productImage}
             />
           </View>
-          <Button title="편집하기" variant="outline" size="sm" style={styles.editButton} />
+          <Button
+            title="편집하기"
+            variant="outline"
+            size="sm"
+            style={styles.editButton}
+            onPress={showImageOptions}
+          />
         </View>
 
         {/* 탭 필터 */}
@@ -238,6 +299,52 @@ const RegisterDetailScreen = () => {
         </View>
         <Button title="등록" variant="primary" size="lg" style={styles.registerButton} />
       </View>
+
+      {/* 이미지 옵션 모달 */}
+      <Modal
+        visible={isImageOptionVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setImageOptionVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setImageOptionVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text variant="h4" weight="bold" style={styles.modalTitle}>
+              이미지 선택
+            </Text>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setImageOptionVisible(false);
+                handlePickImage();
+              }}
+            >
+              <Icon name="photo-library" size={24} color="#333333" style={styles.modalOptionIcon} />
+              <Text variant="body1">갤러리에서 선택</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalOption}
+              onPress={() => {
+                setImageOptionVisible(false);
+                handleOpenCamera();
+              }}
+            >
+              <Icon name="camera-alt" size={24} color="#333333" style={styles.modalOptionIcon} />
+              <Text variant="body1">카메라로 촬영</Text>
+            </TouchableOpacity>
+            <Button
+              title="취소"
+              variant="outline"
+              onPress={() => setImageOptionVisible(false)}
+              style={styles.modalCancelButton}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* DateTimePicker */}
       {renderDatePicker()}
@@ -377,6 +484,34 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     backgroundColor: '#FFFFFF',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+  },
+  modalTitle: {
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  modalOptionIcon: {
+    marginRight: 16,
+  },
+  modalCancelButton: {
+    marginTop: 16,
   },
 });
 
