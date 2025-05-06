@@ -21,7 +21,7 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
   const handleMessage = event => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      console.log(`[${data.type}] ${data.message}`);
+      console.log(`[${data.type}] 받은 메시지:`, data);
 
       setDebugMessage(`마지막 메시지: [${data.type}] ${data.message || 'no message'}`);
 
@@ -36,13 +36,20 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
           }
         }, 1000);
       }
+
       // 마커 클릭 이벤트
       if (data.type === 'markerClick') {
-        // 부모 컴포넌트로 브랜드 id 전달, 선택된 마커 다시 클릭할 경우 null 전달 (선택 해제)
-        if (selectedBrand === data.brandId) {
+        // 타입 변환 처리
+        const currentBrandId = selectedBrand !== null ? Number(selectedBrand) : null;
+        const clickedBrandId = Number(data.brandId);
+
+        // 부모 컴포넌트로 브랜드 id 전달
+        if (currentBrandId === clickedBrandId) {
+          console.log('같은 브랜드 다시 클릭: 선택 해제');
           onSelectBrand(null);
         } else {
-          onSelectBrand(data.brandId);
+          console.log('새 브랜드 선택:', clickedBrandId);
+          onSelectBrand(clickedBrandId);
         }
       }
     } catch (error) {
@@ -61,6 +68,7 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
 
   // 현재 위치로 맵 이동하는 함수
   const moveToCurrentLocation = () => {
+    //
     if (!location || !webViewRef.current) {
       console.log('위치 이동 불가: 위치 정보 또는 webViewRef 없음');
       return;
@@ -172,85 +180,176 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
     if (!webViewRef.current) return;
 
     const script = `
-     (function() {
-       if (window.storeMarkers) {
-         window.storeMarkers.forEach(marker => marker.setMap(null));
-         window.storeMarkers = [];
-       }
-       
-       window.storeMarkers = [];
-       const brandStores = ${JSON.stringify(brandStores)};
-       
-       brandStores.forEach(brandData => {
-         brandData.stores.forEach(store => {
-           const imageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png'; // 추후 svg 파일로 변경 예정
-           const imageSize = new kakao.maps.Size(24, 35);
-           const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
-           
-           const marker = new kakao.maps.Marker({
-             position: new kakao.maps.LatLng(store.y, store.x),
-             title: store.place_name,
-             image: markerImage 
-           });
-           
-           // 마커에 브랜드 정보 저장
-           marker.brandId = brandData.brandId;
-           marker.brandName = brandData.brandName;
-           
-           // 마커 클릭 이벤트
-           kakao.maps.event.addListener(marker, 'click', function() {
-             window.ReactNativeWebView.postMessage(JSON.stringify({
-               type: 'markerClick',
-               store: store,
-               brandId: brandData.brandId,
-               brandName: brandData.brandName
-             }));
-           });
-           
-           marker.setMap(map);
-           window.storeMarkers.push(marker);
-         });
-       });
-     })();
-     true;
+      (function() {
+        try {
+          // 전역 변수로 브랜드별 마커 그룹 저장
+          window.brandMarkers = {};
+          
+          // 기존 마커가 있으면 모두 제거
+          if (window.allMarkers) {
+            window.allMarkers.forEach(marker => marker.setMap(null));
+          }
+          
+          window.allMarkers = [];
+          
+          // 브랜드별로 마커 생성 및 저장
+          const brandStores = ${JSON.stringify(brandStores)};
+          
+          brandStores.forEach(brandData => {
+            const brandId = Number(brandData.brandId);
+            console.log('브랜드 처리 중:', brandData.brandName, '(ID:', brandId, ')');
+            
+            // 이 브랜드의 마커 배열 초기화
+            window.brandMarkers[brandId] = [];
+            
+            brandData.stores.forEach(store => {
+              const marker = new kakao.maps.Marker({
+                position: new kakao.maps.LatLng(store.y, store.x),
+                title: store.place_name,
+                image: new kakao.maps.MarkerImage(
+                  'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png',
+                  new kakao.maps.Size(24, 35)
+                )
+              });
+              
+              // 마커에 브랜드 정보 저장
+              marker.brandId = brandId;
+              marker.brandName = brandData.brandName;
+              
+              // 클릭 이벤트 추가
+              kakao.maps.event.addListener(marker, 'click', function() {
+                console.log('마커 클릭:', brandId, brandData.brandName);
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  type: 'markerClick',
+                  store: store,
+                  brandId: brandId,
+                  brandName: brandData.brandName
+                }));
+              });
+              
+              // 일단 모든 마커 표시
+              marker.setMap(map);
+              
+              // 브랜드별 배열과 전체 배열에 추가
+              window.brandMarkers[brandId].push(marker);
+              window.allMarkers.push(marker);
+            });
+            
+            console.log(\`브랜드 \${brandData.brandName} 마커 \${window.brandMarkers[brandId].length}개 생성\`);
+          });
+          
+          console.log('마커 생성 완료. 브랜드:', Object.keys(window.brandMarkers).length, '개, 마커:', window.allMarkers.length, '개');
+          
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'markersCreated',
+            message: \`총 \${window.allMarkers.length}개의 마커 생성됨\`
+          }));
+        } catch (error) {
+          console.error('마커 생성 중 오류:', error);
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'error',
+            message: '마커 생성 오류: ' + error.message
+          }));
+        }
+      })();
+      true;
     `;
 
     webViewRef.current.injectJavaScript(script);
   };
 
   // 선택된 브랜드에 따라 마커 필터링
+  // 선택된 브랜드에 따라 마커 필터링
   const filterMarkersByBrand = selectedBrandId => {
     if (!webViewRef.current) return;
 
+    console.log('필터링 시작, 선택된 브랜드:', selectedBrandId);
+
     const script = `
-     (function() {
-       if (window.storeMarkers) {
-         window.storeMarkers.forEach(marker => {
-           if (${selectedBrandId === null} || marker.brandId === ${selectedBrandId}) {
-             marker.setMap(map);
-           } else {
-             marker.setMap(null);
-           }
-         });
-       }
-     })();
-     true;
-   `;
+    (function() {
+      try {
+        // 선택된 브랜드 ID (null 또는 숫자)
+        const selectedId = ${selectedBrandId === null ? 'null' : Number(selectedBrandId)};
+        console.log('필터링 중, 선택된 브랜드 ID:', selectedId);
+        
+        // brandMarkers가 없으면 초기화되지 않은 것
+        if (!window.brandMarkers) {
+          console.error('브랜드 마커가 초기화되지 않았습니다');
+          return;
+        }
+        
+        // 1. 모든 마커 숨기기
+        if (window.allMarkers) {
+          window.allMarkers.forEach(marker => marker.setMap(null));
+        }
+        
+        // 2. 선택에 따라 마커 표시
+        if (selectedId === null) {
+          // 선택 없음: 모든 마커 표시
+          console.log('선택 없음: 모든 마커 표시');
+          window.allMarkers.forEach(marker => marker.setMap(map));
+        } else {
+          // 특정 브랜드 선택: 해당 브랜드의 마커만 표시
+          console.log('브랜드 선택:', selectedId, '의 마커만 표시');
+          
+          const selectedMarkers = window.brandMarkers[selectedId] || [];
+          selectedMarkers.forEach(marker => marker.setMap(map));
+          
+          console.log(\`브랜드 ID \${selectedId}의 마커 \${selectedMarkers.length}개를 표시함\`);
+        }
+        
+        // 3. 필터링 결과 전송
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'filterComplete',
+          selectedBrandId: selectedId,
+          message: selectedId === null 
+            ? '모든 마커를 표시합니다' 
+            : \`브랜드 ID \${selectedId}의 마커만 표시합니다\`
+        }));
+      } catch (error) {
+        console.error('필터링 중 오류:', error);
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'error',
+          message: '필터링 오류: ' + error.message
+        }));
+      }
+    })();
+    true;
+  `;
 
     webViewRef.current.injectJavaScript(script);
   };
 
   // 위치가 변경되거나 브랜드 목록이 변경될 때 매장 검색 실행
   useEffect(() => {
-    if (location && mapLoaded && uniqueBrands) {
+    // 최초 한 번만 매장 검색 실행 (selectedBrand 변경 시에는 재검색하지 않음)
+    if (location && mapLoaded && uniqueBrands && !window.initialSearchDone) {
+      console.log('최초 매장 검색 실행');
+      window.initialSearchDone = true;
       searchNearbyStores();
     }
   }, [location, mapLoaded, uniqueBrands]);
 
+  // 선택된 브랜드가 변경될 때는 필터링만 수행
+  useEffect(() => {
+    console.log('선택된 브랜드 변경됨:', selectedBrand);
+
+    if (mapLoaded && webViewRef.current) {
+      console.log('필터링 함수 호출:', selectedBrand);
+      filterMarkersByBrand(selectedBrand);
+    }
+  }, [selectedBrand, mapLoaded]);
+
   // 선택된 브랜드가 변경될 때 마커 필터링
   useEffect(() => {
-    if (mapLoaded) {
+    console.log('선택된 브랜드 변경됨:', selectedBrand);
+
+    // mapLoaded가 true일 때만 필터링 실행
+    if (mapLoaded && webViewRef.current) {
+      console.log('필터링 함수 호출:', selectedBrand);
       filterMarkersByBrand(selectedBrand);
+    } else {
+      console.log('맵이 로드되지 않아 필터링을 건너뜁니다');
     }
   }, [selectedBrand, mapLoaded]);
 
