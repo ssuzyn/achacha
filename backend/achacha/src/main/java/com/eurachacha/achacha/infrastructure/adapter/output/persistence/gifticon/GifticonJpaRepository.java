@@ -147,7 +147,7 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 	Optional<AvailableGifticonDetailResponseDto> findAvailableGifticonDetail(
 		@Param("gifticonId") Integer gifticonId
 	);
-	
+
 	@Query("""
 		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto(
 		      g.id,
@@ -188,7 +188,7 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 		  WHERE (
 		      (oh.id IS NOT NULL)
 		      OR (g.user.id = :userId AND g.isUsed = true) 
-		      OR (g.user.id != :userId AND uh.id IS NOT NULL)
+		      OR (g.user.id != :userId AND uh.user.id = :userId)
 		  )
 		  AND g.isDeleted = false
 		  AND (:type IS NULL OR g.type = :type)
