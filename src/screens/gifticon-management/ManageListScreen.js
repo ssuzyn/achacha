@@ -215,7 +215,16 @@ const ManageListScreen = () => {
             <Text style={styles.brandText}>{item.brandName}</Text>
             <Text style={styles.nameText}>{item.gifticonName}</Text>
             {item.scope === 'SHARE_BOX' && item.shareBoxName && (
-              <Text style={styles.shareBoxText}>출처: {item.shareBoxName}</Text>
+              <View style={styles.shareBoxInfoContainer}>
+                <Icon
+                  name="inventory-2"
+                  type="material"
+                  size={12}
+                  color="#888"
+                  containerStyle={styles.shareBoxIcon}
+                />
+                <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+              </View>
             )}
           </View>
           <View style={styles.expiryContainer}>
@@ -431,10 +440,17 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  shareBoxInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  shareBoxIcon: {
+    marginRight: 3,
+  },
   shareBoxText: {
     fontSize: 12,
     color: '#888',
-    marginTop: 2,
     fontStyle: 'italic',
   },
   expiryContainer: {
