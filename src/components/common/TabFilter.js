@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { View } from 'react-native-elements';
+import { StyleSheet, View } from 'react-native';
 import { Chip } from '../ui';
-import useTheme from '../../hooks/useTheme';
+import { useTheme } from '../../hooks/useTheme';
 
 /**
  * 탭 형태의 필터 컴포넌트

@@ -10,6 +10,7 @@ import GuideFirstScreen from '../screens/GuideScreen';
 import NotificationScreen from '../screens/NotificationScreen';
 import RegisterMainScreen from '../screens/gifticon-management/RegisterMainScreen';
 import RegisterDetailScreen from '../screens/gifticon-management/RegisterDetailScreen';
+import ListScreen from '../screens/gifticon-management/ListScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,14 @@ const AppNavigator = () => {
       <Stack.Screen
         name="RegisterDetail"
         component={RegisterDetailScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="List"
+        component={ListScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,

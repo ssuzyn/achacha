@@ -10,20 +10,9 @@ import { Text } from '../ui';
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
 import SettingScreen from '../../screens/SettingScreen';
+import ListScreen from '../../screens/gifticon-management/ListScreen';
 
 // 임시 스크린
-const GifticonManageScreen = () => {
-  const { theme } = useTheme();
-
-  return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text variant="body1" style={styles.screenText}>
-        기프티콘 관리 화면
-      </Text>
-    </View>
-  );
-};
-
 const MapScreen = () => {
   const { theme } = useTheme();
 
@@ -120,7 +109,7 @@ const createWrappedComponent = (Component, screenName) => {
 
 // 각 화면에 대한 래퍼 컴포넌트를 미리 생성
 const WrappedHomeScreen = createWrappedComponent(HomeScreen, 'Home');
-const WrappedGifticonManageScreen = createWrappedComponent(GifticonManageScreen, 'GifticonManage');
+const WrappedGifticonManageScreen = createWrappedComponent(ListScreen, 'GifticonManage');
 const WrappedMapScreen = createWrappedComponent(MapScreen, 'Map');
 const WrappedShareboxScreen = createWrappedComponent(ShareboxScreen, 'Sharebox');
 const WrappedSettingsScreen = createWrappedComponent(SettingScreen, 'Settings');

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
-import { View } from 'react-native-elements';
-import { Button, Text } from '../ui';
+import { View } from 'react-native';
+import { Button, Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 
 /**
