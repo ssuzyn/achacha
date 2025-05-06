@@ -58,17 +58,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
 
 		// 브랜드 ID 조회
-		Integer brandId = null;
-		if (metadata.getBrandName() != null && !metadata.getBrandName().trim().isEmpty()) {
-			brandId = brandRepository.findByNameEquals(metadata.getBrandName())
-				.map(Brand::getId)
-				.orElse(null);
-		}
+		Integer brandId = findBrandId(metadata.getBrandName());
 
-		String brandName = null;
-		if (brandId != null) {
-			brandName = metadata.getBrandName();
-		}
+		// 브랜드명 설정
+		String brandName = brandId != null ? metadata.getBrandName() : null;
 
 		// 3. MongoDB에 OCR 결과 넣는 과정 필요, (saveGifticon에서 사용자가 수정한 값을 학습 데이터도 이후에 넣어야 함 사용)
 
@@ -146,5 +139,15 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		}
 
 		return detailResponseDto;
+	}
+
+	private Integer findBrandId(String brandName) {
+		if (brandName == null || brandName.trim().isEmpty()) {
+			return null;
+		}
+
+		return brandRepository.findByNameEquals(brandName)
+			.map(Brand::getId)
+			.orElse(null);
 	}
 }
