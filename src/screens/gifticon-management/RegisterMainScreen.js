@@ -12,7 +12,6 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
-  Dimensions,
 } from 'react-native';
 import { Text } from '../../components/ui';
 import Card from '../../components/ui/Card';
@@ -23,9 +22,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-import { ImageCropView } from 'react-native-image-crop-tools';
+import { CropView } from 'react-native-image-crop-tools';
 
-const RegisterScreen = () => {
+const RegisterMainScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -75,7 +74,7 @@ const RegisterScreen = () => {
     console.log('갤러리 버튼 클릭됨');
 
     try {
-      // 옛날 버전 사용 방식으로 변경
+      // 옵션 설정
       const options = {
         title: '이미지 선택',
         storageOptions: {
@@ -87,9 +86,9 @@ const RegisterScreen = () => {
         maxHeight: 2000,
       };
 
-      console.log('launchImageLibrary 호출 전');
+      console.log('이미지 라이브러리 호출 전');
 
-      // 구 버전 API 호출 (8.x)
+      // 이미지 라이브러리 호출
       launchImageLibrary(options, response => {
         console.log('이미지 선택 응답:', JSON.stringify(response));
 
@@ -99,14 +98,28 @@ const RegisterScreen = () => {
           console.error('이미지 선택 오류: ', response.error);
           Alert.alert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
         } else {
-          console.log('이미지 선택 성공:', response.uri);
-          // 선택한 이미지 편집 모드 시작
-          setCurrentImageUri(response.uri);
-          setImageEditorVisible(true);
+          // 직접 파일 경로 확인 로그
+          console.log('이미지 응답 전체:', response);
+
+          // 최신 버전의 react-native-image-picker는 응답 형식이 다름
+          const imageAsset = response.assets ? response.assets[0] : response;
+
+          console.log('이미지 응답 처리:', imageAsset);
+          console.log('이미지 uri:', imageAsset.uri);
+
+          if (imageAsset && imageAsset.uri) {
+            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
+            console.log('이미지 URI 설정:', imageAsset.uri);
+            setCurrentImageUri(imageAsset.uri);
+            setImageEditorVisible(true);
+          } else {
+            console.error('유효한 이미지 URI가 없습니다');
+            Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
+          }
         }
       });
 
-      console.log('launchImageLibrary 호출 후');
+      console.log('이미지 라이브러리 호출 후');
     } catch (error) {
       console.error('이미지 선택 예외 발생:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
@@ -115,18 +128,15 @@ const RegisterScreen = () => {
 
   // 카메라로 촬영
   const handleOpenCamera = useCallback(async () => {
-    console.log('카메라 버튼 클릭됨');
-
     try {
       const hasPermission = await requestCameraPermission();
-      console.log('카메라 권한 상태:', hasPermission);
 
       if (!hasPermission) {
         Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
         return;
       }
 
-      // 옛날 버전 사용 방식으로 변경
+      // 옵션 설정
       const options = {
         title: '사진 촬영',
         storageOptions: {
@@ -140,9 +150,9 @@ const RegisterScreen = () => {
         maxHeight: 2000,
       };
 
-      console.log('launchCamera 호출 전');
+      console.log('카메라 호출 전');
 
-      // 구 버전 API 호출 (8.x)
+      // 카메라 호출
       launchCamera(options, response => {
         console.log('카메라 응답:', JSON.stringify(response));
 
@@ -152,14 +162,28 @@ const RegisterScreen = () => {
           console.error('카메라 오류: ', response.error);
           Alert.alert('오류', '카메라를 사용하는 중 오류가 발생했습니다: ' + response.error);
         } else {
-          console.log('카메라 촬영 성공:', response.uri);
-          // 선택한 이미지 편집 모드 시작
-          setCurrentImageUri(response.uri);
-          setImageEditorVisible(true);
+          // 직접 파일 경로 확인 로그
+          console.log('이미지 응답 전체:', response);
+
+          // 최신 버전의 react-native-image-picker는 응답 형식이 다름
+          const imageAsset = response.assets ? response.assets[0] : response;
+
+          console.log('이미지 응답 처리:', imageAsset);
+          console.log('이미지 uri:', imageAsset.uri);
+
+          if (imageAsset && imageAsset.uri) {
+            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
+            console.log('이미지 URI 설정:', imageAsset.uri);
+            setCurrentImageUri(imageAsset.uri);
+            setImageEditorVisible(true);
+          } else {
+            console.error('유효한 이미지 URI가 없습니다');
+            Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
+          }
         }
       });
 
-      console.log('launchCamera 호출 후');
+      console.log('카메라 호출 후');
     } catch (error) {
       console.error('카메라 촬영 예외 발생:', error);
       Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
@@ -172,11 +196,11 @@ const RegisterScreen = () => {
     if (cropViewRef.current) {
       try {
         cropViewRef.current
-          .saveImage(true, 90)
+          .cropImage()
           .then(result => {
-            console.log('이미지 크롭 성공:', result.uri);
+            console.log('이미지 크롭 성공:', result);
             // 편집한 이미지와 함께 상세 화면으로 이동
-            navigation.navigate('RegisterDetail', { selectedImage: { uri: result.uri } });
+            navigation.navigate('RegisterDetail', { selectedImage: { uri: result } });
             setImageEditorVisible(false);
           })
           .catch(error => {
@@ -189,6 +213,10 @@ const RegisterScreen = () => {
         Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
         setImageEditorVisible(false);
       }
+    } else {
+      console.error('cropViewRef가 없습니다');
+      Alert.alert('오류', '이미지 편집기를 사용할 수 없습니다. 다시 시도해주세요.');
+      setImageEditorVisible(false);
     }
   }, [navigation]);
 
@@ -409,16 +437,32 @@ const RegisterScreen = () => {
           </View>
 
           <View style={styles.cropContainer}>
-            {currentImageUri && (
-              <ImageCropView
-                ref={cropViewRef}
-                imageUri={currentImageUri}
-                style={styles.cropView}
-                cropAreaWidth={Dimensions.get('window').width * 0.9}
-                cropAreaHeight={Dimensions.get('window').width * 0.9}
-                containerColor="rgba(0, 0, 0, 0.8)"
-                areaColor="rgba(255, 255, 255, 0.3)"
-              />
+            {currentImageUri ? (
+              <>
+                <CropView
+                  ref={cropViewRef}
+                  sourceUrl={currentImageUri}
+                  style={styles.cropView}
+                  onError={error => {
+                    console.error('이미지 크롭 에러:', error);
+                    console.error('에러가 발생한 이미지 URI:', currentImageUri);
+                    Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
+                  }}
+                  cropAreaWidth={300}
+                  cropAreaHeight={300}
+                  containerColor="black"
+                  areaColor="white"
+                  keepAspectRatio={false}
+                  iosDimensionSwapEnabled={true}
+                />
+              </>
+            ) : (
+              <View style={styles.emptyImageContainer}>
+                <Icon name="image" type="material" size={50} color="#CCCCCC" />
+                <Text variant="body2" color="#DDDDDD" style={styles.emptyImageText}>
+                  이미지 로드 실패
+                </Text>
+              </View>
             )}
           </View>
 
@@ -427,25 +471,20 @@ const RegisterScreen = () => {
               style={styles.toolbarButton}
               onPress={() => {
                 console.log('회전 버튼 클릭');
-                cropViewRef.current?.rotateImage(true);
+                if (cropViewRef.current) {
+                  try {
+                    cropViewRef.current.rotateImage(true);
+                  } catch (error) {
+                    console.error('회전 오류:', error);
+                  }
+                } else {
+                  console.error('cropViewRef가 없습니다');
+                }
               }}
             >
               <Icon name="rotate-right" type="material" size={24} color="#FFFFFF" />
               <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
                 회전
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.toolbarButton}
-              onPress={() => {
-                console.log('좌우반전 버튼 클릭');
-                cropViewRef.current?.flipImage('horizontal');
-              }}
-            >
-              <Icon name="flip" type="material" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                좌우반전
               </Text>
             </TouchableOpacity>
           </View>
@@ -609,10 +648,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#000000',
   },
   cropView: {
     width: '100%',
     height: '100%',
+    backgroundColor: '#000000',
   },
   editorToolbar: {
     flexDirection: 'row',
@@ -631,6 +672,22 @@ const styles = StyleSheet.create({
   toolbarButtonText: {
     marginTop: 8,
   },
+  debugText: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    color: 'white',
+    fontSize: 12,
+    zIndex: 100,
+  },
+  emptyImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImageText: {
+    color: '#DDDDDD',
+  },
 });
 
-export default RegisterScreen;
+export default RegisterMainScreen;
