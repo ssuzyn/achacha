@@ -44,7 +44,7 @@ const DUMMY_GIFTICONS = [
   {
     gifticonId: 125,
     gifticonName: 'APP전용 e카드 3만원 교환권',
-    gifticonType: 'PRODUCT',
+    gifticonType: 'AMOUNT',
     gifticonExpiryDate: '2025-06-15',
     brandId: 45,
     brandName: '스타벅스',
@@ -111,8 +111,8 @@ const ManageListScreen = () => {
   // 필터 탭 데이터
   const filterTabs = [
     { id: 'all', title: '전체' },
-    { id: 'coupon', title: '상품권' },
-    { id: 'price', title: '금액형' },
+    { id: 'product', title: '상품형' },
+    { id: 'amount', title: '금액형' },
   ];
 
   // 정렬 옵션
@@ -147,9 +147,9 @@ const ManageListScreen = () => {
 
     // 필터 적용
     if (selectedFilter !== 'all') {
-      if (selectedFilter === 'coupon') {
-        filtered = filtered.filter(item => item.gifticonType === 'COUPON');
-      } else if (selectedFilter === 'price') {
+      if (selectedFilter === 'product') {
+        filtered = filtered.filter(item => item.gifticonType === 'PRODUCT');
+      } else if (selectedFilter === 'amount') {
         filtered = filtered.filter(item => item.gifticonType === 'AMOUNT');
       }
     }
@@ -214,6 +214,9 @@ const ManageListScreen = () => {
           <View style={styles.gifticonInfo}>
             <Text style={styles.brandText}>{item.brandName}</Text>
             <Text style={styles.nameText}>{item.gifticonName}</Text>
+            {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+              <Text style={styles.shareBoxText}>출처: {item.shareBoxName}</Text>
+            )}
           </View>
           <View style={styles.expiryContainer}>
             <Text style={styles.expiryText}>
@@ -427,6 +430,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 2,
+  },
+  shareBoxText: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 2,
+    fontStyle: 'italic',
   },
   expiryContainer: {
     marginLeft: 'auto',
