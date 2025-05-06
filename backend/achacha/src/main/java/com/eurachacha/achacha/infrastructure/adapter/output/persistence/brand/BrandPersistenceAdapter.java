@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.brand;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -18,5 +19,10 @@ public class BrandPersistenceAdapter implements BrandRepository {
 	@Override
 	public List<Brand> findByNameContaining(String keyword) {
 		return brandJpaRepository.findByNameContainingIgnoreCaseOrderByNameAsc(keyword);
+	}
+
+	@Override
+	public Optional<Brand> findByNameEquals(String name) {
+		return brandJpaRepository.findByNameEqualsIgnoreCase(name);
 	}
 }
