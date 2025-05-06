@@ -41,8 +41,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			ocrResult, gifticonType.name());
 		log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
 
-		// return metadata;
-		return null;
+		// 브랜드 이름에 따라서 ResponseDto에 BrandId 넣는 과정 필요
+		// 3. MongoDB에 OCR 결과 넣는 과정 필요, (saveGifticon에서 사용자가 수정한 값을 학습 데이터도 이후에 넣어야 함 사용)
+
+		return metadata;
 	}
 
 	@Override
