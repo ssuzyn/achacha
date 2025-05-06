@@ -14,7 +14,6 @@ import lombok.ToString;
 @ToString
 public class GifticonMetadataDto {
 	private String gifticonBarcodeNumber; // 바코드 번호 (공백과 구분자 없이)
-	private Integer brandId; // 브랜드 아이디
 	private String brandName; // 브랜드 이름
 	private String gifticonName; // 상품명
 	private String gifticonExpiryDate; // 유효기간(YYYY-MM-DD 형식)
