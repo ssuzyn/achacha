@@ -18,7 +18,7 @@ import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
-import ImagePicker from 'react-native-image-crop-picker';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 
 const RegisterScreen = () => {
   const { theme } = useTheme();
@@ -44,42 +44,46 @@ const RegisterScreen = () => {
 
   // 갤러리에서 이미지 선택
   const handlePickImage = useCallback(() => {
-    ImagePicker.openPicker({
-      width: 300,
-      height: 400,
-      cropping: true,
-      cropperCircleOverlay: false,
-      compressImageQuality: 0.8,
+    const options = {
       mediaType: 'photo',
-    })
-      .then(image => {
+      includeBase64: false,
+      maxHeight: 2000,
+      maxWidth: 2000,
+      quality: 0.8,
+    };
+
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('사용자가 이미지 선택을 취소했습니다');
+      } else if (response.errorCode) {
+        console.error('이미지 선택 오류: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
         // 선택한 이미지와 함께 상세 화면으로 이동
-        navigation.navigate('RegisterDetail', { selectedImage: { uri: image.path } });
-      })
-      .catch(error => {
-        if (error.code !== 'E_PICKER_CANCELLED') {
-          console.error('이미지 선택 오류:', error);
-        }
-      });
+        navigation.navigate('RegisterDetail', { selectedImage: { uri: response.assets[0].uri } });
+      }
+    });
   }, [navigation]);
 
   // 카메라로 촬영
   const handleOpenCamera = useCallback(() => {
-    ImagePicker.openCamera({
-      width: 300,
-      height: 400,
-      cropping: true,
-      compressImageQuality: 0.8,
-    })
-      .then(image => {
+    const options = {
+      mediaType: 'photo',
+      includeBase64: false,
+      maxHeight: 2000,
+      maxWidth: 2000,
+      quality: 0.8,
+    };
+
+    launchCamera(options, response => {
+      if (response.didCancel) {
+        console.log('사용자가 카메라 촬영을 취소했습니다');
+      } else if (response.errorCode) {
+        console.error('카메라 오류: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
         // 촬영한 이미지와 함께 상세 화면으로 이동
-        navigation.navigate('RegisterDetail', { selectedImage: { uri: image.path } });
-      })
-      .catch(error => {
-        if (error.code !== 'E_PICKER_CANCELLED') {
-          console.error('카메라 오류:', error);
-        }
-      });
+        navigation.navigate('RegisterDetail', { selectedImage: { uri: response.assets[0].uri } });
+      }
+    });
   }, [navigation]);
 
   return (

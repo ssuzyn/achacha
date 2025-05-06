@@ -1,6 +1,6 @@
 // 기프티콘 등록 상세 스크린
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
   Platform,
   Modal,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import { Button, InputLine, Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
@@ -18,13 +19,15 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon as RNEIcon } from 'react-native-elements';
-import ImagePicker from 'react-native-image-crop-picker';
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { ImageCropView } from 'react-native-image-crop-tools';
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const cropViewRef = useRef(null);
   const [barcodeNumber, setBarcodeNumber] = useState('');
   const [brandName, setBrandName] = useState('');
   const [productName, setProductName] = useState('');
@@ -33,6 +36,8 @@ const RegisterDetailScreen = () => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('상품형'); // '상품형' 또는 '금액형'
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isImageEditorVisible, setImageEditorVisible] = useState(false);
+  const [currentImageUri, setCurrentImageUri] = useState(null);
 
   // 네비게이션으로부터 선택된 이미지 불러오기
   useEffect(() => {
@@ -74,42 +79,69 @@ const RegisterDetailScreen = () => {
     setDatePickerVisible(false);
   };
 
-  // 이미지 선택 핸들러 추가
+  // 갤러리에서 이미지 선택
   const handlePickImage = () => {
-    ImagePicker.openPicker({
-      width: 300,
-      height: 400,
-      cropping: true,
-      cropperCircleOverlay: false,
-      compressImageQuality: 0.8,
+    const options = {
       mediaType: 'photo',
-    })
-      .then(image => {
-        setSelectedImage({ uri: image.path });
-      })
-      .catch(error => {
-        if (error.code !== 'E_PICKER_CANCELLED') {
-          console.error('이미지 선택 오류:', error);
-        }
-      });
+      includeBase64: false,
+      maxHeight: 2000,
+      maxWidth: 2000,
+    };
+
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('사용자가 이미지 선택을 취소했습니다');
+      } else if (response.errorCode) {
+        console.error('이미지 선택 오류: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
+        // 이미지 편집 모드 시작
+        setCurrentImageUri(response.assets[0].uri);
+        setImageEditorVisible(true);
+      }
+    });
   };
 
-  // 카메라 실행 핸들러 추가
+  // 카메라 실행
   const handleOpenCamera = () => {
-    ImagePicker.openCamera({
-      width: 300,
-      height: 400,
-      cropping: true,
-      compressImageQuality: 0.8,
-    })
-      .then(image => {
-        setSelectedImage({ uri: image.path });
-      })
-      .catch(error => {
-        if (error.code !== 'E_PICKER_CANCELLED') {
-          console.error('카메라 오류:', error);
-        }
-      });
+    const options = {
+      mediaType: 'photo',
+      includeBase64: false,
+      maxHeight: 2000,
+      maxWidth: 2000,
+    };
+
+    launchCamera(options, response => {
+      if (response.didCancel) {
+        console.log('사용자가 카메라 촬영을 취소했습니다');
+      } else if (response.errorCode) {
+        console.error('카메라 오류: ', response.errorMessage);
+      } else if (response.assets && response.assets.length > 0) {
+        // 이미지 편집 모드 시작
+        setCurrentImageUri(response.assets[0].uri);
+        setImageEditorVisible(true);
+      }
+    });
+  };
+
+  // 이미지 편집 완료 후 처리
+  const handleImageEditComplete = () => {
+    if (cropViewRef.current) {
+      cropViewRef.current
+        .saveImage(true, 90)
+        .then(result => {
+          setSelectedImage({ uri: result.uri });
+          setImageEditorVisible(false);
+        })
+        .catch(error => {
+          console.error('이미지 저장 오류:', error);
+          setImageEditorVisible(false);
+        });
+    }
+  };
+
+  // 이미지 편집 취소
+  const handleImageEditCancel = () => {
+    setImageEditorVisible(false);
   };
 
   // 이미지 선택 옵션 모달
@@ -163,6 +195,69 @@ const RegisterDetailScreen = () => {
 
     // Android는 네이티브 다이얼로그로 표시
     return isDatePickerVisible && <DateTimePicker {...dateTimePickerProps} display="default" />;
+  };
+
+  // 이미지 편집기 렌더링
+  const renderImageEditor = () => {
+    const { width, height } = Dimensions.get('window');
+
+    return (
+      <Modal visible={isImageEditorVisible} animationType="slide">
+        <View style={styles.editorContainer}>
+          <View style={styles.editorHeader}>
+            <TouchableOpacity onPress={handleImageEditCancel} style={styles.editorHeaderButton}>
+              <Text variant="body1" weight="bold" color="#56AEE9">
+                취소
+              </Text>
+            </TouchableOpacity>
+            <Text variant="h4" weight="bold">
+              이미지 편집
+            </Text>
+            <TouchableOpacity onPress={handleImageEditComplete} style={styles.editorHeaderButton}>
+              <Text variant="body1" weight="bold" color="#56AEE9">
+                적용
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.cropContainer}>
+            {currentImageUri && (
+              <ImageCropView
+                ref={cropViewRef}
+                imageUri={currentImageUri}
+                style={styles.cropView}
+                cropAreaWidth={width * 0.9}
+                cropAreaHeight={width * 0.9}
+                containerColor="rgba(0, 0, 0, 0.8)"
+                areaColor="rgba(255, 255, 255, 0.3)"
+              />
+            )}
+          </View>
+
+          <View style={styles.editorToolbar}>
+            <TouchableOpacity
+              style={styles.toolbarButton}
+              onPress={() => cropViewRef.current?.rotateImage(true)}
+            >
+              <Icon name="rotate-right" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                회전
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.toolbarButton}
+              onPress={() => cropViewRef.current?.flipImage('horizontal')}
+            >
+              <Icon name="flip" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                좌우반전
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   return (
@@ -348,6 +443,9 @@ const RegisterDetailScreen = () => {
 
       {/* DateTimePicker */}
       {renderDatePicker()}
+
+      {/* 이미지 편집기 */}
+      {renderImageEditor()}
     </View>
   );
 };
@@ -512,6 +610,49 @@ const styles = StyleSheet.create({
   },
   modalCancelButton: {
     marginTop: 16,
+  },
+  editorContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  editorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#000000',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333333',
+  },
+  editorHeaderButton: {
+    padding: 8,
+  },
+  cropContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cropView: {
+    width: '100%',
+    height: '100%',
+  },
+  editorToolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#000000',
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  toolbarButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  toolbarButtonText: {
+    marginTop: 8,
   },
 });
 
