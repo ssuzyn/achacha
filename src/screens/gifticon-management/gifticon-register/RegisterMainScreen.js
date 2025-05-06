@@ -384,11 +384,7 @@ const RegisterMainScreen = () => {
         animationType="slide"
         onRequestClose={() => setTypeModalVisible(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setTypeModalVisible(false)}
-        >
+        <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, styles.typeModalContent]}>
             {/* 상품형/금액형 선택 버튼 */}
             <View style={styles.typeButtonsContainer}>
@@ -494,7 +490,7 @@ const RegisterMainScreen = () => {
               />
             </View>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       {/* 이미지 옵션 모달 */}
@@ -504,11 +500,7 @@ const RegisterMainScreen = () => {
         animationType="slide"
         onRequestClose={() => setImageOptionVisible(false)}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setImageOptionVisible(false)}
-        >
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text variant="h4" weight="bold" style={styles.modalTitle}>
               이미지 선택
@@ -552,7 +544,7 @@ const RegisterMainScreen = () => {
               style={styles.modalCancelButton}
             />
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
 
       {/* 이미지 편집 모달 */}
