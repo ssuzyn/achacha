@@ -122,6 +122,34 @@ const MapScreen = () => {
       shareBoxName: null,
       thumbnailPath: '/images/gifticons/thumbnail/130.jpg',
     },
+    {
+      gifticonId: 131,
+      gifticonName: '더블팥 빙수',
+      gifticonType: 'PRODUCT',
+      gifticonExpiryDate: '2025-06-10',
+      brandId: 49,
+      brandName: 'GS25',
+      scope: 'MY_BOX',
+      userId: 78,
+      userName: '홍길동',
+      shareBoxId: null,
+      shareBoxName: null,
+      thumbnailPath: '/images/gifticons/thumbnail/131.jpg',
+    },
+    {
+      gifticonId: 132,
+      gifticonName: '왕구마 붕어빵',
+      gifticonType: 'PRODUCT',
+      gifticonExpiryDate: '2025-06-15',
+      brandId: 49,
+      brandName: 'GS25',
+      scope: 'MY_BOX',
+      userId: 78,
+      userName: '홍길동',
+      shareBoxId: null,
+      shareBoxName: null,
+      thumbnailPath: '/images/gifticons/thumbnail/132.jpg',
+    },
   ]);
 
   // 기프티콘 목록에서 브랜드 정보 추출(중복 없이)
@@ -153,7 +181,16 @@ const MapScreen = () => {
 
   // 브랜드 선택 처리 함수
   const handleSelectBrand = brandId => {
-    setSelectedBrand(selectedBrand === brandId ? null : brandId);
+    // 숫자형으로 변환하여 비교
+    const currentBrandId = selectedBrand !== null ? Number(selectedBrand) : null;
+    const newBrandId = brandId !== null ? Number(brandId) : null;
+
+    // 같은 브랜드를 다시 선택하면 선택 해제
+    if (currentBrandId === newBrandId) {
+      setSelectedBrand(null);
+    } else {
+      setSelectedBrand(newBrandId);
+    }
   };
 
   // 현재 위치로 이동하는 함수
