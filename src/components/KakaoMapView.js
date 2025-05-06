@@ -121,10 +121,6 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
 
   // 매장 검색 함수
   const searchNearbyStores = async () => {
-    console.log('searchNearbyStores 시작');
-    console.log('location:', location);
-    console.log('uniqueBrands:', uniqueBrands);
-
     if (!location || !uniqueBrands || uniqueBrands.length === 0) {
       console.log('조건 미충족으로 리턴');
       return;
@@ -166,7 +162,6 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
       });
 
       const results = await Promise.all(searchPromises);
-      // console.log('모든 검색 결과:', results);
 
       // WebView로 매장 데이터 전송
       updateMapMarkers(results);
@@ -197,7 +192,6 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
           
           brandStores.forEach(brandData => {
             const brandId = Number(brandData.brandId);
-            console.log('브랜드 처리 중:', brandData.brandName, '(ID:', brandId, ')');
             
             // 이 브랜드의 마커 배열 초기화
             window.brandMarkers[brandId] = [];
@@ -259,18 +253,14 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
   };
 
   // 선택된 브랜드에 따라 마커 필터링
-  // 선택된 브랜드에 따라 마커 필터링
   const filterMarkersByBrand = selectedBrandId => {
     if (!webViewRef.current) return;
-
-    console.log('필터링 시작, 선택된 브랜드:', selectedBrandId);
 
     const script = `
     (function() {
       try {
         // 선택된 브랜드 ID (null 또는 숫자)
         const selectedId = ${selectedBrandId === null ? 'null' : Number(selectedBrandId)};
-        console.log('필터링 중, 선택된 브랜드 ID:', selectedId);
         
         // brandMarkers가 없으면 초기화되지 않은 것
         if (!window.brandMarkers) {
@@ -278,14 +268,14 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
           return;
         }
         
-        // 1. 모든 마커 숨기기
+        // 모든 마커 숨기기
         if (window.allMarkers) {
           window.allMarkers.forEach(marker => marker.setMap(null));
         }
         
-        // 2. 선택에 따라 마커 표시
+        // 선택에 따라 마커 표시
         if (selectedId === null) {
-          // 선택 없음: 모든 마커 표시
+          // 선택 없을 경우: 모든 마커 표시
           console.log('선택 없음: 모든 마커 표시');
           window.allMarkers.forEach(marker => marker.setMap(map));
         } else {
@@ -295,7 +285,6 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
           const selectedMarkers = window.brandMarkers[selectedId] || [];
           selectedMarkers.forEach(marker => marker.setMap(map));
           
-          console.log(\`브랜드 ID \${selectedId}의 마커 \${selectedMarkers.length}개를 표시함\`);
         }
         
         // 3. 필터링 결과 전송
@@ -324,7 +313,6 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
   useEffect(() => {
     // 최초 한 번만 매장 검색 실행 (selectedBrand 변경 시에는 재검색하지 않음)
     if (location && mapLoaded && uniqueBrands && !window.initialSearchDone) {
-      console.log('최초 매장 검색 실행');
       window.initialSearchDone = true;
       searchNearbyStores();
     }
@@ -332,24 +320,8 @@ const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand
 
   // 선택된 브랜드가 변경될 때는 필터링만 수행
   useEffect(() => {
-    console.log('선택된 브랜드 변경됨:', selectedBrand);
-
     if (mapLoaded && webViewRef.current) {
-      console.log('필터링 함수 호출:', selectedBrand);
       filterMarkersByBrand(selectedBrand);
-    }
-  }, [selectedBrand, mapLoaded]);
-
-  // 선택된 브랜드가 변경될 때 마커 필터링
-  useEffect(() => {
-    console.log('선택된 브랜드 변경됨:', selectedBrand);
-
-    // mapLoaded가 true일 때만 필터링 실행
-    if (mapLoaded && webViewRef.current) {
-      console.log('필터링 함수 호출:', selectedBrand);
-      filterMarkersByBrand(selectedBrand);
-    } else {
-      console.log('맵이 로드되지 않아 필터링을 건너뜁니다');
     }
   }, [selectedBrand, mapLoaded]);
 
