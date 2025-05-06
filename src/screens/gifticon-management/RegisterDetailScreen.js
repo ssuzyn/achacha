@@ -300,89 +300,97 @@ const RegisterDetailScreen = () => {
         <View style={styles.rightPlaceholder} />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        {/* 이미지 선택 영역 */}
-        <View style={styles.imageContainerWrapper}>
-          <TouchableOpacity style={styles.imageContainer} onPress={showImageOptions}>
-            {currentImageUri ? (
-              <Image source={{ uri: currentImageUri }} style={styles.image} resizeMode="cover" />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <RNEIcon name="image" type="material" size={60} color="#CCCCCC" />
-                <Text variant="body2" color="#666666" style={styles.placeholderText}>
-                  이미지를 등록해주세요
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+      <View style={styles.content}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
+        >
+          {/* 이미지 선택 영역 */}
+          <View style={styles.imageContainerWrapper}>
+            <TouchableOpacity style={styles.imageContainer} onPress={showImageOptions}>
+              {currentImageUri ? (
+                <Image source={{ uri: currentImageUri }} style={styles.image} resizeMode="cover" />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <RNEIcon name="image" type="material" size={60} color="#CCCCCC" />
+                  <Text variant="body2" color="#666666" style={styles.placeholderText}>
+                    이미지를 등록해주세요
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
 
-          <Button
-            title={currentImageUri ? '이미지 편집하기' : '이미지 등록하기'}
-            variant="outline"
-            style={styles.imageButton}
-            onPress={showImageOptions}
-          />
-        </View>
-
-        {/* 입력 폼 */}
-        <View style={styles.formContainer}>
-          <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
-            바코드 번호 입력
-          </Text>
-          <InputLine
-            value={barcode}
-            onChangeText={setBarcode}
-            placeholder="바코드 번호를 입력해주세요."
-            keyboardType="numeric"
-            containerStyle={styles.inputContainer}
-          />
-
-          <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
-            기프티콘 정보 입력
-          </Text>
-          <InputLine
-            value={brand}
-            onChangeText={setBrand}
-            placeholder="브랜드명을 입력해주세요."
-            containerStyle={styles.inputContainer}
-          />
-
-          <InputLine
-            value={productName}
-            onChangeText={setProductName}
-            placeholder="상품명을 입력해주세요."
-            containerStyle={styles.inputContainer}
-          />
-
-          <InputLine
-            value={formatDate(expiryDate)}
-            placeholder="유효기간을 입력해주세요."
-            containerStyle={styles.inputContainer}
-            rightIcon={
-              <TouchableOpacity onPress={showDatePickerHandler}>
-                <Icon name="calendar-today" size={22} color="#333333" />
-              </TouchableOpacity>
-            }
-            editable={false}
-            onTouchStart={showDatePickerHandler}
-          />
-
-          {showDatePicker && (
-            <DateTimePicker
-              value={expiryDate || new Date()}
-              mode="date"
-              display="default"
-              onChange={handleDateChange}
+            <Button
+              title={currentImageUri ? '이미지 편집하기' : '이미지 등록하기'}
+              variant="outline"
+              style={styles.imageButton}
+              onPress={showImageOptions}
             />
-          )}
-        </View>
+          </View>
+
+          {/* 입력 폼 */}
+          <View style={styles.formContainer}>
+            <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+              바코드 번호 입력
+            </Text>
+            <InputLine
+              value={barcode}
+              onChangeText={setBarcode}
+              placeholder="바코드 번호를 입력해주세요."
+              keyboardType="numeric"
+              containerStyle={styles.inputContainer}
+            />
+
+            <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+              기프티콘 정보 입력
+            </Text>
+            <InputLine
+              value={brand}
+              onChangeText={setBrand}
+              placeholder="브랜드명을 입력해주세요."
+              containerStyle={styles.inputContainer}
+            />
+
+            <InputLine
+              value={productName}
+              onChangeText={setProductName}
+              placeholder="상품명을 입력해주세요."
+              containerStyle={styles.inputContainer}
+            />
+
+            <InputLine
+              value={formatDate(expiryDate)}
+              placeholder="유효기간을 입력해주세요."
+              containerStyle={styles.inputContainer}
+              rightIcon={
+                <TouchableOpacity onPress={showDatePickerHandler}>
+                  <Icon name="calendar-today" size={22} color="#333333" />
+                </TouchableOpacity>
+              }
+              editable={false}
+              onTouchStart={showDatePickerHandler}
+            />
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={expiryDate || new Date()}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
+          </View>
+        </ScrollView>
 
         {/* 등록 버튼 */}
-        <Button title="등록하기" style={styles.registerButton} onPress={handleRegister} />
-      </ScrollView>
+        <Button
+          title="등록하기"
+          onPress={handleRegister}
+          variant="primary"
+          size="lg"
+          style={styles.button}
+        />
+      </View>
 
       {/* 이미지 옵션 모달 */}
       <Modal
@@ -602,9 +610,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 25,
+    justifyContent: 'space-between',
+  },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 20,
   },
   header: {
     height: 60,
@@ -666,8 +679,11 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 5,
   },
-  registerButton: {
-    marginTop: 30,
+  button: {
+    width: '100%',
+    height: 56,
+    borderRadius: 8,
+    marginBottom: 20,
   },
   // 모달 관련 스타일
   modalOverlay: {
