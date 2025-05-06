@@ -14,9 +14,12 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
+import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
+import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
+import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
@@ -39,6 +42,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final PageableFactory pageableFactory;
 	private final OcrPort ocrPort;
 	private final AIServicePort aiServicePort;
+	private final BrandRepository brandRepository;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -49,14 +53,27 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		log.debug("OCR 결과 추출 완료");
 
 		// 2. AI 서비스를 통해 OCR 결과에서 필요한 정보 추출
-		GifticonMetadataResponseDto metadata = aiServicePort.extractGifticonInfo(
+		GifticonMetadataDto metadata = aiServicePort.extractGifticonInfo(
 			ocrResult, gifticonType.name());
 		log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
 
-		// 브랜드 이름에 따라서 ResponseDto에 BrandId 넣는 과정 필요
+		// 브랜드 ID 조회
+		Integer brandId = findBrandId(metadata.getBrandName());
+
+		// 브랜드명 설정
+		String brandName = brandId != null ? metadata.getBrandName() : null;
+
 		// 3. MongoDB에 OCR 결과 넣는 과정 필요, (saveGifticon에서 사용자가 수정한 값을 학습 데이터도 이후에 넣어야 함 사용)
 
-		return metadata;
+		// 최종 응답용 DTO 생성 및 반환
+		return GifticonMetadataResponseDto.builder()
+			.gifticonName(metadata.getGifticonName())
+			.brandName(brandName)
+			.brandId(brandId)
+			.gifticonBarcodeNumber(metadata.getGifticonBarcodeNumber())
+			.gifticonExpiryDate(metadata.getGifticonExpiryDate())
+			.gifticonOriginalAmount(metadata.getGifticonOriginalAmount())
+			.build();
 	}
 
 	@Transactional
@@ -122,5 +139,15 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		}
 
 		return detailResponseDto;
+	}
+
+	private Integer findBrandId(String brandName) {
+		if (brandName == null || brandName.trim().isEmpty()) {
+			return null;
+		}
+
+		return brandRepository.findByNameEquals(brandName)
+			.map(Brand::getId)
+			.orElse(null);
 	}
 }
