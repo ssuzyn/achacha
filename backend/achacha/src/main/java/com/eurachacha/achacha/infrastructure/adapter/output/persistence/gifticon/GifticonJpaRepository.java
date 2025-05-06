@@ -55,18 +55,36 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 		    AND g.isUsed = false
 		    AND (g.remainingAmount > 0 OR g.remainingAmount = -1)
 		    AND g.expiryDate > CURRENT_DATE
-		    AND g.user.id = :userId
 		    AND (
-		      :#{#scope.name()} = 'ALL'
-		      OR (:#{#scope.name()} = 'MY_BOX'   AND g.sharebox.id IS NULL)
-		      OR (:#{#scope.name()} = 'SHARE_BOX' AND g.sharebox.id IS NOT NULL)
+		      (:#{#scope.name()} = 'ALL' AND (
+		        g.user.id = :userId OR
+		        (g.sharebox.id IS NOT NULL AND 
+		          EXISTS (
+		            SELECT p
+		            FROM Participation p
+		            WHERE p.sharebox.id = g.sharebox.id
+		              AND p.user.id = :userId
+		          ))
+		      )) OR
+		      (:#{#scope.name()} = 'MY_BOX' AND g.sharebox.id IS NULL AND g.user.id = :userId) OR
+		      (:#{#scope.name()} = 'SHARE_BOX' AND g.sharebox.id IS NOT NULL AND 
+		        (
+		          g.user.id = :userId OR
+		          EXISTS (
+		            SELECT p
+		            FROM Participation p
+		            WHERE p.sharebox.id = g.sharebox.id
+		              AND p.user.id = :userId
+		          )
+		        )
+		      )
 		    )
 		    AND (:type IS NULL OR g.type = :type)
 		""")
 	Slice<AvailableGifticonResponseDto> findAvailableGifticons(
 		@Param("userId") Integer userId,
-		@Param("scope") GifticonScopeType scope,
-		@Param("type") GifticonType type,
+		@Param("scope") GifticonScopeType gifticonScope,
+		@Param("type") GifticonType gifticonType,
 		@Param("fileType") FileType fileType,
 		Pageable pageable
 	);
@@ -129,7 +147,7 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 	Optional<AvailableGifticonDetailResponseDto> findAvailableGifticonDetail(
 		@Param("gifticonId") Integer gifticonId
 	);
-
+	
 	@Query("""
 		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto(
 		      g.id,
@@ -165,15 +183,20 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 		  FROM Gifticon g
 		  JOIN g.brand b
 		  LEFT JOIN GifticonOwnerHistory oh ON g.id = oh.gifticon.id AND oh.fromUser.id = :userId
-		  LEFT JOIN UsageHistory uh ON g.id = uh.gifticon.id AND uh.toUser.id = :userId
+		  LEFT JOIN UsageHistory uh ON g.id = uh.gifticon.id AND uh.user.id = :userId
 		      AND (g.type = 'PRODUCT' OR (g.type = 'AMOUNT' AND uh.usageAmount = g.originalAmount))
-		  WHERE (oh.id IS NOT NULL OR uh.id IS NOT NULL)
-		    AND (:type IS NULL OR g.type = :type)
+		  WHERE (
+		      (oh.id IS NOT NULL)
+		      OR (g.user.id = :userId AND g.isUsed = true) 
+		      OR (g.user.id != :userId AND uh.id IS NOT NULL)
+		  )
+		  AND g.isDeleted = false
+		  AND (:type IS NULL OR g.type = :type)
+		  GROUP BY g.id, b.id, oh.id, oh.transferType, oh.createdAt, uh.createdAt
 		""")
-		// ORDER BY 절 제거
 	Slice<UsedGifticonResponseDto> findUsedGifticons(
 		@Param("userId") Integer userId,
-		@Param("type") GifticonType type,
+		@Param("type") GifticonType gifticonType,
 		@Param("fileType") FileType fileType,
 		Pageable pageable
 	);
