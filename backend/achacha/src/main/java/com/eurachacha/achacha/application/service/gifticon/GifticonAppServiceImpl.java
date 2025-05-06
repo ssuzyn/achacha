@@ -3,6 +3,7 @@ package com.eurachacha.achacha.application.service.gifticon;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
@@ -12,6 +13,8 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
@@ -19,16 +22,17 @@ import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class GifticonAppServiceImpl implements GifticonAppService {
 
 	private final GifticonDomainService gifticonDomainService;
@@ -80,7 +84,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	public AvailableGifticonsResponseDto getAvailableGifticons(GifticonScopeType scope, GifticonType type,
 		GifticonSortType sort, Integer page, Integer size) {
 
@@ -101,7 +104,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
 		Integer userId = 2; // 유저 로직 추가 시 변경 필요
@@ -109,7 +111,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		AvailableGifticonDetailResponseDto detailResponseDto = gifticonRepository.getAvailableGifticonDetail(
 			gifticonId);
 
-		System.out.println(detailResponseDto.getShareBoxId());
 		if (detailResponseDto.getShareBoxId() == null) { // 공유되지 않은 기프티콘인 경우
 			gifticonDomainService.validateGifticonAccess(userId, detailResponseDto.getUserId());
 		}
@@ -119,5 +120,25 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		}
 
 		return detailResponseDto;
+	}
+
+	@Override
+	public UsedGifticonsResponseDto getUsedGifticons(GifticonType type, GifticonUsedSortType sort, Integer page,
+		Integer size) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 페이징 처리
+		Pageable pageable = pageableFactory.createPageable(page, size, sort);
+
+		// 쿼리 실행
+		Slice<UsedGifticonResponseDto> gifticonSlice =
+			gifticonRepository.getUsedGifticons(userId, type, pageable);
+
+		return UsedGifticonsResponseDto.builder()
+			.gifticons(gifticonSlice.getContent())
+			.hasNextPage(gifticonSlice.hasNext())
+			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
+			.build();
 	}
 }
