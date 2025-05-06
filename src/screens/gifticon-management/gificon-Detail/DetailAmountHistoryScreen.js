@@ -1,17 +1,25 @@
 // 금액형 사용내역 스크린
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, Image, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Divider } from '../../../components/ui';
+import { Text, Divider, Button } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
+import { useTabBar } from '../../../context/TabBarContext';
+import NavigationService from '../../../navigation/NavigationService';
 
-const DetailCashHistoryScreen = () => {
+const DetailAmountHistoryScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { showTabBar } = useTabBar();
+
+  // 바텀탭 표시
+  useEffect(() => {
+    showTabBar();
+  }, []);
 
   // 더미 기프티콘 데이터
   const gifticonData = {
@@ -22,7 +30,7 @@ const DetailCashHistoryScreen = () => {
     totalBalance: 10000,
     usedAmount: 8000,
     remainingBalance: 2000,
-    imageUrl: require('../../assets/images/starbucks-gift-card.png'),
+    imageUrl: require('../../../assets/images/dummy-starbuckscard.png'),
     transactions: [
       {
         id: '1',
@@ -48,7 +56,7 @@ const DetailCashHistoryScreen = () => {
 
   // 뒤로가기 함수
   const handleGoBack = () => {
-    navigation.goBack();
+    NavigationService.goBack();
   };
 
   // 수정하기 함수
@@ -68,11 +76,16 @@ const DetailCashHistoryScreen = () => {
       {/* 안전 영역 상단 여백 */}
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
-      {/* 상단 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Icon name="chevron-left" type="material" size={28} color="#333" />
-        </TouchableOpacity>
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <Button
+          variant="ghost"
+          onPress={handleGoBack}
+          style={styles.backButton}
+          leftIcon={
+            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+          }
+        />
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 사용내역
         </Text>
@@ -177,7 +190,9 @@ const styles = StyleSheet.create({
     borderBottomColor: '#EEEEEE',
   },
   backButton: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
   },
   headerTitle: {
     textAlign: 'center',
@@ -300,4 +315,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DetailCashHistoryScreen;
+export default DetailAmountHistoryScreen;

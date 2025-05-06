@@ -11,6 +11,9 @@ import NotificationScreen from '../screens/NotificationScreen';
 import RegisterMainScreen from '../screens/gifticon-management/gifticon-register/RegisterMainScreen';
 import RegisterDetailScreen from '../screens/gifticon-management/gifticon-register/RegisterDetailScreen';
 import ManageListScreen from '../screens/gifticon-management/ManageListScreen';
+import DetailProductScreen from '../screens/gifticon-management/gificon-Detail/DetailProductScreen';
+import DetailAmountScreen from '../screens/gifticon-management/gificon-Detail/DetailAmountScreen';
+import DetailAmountHistoryScreen from '../screens/gifticon-management/gificon-Detail/DetailAmountHistoryScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +54,30 @@ const AppNavigator = () => {
       <Stack.Screen
         name="List"
         component={ManageListScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="DetailProduct"
+        component={DetailProductScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="DetailAmount"
+        component={DetailAmountScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="DetailAmountHistoryScreen"
+        component={DetailAmountHistoryScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,

@@ -55,7 +55,6 @@ const LABEL_FONTSIZE = width > 380 ? 11 : 10;
 
 // 특정 화면에서 탭바를 숨길 화면 목록
 const HIDDEN_TAB_BAR_SCREENS = [
-  'GifticonDetail',
   'AddGifticon',
   'EditProfile',
   // 추가할 화면들...
