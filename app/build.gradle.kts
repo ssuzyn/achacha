@@ -58,6 +58,12 @@ dependencies {
     // Add Wear Compose Material Dependency
     implementation(libs.wear.compose.material)
 
+    // Add Material Icons Core (기본 아이콘)
+    // implementation(libs.material.icons.core) // 별칭 대신 직접 좌표 사용
+    implementation("androidx.compose.material:material-icons-core") // Compose BOM이 버전 관리
+    // Add Material Icons Extended (확장 아이콘 - Backspace 등 포함)
+    implementation("androidx.compose.material:material-icons-extended-android:1.6.7") // 확장 아이콘 추가
+
     // Add Wear Compose Foundation Dependency (ScalingLazyColumn 포함)
     implementation("androidx.wear.compose:compose-foundation:1.3.1")
 
@@ -78,6 +84,15 @@ dependencies {
     // Accompanist Pager
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
+
+    // Retrofit for API communication
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // implementation("com.squareup.retrofit2:converter-kotlinx-serialization:1.0.0") // 문제 발생 가능성, 주석 처리
+    implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0") // 이 컨버터 사용
+    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0") // For logging API requests/responses
+
+    // Coil for image loading
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
     // implementation(libs.play.services.wearable) // 이미 위에서 명시적으로 선언되어 중복 제거
 }

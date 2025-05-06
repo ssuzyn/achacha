@@ -1,5 +1,6 @@
 package com.koup28.achacha_app.presentation.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,8 +16,6 @@ import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.ButtonDefaults
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
@@ -26,6 +25,8 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
 import androidx.compose.runtime.LaunchedEffect // Keep LaunchedEffect for pager state observation
+import androidx.compose.foundation.rememberScrollState // 추가
+import androidx.compose.foundation.verticalScroll // 추가
 
 // 날짜 형식 변환 함수 (YYYY-MM-DD -> YYYY.MM.DD)
 fun formatExpiryDate(dateStr: String): String {
@@ -48,13 +49,16 @@ fun GifticonDetailScreen(
     onShowBarcodeClick: (gifticonId: Int) -> Unit,
     // Add callbacks for new buttons
     onShareClick: (gifticonId: Int) -> Unit,
-    onUseClick: (gifticonId: Int) -> Unit
+    onUseClick: (gifticonId: Int) -> Unit,
+    onBackPress: () -> Unit // 뒤로가기 콜백 추가
 ) {
     // Handle empty list or invalid index
     if (gifticons.isEmpty() || initialIndex < 0 || initialIndex >= gifticons.size) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text("기프티콘 정보를 표시할 수 없습니다.")
         }
+        // 뒤로가기 핸들러는 여기에도 추가할 수 있지만, 일반적으로 메인 컨텐츠에 연결
+        BackHandler(enabled = true) { onBackPress() }
         return // Exit composable if data is invalid
     }
 
@@ -64,6 +68,11 @@ fun GifticonDetailScreen(
     // Use LaunchedEffect to monitor currentPage changes and call the callback
     LaunchedEffect(pagerState.currentPage) {
         onCurrentGifticonIndexChanged(pagerState.currentPage)
+    }
+
+    // 시스템 뒤로가기 버튼 처리
+    BackHandler(enabled = true) {
+        onBackPress()
     }
 
     Scaffold(
@@ -85,14 +94,16 @@ fun GifticonDetailScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .verticalScroll(rememberScrollState()) // 세로 스크롤 추가
+                    .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 32.dp), // 상하 패딩 추가/조정
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center // 중앙 정렬 유지 (스크롤 시 시작점 확인 필요)
             ) {
                 Text(
                     text = currentGifticon.brandName,
                     style = MaterialTheme.typography.title3,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp) // 브랜드명 상단 마진 추가
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -106,11 +117,28 @@ fun GifticonDetailScreen(
                     style = MaterialTheme.typography.caption1,
                     textAlign = TextAlign.Center
                 )
-                // Reduce spacing above the barcode chip
-                Spacer(modifier = Modifier.height(8.dp)) // Reduced from 16.dp
+
+                // 금액권 타입이고 잔액 정보가 있을 경우 표시
+                if (currentGifticon.gifticonType == "AMOUNT" && currentGifticon.gifticonRemainingAmount != null) {
+                    Spacer(modifier = Modifier.height(4.dp)) // 유효기간과 잔액 사이 간격
+                    Text(
+                        text = "잔액: %,d원".format(currentGifticon.gifticonRemainingAmount),
+                        style = MaterialTheme.typography.caption1, // 유효기간과 동일한 스타일
+                        textAlign = TextAlign.Center,
+                        color = Color.Gray // 약간 흐린 색으로 표시 (선택 사항)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp)) // 잔액과 바코드 버튼 사이 간격
+                } else {
+                    // 금액권이 아니거나 잔액 정보가 없으면 기존 간격 유지
+                    Spacer(modifier = Modifier.height(8.dp)) // Reduced from 16.dp
+                }
+
                 // 바코드 보기 버튼 (Chip)
                 Chip(
-                    onClick = { onShowBarcodeClick(currentGifticon.gifticonId) },
+                    onClick = {
+                        // currentGifticon이 null이 될 수 없으므로 안전 호출 제거 가능 (위에서 이미 체크)
+                        onShowBarcodeClick(currentGifticon.gifticonId)
+                    },
                     label = {
                         Text(
                             text = "바코드 보기",
@@ -134,19 +162,22 @@ fun GifticonDetailScreen(
                     // Replace Button with Chip for "나눔"
                     Chip(
                         onClick = { onShareClick(currentGifticon.gifticonId) },
-                        modifier = Modifier.weight(1f), // Occupy available space
-                        label = { Text("나눔", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }, // Center text
-                        colors = ChipDefaults.secondaryChipColors() // Use secondary colors like list items
-                        // colors = ChipDefaults.chipColors(backgroundColor = Color(0xFFB0C4DE)) // Or keep previous button color
+                        modifier = Modifier.weight(1f), 
+                        label = { Text("나눔", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }, 
+                        colors = ChipDefaults.chipColors(
+                            backgroundColor = Color(0xFFAECBFA), // 색상 변경
+                            contentColor = Color.Black
+                        )
                     )
-                    Spacer(modifier = Modifier.width(8.dp)) // Space between chips
-                    // Replace Button with Chip for "사용"
+                    Spacer(modifier = Modifier.width(8.dp)) 
                     Chip(
                         onClick = { onUseClick(currentGifticon.gifticonId) },
-                        modifier = Modifier.weight(1f), // Occupy available space
-                        label = { Text("사용", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }, // Center text
-                        colors = ChipDefaults.secondaryChipColors() // Use secondary colors like list items
-                        // colors = ChipDefaults.chipColors(backgroundColor = Color(0xFFB0C4DE)) // Or keep previous button color
+                        modifier = Modifier.weight(1f), 
+                        label = { Text("사용", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }, 
+                        colors = ChipDefaults.chipColors(
+                            backgroundColor = Color(0xFFAECBFA), // 색상 변경
+                            contentColor = Color.Black
+                        )
                     )
                 }
             }

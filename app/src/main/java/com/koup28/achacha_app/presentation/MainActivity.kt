@@ -34,9 +34,17 @@ import java.text.SimpleDateFormat
 import java.util.*
 import androidx.lifecycle.lifecycleScope
 import com.koup28.achacha_app.data.UserDataStore
+import com.koup28.achacha_app.data.BarcodeInfo
+import com.koup28.achacha_app.data.ApiService
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import kotlinx.serialization.json.Json
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import okhttp3.MediaType.Companion.toMediaType
 
 // 화면 상태 정의
 enum class ScreenState {
@@ -44,6 +52,11 @@ enum class ScreenState {
     MAIN_MENU,  // 토큰 로드 완료 또는 수신 완료
     GIFTICON_LIST, // 기프티콘 목록 화면 상태 추가
     GIFTICON_DETAIL, // 기프티콘 상세 화면 상태 추가
+    BARCODE, // 바코드 화면 상태 추가
+    SHARE_WAITING, // 나눔 대기 화면 상태 추가
+    SHARING, // 나눔 진행 화면 상태 추가
+    ENTER_AMOUNT, // 금액 입력 화면 상태 추가
+    NOTIFICATION_BOX, // 알림함 화면 상태 추가
     ERROR       // 권한 또는 연결 오류
 }
 
@@ -60,7 +73,7 @@ class MainActivity : ComponentActivity() {
         const val ROUTE_GIFTICON_LIST = "gifticon_list"
         const val ROUTE_GIFTICON_DETAIL = "gifticon_detail/{gifticonId}"
         const val ROUTE_NEARBY_SEARCH = "nearby_search"
-        const val ROUTE_BARCODE = "barcode"
+        // const val ROUTE_BARCODE = "barcode" // ScreenState로 관리하므로 라우트 문자열은 불필요
         // SimpleDateFormat for logging timestamps
         private val timeFormat = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     }
@@ -90,6 +103,20 @@ class MainActivity : ComponentActivity() {
     // --- 선택된 기프티콘 인덱스 상태 --- (수정)
     private val _currentGifticonIndex = mutableStateOf(-1) // -1 for no selection
     // ---------------------------------
+
+    // --- 선택된 기프티콘 ID 상태 --- (바코드 화면 전달용)
+    private val _selectedGifticonId = mutableStateOf<Int?>(null)
+    // ---------------------------------
+
+    // --- 바코드 정보 상태 --- (추가)
+    private val _barcodeInfo = mutableStateOf<BarcodeInfo?>(null)
+    private val _isBarcodeLoading = mutableStateOf(false)
+    private val _barcodeError = mutableStateOf<String?>(null)
+    // --------------------------
+
+    // --- 금액 입력 화면용 상태 --- (추가)
+    private val _selectedGifticonRemainingAmount = mutableStateOf<Int?>(null)
+    // ---------------------------
 
     // _nearbyStatus, _errorMessage는 내부 로직용으로 유지하거나 필요시 제거
     private val _nearbyStatus = mutableStateOf("IDLE")
@@ -291,6 +318,30 @@ class MainActivity : ComponentActivity() {
     }
     // ------------------------------------
 
+    // --- Retrofit 및 ApiService 인스턴스 --- (추가)
+    private val apiService: ApiService by lazy {
+        val loggingInterceptor = HttpLoggingInterceptor { message ->
+            Log.d(TAG, "OkHttp: $message")
+        }.apply {
+            level = HttpLoggingInterceptor.Level.BODY // 개발 중에는 BODY, 배포 시에는 NONE 또는 BASIC
+        }
+
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+
+        val contentType = "application/json".toMediaType()
+        val json = Json { ignoreUnknownKeys = true;coerceInputValues = true } // API 응답에 모르는 필드가 있거나 기본값이 필요한 경우 처리
+
+        Retrofit.Builder()
+            .baseUrl("YOUR_API_BASE_URL/") // TODO: 실제 API Base URL로 교체해야 합니다!
+            .client(okHttpClient)
+            .addConverterFactory(json.asConverterFactory(contentType))
+            .build()
+            .create(ApiService::class.java)
+    }
+    // --------------------------------------
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -339,8 +390,8 @@ class MainActivity : ComponentActivity() {
                                  _currentScreen.value = ScreenState.GIFTICON_LIST
                              },
                              onNotificationBoxClick = { 
-                                 addLog("MainMenu: Notification Box button clicked.")
-                                 // TODO: 알림함 화면으로 이동 구현
+                                 addLog("MainMenu: Notification Box button clicked. Navigating to NotificationBoxScreen.")
+                                 _currentScreen.value = ScreenState.NOTIFICATION_BOX // 알림함 화면으로 전환
                              }
                          )
                      }
@@ -352,48 +403,136 @@ class MainActivity : ComponentActivity() {
                                  val clickedIndex = tempGifticonList.indexOfFirst { it.gifticonId == gifticonId }
                                  if (clickedIndex != -1) {
                                      _currentGifticonIndex.value = clickedIndex // 인덱스 저장
+                                     _selectedGifticonId.value = gifticonId // ID도 저장
                                      _currentScreen.value = ScreenState.GIFTICON_DETAIL
                                  } else {
                                      addLog("[Error] Clicked gifticon ID not found in list: $gifticonId")
                                      // Optional: Show error message to user
                                  }
                                  // --------------------------------
-                             }
+                             },
+                             onBackPress = { _currentScreen.value = ScreenState.MAIN_MENU }
                          )
                      }
                      ScreenState.GIFTICON_DETAIL -> {
                          // Check if index is valid before rendering
-                         if (_currentGifticonIndex.value != -1) {
+                         if (_currentGifticonIndex.value != -1 && _selectedGifticonId.value != null) {
                              GifticonDetailScreen(
                                  // Pass the full list, initial index, and callback (수정)
                                  gifticons = tempGifticonList,
                                  initialIndex = _currentGifticonIndex.value,
                                  onCurrentGifticonIndexChanged = { newIndex ->
                                      _currentGifticonIndex.value = newIndex // Update state on swipe
+                                     _selectedGifticonId.value = tempGifticonList.getOrNull(newIndex)?.gifticonId
                                  },
                                  onShowBarcodeClick = { gifticonId ->
                                      addLog("GifticonDetail: Show barcode clicked for ID: $gifticonId")
-                                     // TODO: 바코드 화면으로 이동 또는 바코드 표시 로직 구현
+                                     _selectedGifticonId.value = gifticonId // 바코드 볼 ID 저장
+                                     _currentScreen.value = ScreenState.BARCODE // 바코드 화면으로 전환
+                                     fetchBarcodeInfo(gifticonId) // API 호출
                                  },
-                                 // Implement new callbacks
                                  onShareClick = { gifticonId ->
                                      addLog("GifticonDetail: Share clicked for ID: $gifticonId")
-                                     // TODO: 나눔 기능 구현
+                                     _selectedGifticonId.value = gifticonId // 나눔할 ID 저장
+                                     _currentScreen.value = ScreenState.SHARE_WAITING // 나눔 대기 화면으로 전환
+                                     // TODO: 실제 나눔 요청 API 호출 또는 로직 구현
                                  },
                                  onUseClick = { gifticonId ->
                                      addLog("GifticonDetail: Use clicked for ID: $gifticonId")
-                                     // TODO: 사용 처리 기능 구현 (API 호출 등)
-                                 }
+                                     // 클릭된 기프티콘 정보 찾기 (타입, 잔액 확인용)
+                                     val clickedGifticon = tempGifticonList.find { it.gifticonId == gifticonId }
+                                     if (clickedGifticon != null) {
+                                         if (clickedGifticon.gifticonType == "AMOUNT") {
+                                             // 금액권일 경우
+                                             addLog("GifticonDetail: Amount type gifticon. Navigating to EnterAmountScreen.")
+                                             _selectedGifticonId.value = gifticonId // ID 저장
+                                             _selectedGifticonRemainingAmount.value = clickedGifticon.gifticonRemainingAmount // 잔액 저장
+                                             _currentScreen.value = ScreenState.ENTER_AMOUNT // 금액 입력 화면으로 전환
+                                         } else {
+                                             // 상품권일 경우 (직접 사용 처리)
+                                             addLog("GifticonDetail: Product type gifticon. Triggering use action.")
+                                             // TODO: 상품권 사용 처리 API 호출 구현
+                                         }
+                                     } else {
+                                         addLog("[Error] Clicked gifticon for use not found: $gifticonId")
+                                     }
+                                 },
+                                 onBackPress = { _currentScreen.value = ScreenState.GIFTICON_LIST }
                              )
                          } else {
                              // Handle invalid index state (e.g., navigate back or show error)
                              addLog("[Error] Invalid gifticon index: ${_currentGifticonIndex.value}. Navigating back to list.")
                              // Potentially navigate back automatically
-                             // LaunchedEffect(Unit) { _currentScreen.value = ScreenState.GIFTICON_LIST }
+                             LaunchedEffect(Unit) { _currentScreen.value = ScreenState.GIFTICON_LIST }
                              Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                  Text("Error: Invalid Gifticon Index")
                              }
                          }
+                     }
+                     ScreenState.SHARE_WAITING -> {
+                        com.koup28.achacha_app.presentation.ui.ShareWaitScreen(
+                            // gifticonId = _selectedGifticonId.value, // ShareWaitScreen에서 직접 사용하지 않음
+                            onBackClick = {
+                                addLog("ShareWaitScreen: Back clicked (or tapped). Returning to GifticonDetail.")
+                                _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                            },
+                            onSwipeUpToShare = {
+                                addLog("ShareWaitScreen: Swiped up. Navigating to SharingScreen with ID: ${_selectedGifticonId.value}")
+                                _currentScreen.value = ScreenState.SHARING
+                                // TODO: 실제 나눔 시작 로직 (Nearby Advertising 시작 등)은 여기서 또는 SharingScreen에서 호출
+                            }
+                        )
+                     }
+                     ScreenState.SHARING -> {
+                        com.koup28.achacha_app.presentation.ui.SharingScreen(
+                            gifticonId = _selectedGifticonId.value,
+                            onBackClick = {
+                                addLog("SharingScreen: Back clicked. Returning to GifticonDetail.")
+                                // TODO: 나눔 중단/완료 관련 로직 (Nearby 중단 등) 필요시 추가
+                                _currentScreen.value = ScreenState.GIFTICON_DETAIL // 상세 화면으로 바로 돌아감
+                            }
+                        )
+                     }
+                     ScreenState.BARCODE -> {
+                         com.koup28.achacha_app.presentation.ui.BarcodeScreen(
+                             gifticonId = _selectedGifticonId.value, // BarcodeScreen 자체에서 ID가 필요할 수 있음
+                             barcodeInfo = _barcodeInfo.value,
+                             isLoading = _isBarcodeLoading.value,
+                             error = _barcodeError.value,
+                             onBackClick = {
+                                 addLog("BarcodeScreen: Back clicked. Returning to GifticonDetail.")
+                                 _barcodeInfo.value = null // 상태 초기화
+                                 _barcodeError.value = null
+                                 _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                             },
+                             onRetryClick = {
+                                 _selectedGifticonId.value?.let { fetchBarcodeInfo(it) }
+                             }
+                         )
+                     }
+                     ScreenState.ENTER_AMOUNT -> {
+                        com.koup28.achacha_app.presentation.ui.EnterAmountScreen(
+                            gifticonId = _selectedGifticonId.value,
+                            remainingAmount = _selectedGifticonRemainingAmount.value,
+                            onConfirmClick = { amountToUse -> // 콜백에서 다시 금액 받음
+                                addLog("EnterAmountScreen: Confirm clicked. Amount to use: $amountToUse for ID: ${_selectedGifticonId.value}")
+                                // TODO: 입력된 금액 사용 처리 API 호출 구현 (amountToUse 사용)
+                                _currentScreen.value = ScreenState.GIFTICON_DETAIL // 사용 후 상세 화면으로 복귀
+                                // 상태 초기화는 EnterAmountScreen 내부 또는 여기서 필요시
+                            },
+                            onCancelClick = {
+                                addLog("EnterAmountScreen: Cancel clicked. Returning to GifticonDetail.")
+                                _currentScreen.value = ScreenState.GIFTICON_DETAIL // 취소 시 상세 화면으로 복귀
+                            }
+                        )
+                     }
+                     ScreenState.NOTIFICATION_BOX -> {
+                        com.koup28.achacha_app.presentation.ui.NotificationBoxScreen(
+                            onBackClick = {
+                                addLog("NotificationBoxScreen: Back clicked. Returning to MainMenu.")
+                                _currentScreen.value = ScreenState.MAIN_MENU // 메인 메뉴로 돌아가기
+                            }
+                        )
                      }
                      ScreenState.ERROR -> {
                          ConnectPhoneScreen(
@@ -515,14 +654,58 @@ class MainActivity : ComponentActivity() {
     private fun disconnectNearby() {
         // Implementation of disconnectNearby function
     }
+
+    // --- 바코드 정보 가져오기 함수 --- (추가)
+    private fun fetchBarcodeInfo(gifticonId: Int) {
+        addLog("[API] Fetching barcode for ID: $gifticonId (MOCK DATA)") // MOCK DATA 명시
+        _isBarcodeLoading.value = true
+        _barcodeError.value = null
+        _barcodeInfo.value = null // 이전 정보 초기화
+
+        lifecycleScope.launch {
+            try {
+                // Simulate network delay
+                kotlinx.coroutines.delay(1500) // 1.5초 딜레이
+
+                // --- Mock Data 생성 --- //
+                val mockBarcodeInfo = BarcodeInfo(
+                    gifticonBarcodeNumber = "1234-5678-9012-3456",
+                    // barcodePath = "https://via.placeholder.com/300x150.png?text=Barcode+$gifticonId" // 기존 URL 주석 처리
+                    barcodeDrawableResId = com.koup28.achacha_app.R.drawable.my_barcode // R.drawable.파일명 (파일명에 맞게 수정)
+                )
+                _barcodeInfo.value = mockBarcodeInfo
+                addLog("[API] Mock barcode fetched successfully: $mockBarcodeInfo")
+                // --- 기존 API 호출 로직 주석 처리 ---
+                /*
+                val response = apiService.getGifticonBarcode(gifticonId)
+                if (response.isSuccessful) {
+                    _barcodeInfo.value = response.body()
+                    addLog("[API] Barcode fetched successfully: ${response.body()}")
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    addLog("[API] Error fetching barcode: ${response.code()} - $errorBody")
+                    _barcodeError.value = "바코드 정보 로딩 실패 (${response.code()})"
+                }
+                */
+            } catch (e: Exception) {
+                addLog("[API] Exception fetching mock barcode: ${e.message}")
+                _barcodeError.value = "임시 바코드 정보 로딩 중 오류 발생: ${e.localizedMessage}"
+            } finally {
+                _isBarcodeLoading.value = false
+            }
+        }
+    }
+    // ------------------------------------
 }
 
 // --- 임시 데이터 (람다 파라미터 타입 명시) ---
 val tempGifticonList = List(5) { index -> // 파라미터 이름 'index' 명시
     ApiGifticon(
         gifticonId = index + 100,
-        gifticonName = "API 상품명 ${index + 1} 테스트",
+        gifticonName = if (index == 0) "금액권 10,000원" else "API 상품명 ${index + 1} 테스트",
+        gifticonType = if (index == 0) "AMOUNT" else "PRODUCT", // 첫 번째 항목을 금액형으로 설정
         gifticonExpiryDate = LocalDate.now().plusDays( (index * 7).toLong() - 2).toString(),
+        gifticonRemainingAmount = if (index == 0) 8000 else null, // 첫 번째 항목에 잔액 설정
         brandName = "API 브랜드 ${index % 2}",
         thumbnailPath = if (index % 3 == 0) null else "/images/dummy.jpg" 
     )

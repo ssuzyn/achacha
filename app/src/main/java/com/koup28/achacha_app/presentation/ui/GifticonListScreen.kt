@@ -1,5 +1,6 @@
 package com.koup28.achacha_app.presentation.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ data class ApiGifticon(
     val gifticonName: String,
     val gifticonType: String? = null, // 사용 안 할 수도 있지만 정의
     val gifticonExpiryDate: String,
+    val gifticonRemainingAmount: Int? = null, // 잔액 필드 추가 (Nullable Int)
     val brandId: Int? = null,
     val brandName: String,
     val scope: String? = null,
@@ -65,7 +67,8 @@ data class GifticonListUiState(
 
 @Composable
 fun GifticonListScreen(
-    onGifticonClick: (gifticonId: Int) -> Unit
+    onGifticonClick: (gifticonId: Int) -> Unit,
+    onBackPress: () -> Unit
 ) {
     // --- 임시 상태 데이터 사용 (ViewModel 구현 전) ---
     val uiState = remember { 
@@ -75,7 +78,8 @@ fun GifticonListScreen(
                  ApiGifticon(
                      gifticonId = it + 100, // ID 예시
                      gifticonName = "API 상품명 ${it + 1} 테스트",
-                     gifticonExpiryDate = LocalDate.now().plusDays( (it * 7).toLong() - 2).toString(), // 만료 임박/지난 데이터 포함
+                     // 모든 기프티콘이 만료되지 않도록 수정 (최소 D-0부터 시작)
+                     gifticonExpiryDate = LocalDate.now().plusDays( (it * 7).toLong() ).toString(), 
                      brandName = "API 브랜드 ${it % 2}",
                      thumbnailPath = if (it % 3 == 0) null else "/images/dummy.jpg" // 썸네일 경로 예시
                  )
@@ -85,6 +89,11 @@ fun GifticonListScreen(
     // ---------------------------------------
 
     val listState = rememberScalingLazyListState()
+
+    // 시스템 뒤로가기 버튼 처리
+    BackHandler(enabled = true) {
+        onBackPress()
+    }
 
     Scaffold(
         timeText = { TimeText(modifier = Modifier.padding(top = 6.dp)) },
@@ -143,14 +152,14 @@ fun GifticonListScreen(
                                         Text(
                                             text = when { 
                                                 dDay == null -> "-" 
-                                                dDay < 0 -> "만료"
+                                                dDay < 0 -> "만료" // 이 경우는 이제 더미 데이터에서 발생하지 않음
                                                 else -> "D-$dDay"
                                             },
                                             style = MaterialTheme.typography.body1,
                                             textAlign = TextAlign.End,
                                             color = when {
                                                 dDay == null -> Color.Gray
-                                                dDay < 0 -> Color.DarkGray
+                                                dDay < 0 -> Color.DarkGray // 이 경우는 이제 더미 데이터에서 발생하지 않음
                                                 dDay < 7 -> Color.Red
                                                 else -> Color.Unspecified
                                             }
