@@ -3,6 +3,7 @@ package com.eurachacha.achacha.application.service.gifticon;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
@@ -12,6 +13,7 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
+import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
@@ -22,13 +24,13 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class GifticonAppServiceImpl implements GifticonAppService {
 
 	private final GifticonDomainService gifticonDomainService;
@@ -36,6 +38,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final ParticipationRepository participationRepository;
 	private final PageableFactory pageableFactory;
 	private final OcrPort ocrPort;
+	private final AIServicePort aiServicePort;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -45,17 +48,19 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		String ocrResult = ocrPort.extractRawOcrResult(image);
 		log.debug("OCR 결과 추출 완료");
 
-		// 2. LangChain을 통해 OCR 결과에서 필요한 정보 추출
-		// GifticonMetadataResponseDto metadata = langChainPort.extractMetadataFromOcrResult(
-		// 	ocrResult, request.getGifticonType());
-		// log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
+		// 2. AI 서비스를 통해 OCR 결과에서 필요한 정보 추출
+		GifticonMetadataResponseDto metadata = aiServicePort.extractGifticonInfo(
+			ocrResult, gifticonType.name());
+		log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
 
-		// return metadata;
-		return null;
+		// 브랜드 이름에 따라서 ResponseDto에 BrandId 넣는 과정 필요
+		// 3. MongoDB에 OCR 결과 넣는 과정 필요, (saveGifticon에서 사용자가 수정한 값을 학습 데이터도 이후에 넣어야 함 사용)
+
+		return metadata;
 	}
 
-	@Override
 	@Transactional
+	@Override
 	public GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto) {
 		// 도메인 객체 생성
 		Gifticon newGifticon = Gifticon.builder()
@@ -80,7 +85,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	public AvailableGifticonsResponseDto getAvailableGifticons(GifticonScopeType scope, GifticonType type,
 		GifticonSortType sort, Integer page, Integer size) {
 
@@ -101,7 +105,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
 		Integer userId = 2; // 유저 로직 추가 시 변경 필요
