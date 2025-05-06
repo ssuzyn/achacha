@@ -11,8 +11,8 @@ import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
+import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
 import com.eurachacha.achacha.infrastructure.config.AIServiceProperties;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
@@ -34,7 +34,7 @@ public class AIServiceAdapter implements AIServicePort {
 	private final ObjectMapper objectMapper;
 
 	@Override
-	public GifticonMetadataResponseDto extractGifticonInfo(String ocrResult, String gifticonType) {
+	public GifticonMetadataDto extractGifticonInfo(String ocrResult, String gifticonType) {
 		try {
 			log.info("AI 서비스 처리 시작 - 기프티콘 타입: {}", gifticonType);
 
@@ -93,11 +93,11 @@ public class AIServiceAdapter implements AIServicePort {
 		}
 	}
 
-	private GifticonMetadataResponseDto parseResponse(String responseBody) {
+	private GifticonMetadataDto parseResponse(String responseBody) {
 		try {
 			JsonNode rootNode = objectMapper.readTree(responseBody);
 
-			return GifticonMetadataResponseDto.builder()
+			return GifticonMetadataDto.builder()
 				.gifticonBarcodeNumber(getNullableTextValue(rootNode, "gifticonBarcodeNumber"))
 				.brandName(getNullableTextValue(rootNode, "brandName"))
 				.gifticonName(getNullableTextValue(rootNode, "gifticonName"))
