@@ -6,7 +6,16 @@ spring:
     properties:
       hibernate:
         jdbc:
-          time_zone=Asia/Seoul:
+          time_zone: Asia/Seoul
+
+  cloud:
+    aws:
+      s3:
+        region: ap-northeast-2
+        enabled: true # Spring Cloud AWS 스타터가 S3 관련 빈 자동 구성
+      credentials:
+        access-key: ${AWS_ACCESS_TOKEN}
+        secret-key: ${AWS_SECRET_TOKEN}
 
   profiles:
     group:
@@ -28,3 +37,10 @@ clova:
 
 ai-service:
   api-url: ${AI_SERVICE_URL}
+
+aws:
+  s3:
+    bucket: achacha-bucket
+  cloudfront:
+    domain: d23wsj9ifltpil.cloudfront.net
+    keypair-id: ${AWS_CLOUDFRONT_KEYPAIR_ID}
