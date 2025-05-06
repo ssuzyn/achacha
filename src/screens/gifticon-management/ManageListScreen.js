@@ -9,6 +9,7 @@ import { Text } from '../../components/ui';
 import CategoryTabs from '../../components/common/CategoryTabs';
 import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
+import { Shadow } from 'react-native-shadow-2';
 
 // 더미 데이터
 const DUMMY_GIFTICONS = [
@@ -31,9 +32,9 @@ const DUMMY_GIFTICONS = [
   {
     id: '3',
     brand: '스타벅스',
-    name: '아이스 카페 아메리카노 T',
+    name: 'APP전용 e카드 3만원 교환권',
     expiryDate: '2024-01-05',
-    imageUrl: require('../../assets/images/dummy-starbucks.png'),
+    imageUrl: require('../../assets/images/dummy-starbuckscard.png'),
     daysLeft: 7,
   },
   {
@@ -44,9 +45,17 @@ const DUMMY_GIFTICONS = [
     imageUrl: require('../../assets/images/dummy-starbucks.png'),
     daysLeft: 7,
   },
+  {
+    id: '5',
+    brand: '스타벅스',
+    name: 'APP전용 e카드 3만원 교환권',
+    expiryDate: '2024-01-15',
+    daysLeft: 7,
+    imageUrl: require('../../assets/images/dummy-starbuckscard.png'),
+  },
 ];
 
-const ListScreen = () => {
+const ManageListScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -62,23 +71,22 @@ const ListScreen = () => {
 
   // 카테고리 탭 데이터
   const categories = [
-    { id: 'mybas', name: '마이바스' },
-    { id: 'sharebas', name: '쉐어바스' },
+    { id: 'mybas', name: '마이박스' },
+    { id: 'sharebas', name: '쉐어박스' },
     { id: 'used', name: '사용완료' },
   ];
 
   // 필터 탭 데이터
   const filterTabs = [
     { id: 'all', title: '전체' },
-    { id: 'coupon', title: '상품권' },
+    { id: 'coupon', title: '상품형' },
     { id: 'price', title: '금액형' },
   ];
 
   // 정렬 옵션
   const sortOptions = [
-    { id: 'recent', title: '최근 등록순' },
-    { id: 'expiry', title: '유효기간 임박순' },
-    { id: 'brand', title: '브랜드명순' },
+    { id: 'recent', title: '등록순' },
+    { id: 'expiry', title: '임박순' },
   ];
 
   // 카테고리 변경 처리
@@ -109,16 +117,23 @@ const ListScreen = () => {
       style={styles.gifticonItem}
       onPress={() => navigation.navigate('GifticonDetail', { id: item.id })}
     >
-      <View style={styles.gifticonContent}>
-        <Image source={item.imageUrl} style={styles.gifticonImage} />
-        <View style={styles.gifticonInfo}>
-          <Text style={styles.brandText}>{item.brand}</Text>
-          <Text style={styles.nameText}>{item.name}</Text>
+      <Shadow
+        distance={6}
+        startColor={'rgba(0, 0, 0, 0.03)'}
+        offset={[0, 1]}
+        style={styles.shadowContainer}
+      >
+        <View style={styles.gifticonContent}>
+          <Image source={item.imageUrl} style={styles.gifticonImage} />
+          <View style={styles.gifticonInfo}>
+            <Text style={styles.brandText}>{item.brand}</Text>
+            <Text style={styles.nameText}>{item.name}</Text>
+          </View>
+          <View style={styles.expiryContainer}>
+            <Text style={styles.expiryText}>D-{item.daysLeft}</Text>
+          </View>
         </View>
-        <View style={styles.expiryContainer}>
-          <Text style={styles.expiryText}>D-{item.daysLeft}</Text>
-        </View>
-      </View>
+      </Shadow>
     </TouchableOpacity>
   );
 
@@ -130,20 +145,18 @@ const ListScreen = () => {
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
       {/* 헤더 */}
-      <View style={styles.header}>
-        <Text variant="h3" weight="bold" style={styles.headerTitle}>
+      <View style={styles.headerSection}>
+        <Text variant="h2" weight="bold" style={styles.headerTitle}>
           기프티콘 관리
         </Text>
       </View>
 
       {/* 카테고리 탭 */}
-      <View style={styles.categoryTabContainer}>
-        <CategoryTabs
-          categories={categories}
-          selectedId={selectedCategory}
-          onSelectCategory={handleCategoryChange}
-        />
-      </View>
+      <CategoryTabs
+        categories={categories}
+        selectedId={selectedCategory}
+        onSelectCategory={handleCategoryChange}
+      />
 
       {/* 필터링 섹션 */}
       <View style={styles.filterContainer}>
@@ -164,7 +177,7 @@ const ListScreen = () => {
             <Icon
               name={showSortDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
               type="material"
-              size={24}
+              size={18}
               color="#333"
             />
           </TouchableOpacity>
@@ -207,28 +220,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+  headerSection: {
+    paddingTop: 10,
+    paddingBottom: 5,
+    paddingHorizontal: 12,
   },
   headerTitle: {
-    textAlign: 'center',
-  },
-  categoryTabContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    fontSize: 26,
+    letterSpacing: -0.5,
   },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 10,
+    paddingHorizontal: 12,
+    marginTop: 5,
   },
   tabFilterContainer: {
     flex: 1,
@@ -241,7 +247,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: '#E0E0E0',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -249,6 +255,7 @@ const styles = StyleSheet.create({
   sortButtonText: {
     fontSize: 14,
     marginRight: 5,
+    color: '#333',
   },
   sortDropdown: {
     position: 'absolute',
@@ -256,50 +263,56 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: 'white',
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: '#E0E0E0',
     borderRadius: 8,
-    width: 150,
+    width: 160,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5,
+    elevation: 3,
   },
   sortOption: {
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: '#F0F0F0',
   },
   sortOptionText: {
     fontSize: 14,
+    color: '#333',
   },
   sortOptionTextSelected: {
-    color: '#5DADE2',
+    color: '#3498DB',
     fontWeight: 'bold',
   },
   scrollView: {
     flex: 1,
+    marginTop: 5,
+    paddingHorizontal: 12,
   },
   gifticonList: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 5,
   },
-  gifticonItem: {
-    backgroundColor: '#E6F4FB',
+  shadowContainer: {
+    width: '100%',
     borderRadius: 10,
     marginBottom: 10,
-    overflow: 'hidden',
+  },
+  gifticonItem: {
+    width: '100%',
   },
   gifticonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: 16,
+    backgroundColor: '#E6F4FB',
+    borderRadius: 10,
   },
   gifticonImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 6,
     marginRight: 12,
   },
   gifticonInfo: {
@@ -321,8 +334,8 @@ const styles = StyleSheet.create({
   expiryText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#5DADE2',
+    color: '#3498DB',
   },
 });
 
-export default ListScreen;
+export default ManageListScreen;

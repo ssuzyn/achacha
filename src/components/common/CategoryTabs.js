@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, TouchableOpacity } from 'react-native';
 import { View } from 'react-native';
-import { Button, Text } from '../../components/ui';
-import { useTheme } from '../../hooks/useTheme';
+import { Text } from '../../components/ui';
 
 /**
  * 카테고리 탭 컴포넌트
@@ -11,7 +10,6 @@ import { useTheme } from '../../hooks/useTheme';
  * @param {Function} onSelectCategory - 카테고리 선택 시 호출되는 콜백 함수
  */
 const CategoryTabs = ({ categories = [], selectedId, onSelectCategory }) => {
-  const { colors } = useTheme();
   const [selected, setSelected] = useState(
     selectedId || (categories.length > 0 ? categories[0].id : null)
   );
@@ -25,66 +23,61 @@ const CategoryTabs = ({ categories = [], selectedId, onSelectCategory }) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      {categories.map(category => {
-        const isSelected = selected === category.id;
-        return (
-          <Button
-            key={category.id}
-            style={styles.tab}
-            onPress={() => handleSelectCategory(category.id)}
-            variant="ghost"
-          >
-            {isSelected ? (
-              <View style={[styles.activeTabIndicator, { backgroundColor: colors.secondary }]}>
-                <Text variant="button" style={styles.tabText} color="white">
-                  {category.name}
-                </Text>
-              </View>
-            ) : (
-              <Text variant="button" style={styles.tabText} color="white">
+    <View style={styles.outerContainer}>
+      <View style={styles.container}>
+        {categories.map(category => {
+          const isSelected = selected === category.id;
+          return (
+            <TouchableOpacity
+              key={category.id}
+              style={[styles.tab, isSelected ? styles.selectedTab : null]}
+              onPress={() => handleSelectCategory(category.id)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.tabText} color="white" weight={isSelected ? 'bold' : 'medium'}>
                 {category.name}
               </Text>
-            )}
-          </Button>
-        );
-      })}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    backgroundColor: '#62B1EB',
+    borderRadius: 12,
+    padding: 3,
+    margin: 16,
+  },
   container: {
     flexDirection: 'row',
-    borderRadius: 8,
+    width: '100%',
+    backgroundColor: '#56AEE9',
+    borderRadius: 10,
     overflow: 'hidden',
-    marginHorizontal: 0,
-    marginVertical: 0,
-    height: 50,
   },
   tab: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    height: '100%',
-    paddingBottom: 2,
-    backgroundColor: 'transparent',
+    paddingVertical: 14,
+    backgroundColor: '#56AEE9',
   },
-  activeTabIndicator: {
-    width: '90%',
-    height: '80%',
+  selectedTab: {
+    backgroundColor: '#278CCC',
+    marginVertical: 4,
+    marginHorizontal: 4,
     borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: 2,
+    paddingVertical: 10,
   },
   tabText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
-    includeFontPadding: false,
-    textAlignVertical: 'center',
-    lineHeight: 20,
+    color: 'white',
   },
 });
 
