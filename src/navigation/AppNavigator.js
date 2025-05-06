@@ -8,8 +8,8 @@ import PermissionScreen from '../screens/PermissionScreen';
 import LoginScreen from '../screens/LoginScreen';
 import GuideFirstScreen from '../screens/GuideScreen';
 import NotificationScreen from '../screens/NotificationScreen';
-import RegisterMainScreen from '../screens/gifticon-management/RegisterMainScreen';
-import RegisterDetailScreen from '../screens/gifticon-management/RegisterDetailScreen';
+import RegisterMainScreen from '../screens/gifticon-management/gifticon-register/RegisterMainScreen';
+import RegisterDetailScreen from '../screens/gifticon-management/gifticon-register/RegisterDetailScreen';
 import ManageListScreen from '../screens/gifticon-management/ManageListScreen';
 
 const Stack = createNativeStackNavigator();

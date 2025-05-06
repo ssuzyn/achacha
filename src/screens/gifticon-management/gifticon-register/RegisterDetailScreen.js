@@ -1,56 +1,89 @@
-// 기프티콘 등록 스크린
+// 기프티콘 등록 상세 스크린
 
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
-  StatusBar,
   TouchableOpacity,
+  ScrollView,
   Image,
-  Modal,
-  Alert,
   Platform,
+  Modal,
+  StatusBar,
+  Alert,
   PermissionsAndroid,
 } from 'react-native';
-import { Text } from '../../components/ui';
-import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
-import { useTheme } from '../../hooks/useTheme';
-import { Icon } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { Button, InputLine, Text } from '../../../components/ui';
+import { useTheme } from '../../../hooks/useTheme';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Shadow } from 'react-native-shadow-2';
+import { Icon as RNEIcon } from 'react-native-elements';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { CropView } from 'react-native-image-crop-tools';
 
-const RegisterMainScreen = () => {
+const RegisterDetailScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
+
+  // 화면 데이터 상태 관리
+  const [brand, setBrand] = useState('');
+  const [productName, setProductName] = useState('');
+  const [barcode, setBarcode] = useState('');
+  const [expiryDate, setExpiryDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentImageUri, setCurrentImageUri] = useState(null);
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
   const [isImageEditorVisible, setImageEditorVisible] = useState(false);
-  const [currentImageUri, setCurrentImageUri] = useState(null);
   const [aspectRatio, setAspectRatio] = useState(null);
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const [croppedImageResult, setCroppedImageResult] = useState(null);
   const cropViewRef = useRef(null);
 
-  // 뒤로가기 처리
-  const handleGoBack = useCallback(() => {
-    navigation.goBack();
-  }, [navigation]);
+  // 초기 화면 로드시 이미지가 있는지 확인
+  useEffect(() => {
+    if (route.params?.selectedImage) {
+      setCurrentImageUri(route.params.selectedImage.uri);
+    }
+  }, [route.params]);
 
-  // 수동 등록 처리
-  const handleManualRegister = useCallback(() => {
-    // 수동 등록 화면으로 이동
-    navigation.navigate('RegisterDetail');
-  }, [navigation]);
+  // useEffect로 크롭 결과를 감시하여 적용
+  useEffect(() => {
+    if (croppedImageResult && croppedImageResult.uri) {
+      setCurrentImageUri(croppedImageResult.uri);
+    }
+  }, [croppedImageResult]);
+
+  // 뒤로가기 처리
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  // 날짜 선택기 표시
+  const showDatePickerHandler = () => {
+    setShowDatePicker(true);
+  };
+
+  // 날짜 변경 처리
+  const handleDateChange = (event, selectedDate) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setExpiryDate(selectedDate);
+    }
+  };
 
   // 이미지 선택 모달 표시
-  const showImageOptions = useCallback(() => {
-    setImageOptionVisible(true);
-  }, []);
+  const showImageOptions = () => {
+    // 이미 이미지가 있으면 바로 편집 화면으로, 없으면 옵션 모달 보여주기
+    if (currentImageUri) {
+      setImageEditorVisible(true);
+    } else {
+      setImageOptionVisible(true);
+    }
+  };
 
   // 안드로이드 카메라 권한 요청
   const requestCameraPermission = async () => {
@@ -65,7 +98,6 @@ const RegisterMainScreen = () => {
         });
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (err) {
-        console.warn(err);
         return false;
       }
     }
@@ -73,9 +105,7 @@ const RegisterMainScreen = () => {
   };
 
   // 갤러리에서 이미지 선택
-  const handlePickImage = useCallback(() => {
-    console.log('갤러리 버튼 클릭됨');
-
+  const handlePickImage = () => {
     try {
       // 옵션 설정
       const options = {
@@ -89,48 +119,32 @@ const RegisterMainScreen = () => {
         maxHeight: 2000,
       };
 
-      console.log('이미지 라이브러리 호출 전');
-
       // 이미지 라이브러리 호출
       launchImageLibrary(options, response => {
-        console.log('이미지 선택 응답:', JSON.stringify(response));
-
         if (response.didCancel) {
-          console.log('사용자가 이미지 선택을 취소했습니다');
+          // 사용자가 취소
         } else if (response.error) {
-          console.error('이미지 선택 오류: ', response.error);
           Alert.alert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
         } else {
-          // 직접 파일 경로 확인 로그
-          console.log('이미지 응답 전체:', response);
-
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
 
-          console.log('이미지 응답 처리:', imageAsset);
-          console.log('이미지 uri:', imageAsset.uri);
-
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
-            console.log('이미지 URI 설정:', imageAsset.uri);
+            // 선택한 이미지 편집 모드 시작
             setCurrentImageUri(imageAsset.uri);
             setImageEditorVisible(true);
           } else {
-            console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
           }
         }
       });
-
-      console.log('이미지 라이브러리 호출 후');
     } catch (error) {
-      console.error('이미지 선택 예외 발생:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
-  }, []);
+  };
 
   // 카메라로 촬영
-  const handleOpenCamera = useCallback(async () => {
+  const handleOpenCamera = async () => {
     try {
       const hasPermission = await requestCameraPermission();
 
@@ -153,74 +167,83 @@ const RegisterMainScreen = () => {
         maxHeight: 2000,
       };
 
-      console.log('카메라 호출 전');
-
       // 카메라 호출
       launchCamera(options, response => {
-        console.log('카메라 응답:', JSON.stringify(response));
-
         if (response.didCancel) {
-          console.log('사용자가 카메라 촬영을 취소했습니다');
+          // 사용자가 취소
         } else if (response.error) {
-          console.error('카메라 오류: ', response.error);
           Alert.alert('오류', '카메라를 사용하는 중 오류가 발생했습니다: ' + response.error);
         } else {
-          // 직접 파일 경로 확인 로그
-          console.log('이미지 응답 전체:', response);
-
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
 
-          console.log('이미지 응답 처리:', imageAsset);
-          console.log('이미지 uri:', imageAsset.uri);
-
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
-            console.log('이미지 URI 설정:', imageAsset.uri);
+            // 선택한 이미지 편집 모드 시작
             setCurrentImageUri(imageAsset.uri);
             setImageEditorVisible(true);
           } else {
-            console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
           }
         }
       });
-
-      console.log('카메라 호출 후');
     } catch (error) {
-      console.error('카메라 촬영 예외 발생:', error);
       Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
     }
-  }, []);
+  };
 
   // 이미지 편집 완료 후 처리
-  const handleImageEditComplete = useCallback(() => {
-    console.log('이미지 편집 완료 버튼 클릭됨');
-    try {
-      if (cropViewRef.current) {
-        const result = cropViewRef.current.saveImage(true, 90);
-        console.log('이미지 크롭 결과 트라이:', result);
-      }
-
-      // 편집 완료 후 croppedImageResult 또는 원본 URI 사용
-      const resultUri = croppedImageResult ? croppedImageResult.uri : currentImageUri;
-      console.log('최종 사용 이미지:', resultUri);
-
-      // 편집한 이미지와 함께 상세 화면으로 이동
-      navigation.navigate('RegisterDetail', { selectedImage: { uri: resultUri } });
-      setImageEditorVisible(false);
-    } catch (error) {
-      console.error('이미지 편집 예외 발생:', error);
-      Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
-      setImageEditorVisible(false);
-    }
-  }, [navigation, currentImageUri, croppedImageResult]);
+  const handleImageEditComplete = () => {
+    // 편집기 닫기만 하고, 이미지는 onImageCrop에서 처리
+    setImageEditorVisible(false);
+  };
 
   // 이미지 편집 취소
-  const handleImageEditCancel = useCallback(() => {
-    console.log('이미지 편집 취소됨');
+  const handleImageEditCancel = () => {
+    // 취소 시 크롭 결과 초기화
+    setCroppedImageResult(null);
     setImageEditorVisible(false);
-  }, []);
+  };
+
+  // 기프티콘 등록 처리
+  const handleRegister = () => {
+    if (!currentImageUri) {
+      Alert.alert('알림', '기프티콘 이미지를 등록해주세요.');
+      return;
+    }
+
+    if (!brand.trim()) {
+      Alert.alert('알림', '브랜드명을 입력해주세요.');
+      return;
+    }
+
+    if (!productName.trim()) {
+      Alert.alert('알림', '상품명을 입력해주세요.');
+      return;
+    }
+
+    if (!expiryDate) {
+      Alert.alert('알림', '유효기간을 입력해주세요.');
+      return;
+    }
+
+    // 여기서 등록 API 호출 또는 저장 로직을 구현
+    Alert.alert('성공', '기프티콘이 성공적으로 등록되었습니다.', [
+      {
+        text: '확인',
+        onPress: () => navigation.navigate('List'),
+      },
+    ]);
+  };
+
+  // 날짜를 YYYY.MM.DD 형식으로 포맷
+  const formatDate = date => {
+    if (!date) return '';
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -235,9 +258,7 @@ const RegisterMainScreen = () => {
           variant="ghost"
           onPress={handleGoBack}
           style={styles.backButton}
-          leftIcon={
-            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
-          }
+          leftIcon={<Icon name="arrow-back-ios" size={22} color={theme.colors.black} />}
         />
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 등록
@@ -245,115 +266,97 @@ const RegisterMainScreen = () => {
         <View style={styles.rightPlaceholder} />
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        {/* 업로드 카드 */}
-        <Shadow
-          distance={10}
-          startColor={'rgba(0, 0, 0, 0.028)'}
-          offset={[0, 1]}
-          style={styles.shadowContainer}
+      <View style={styles.content}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.contentContainer}
         >
-          <TouchableOpacity onPress={showImageOptions}>
-            <Card style={styles.uploadCard}>
-              <View style={styles.uploadContent}>
-                <Image
-                  source={require('../../assets/images/gifticon-upload.png')}
-                  style={styles.uploadIcon}
-                  resizeMode="contain"
-                />
-                <Text variant="h2" weight="bold" style={styles.uploadTitleMargin}>
-                  기프티콘 업로드
-                </Text>
-                <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
-                  지금 바로 갤러리에 저장된
-                </Text>
-                <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
-                  기프티콘을 업로드 해보세요.
-                </Text>
-              </View>
-            </Card>
-          </TouchableOpacity>
-        </Shadow>
+          {/* 이미지 선택 영역 */}
+          <View style={styles.imageContainerWrapper}>
+            <TouchableOpacity style={styles.imageContainer} onPress={showImageOptions}>
+              {currentImageUri ? (
+                <Image source={{ uri: currentImageUri }} style={styles.image} resizeMode="cover" />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <RNEIcon name="image" type="material" size={60} color="#CCCCCC" />
+                  <Text variant="body2" color="#666666" style={styles.placeholderText}>
+                    이미지를 등록해주세요
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
 
-        {/* 수동 등록 버튼 - TouchableOpacity로 간단하게 구현 */}
-        <TouchableOpacity style={styles.manualButton} onPress={handleManualRegister}>
-          <Text variant="h4" weight="semiBold" color="white" style={styles.manualTextMain}>
-            수동 등록
-          </Text>
-          <Text variant="body2" weight="regular" color="white" style={styles.manualTextSub}>
-            등록에 문제가 발생하셨나요?
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        {/* 등록하신 기프티콘은... 섹션 */}
-        <View style={styles.infoSection}>
-          <Text variant="h2" weight="bold">
-            등록하신 기프티콘은
-          </Text>
-          <Text variant="h2" weight="bold">
-            다음과 같은 절차를 통해 관리돼요.
-          </Text>
-        </View>
-
-        {/* 절차 스텝 */}
-        <View style={styles.stepsContainer}>
-          {/* 스텝 1 */}
-          <View style={styles.stepItem}>
-            <View style={[styles.stepCircle, { backgroundColor: theme.colors.tertiary }]}>
-              <Text variant="h3" weight="bold" color="white">
-                1
-              </Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text variant="body1" weight="regular">
-                갤러리에 저장된 기프티콘을
-              </Text>
-              <Text variant="body1" weight="regular">
-                앱에 업로드해요.
-              </Text>
-            </View>
+            <Button
+              title={currentImageUri ? '이미지 편집하기' : '이미지 등록하기'}
+              variant="outline"
+              style={styles.imageButton}
+              onPress={showImageOptions}
+            />
           </View>
 
-          {/* 스텝 2 */}
-          <View style={styles.stepItem}>
-            <View style={[styles.stepCircle, { backgroundColor: theme.colors.primary }]}>
-              <Text variant="h3" weight="bold" color="white">
-                2
-              </Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text variant="body1" weight="regular">
-                OCR 기술을 통해
-              </Text>
-              <Text variant="body1" weight="regular">
-                브랜드, 상품, 유효기간을 모두 저장해요.
-              </Text>
-            </View>
-          </View>
+          {/* 입력 폼 */}
+          <View style={styles.formContainer}>
+            <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+              바코드 번호 입력
+            </Text>
+            <InputLine
+              value={barcode}
+              onChangeText={setBarcode}
+              placeholder="바코드 번호를 입력해주세요."
+              keyboardType="numeric"
+              containerStyle={styles.inputContainer}
+            />
 
-          {/* 스텝 3 */}
-          <View style={styles.stepItem}>
-            <View style={[styles.stepCircle, { backgroundColor: theme.colors.secondary }]}>
-              <Text variant="h3" weight="bold" color="white">
-                3
-              </Text>
-            </View>
-            <View style={styles.stepContent}>
-              <Text variant="body1" weight="regular">
-                이렇게 저장된 기프티콘은
-              </Text>
-              <Text variant="body1" weight="regular">
-                사용, 선물, 공유가 가능해져요.
-              </Text>
-            </View>
+            <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+              기프티콘 정보 입력
+            </Text>
+            <InputLine
+              value={brand}
+              onChangeText={setBrand}
+              placeholder="브랜드명을 입력해주세요."
+              containerStyle={styles.inputContainer}
+            />
+
+            <InputLine
+              value={productName}
+              onChangeText={setProductName}
+              placeholder="상품명을 입력해주세요."
+              containerStyle={styles.inputContainer}
+            />
+
+            <InputLine
+              value={formatDate(expiryDate)}
+              placeholder="유효기간을 입력해주세요."
+              containerStyle={styles.inputContainer}
+              rightIcon={
+                <TouchableOpacity onPress={showDatePickerHandler}>
+                  <Icon name="calendar-today" size={22} color="#333333" />
+                </TouchableOpacity>
+              }
+              editable={false}
+              onTouchStart={showDatePickerHandler}
+            />
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={expiryDate || new Date()}
+                mode="date"
+                display="default"
+                onChange={handleDateChange}
+              />
+            )}
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+
+        {/* 등록 버튼 */}
+        <Button
+          title="등록하기"
+          onPress={handleRegister}
+          variant="primary"
+          size="lg"
+          style={styles.button}
+        />
+      </View>
 
       {/* 이미지 옵션 모달 */}
       <Modal
@@ -378,13 +381,7 @@ const RegisterMainScreen = () => {
                 handlePickImage();
               }}
             >
-              <Icon
-                name="photo-library"
-                type="material"
-                size={24}
-                color="#333333"
-                style={styles.modalOptionIcon}
-              />
+              <Icon name="photo-library" size={24} color="#333333" style={styles.modalOptionIcon} />
               <Text variant="body1">갤러리에서 선택</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -394,13 +391,7 @@ const RegisterMainScreen = () => {
                 handleOpenCamera();
               }}
             >
-              <Icon
-                name="camera-alt"
-                type="material"
-                size={24}
-                color="#333333"
-                style={styles.modalOptionIcon}
-              />
+              <Icon name="camera-alt" size={24} color="#333333" style={styles.modalOptionIcon} />
               <Text variant="body1">카메라로 촬영</Text>
             </TouchableOpacity>
             <Button
@@ -440,13 +431,16 @@ const RegisterMainScreen = () => {
                   sourceUrl={currentImageUri}
                   style={styles.cropView}
                   onError={error => {
-                    console.error('이미지 크롭 에러:', error);
-                    console.error('에러가 발생한 이미지 URI:', currentImageUri);
                     Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
                   }}
                   onImageCrop={res => {
-                    console.log('이미지 크롭 결과:', res);
-                    setCroppedImageResult(res);
+                    // 크롭 결과 확인
+                    if (res && res.uri) {
+                      // 크롭 결과를 상태에 저장
+                      setCroppedImageResult({ ...res });
+                      // 현재 이미지 URI도 즉시 업데이트
+                      setCurrentImageUri(res.uri);
+                    }
                   }}
                   cropAreaWidth={300}
                   cropAreaHeight={300}
@@ -459,7 +453,7 @@ const RegisterMainScreen = () => {
               </>
             ) : (
               <View style={styles.emptyImageContainer}>
-                <Icon name="image" type="material" size={50} color="#CCCCCC" />
+                <Icon name="image" size={50} color="#CCCCCC" />
                 <Text variant="body2" color="#DDDDDD" style={styles.emptyImageText}>
                   이미지 로드 실패
                 </Text>
@@ -471,19 +465,22 @@ const RegisterMainScreen = () => {
             <TouchableOpacity
               style={styles.toolbarButton}
               onPress={() => {
-                console.log('회전 버튼 클릭');
                 if (cropViewRef.current) {
                   try {
+                    // 회전 후 즉시 저장 시도
                     cropViewRef.current.rotateImage(true);
+                    setTimeout(() => {
+                      if (cropViewRef.current) {
+                        cropViewRef.current.saveImage(true, 100);
+                      }
+                    }, 300); // 약간의 딜레이 추가
                   } catch (error) {
-                    console.error('회전 오류:', error);
+                    // 오류 처리
                   }
-                } else {
-                  console.error('cropViewRef가 없습니다');
                 }
               }}
             >
-              <Icon name="rotate-right" type="material" size={24} color="#FFFFFF" />
+              <Icon name="rotate-right" size={24} color="#FFFFFF" />
               <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
                 회전
               </Text>
@@ -496,7 +493,7 @@ const RegisterMainScreen = () => {
                 setAspectRatio(null);
               }}
             >
-              <Icon name="crop-free" type="material" size={24} color="#FFFFFF" />
+              <Icon name="crop-free" size={24} color="#FFFFFF" />
               <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
                 자유
               </Text>
@@ -516,7 +513,7 @@ const RegisterMainScreen = () => {
                 setAspectRatio({ width: 1, height: 1 });
               }}
             >
-              <Icon name="crop-square" type="material" size={24} color="#FFFFFF" />
+              <Icon name="crop-square" size={24} color="#FFFFFF" />
               <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
                 1:1
               </Text>
@@ -536,7 +533,7 @@ const RegisterMainScreen = () => {
                 setAspectRatio({ width: 4, height: 3 });
               }}
             >
-              <Icon name="crop-7-5" type="material" size={24} color="#FFFFFF" />
+              <Icon name="crop-7-5" size={24} color="#FFFFFF" />
               <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
                 4:3
               </Text>
@@ -556,7 +553,7 @@ const RegisterMainScreen = () => {
                 setAspectRatio({ width: 16, height: 9 });
               }}
             >
-              <Icon name="crop-16-9" type="material" size={24} color="#FFFFFF" />
+              <Icon name="crop-16-9" size={24} color="#FFFFFF" />
               <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
                 16:9
               </Text>
@@ -572,10 +569,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 25,
+    justifyContent: 'space-between',
+  },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 30,
-    paddingBottom: 30,
+    paddingBottom: 20,
   },
   header: {
     height: 60,
@@ -597,79 +598,51 @@ const styles = StyleSheet.create({
   rightPlaceholder: {
     width: 48,
   },
-  uploadCard: {
-    height: 250,
+  imageContainerWrapper: {
     alignItems: 'center',
-    justifyContent: 'center',
+    marginVertical: 20,
+  },
+  imageContainer: {
+    width: 180,
+    height: 180,
     borderRadius: 10,
-    marginBottom: 0,
-  },
-  uploadContent: {
-    alignItems: 'center',
-  },
-  uploadIcon: {
-    width: 90,
-    height: 90,
-    marginBottom: 18,
-  },
-  uploadTitleMargin: {
-    marginBottom: 10,
-  },
-  textCenter: {
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 2,
-  },
-  manualButton: {
-    backgroundColor: '#BBC1D0',
-    borderRadius: 10,
-    height: 65,
-    marginBottom: 15,
+    backgroundColor: '#F9F9F9',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  image: {
     width: '100%',
+    height: '100%',
   },
-  manualTextMain: {
-    marginBottom: 0,
+  imagePlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  manualTextSub: {
-    opacity: 0.8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#EEEEEE',
+  placeholderText: {
     marginTop: 10,
-    marginBottom: 20,
   },
-  infoSection: {
-    marginBottom: 20,
-    paddingHorizontal: 20,
+  imageButton: {
+    marginTop: 15,
+    width: 180,
   },
-  stepsContainer: {
-    marginTop: 8,
-    paddingHorizontal: 20,
+  formContainer: {
+    marginTop: 5,
   },
-  stepItem: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    alignItems: 'flex-start',
+  formSectionTitle: {
+    marginTop: 5,
+    marginBottom: 5,
   },
-  stepCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
+  inputContainer: {
+    marginBottom: 5,
   },
-  stepContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  shadowContainer: {
+  button: {
     width: '100%',
+    height: 56,
+    borderRadius: 8,
     marginBottom: 20,
-    borderRadius: 10,
   },
   // 모달 관련 스타일
   modalOverlay: {
@@ -750,14 +723,6 @@ const styles = StyleSheet.create({
   toolbarButtonText: {
     marginTop: 8,
   },
-  debugText: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    color: 'white',
-    fontSize: 12,
-    zIndex: 100,
-  },
   emptyImageContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -768,4 +733,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default RegisterMainScreen;
+export default RegisterDetailScreen;
