@@ -43,10 +43,31 @@ const RegisterDetailScreen = () => {
   const [croppedImageResult, setCroppedImageResult] = useState(null);
   const cropViewRef = useRef(null);
 
+  // 이전 화면에서 전달받은 기프티콘 타입 및 등록 위치 정보
+  const [gifticonType, setGifticonType] = useState('PRODUCT'); // 'PRODUCT' 또는 'AMOUNT'
+  const [boxType, setBoxType] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
+  const [shareBoxId, setShareBoxId] = useState(null);
+
+  // 추가 필드 (금액형일 경우)
+  const [amount, setAmount] = useState('');
+
   // 초기 화면 로드시 이미지가 있는지 확인
   useEffect(() => {
     if (route.params?.selectedImage) {
       setCurrentImageUri(route.params.selectedImage.uri);
+    }
+
+    // 기프티콘 타입 및 등록 위치 정보 가져오기
+    if (route.params?.gifticonType) {
+      setGifticonType(route.params.gifticonType);
+    }
+
+    if (route.params?.boxType) {
+      setBoxType(route.params.boxType);
+    }
+
+    if (route.params?.shareBoxId) {
+      setShareBoxId(route.params.shareBoxId);
     }
   }, [route.params]);
 
@@ -226,11 +247,28 @@ const RegisterDetailScreen = () => {
       return;
     }
 
+    // 금액형인 경우 금액 검증
+    if (gifticonType === 'AMOUNT' && (!amount || isNaN(Number(amount)) || Number(amount) <= 0)) {
+      Alert.alert('알림', '유효한 금액을 입력해주세요.');
+      return;
+    }
+
     // 여기서 등록 API 호출 또는 저장 로직을 구현
+    // 예시: 등록 후 생성된 ID를 받아옴
+    const mockRegisteredId = Date.now().toString();
+
     Alert.alert('성공', '기프티콘이 성공적으로 등록되었습니다.', [
       {
         text: '확인',
-        onPress: () => navigation.navigate('List'),
+        onPress: () => {
+          // 기프티콘 타입에 따라 다른 상세 화면으로 이동
+          const targetScreen = gifticonType === 'PRODUCT' ? 'DetailProduct' : 'DetailAmount';
+          navigation.navigate(targetScreen, {
+            id: mockRegisteredId,
+            scope: boxType,
+            shareBoxId: shareBoxId,
+          });
+        },
       },
     ]);
   };
@@ -344,6 +382,23 @@ const RegisterDetailScreen = () => {
                 display="default"
                 onChange={handleDateChange}
               />
+            )}
+
+            {/* 금액형인 경우 금액 입력 필드 추가 */}
+            {gifticonType === 'AMOUNT' && (
+              <>
+                <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+                  금액 정보 입력
+                </Text>
+                <InputLine
+                  value={amount}
+                  onChangeText={setAmount}
+                  placeholder="금액을 입력해주세요."
+                  keyboardType="numeric"
+                  containerStyle={styles.inputContainer}
+                  rightIcon={<Text variant="body1">원</Text>}
+                />
+              </>
             )}
           </View>
         </ScrollView>
