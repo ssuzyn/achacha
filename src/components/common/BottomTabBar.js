@@ -10,7 +10,7 @@ import { Text } from '../ui';
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
 import SettingScreen from '../../screens/SettingScreen';
-import ListScreen from '../../screens/gifticon-management/ListScreen';
+import ManageListScreen from '../../screens/gifticon-management/ManageListScreen';
 
 // 임시 스크린
 const MapScreen = () => {
@@ -109,7 +109,7 @@ const createWrappedComponent = (Component, screenName) => {
 
 // 각 화면에 대한 래퍼 컴포넌트를 미리 생성
 const WrappedHomeScreen = createWrappedComponent(HomeScreen, 'Home');
-const WrappedGifticonManageScreen = createWrappedComponent(ListScreen, 'GifticonManage');
+const WrappedGifticonManageScreen = createWrappedComponent(ManageListScreen, 'GifticonManage');
 const WrappedMapScreen = createWrappedComponent(MapScreen, 'Map');
 const WrappedShareboxScreen = createWrappedComponent(ShareboxScreen, 'Sharebox');
 const WrappedSettingsScreen = createWrappedComponent(SettingScreen, 'Settings');
