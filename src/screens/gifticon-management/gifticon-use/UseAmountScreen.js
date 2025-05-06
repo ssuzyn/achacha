@@ -106,7 +106,7 @@ const UseAmountScreen = () => {
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Icon name="arrow-back" type="material" size={28} color="#333" />
+          <Icon name="arrow-back-ios" type="material" size={22} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{productInfo.name}</Text>
       </View>

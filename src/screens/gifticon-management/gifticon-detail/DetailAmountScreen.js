@@ -179,7 +179,7 @@ const DetailAmountScreen = () => {
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
-          <Icon name="arrow-back" type="material" size={28} color="#000000" />
+          <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
         </TouchableOpacity>
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 상세
