@@ -14,5 +14,5 @@ public class GifticonSaveRequestDto {
 	private GifticonType type;
 	private String barcode;
 	private Integer originalAmount;
-	private LocalDate expireDate;
+	private LocalDate expiryDate;
 }

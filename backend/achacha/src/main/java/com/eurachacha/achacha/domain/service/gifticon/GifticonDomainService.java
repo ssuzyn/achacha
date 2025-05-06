@@ -8,4 +8,7 @@ public interface GifticonDomainService {
 
 	// 기프티콘 만료 여부 확인
 	boolean isExpired(Gifticon gifticon);
+
+	// 기프티콘 조회 권한 여부 확인
+	void validateGifticonAccess(Integer requestUserId, Integer gifticonUserId);
 }
