@@ -13,6 +13,9 @@ pipeline {
         // 클로바 OCR 환경 변수
         CLOVA_OCR_API_URL = credentials('CLOVA_OCR_API_URL')
         CLOVA_OCR_SECRET_KEY = credentials('CLOVA_OCR_SECRET_KEY')
+
+        // FastAPI 환경변수
+        AI_SERVICE_URL = credentials('FASTAPI_AI_URL')
     }
     stages {
         stage('Clone Repository') {
@@ -78,6 +81,7 @@ pipeline {
                                       -e SPRING_DATABASE_PASSWORD="${SPRING_DATABASE_PSW}" \\
                                       -e CLOVA_OCR_API_URL="${CLOVA_OCR_API_URL}" \\
                                       -e CLOVA_OCR_SECRET_KEY="${CLOVA_OCR_SECRET_KEY}" \\
+                                      -e AI_SERVICE_URL="${AI_SERVICE_URL}" \\
                                       -p 8081:8080 \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
