@@ -139,11 +139,14 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 		      b.id,
 		      b.name,
 		      CASE 
-		        WHEN oh.id IS NOT NULL AND oh.transferType = 'GIVE_AWAY' THEN 'GIVE_AWAY'
-		        WHEN oh.id IS NOT NULL AND oh.transferType = 'PRESENT' THEN 'PRESENT'
+		        WHEN oh.id IS NOT NULL THEN 
+		          CASE 
+		            WHEN oh.transferType = 'GIVE_AWAY' THEN 'GIVE_AWAY'
+		            WHEN oh.transferType = 'PRESENT' THEN 'PRESENT'
+		          END
 		        ELSE 'SELF_USE'
 		      END,
-		      COALESCE(oh.createdAt, uh.createdAt),
+		      COALESCE(oh.createdAt, uh.createdAt) as usedAt,
 		      (
 		        SELECT f.path
 		          FROM File f
@@ -166,13 +169,12 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 		      AND (g.type = 'PRODUCT' OR (g.type = 'AMOUNT' AND uh.usageAmount = g.originalAmount))
 		  WHERE (oh.id IS NOT NULL OR uh.id IS NOT NULL)
 		    AND (:type IS NULL OR g.type = :type)
-		  ORDER BY COALESCE(oh.createdAt, uh.createdAt) DESC
 		""")
+		// ORDER BY 절 제거
 	Slice<UsedGifticonResponseDto> findUsedGifticons(
 		@Param("userId") Integer userId,
 		@Param("type") GifticonType type,
 		@Param("fileType") FileType fileType,
 		Pageable pageable
 	);
-
 }
