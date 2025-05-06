@@ -3,6 +3,7 @@ package com.eurachacha.achacha.application.service.gifticon;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
@@ -23,13 +24,13 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class GifticonAppServiceImpl implements GifticonAppService {
 
 	private final GifticonDomainService gifticonDomainService;
@@ -58,8 +59,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		return metadata;
 	}
 
-	@Override
 	@Transactional
+	@Override
 	public GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto) {
 		// 도메인 객체 생성
 		Gifticon newGifticon = Gifticon.builder()
@@ -84,7 +85,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	public AvailableGifticonsResponseDto getAvailableGifticons(GifticonScopeType scope, GifticonType type,
 		GifticonSortType sort, Integer page, Integer size) {
 
@@ -105,7 +105,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
-	@org.springframework.transaction.annotation.Transactional(readOnly = true)
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
 		Integer userId = 2; // 유저 로직 추가 시 변경 필요
