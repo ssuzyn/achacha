@@ -12,12 +12,14 @@ export const TabBarProvider = ({ children }) => {
 
   // 특정 라우트에서 탭바 표시 여부 결정 함수
   const getTabBarVisibility = route => {
-    // 탭바를 숨길 화면 목록 (필요에 따라 추가 예정 !!!)
+    // 탭바를 숨길 화면 목록 (DetailProductScreen과 DetailAmountScreen은 제외)
     const hiddenInRoutes = [
       'Login',
       'GuideFirst',
       'Permission',
       'Splash',
+      // 'DetailProduct', // 제거: 항상 표시되도록
+      // 'DetailAmount', // 제거: 항상 표시되도록
       // 추가 화면들...
     ];
 
