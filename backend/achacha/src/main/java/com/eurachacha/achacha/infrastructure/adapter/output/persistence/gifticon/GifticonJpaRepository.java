@@ -184,11 +184,10 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 		  JOIN g.brand b
 		  LEFT JOIN GifticonOwnerHistory oh ON g.id = oh.gifticon.id AND oh.fromUser.id = :userId
 		  LEFT JOIN UsageHistory uh ON g.id = uh.gifticon.id AND uh.user.id = :userId
-		      AND (g.type = 'PRODUCT' OR (g.type = 'AMOUNT' AND uh.usageAmount = g.originalAmount))
 		  WHERE (
 		      (oh.id IS NOT NULL)
 		      OR (g.user.id = :userId AND g.isUsed = true) 
-		      OR (g.user.id != :userId AND uh.user.id = :userId)
+		      OR (g.user.id != :userId AND g.isUsed = true AND uh.id IS NOT NULL)
 		  )
 		  AND g.isDeleted = false
 		  AND (:type IS NULL OR g.type = :type)
