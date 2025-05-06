@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @RequiredArgsConstructor
 public class AIServiceAdapter implements AIServicePort {
+	private static final String EXTRACT_GIFTICON_URL_PATH = "/api/extract-gifticon";
 
 	private final AIServiceProperties properties;
 	private final RestTemplate restTemplate;
@@ -53,7 +54,7 @@ public class AIServiceAdapter implements AIServicePort {
 			HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
 
 			// 4. AI 서비스 서버 호출
-			String url = properties.getApiUrl() + "/api/extract-gifticon";
+			String url = properties.getApiUrl() + EXTRACT_GIFTICON_URL_PATH;
 			ResponseEntity<String> response;
 
 			try {
