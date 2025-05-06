@@ -16,45 +16,86 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 
-const DetailCashScreen = () => {
+const DetailAmountScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
 
-  // 마이박스 또는 쉐어박스 구분 (route.params에서 받아오도록 수정)
-  const [boxType, setBoxType] = useState('mybox'); // 'mybox' 또는 'sharebox'
+  // scope 상태 관리
+  const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
 
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
 
-  // route.params에서 boxType을 가져오는 부분
+  // route.params에서 scope을 가져오는 부분
   useEffect(() => {
-    if (route.params?.boxType) {
-      setBoxType(route.params.boxType);
+    if (route.params?.scope) {
+      setScope(route.params.scope);
     }
   }, [route.params]);
 
-  // 더미 기프티콘 데이터
+  // 더미 기프티콘 데이터 - API 명세에 맞춤
   const gifticonData = {
-    id: '1',
-    brand: '스타벅스',
-    name: '아이스 카페 아메리카노 T',
-    expiryDate: '25.04.28',
-    daysLeft: 7,
-    amount: 30000,
-    balance: 10000,
-    source: '오라차차 대성이네', // 쉐어박스일 때 출처 정보
-    barcodeNumber: '23424-325235-2352525-45345', // 바코드 번호
-    imageUrl: require('../../assets/images/starbucks-gift-card.png'),
-    barcodeImageUrl: require('../../assets/images/barcode.png'), // 바코드 이미지 (더미)
+    gifticonId: 124,
+    gifticonName: "문화상품권",
+    gifticonType: "AMOUNT",
+    gifticonExpiryDate: "2025-12-31",
+    brandId: 46,
+    brandName: "컬쳐랜드",
+    scope: "SHARE_BOX",
+    userId: 78,
+    userName: "홍길동",
+    shareBoxId: 90,
+    shareBoxName: "스터디 그룹",
+    thumbnailPath: require('../../../assets/images/dummy-starbuckscard.png'),
+    originalImagePath: require('../../../assets/images/dummy-starbuckscard.png'),
+    gifticonCreatedAt: "2025-01-15T10:30:00",
+    gifticonOriginalAmount: 10000,
+    gifticonRemainingAmount: 8000,
+    barcodeNumber: "8013-7621-1234-5678", // 바코드 번호 (더미)
+    barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
+  };
+
+  // 날짜 포맷 함수 (YYYY.MM.DD)
+  const formatDate = dateString => {
+    const date = new Date(dateString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}.${mm}.${dd}`;
+  };
+
+  // 날짜 포맷 함수 (YYYY.MM.DD HH:MM)
+  const formatDateTime = dateString => {
+    const date = new Date(dateString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
+  };
+
+  // D-day 계산 함수
+  const calculateDaysLeft = expiryDate => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // 금액 포맷 함수
+  const formatAmount = amount => {
+    return amount.toLocaleString() + '원';
   };
 
   // 공유하기 기능
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `${gifticonData.brand} ${gifticonData.name} 기프티콘을 공유합니다.`,
+        message: `${gifticonData.brandName} ${gifticonData.gifticonName} 기프티콘을 공유합니다.`,
       });
     } catch (error) {
       console.error(error);
@@ -75,8 +116,8 @@ const DetailCashScreen = () => {
 
   // 돋보기 기능 - 확대 화면으로 이동
   const handleMagnify = () => {
-    navigation.navigate('UseCashScreen', {
-      id: gifticonData.id,
+    navigation.navigate('UseAmountScreen', {
+      id: gifticonData.gifticonId,
       barcodeNumber: gifticonData.barcodeNumber,
     });
   };
@@ -91,12 +132,12 @@ const DetailCashScreen = () => {
   const handleHistory = () => {
     // 사용내역 조회 로직
     console.log('사용내역 조회');
-    navigation.navigate('DetailCashHistoryScreen', { id: gifticonData.id });
+    navigation.navigate('DetailAmountHistoryScreen', { id: gifticonData.gifticonId });
   };
 
-  // 테스트용 박스 타입 전환 함수
-  const toggleBoxType = () => {
-    setBoxType(boxType === 'mybox' ? 'sharebox' : 'mybox');
+  // 테스트용 scope 전환 함수
+  const toggleScope = () => {
+    setScope(scope === 'MY_BOX' ? 'SHARE_BOX' : 'MY_BOX');
   };
 
   return (
@@ -138,7 +179,7 @@ const DetailCashScreen = () => {
                 // 일반 모드일 때 기프티콘 이미지 표시
                 <View style={styles.imageContainer}>
                   <Image
-                    source={gifticonData.imageUrl}
+                    source={gifticonData.thumbnailPath}
                     style={styles.gifticonImage}
                     resizeMode="contain"
                   />
@@ -146,20 +187,53 @@ const DetailCashScreen = () => {
               )}
 
               <View style={styles.infoContainer}>
-                <Text style={styles.brandText}>{gifticonData.brand}</Text>
-                <Text style={styles.nameText}>{gifticonData.name}</Text>
+                <Text style={styles.brandText}>{gifticonData.brandName}</Text>
+                <Text style={styles.nameText}>{gifticonData.gifticonName}</Text>
 
                 {!isUsing && (
                   <>
-                    <View style={styles.expiryContainer}>
-                      <Text style={styles.expiryLabel}>~ {gifticonData.expiryDate}</Text>
-                      <Text style={styles.expiryDday}>D-{gifticonData.daysLeft}</Text>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>유효기간</Text>
+                      <Text style={styles.infoValue}>
+                        ~ {formatDate(gifticonData.gifticonExpiryDate)}
+                      </Text>
+                      <Text style={styles.expiryDday}>
+                        D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
+                      </Text>
                     </View>
 
-                    <View style={styles.amountContainer}>
-                      <Text style={styles.balanceLabel}>잔액 | </Text>
-                      <Text style={styles.balanceAmount}>
-                        {gifticonData.balance.toLocaleString()}원
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>등록일</Text>
+                      <Text style={styles.infoValue}>
+                        {formatDateTime(gifticonData.gifticonCreatedAt)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>등록자</Text>
+                      <Text style={styles.infoValue}>{gifticonData.userName}</Text>
+                    </View>
+
+                    {scope === 'SHARE_BOX' && gifticonData.shareBoxName && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>쉐어박스</Text>
+                        <Text style={styles.infoValue}>{gifticonData.shareBoxName}</Text>
+                      </View>
+                    )}
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.amountInfoRow}>
+                      <Text style={styles.amountLabel}>총 금액</Text>
+                      <Text style={styles.amountValue}>
+                        {formatAmount(gifticonData.gifticonOriginalAmount)}
+                      </Text>
+                    </View>
+
+                    <View style={styles.amountInfoRow}>
+                      <Text style={styles.amountLabel}>잔액</Text>
+                      <Text style={[styles.amountValue, styles.remainingAmount]}>
+                        {formatAmount(gifticonData.gifticonRemainingAmount)}
                       </Text>
                     </View>
                   </>
@@ -168,7 +242,7 @@ const DetailCashScreen = () => {
             </View>
           </View>
 
-          {/* 버튼 영역 - 박스 타입에 따라 다른 UI 표시 */}
+          {/* 버튼 영역 - scope에 따라 다른 UI 표시 */}
           <View style={styles.buttonContainer}>
             {/* 버튼 영역 - 사용 상태에 따라 다른 UI */}
             {isUsing ? (
@@ -197,7 +271,7 @@ const DetailCashScreen = () => {
                   />
                 </View>
 
-                {boxType === 'mybox' ? (
+                {scope === 'MY_BOX' ? (
                   // 마이박스일 때 - 공유하기/선물하기 버튼
                   <View style={styles.actionButtonsRow}>
                     <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
@@ -214,16 +288,16 @@ const DetailCashScreen = () => {
                   // 쉐어박스일 때 - 출처 정보 표시
                   <View style={styles.sourceContainer}>
                     <View style={styles.sourceButton}>
-                      <Icon name="person" type="material" size={24} color="#4A90E2" />
-                      <Text style={styles.sourceText}>{gifticonData.source}</Text>
+                      <Icon name="inventory-2" type="material" size={24} color="#4A90E2" />
+                      <Text style={styles.sourceText}>{gifticonData.shareBoxName}</Text>
                     </View>
                   </View>
                 )}
 
                 {/* 테스트용 타입 전환 버튼 (실제 앱에서는 삭제) */}
-                <TouchableOpacity style={styles.typeToggleButton} onPress={toggleBoxType}>
+                <TouchableOpacity style={styles.typeToggleButton} onPress={toggleScope}>
                   <Text style={styles.typeToggleText}>
-                    현재: {boxType === 'mybox' ? '마이박스' : '쉐어박스'} (탭하여 전환)
+                    현재: {scope === 'MY_BOX' ? '마이박스' : '쉐어박스'} (탭하여 전환)
                   </Text>
                 </TouchableOpacity>
               </>
@@ -274,10 +348,12 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
+    height: 200,
+    backgroundColor: '#D2F2FF',
   },
   gifticonImage: {
-    width: '100%',
-    height: 180,
+    width: '80%',
+    height: '100%',
     borderRadius: 8,
   },
   // 바코드 관련 스타일
@@ -288,6 +364,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
+    height: 200,
   },
   barcodeImage: {
     width: '90%',
@@ -310,48 +387,69 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     padding: 16,
-    alignItems: 'center',
   },
   brandText: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 4,
+    marginBottom: 6,
+    textAlign: 'center',
   },
   nameText: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: 20,
+    textAlign: 'center',
   },
-  expiryContainer: {
+  infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 12,
+    paddingHorizontal: 8,
   },
-  expiryLabel: {
-    fontSize: 16,
+  infoLabel: {
+    width: 80,
+    fontSize: 15,
     color: '#666',
-    marginRight: 8,
+    fontWeight: '500',
+  },
+  infoValue: {
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
   },
   expiryDday: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#5DADE2',
+    marginLeft: 10,
   },
-  amountContainer: {
+  divider: {
+    height: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 16,
+  },
+  amountInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
+    marginBottom: 12,
   },
-  balanceLabel: {
+  amountLabel: {
     fontSize: 16,
-    color: '#666',
+    color: '#555',
+    fontWeight: '500',
   },
-  balanceAmount: {
+  amountValue: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#333',
+    fontWeight: '500',
+  },
+  remainingAmount: {
+    color: '#3498DB',
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   buttonContainer: {
     marginTop: 10,
@@ -426,4 +524,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DetailCashScreen;
+export default DetailAmountScreen;
