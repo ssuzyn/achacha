@@ -7,6 +7,7 @@ import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
+import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
@@ -25,6 +26,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final GifticonDomainService gifticonDomainService;
 	private final GifticonRepository gifticonRepository;
 	private final OcrPort ocrPort;
+	private final AIServicePort aiServicePort;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -34,10 +36,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		String ocrResult = ocrPort.extractRawOcrResult(image);
 		log.debug("OCR 결과 추출 완료");
 
-		// 2. LangChain을 통해 OCR 결과에서 필요한 정보 추출
-		// GifticonMetadataResponseDto metadata = langChainPort.extractMetadataFromOcrResult(
-		// 	ocrResult, request.getGifticonType());
-		// log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
+		// 2. AI 서비스를 통해 OCR 결과에서 필요한 정보 추출
+		GifticonMetadataResponseDto metadata = aiServicePort.extractGifticonInfo(
+			ocrResult, gifticonType.name());
+		log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
 
 		// return metadata;
 		return null;
