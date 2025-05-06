@@ -209,54 +209,53 @@ const DetailAmountScreen = () => {
                 <Text style={styles.brandText}>{gifticonData.brandName}</Text>
                 <Text style={styles.nameText}>{gifticonData.gifticonName}</Text>
 
-                {!isUsing && (
-                  <>
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>유효기간</Text>
-                      <Text style={styles.infoValue}>
-                        ~ {formatDate(gifticonData.gifticonExpiryDate)}
-                      </Text>
-                      <Text style={styles.expiryDday}>
-                        D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
-                      </Text>
-                    </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>유효기간</Text>
+                  <Text style={styles.infoValue}>
+                    ~ {formatDate(gifticonData.gifticonExpiryDate)}
+                  </Text>
+                  <Text style={styles.expiryDday}>
+                    D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
+                  </Text>
+                </View>
 
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>등록일</Text>
-                      <Text style={styles.infoValue}>
-                        {formatDateTime(gifticonData.gifticonCreatedAt)}
-                      </Text>
-                    </View>
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>등록일</Text>
+                  <Text style={styles.infoValue}>
+                    {formatDateTime(gifticonData.gifticonCreatedAt)}
+                  </Text>
+                </View>
 
-                    <View style={styles.infoRow}>
-                      <Text style={styles.infoLabel}>등록자</Text>
-                      <Text style={styles.infoValue}>{gifticonData.userName}</Text>
-                    </View>
-
-                    {scope === 'SHARE_BOX' && gifticonData.shareBoxName && (
-                      <View style={styles.infoRow}>
-                        <Text style={styles.infoLabel}>쉐어박스</Text>
-                        <Text style={styles.infoValue}>{gifticonData.shareBoxName}</Text>
-                      </View>
-                    )}
-
-                    <View style={styles.divider} />
-
-                    <View style={styles.amountInfoRow}>
-                      <Text style={styles.amountLabel}>총 금액</Text>
-                      <Text style={styles.amountValue}>
-                        {formatAmount(gifticonData.gifticonOriginalAmount)}
-                      </Text>
-                    </View>
-
-                    <View style={styles.amountInfoRow}>
-                      <Text style={styles.amountLabel}>잔액</Text>
-                      <Text style={[styles.amountValue, styles.remainingAmount]}>
-                        {formatAmount(gifticonData.gifticonRemainingAmount)}
-                      </Text>
-                    </View>
-                  </>
+                {/* 마이박스가 아닌 경우에만 등록자 정보 표시 */}
+                {scope !== 'MY_BOX' && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>등록자</Text>
+                    <Text style={styles.infoValue}>{gifticonData.userName}</Text>
+                  </View>
                 )}
+
+                {scope === 'SHARE_BOX' && gifticonData.shareBoxName && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>쉐어박스</Text>
+                    <Text style={styles.infoValue}>{gifticonData.shareBoxName}</Text>
+                  </View>
+                )}
+
+                <View style={styles.divider} />
+
+                <View style={styles.amountInfoRow}>
+                  <Text style={styles.amountLabel}>총 금액</Text>
+                  <Text style={styles.amountValue}>
+                    {formatAmount(gifticonData.gifticonOriginalAmount)}
+                  </Text>
+                </View>
+
+                <View style={styles.amountInfoRow}>
+                  <Text style={styles.amountLabel}>잔액</Text>
+                  <Text style={[styles.amountValue, styles.remainingAmount]}>
+                    {formatAmount(gifticonData.gifticonRemainingAmount)}
+                  </Text>
+                </View>
               </View>
             </View>
           </View>

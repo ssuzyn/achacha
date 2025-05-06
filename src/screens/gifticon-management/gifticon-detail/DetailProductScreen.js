@@ -270,10 +270,13 @@ const DetailProductScreen = () => {
                   </Text>
                 </View>
 
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>등록자</Text>
-                  <Text style={styles.infoValue}>{gifticonData.userName}</Text>
-                </View>
+                {/* 마이박스가 아닌 경우에만 등록자 정보 표시 */}
+                {scope !== 'MY_BOX' && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>등록자</Text>
+                    <Text style={styles.infoValue}>{gifticonData.userName}</Text>
+                  </View>
+                )}
 
                 {scope === 'SHARE_BOX' && gifticonData.shareBoxName && (
                   <View style={styles.infoRow}>
