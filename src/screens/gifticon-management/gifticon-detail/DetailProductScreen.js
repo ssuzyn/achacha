@@ -160,6 +160,9 @@ const DetailProductScreen = () => {
       // 이미 사용 중인 경우 사용 완료 처리
       console.log('기프티콘 사용 완료');
       // 여기에 사용 완료 로직 추가 (API 호출 등)
+
+      // 사용 완료 후 ManageListScreen으로 이동
+      navigation.navigate('List');
     }
   };
 
