@@ -1,6 +1,6 @@
 // 상세 스크린 - 금액형
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,13 +11,26 @@ import {
   Share,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Button } from '../../components/ui';
-import { useTheme } from '../../hooks/useTheme';
+import { Text, Button } from '../../../components/ui';
+import { useTheme } from '../../../hooks/useTheme';
 
 const DetailCashScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const navigation = useNavigation();
+  const route = useRoute();
+
+  // 마이박스 또는 쉐어박스 구분 (route.params에서 받아오도록 수정)
+  const [boxType, setBoxType] = useState('mybox'); // 'mybox' 또는 'sharebox'
+
+  // route.params에서 boxType을 가져오는 부분
+  useEffect(() => {
+    if (route.params?.boxType) {
+      setBoxType(route.params.boxType);
+    }
+  }, [route.params]);
 
   // 더미 기프티콘 데이터
   const gifticonData = {
@@ -28,6 +41,7 @@ const DetailCashScreen = () => {
     daysLeft: 7,
     amount: 30000,
     balance: 10000,
+    source: '오라차차 대성이네', // 쉐어박스일 때 출처 정보
     imageUrl: require('../../assets/images/starbucks-gift-card.png'),
   };
 
@@ -58,6 +72,12 @@ const DetailCashScreen = () => {
   const handleHistory = () => {
     // 사용내역 조회 로직
     console.log('사용내역 조회');
+    // 예: navigation.navigate('DetailCashHistoryScreen', { id: gifticonData.id });
+  };
+
+  // 테스트용 박스 타입 전환 함수
+  const toggleBoxType = () => {
+    setBoxType(boxType === 'mybox' ? 'sharebox' : 'mybox');
   };
 
   return (
@@ -107,8 +127,9 @@ const DetailCashScreen = () => {
             </View>
           </View>
 
-          {/* 버튼 영역 */}
+          {/* 버튼 영역 - 박스 타입에 따라 다른 UI 표시 */}
           <View style={styles.buttonContainer}>
+            {/* 상단 버튼 영역 - 두 타입 모두 사용하기/사용내역 버튼 표시 */}
             <View style={styles.buttonRow}>
               <Button
                 title="사용하기"
@@ -124,17 +145,35 @@ const DetailCashScreen = () => {
               />
             </View>
 
-            <View style={styles.actionButtonsRow}>
-              <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                <Icon name="share" type="material" size={24} color="#666" />
-                <Text style={styles.actionButtonText}>공유하기</Text>
-              </TouchableOpacity>
+            {boxType === 'mybox' ? (
+              // 마이박스일 때 - 공유하기/선물하기 버튼
+              <View style={styles.actionButtonsRow}>
+                <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+                  <Icon name="share" type="material" size={24} color="#666" />
+                  <Text style={styles.actionButtonText}>공유하기</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity style={styles.actionButton} onPress={handleGift}>
-                <Icon name="card-giftcard" type="material" size={24} color="#666" />
-                <Text style={styles.actionButtonText}>선물하기</Text>
-              </TouchableOpacity>
-            </View>
+                <TouchableOpacity style={styles.actionButton} onPress={handleGift}>
+                  <Icon name="card-giftcard" type="material" size={24} color="#666" />
+                  <Text style={styles.actionButtonText}>선물하기</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              // 쉐어박스일 때 - 출처 정보 표시
+              <View style={styles.sourceContainer}>
+                <View style={styles.sourceButton}>
+                  <Icon name="person" type="material" size={24} color="#4A90E2" />
+                  <Text style={styles.sourceText}>{gifticonData.source}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* 테스트용 타입 전환 버튼 (실제 앱에서는 삭제) */}
+            <TouchableOpacity style={styles.typeToggleButton} onPress={toggleBoxType}>
+              <Text style={styles.typeToggleText}>
+                현재: {boxType === 'mybox' ? '마이박스' : '쉐어박스'} (탭하여 전환)
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -269,6 +308,35 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 14,
     color: '#666',
+  },
+  sourceContainer: {
+    marginTop: 10,
+  },
+  sourceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EBF5FF',
+    borderRadius: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  sourceText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#4A90E2',
+    fontWeight: '500',
+  },
+  typeToggleButton: {
+    marginTop: 20,
+    padding: 8,
+    backgroundColor: '#F2F2F2',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  typeToggleText: {
+    fontSize: 14,
+    color: '#888',
   },
 });
 

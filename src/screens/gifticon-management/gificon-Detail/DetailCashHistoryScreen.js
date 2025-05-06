@@ -5,8 +5,8 @@ import { View, StyleSheet, Image, ScrollView, TouchableOpacity, StatusBar } from
 import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Button, Divider } from '../../components/ui';
-import { useTheme } from '../../hooks/useTheme';
+import { Text, Divider } from '../../../components/ui';
+import { useTheme } from '../../../hooks/useTheme';
 
 const DetailCashHistoryScreen = () => {
   const navigation = useNavigation();
