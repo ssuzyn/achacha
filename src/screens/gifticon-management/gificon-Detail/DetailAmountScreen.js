@@ -15,12 +15,15 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
+import { useTabBar } from '../../../context/TabBarContext';
+import NavigationService from '../../../navigation/NavigationService';
 
 const DetailAmountScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
+  const { showTabBar } = useTabBar();
 
   // scope 상태 관리
   const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
@@ -28,12 +31,22 @@ const DetailAmountScreen = () => {
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
 
+  // 바텀탭 표시
+  useEffect(() => {
+    showTabBar();
+  }, []);
+
   // route.params에서 scope을 가져오는 부분
   useEffect(() => {
     if (route.params?.scope) {
       setScope(route.params.scope);
     }
   }, [route.params]);
+
+  // 뒤로가기 처리 함수
+  const handleGoBack = () => {
+    NavigationService.goBack();
+  };
 
   // 더미 기프티콘 데이터 - API 명세에 맞춤
   const gifticonData = {
@@ -135,11 +148,6 @@ const DetailAmountScreen = () => {
     navigation.navigate('DetailAmountHistoryScreen', { id: gifticonData.gifticonId });
   };
 
-  // 테스트용 scope 전환 함수
-  const toggleScope = () => {
-    setScope(scope === 'MY_BOX' ? 'SHARE_BOX' : 'MY_BOX');
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -147,11 +155,20 @@ const DetailAmountScreen = () => {
       {/* 안전 영역 상단 여백 */}
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
-      {/* 상단 헤더 */}
-      <View style={styles.header}>
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <Button
+          variant="ghost"
+          onPress={handleGoBack}
+          style={styles.backButton}
+          leftIcon={
+            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+          }
+        />
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 상세
         </Text>
+        <View style={styles.rightPlaceholder} />
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -293,13 +310,6 @@ const DetailAmountScreen = () => {
                     </View>
                   </View>
                 )}
-
-                {/* 테스트용 타입 전환 버튼 (실제 앱에서는 삭제) */}
-                <TouchableOpacity style={styles.typeToggleButton} onPress={toggleScope}>
-                  <Text style={styles.typeToggleText}>
-                    현재: {scope === 'MY_BOX' ? '마이박스' : '쉐어박스'} (탭하여 전환)
-                  </Text>
-                </TouchableOpacity>
               </>
             )}
           </View>
@@ -317,13 +327,22 @@ const styles = StyleSheet.create({
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+  },
   headerTitle: {
     textAlign: 'center',
+    flex: 1,
+  },
+  rightPlaceholder: {
+    width: 40,
   },
   scrollView: {
     flex: 1,
@@ -510,17 +529,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#4A90E2',
     fontWeight: '500',
-  },
-  typeToggleButton: {
-    marginTop: 20,
-    padding: 8,
-    backgroundColor: '#F2F2F2',
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  typeToggleText: {
-    fontSize: 14,
-    color: '#888',
   },
 });
 

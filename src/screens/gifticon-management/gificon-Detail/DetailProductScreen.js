@@ -15,44 +15,93 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Button } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
+import { useTabBar } from '../../../context/TabBarContext';
+import NavigationService from '../../../navigation/NavigationService';
 
 const DetailProductScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
+  const { showTabBar } = useTabBar();
 
   // scope 상태 관리
   const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
-
+  // 기프티콘 ID 관리
+  const [gifticonId, setGifticonId] = useState(null);
+  // 기프티콘 데이터 상태
+  const [gifticonData, setGifticonData] = useState(null);
+  // 로딩 상태
+  const [isLoading, setIsLoading] = useState(true);
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
 
-  // route.params에서 scope를 가져오는 부분
+  // 바텀탭 표시
   useEffect(() => {
-    if (route.params?.scope) {
-      setScope(route.params.scope);
+    showTabBar();
+  }, []);
+
+  // route.params에서 scope와 gifticonId를 가져오는 부분
+  useEffect(() => {
+    if (route.params) {
+      if (route.params.scope) {
+        setScope(route.params.scope);
+      }
+      if (route.params.gifticonId) {
+        setGifticonId(route.params.gifticonId);
+      }
     }
   }, [route.params]);
 
-  // 더미 기프티콘 데이터 - API 명세에 맞춤
-  const gifticonData = {
-    gifticonId: 123,
-    gifticonName: '아메리카노',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-12-31',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'MY_BOX',
-    userId: 78,
-    userName: '홍길동',
-    shareBoxId: null,
-    shareBoxName: null,
-    thumbnailPath: require('../../../assets/images/dummy-starbucks.png'),
-    originalImagePath: require('../../../assets/images/dummy-starbucks.png'),
-    gifticonCreatedAt: '2025-01-15T10:30:00',
-    barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
-    barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
+  // 기프티콘 ID가 있으면 데이터 로드
+  useEffect(() => {
+    if (gifticonId) {
+      loadGifticonData(gifticonId);
+    }
+  }, [gifticonId]);
+
+  // 뒤로가기 처리 함수
+  const handleGoBack = () => {
+    NavigationService.goBack();
+  };
+
+  // 기프티콘 데이터 로드 함수
+  const loadGifticonData = async id => {
+    setIsLoading(true);
+    try {
+      // 실제 구현에서는 API 호출로 대체
+      // const response = await api.getGifticonDetail(id);
+      // setGifticonData(response.data);
+
+      // 더미 데이터 - API 명세에 맞춤 (테스트용)
+      // 실제 구현에서는 삭제하고 API 호출로 대체
+      setTimeout(() => {
+        const dummyData = {
+          gifticonId: id,
+          gifticonName: '아메리카노',
+          gifticonType: 'PRODUCT',
+          gifticonExpiryDate: '2025-12-31',
+          brandId: 45,
+          brandName: '스타벅스',
+          scope: scope, // 파라미터에서 받은 scope 사용
+          userId: 78,
+          userName: '홍길동',
+          shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
+          shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
+          thumbnailPath: require('../../../assets/images/dummy-starbucks.png'),
+          originalImagePath: require('../../../assets/images/dummy-starbucks.png'),
+          gifticonCreatedAt: '2025-01-15T10:30:00',
+          barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
+          barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
+        };
+        setGifticonData(dummyData);
+        setIsLoading(false);
+      }, 500); // 0.5초 지연 (로딩 효과)
+    } catch (error) {
+      console.error('기프티콘 데이터 로드 실패:', error);
+      setIsLoading(false);
+      // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
+    }
   };
 
   // 날짜 포맷 함수 (YYYY.MM.DD)
@@ -121,10 +170,32 @@ const DetailProductScreen = () => {
     console.log('기프티콘 선물하기');
   };
 
-  // 테스트용 scope 전환 함수
-  const toggleScope = () => {
-    setScope(scope === 'MY_BOX' ? 'SHARE_BOX' : 'MY_BOX');
-  };
+  // 로딩 중이거나 데이터가 없는 경우 로딩 화면 표시
+  if (isLoading || !gifticonData) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+        <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+        <View style={styles.header}>
+          <Button
+            variant="ghost"
+            onPress={handleGoBack}
+            style={styles.backButton}
+            leftIcon={
+              <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+            }
+          />
+          <Text variant="h3" weight="bold" style={styles.headerTitle}>
+            기프티콘 상세
+          </Text>
+          <View style={styles.rightPlaceholder} />
+        </View>
+        <View style={styles.loadingContent}>
+          <Text style={styles.loadingText}>로딩 중...</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -133,11 +204,20 @@ const DetailProductScreen = () => {
       {/* 안전 영역 상단 여백 */}
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
-      {/* 상단 헤더 */}
-      <View style={styles.header}>
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <Button
+          variant="ghost"
+          onPress={handleGoBack}
+          style={styles.backButton}
+          leftIcon={
+            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+          }
+        />
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 상세
         </Text>
+        <View style={styles.rightPlaceholder} />
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -243,15 +323,6 @@ const DetailProductScreen = () => {
                   </View>
                 </View>
               ))}
-
-            {/* 테스트용 타입 전환 버튼 (실제 앱에서는 삭제) */}
-            {!isUsing && (
-              <TouchableOpacity style={styles.typeToggleButton} onPress={toggleScope}>
-                <Text style={styles.typeToggleText}>
-                  현재: {scope === 'MY_BOX' ? '마이박스' : '쉐어박스'} (탭하여 전환)
-                </Text>
-              </TouchableOpacity>
-            )}
           </View>
         </View>
       </ScrollView>
@@ -267,13 +338,22 @@ const styles = StyleSheet.create({
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+  },
   headerTitle: {
     textAlign: 'center',
+    flex: 1,
+  },
+  rightPlaceholder: {
+    width: 40,
   },
   scrollView: {
     flex: 1,
@@ -418,16 +498,17 @@ const styles = StyleSheet.create({
     color: '#4A90E2',
     fontWeight: '500',
   },
-  typeToggleButton: {
-    marginTop: 20,
-    padding: 8,
-    backgroundColor: '#F2F2F2',
-    borderRadius: 8,
+  loadingContainer: {
+    backgroundColor: '#FFFFFF',
+  },
+  loadingContent: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  typeToggleText: {
-    fontSize: 14,
-    color: '#888',
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
   },
 });
 
