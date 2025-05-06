@@ -31,10 +31,17 @@ const DetailAmountScreen = () => {
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
 
-  // 바텀탭 표시
+  // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      showTabBar();
+    });
+
+    // 초기 로드 시에도 바텀탭 표시
     showTabBar();
-  }, []);
+
+    return unsubscribe;
+  }, [navigation, showTabBar]);
 
   // route.params에서 scope을 가져오는 부분
   useEffect(() => {
@@ -51,22 +58,22 @@ const DetailAmountScreen = () => {
   // 더미 기프티콘 데이터 - API 명세에 맞춤
   const gifticonData = {
     gifticonId: 124,
-    gifticonName: "문화상품권",
-    gifticonType: "AMOUNT",
-    gifticonExpiryDate: "2025-12-31",
+    gifticonName: '문화상품권',
+    gifticonType: 'AMOUNT',
+    gifticonExpiryDate: '2025-12-31',
     brandId: 46,
-    brandName: "컬쳐랜드",
-    scope: "SHARE_BOX",
+    brandName: '컬쳐랜드',
+    scope: 'SHARE_BOX',
     userId: 78,
-    userName: "홍길동",
+    userName: '홍길동',
     shareBoxId: 90,
-    shareBoxName: "스터디 그룹",
+    shareBoxName: '스터디 그룹',
     thumbnailPath: require('../../../assets/images/dummy-starbuckscard.png'),
     originalImagePath: require('../../../assets/images/dummy-starbuckscard.png'),
-    gifticonCreatedAt: "2025-01-15T10:30:00",
+    gifticonCreatedAt: '2025-01-15T10:30:00',
     gifticonOriginalAmount: 10000,
     gifticonRemainingAmount: 8000,
-    barcodeNumber: "8013-7621-1234-5678", // 바코드 번호 (더미)
+    barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
     barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
   };
 
@@ -157,14 +164,9 @@ const DetailAmountScreen = () => {
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Button
-          variant="ghost"
-          onPress={handleGoBack}
-          style={styles.backButton}
-          leftIcon={
-            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
-          }
-        />
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
+          <Icon name="arrow-back" type="material" size={28} color="#000000" />
+        </TouchableOpacity>
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 상세
         </Text>
@@ -332,17 +334,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
-  backButton: {
-    width: 40,
-    height: 40,
+  backButtonContainer: {
+    width: 44,
+    height: 44,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     textAlign: 'center',
     flex: 1,
   },
   rightPlaceholder: {
-    width: 40,
+    width: 44,
   },
   scrollView: {
     flex: 1,
@@ -383,11 +386,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
-    height: 200,
+    height: 220,
   },
   barcodeImage: {
     width: '90%',
-    height: 120,
+    height: 150,
   },
   barcodeNumberContainer: {
     flexDirection: 'row',
@@ -396,7 +399,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   barcodeNumberText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
     fontWeight: '500',
   },

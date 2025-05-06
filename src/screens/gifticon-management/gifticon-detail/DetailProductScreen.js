@@ -36,10 +36,17 @@ const DetailProductScreen = () => {
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
 
-  // 바텀탭 표시
+  // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      showTabBar();
+    });
+
+    // 초기 로드 시에도 바텀탭 표시
     showTabBar();
-  }, []);
+
+    return unsubscribe;
+  }, [navigation, showTabBar]);
 
   // route.params에서 scope와 gifticonId를 가져오는 부분
   useEffect(() => {
@@ -177,12 +184,9 @@ const DetailProductScreen = () => {
         <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
         <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
         <View style={styles.header}>
-          <Button
-            variant="ghost"
-            onPress={handleGoBack}
-            style={styles.backButton}
-            leftIcon={<Icon name="arrow-back" type="material" size={24} color="#000000" />}
-          />
+          <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
+            <Icon name="arrow-back" type="material" size={28} color="#000000" />
+          </TouchableOpacity>
           <Text variant="h3" weight="bold" style={styles.headerTitle}>
             기프티콘 상세
           </Text>
@@ -204,12 +208,9 @@ const DetailProductScreen = () => {
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Button
-          variant="ghost"
-          onPress={handleGoBack}
-          style={styles.backButton}
-          leftIcon={<Icon name="arrow-back" type="material" size={24} color="#000000" />}
-        />
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
+          <Icon name="arrow-back" type="material" size={28} color="#000000" />
+        </TouchableOpacity>
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 상세
         </Text>
@@ -339,17 +340,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
-  backButton: {
-    width: 40,
-    height: 40,
+  backButtonContainer: {
+    width: 44,
+    height: 44,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     textAlign: 'center',
     flex: 1,
   },
   rightPlaceholder: {
-    width: 40,
+    width: 44,
   },
   scrollView: {
     flex: 1,
