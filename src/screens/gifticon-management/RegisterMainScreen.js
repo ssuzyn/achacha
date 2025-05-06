@@ -31,6 +31,8 @@ const RegisterMainScreen = () => {
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
   const [isImageEditorVisible, setImageEditorVisible] = useState(false);
   const [currentImageUri, setCurrentImageUri] = useState(null);
+  const [aspectRatio, setAspectRatio] = useState(null);
+  const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const cropViewRef = useRef(null);
 
   // 뒤로가기 처리
@@ -452,7 +454,8 @@ const RegisterMainScreen = () => {
                   cropAreaHeight={300}
                   containerColor="black"
                   areaColor="white"
-                  keepAspectRatio={false}
+                  keepAspectRatio={keepAspectRatio}
+                  aspectRatio={aspectRatio}
                   iosDimensionSwapEnabled={true}
                 />
               </>
@@ -485,6 +488,79 @@ const RegisterMainScreen = () => {
               <Icon name="rotate-right" type="material" size={24} color="#FFFFFF" />
               <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
                 회전
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.toolbarButton, !keepAspectRatio && styles.activeToolbarButton]}
+              onPress={() => {
+                setKeepAspectRatio(false);
+                setAspectRatio(null);
+              }}
+            >
+              <Icon name="crop-free" type="material" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                자유
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.toolbarButton,
+                keepAspectRatio &&
+                  aspectRatio &&
+                  aspectRatio.width === 1 &&
+                  aspectRatio.height === 1 &&
+                  styles.activeToolbarButton,
+              ]}
+              onPress={() => {
+                setKeepAspectRatio(true);
+                setAspectRatio({ width: 1, height: 1 });
+              }}
+            >
+              <Icon name="crop-square" type="material" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                1:1
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.toolbarButton,
+                keepAspectRatio &&
+                  aspectRatio &&
+                  aspectRatio.width === 4 &&
+                  aspectRatio.height === 3 &&
+                  styles.activeToolbarButton,
+              ]}
+              onPress={() => {
+                setKeepAspectRatio(true);
+                setAspectRatio({ width: 4, height: 3 });
+              }}
+            >
+              <Icon name="crop-7-5" type="material" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                4:3
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.toolbarButton,
+                keepAspectRatio &&
+                  aspectRatio &&
+                  aspectRatio.width === 16 &&
+                  aspectRatio.height === 9 &&
+                  styles.activeToolbarButton,
+              ]}
+              onPress={() => {
+                setKeepAspectRatio(true);
+                setAspectRatio({ width: 16, height: 9 });
+              }}
+            >
+              <Icon name="crop-16-9" type="material" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                16:9
               </Text>
             </TouchableOpacity>
           </View>
@@ -668,6 +744,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 10,
+  },
+  activeToolbarButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 5,
   },
   toolbarButtonText: {
     marginTop: 8,
