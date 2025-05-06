@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="643ce2da-126f-4978-988f-3264d55bbfcd" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/RegisterDetailScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/RegisterDetailScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/RegisterMainScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/RegisterMainScreen.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

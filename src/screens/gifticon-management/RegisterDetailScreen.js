@@ -33,7 +33,7 @@ const RegisterDetailScreen = () => {
   const [brand, setBrand] = useState('');
   const [productName, setProductName] = useState('');
   const [barcode, setBarcode] = useState('');
-  const [expiryDate, setExpiryDate] = useState(new Date());
+  const [expiryDate, setExpiryDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentImageUri, setCurrentImageUri] = useState(null);
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
@@ -271,6 +271,8 @@ const RegisterDetailScreen = () => {
 
   // 날짜를 YYYY.MM.DD 형식으로 포맷
   const formatDate = date => {
+    if (!date) return '';
+
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -368,7 +370,7 @@ const RegisterDetailScreen = () => {
 
           {showDatePicker && (
             <DateTimePicker
-              value={expiryDate}
+              value={expiryDate || new Date()}
               mode="date"
               display="default"
               onChange={handleDateChange}
@@ -650,11 +652,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   formSectionTitle: {
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 5,
+    marginBottom: 5,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 5,
   },
   registerButton: {
     marginTop: 30,
@@ -737,14 +739,6 @@ const styles = StyleSheet.create({
   },
   toolbarButtonText: {
     marginTop: 8,
-  },
-  debugText: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    color: 'white',
-    fontSize: 12,
-    zIndex: 100,
   },
   emptyImageContainer: {
     flex: 1,
