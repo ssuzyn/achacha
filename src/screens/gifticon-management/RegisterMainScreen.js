@@ -1,6 +1,6 @@
 // 기프티콘 등록 스크린
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,6 +9,10 @@ import {
   TouchableOpacity,
   Image,
   Modal,
+  Alert,
+  Platform,
+  PermissionsAndroid,
+  Dimensions,
 } from 'react-native';
 import { Text } from '../../components/ui';
 import Card from '../../components/ui/Card';
@@ -19,12 +23,16 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import { ImageCropView } from 'react-native-image-crop-tools';
 
 const RegisterScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
+  const [isImageEditorVisible, setImageEditorVisible] = useState(false);
+  const [currentImageUri, setCurrentImageUri] = useState(null);
+  const cropViewRef = useRef(null);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -42,49 +50,153 @@ const RegisterScreen = () => {
     setImageOptionVisible(true);
   }, []);
 
+  // 안드로이드 카메라 권한 요청
+  const requestCameraPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
+          title: '카메라 접근 권한',
+          message: '기프티콘 등록을 위해 카메라 접근 권한이 필요합니다.',
+          buttonNeutral: '나중에 묻기',
+          buttonNegative: '취소',
+          buttonPositive: '확인',
+        });
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn(err);
+        return false;
+      }
+    }
+    return true;
+  };
+
   // 갤러리에서 이미지 선택
   const handlePickImage = useCallback(() => {
-    const options = {
-      mediaType: 'photo',
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-      quality: 0.8,
-    };
+    console.log('갤러리 버튼 클릭됨');
 
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('사용자가 이미지 선택을 취소했습니다');
-      } else if (response.errorCode) {
-        console.error('이미지 선택 오류: ', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        // 선택한 이미지와 함께 상세 화면으로 이동
-        navigation.navigate('RegisterDetail', { selectedImage: { uri: response.assets[0].uri } });
-      }
-    });
-  }, [navigation]);
+    try {
+      // 옛날 버전 사용 방식으로 변경
+      const options = {
+        title: '이미지 선택',
+        storageOptions: {
+          skipBackup: true,
+          path: 'images',
+        },
+        quality: 0.8,
+        maxWidth: 2000,
+        maxHeight: 2000,
+      };
+
+      console.log('launchImageLibrary 호출 전');
+
+      // 구 버전 API 호출 (8.x)
+      launchImageLibrary(options, response => {
+        console.log('이미지 선택 응답:', JSON.stringify(response));
+
+        if (response.didCancel) {
+          console.log('사용자가 이미지 선택을 취소했습니다');
+        } else if (response.error) {
+          console.error('이미지 선택 오류: ', response.error);
+          Alert.alert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
+        } else {
+          console.log('이미지 선택 성공:', response.uri);
+          // 선택한 이미지 편집 모드 시작
+          setCurrentImageUri(response.uri);
+          setImageEditorVisible(true);
+        }
+      });
+
+      console.log('launchImageLibrary 호출 후');
+    } catch (error) {
+      console.error('이미지 선택 예외 발생:', error);
+      Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
+    }
+  }, []);
 
   // 카메라로 촬영
-  const handleOpenCamera = useCallback(() => {
-    const options = {
-      mediaType: 'photo',
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-      quality: 0.8,
-    };
+  const handleOpenCamera = useCallback(async () => {
+    console.log('카메라 버튼 클릭됨');
 
-    launchCamera(options, response => {
-      if (response.didCancel) {
-        console.log('사용자가 카메라 촬영을 취소했습니다');
-      } else if (response.errorCode) {
-        console.error('카메라 오류: ', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        // 촬영한 이미지와 함께 상세 화면으로 이동
-        navigation.navigate('RegisterDetail', { selectedImage: { uri: response.assets[0].uri } });
+    try {
+      const hasPermission = await requestCameraPermission();
+      console.log('카메라 권한 상태:', hasPermission);
+
+      if (!hasPermission) {
+        Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
+        return;
       }
-    });
+
+      // 옛날 버전 사용 방식으로 변경
+      const options = {
+        title: '사진 촬영',
+        storageOptions: {
+          skipBackup: true,
+          path: 'images',
+          cameraRoll: true,
+          waitUntilSaved: true,
+        },
+        quality: 0.8,
+        maxWidth: 2000,
+        maxHeight: 2000,
+      };
+
+      console.log('launchCamera 호출 전');
+
+      // 구 버전 API 호출 (8.x)
+      launchCamera(options, response => {
+        console.log('카메라 응답:', JSON.stringify(response));
+
+        if (response.didCancel) {
+          console.log('사용자가 카메라 촬영을 취소했습니다');
+        } else if (response.error) {
+          console.error('카메라 오류: ', response.error);
+          Alert.alert('오류', '카메라를 사용하는 중 오류가 발생했습니다: ' + response.error);
+        } else {
+          console.log('카메라 촬영 성공:', response.uri);
+          // 선택한 이미지 편집 모드 시작
+          setCurrentImageUri(response.uri);
+          setImageEditorVisible(true);
+        }
+      });
+
+      console.log('launchCamera 호출 후');
+    } catch (error) {
+      console.error('카메라 촬영 예외 발생:', error);
+      Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
+    }
+  }, []);
+
+  // 이미지 편집 완료 후 처리
+  const handleImageEditComplete = useCallback(() => {
+    console.log('이미지 편집 완료 버튼 클릭됨');
+    if (cropViewRef.current) {
+      try {
+        cropViewRef.current
+          .saveImage(true, 90)
+          .then(result => {
+            console.log('이미지 크롭 성공:', result.uri);
+            // 편집한 이미지와 함께 상세 화면으로 이동
+            navigation.navigate('RegisterDetail', { selectedImage: { uri: result.uri } });
+            setImageEditorVisible(false);
+          })
+          .catch(error => {
+            console.error('이미지 저장 오류:', error);
+            Alert.alert('오류', '이미지를 저장하는 중 오류가 발생했습니다.');
+            setImageEditorVisible(false);
+          });
+      } catch (error) {
+        console.error('이미지 편집 예외 발생:', error);
+        Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
+        setImageEditorVisible(false);
+      }
+    }
   }, [navigation]);
+
+  // 이미지 편집 취소
+  const handleImageEditCancel = useCallback(() => {
+    console.log('이미지 편집 취소됨');
+    setImageEditorVisible(false);
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -276,6 +388,69 @@ const RegisterScreen = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* 이미지 편집 모달 */}
+      <Modal visible={isImageEditorVisible} animationType="slide">
+        <View style={styles.editorContainer}>
+          <View style={styles.editorHeader}>
+            <TouchableOpacity onPress={handleImageEditCancel} style={styles.editorHeaderButton}>
+              <Text variant="body1" weight="bold" color="#56AEE9">
+                취소
+              </Text>
+            </TouchableOpacity>
+            <Text variant="h4" weight="bold" color="white">
+              이미지 편집
+            </Text>
+            <TouchableOpacity onPress={handleImageEditComplete} style={styles.editorHeaderButton}>
+              <Text variant="body1" weight="bold" color="#56AEE9">
+                적용
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.cropContainer}>
+            {currentImageUri && (
+              <ImageCropView
+                ref={cropViewRef}
+                imageUri={currentImageUri}
+                style={styles.cropView}
+                cropAreaWidth={Dimensions.get('window').width * 0.9}
+                cropAreaHeight={Dimensions.get('window').width * 0.9}
+                containerColor="rgba(0, 0, 0, 0.8)"
+                areaColor="rgba(255, 255, 255, 0.3)"
+              />
+            )}
+          </View>
+
+          <View style={styles.editorToolbar}>
+            <TouchableOpacity
+              style={styles.toolbarButton}
+              onPress={() => {
+                console.log('회전 버튼 클릭');
+                cropViewRef.current?.rotateImage(true);
+              }}
+            >
+              <Icon name="rotate-right" type="material" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                회전
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.toolbarButton}
+              onPress={() => {
+                console.log('좌우반전 버튼 클릭');
+                cropViewRef.current?.flipImage('horizontal');
+              }}
+            >
+              <Icon name="flip" type="material" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                좌우반전
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -411,6 +586,50 @@ const styles = StyleSheet.create({
   },
   modalCancelButton: {
     marginTop: 16,
+  },
+  // 이미지 편집기 관련 스타일
+  editorContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  editorHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#000000',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333333',
+  },
+  editorHeaderButton: {
+    padding: 8,
+  },
+  cropContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cropView: {
+    width: '100%',
+    height: '100%',
+  },
+  editorToolbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    backgroundColor: '#000000',
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#333333',
+  },
+  toolbarButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  toolbarButtonText: {
+    marginTop: 8,
   },
 });
 

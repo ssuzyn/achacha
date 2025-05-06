@@ -10,6 +10,8 @@ import {
   Platform,
   Modal,
   StatusBar,
+  Alert,
+  PermissionsAndroid,
   Dimensions,
 } from 'react-native';
 import { Button, InputLine, Text } from '../../components/ui';
@@ -79,68 +81,150 @@ const RegisterDetailScreen = () => {
     setDatePickerVisible(false);
   };
 
-  // 갤러리에서 이미지 선택
-  const handlePickImage = () => {
-    const options = {
-      mediaType: 'photo',
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-    };
-
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('사용자가 이미지 선택을 취소했습니다');
-      } else if (response.errorCode) {
-        console.error('이미지 선택 오류: ', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        // 이미지 편집 모드 시작
-        setCurrentImageUri(response.assets[0].uri);
-        setImageEditorVisible(true);
+  // 안드로이드 카메라 권한 요청
+  const requestCameraPermission = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const granted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
+          title: '카메라 접근 권한',
+          message: '기프티콘 등록을 위해 카메라 접근 권한이 필요합니다.',
+          buttonNeutral: '나중에 묻기',
+          buttonNegative: '취소',
+          buttonPositive: '확인',
+        });
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      } catch (err) {
+        console.warn(err);
+        return false;
       }
-    });
+    }
+    return true;
   };
 
-  // 카메라 실행
-  const handleOpenCamera = () => {
-    const options = {
-      mediaType: 'photo',
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-    };
+  // 갤러리에서 이미지 선택
+  const handlePickImage = () => {
+    console.log('갤러리 버튼 클릭됨');
 
-    launchCamera(options, response => {
-      if (response.didCancel) {
-        console.log('사용자가 카메라 촬영을 취소했습니다');
-      } else if (response.errorCode) {
-        console.error('카메라 오류: ', response.errorMessage);
-      } else if (response.assets && response.assets.length > 0) {
-        // 이미지 편집 모드 시작
-        setCurrentImageUri(response.assets[0].uri);
-        setImageEditorVisible(true);
+    try {
+      // 옛날 버전 사용 방식으로 변경
+      const options = {
+        title: '이미지 선택',
+        storageOptions: {
+          skipBackup: true,
+          path: 'images',
+        },
+        quality: 0.8,
+        maxWidth: 2000,
+        maxHeight: 2000,
+      };
+
+      console.log('launchImageLibrary 호출 전');
+
+      // 구 버전 API 호출 (8.x)
+      launchImageLibrary(options, response => {
+        console.log('이미지 선택 응답:', JSON.stringify(response));
+
+        if (response.didCancel) {
+          console.log('사용자가 이미지 선택을 취소했습니다');
+        } else if (response.error) {
+          console.error('이미지 선택 오류: ', response.error);
+          Alert.alert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
+        } else {
+          console.log('이미지 선택 성공:', response.uri);
+          // 선택한 이미지 편집 모드 시작
+          setCurrentImageUri(response.uri);
+          setImageEditorVisible(true);
+        }
+      });
+
+      console.log('launchImageLibrary 호출 후');
+    } catch (error) {
+      console.error('이미지 선택 예외 발생:', error);
+      Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
+    }
+  };
+
+  // 카메라로 촬영
+  const handleOpenCamera = async () => {
+    console.log('카메라 버튼 클릭됨');
+
+    try {
+      const hasPermission = await requestCameraPermission();
+      console.log('카메라 권한 상태:', hasPermission);
+
+      if (!hasPermission) {
+        Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
+        return;
       }
-    });
+
+      // 옛날 버전 사용 방식으로 변경
+      const options = {
+        title: '사진 촬영',
+        storageOptions: {
+          skipBackup: true,
+          path: 'images',
+          cameraRoll: true,
+          waitUntilSaved: true,
+        },
+        quality: 0.8,
+        maxWidth: 2000,
+        maxHeight: 2000,
+      };
+
+      console.log('launchCamera 호출 전');
+
+      // 구 버전 API 호출 (8.x)
+      launchCamera(options, response => {
+        console.log('카메라 응답:', JSON.stringify(response));
+
+        if (response.didCancel) {
+          console.log('사용자가 카메라 촬영을 취소했습니다');
+        } else if (response.error) {
+          console.error('카메라 오류: ', response.error);
+          Alert.alert('오류', '카메라를 사용하는 중 오류가 발생했습니다: ' + response.error);
+        } else {
+          console.log('카메라 촬영 성공:', response.uri);
+          // 선택한 이미지 편집 모드 시작
+          setCurrentImageUri(response.uri);
+          setImageEditorVisible(true);
+        }
+      });
+
+      console.log('launchCamera 호출 후');
+    } catch (error) {
+      console.error('카메라 촬영 예외 발생:', error);
+      Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
+    }
   };
 
   // 이미지 편집 완료 후 처리
   const handleImageEditComplete = () => {
+    console.log('이미지 편집 완료 버튼 클릭됨');
     if (cropViewRef.current) {
-      cropViewRef.current
-        .saveImage(true, 90)
-        .then(result => {
-          setSelectedImage({ uri: result.uri });
-          setImageEditorVisible(false);
-        })
-        .catch(error => {
-          console.error('이미지 저장 오류:', error);
-          setImageEditorVisible(false);
-        });
+      try {
+        cropViewRef.current
+          .saveImage(true, 90)
+          .then(result => {
+            console.log('이미지 크롭 성공:', result.uri);
+            setSelectedImage({ uri: result.uri });
+            setImageEditorVisible(false);
+          })
+          .catch(error => {
+            console.error('이미지 저장 오류:', error);
+            Alert.alert('오류', '이미지를 저장하는 중 오류가 발생했습니다.');
+            setImageEditorVisible(false);
+          });
+      } catch (error) {
+        console.error('이미지 편집 예외 발생:', error);
+        Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
+        setImageEditorVisible(false);
+      }
     }
   };
 
   // 이미지 편집 취소
   const handleImageEditCancel = () => {
+    console.log('이미지 편집 취소됨');
     setImageEditorVisible(false);
   };
 
@@ -197,69 +281,6 @@ const RegisterDetailScreen = () => {
     return isDatePickerVisible && <DateTimePicker {...dateTimePickerProps} display="default" />;
   };
 
-  // 이미지 편집기 렌더링
-  const renderImageEditor = () => {
-    const { width, height } = Dimensions.get('window');
-
-    return (
-      <Modal visible={isImageEditorVisible} animationType="slide">
-        <View style={styles.editorContainer}>
-          <View style={styles.editorHeader}>
-            <TouchableOpacity onPress={handleImageEditCancel} style={styles.editorHeaderButton}>
-              <Text variant="body1" weight="bold" color="#56AEE9">
-                취소
-              </Text>
-            </TouchableOpacity>
-            <Text variant="h4" weight="bold">
-              이미지 편집
-            </Text>
-            <TouchableOpacity onPress={handleImageEditComplete} style={styles.editorHeaderButton}>
-              <Text variant="body1" weight="bold" color="#56AEE9">
-                적용
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.cropContainer}>
-            {currentImageUri && (
-              <ImageCropView
-                ref={cropViewRef}
-                imageUri={currentImageUri}
-                style={styles.cropView}
-                cropAreaWidth={width * 0.9}
-                cropAreaHeight={width * 0.9}
-                containerColor="rgba(0, 0, 0, 0.8)"
-                areaColor="rgba(255, 255, 255, 0.3)"
-              />
-            )}
-          </View>
-
-          <View style={styles.editorToolbar}>
-            <TouchableOpacity
-              style={styles.toolbarButton}
-              onPress={() => cropViewRef.current?.rotateImage(true)}
-            >
-              <Icon name="rotate-right" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                회전
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.toolbarButton}
-              onPress={() => cropViewRef.current?.flipImage('horizontal')}
-            >
-              <Icon name="flip" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                좌우반전
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-    );
-  };
-
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -287,13 +308,19 @@ const RegisterDetailScreen = () => {
         {/* 기프티콘 이미지 */}
         <View style={styles.imageContainer}>
           <View style={styles.image}>
-            <Image
-              source={selectedImage || require('../../assets/images/dummy-starbucks.png')}
-              style={styles.productImage}
-            />
+            {selectedImage ? (
+              <Image source={selectedImage} style={styles.productImage} />
+            ) : (
+              <View style={styles.emptyImageContainer}>
+                <Icon name="image" size={50} color="#CCCCCC" />
+                <Text variant="body2" color="#999999" style={styles.emptyImageText}>
+                  이미지 없음
+                </Text>
+              </View>
+            )}
           </View>
           <Button
-            title="편집하기"
+            title={selectedImage ? '편집하기' : '등록하기'}
             variant="outline"
             size="sm"
             style={styles.editButton}
@@ -441,11 +468,71 @@ const RegisterDetailScreen = () => {
         </TouchableOpacity>
       </Modal>
 
+      {/* 이미지 편집 모달 */}
+      <Modal visible={isImageEditorVisible} animationType="slide">
+        <View style={styles.editorContainer}>
+          <View style={styles.editorHeader}>
+            <TouchableOpacity onPress={handleImageEditCancel} style={styles.editorHeaderButton}>
+              <Text variant="body1" weight="bold" color="#56AEE9">
+                취소
+              </Text>
+            </TouchableOpacity>
+            <Text variant="h4" weight="bold" color="white">
+              이미지 편집
+            </Text>
+            <TouchableOpacity onPress={handleImageEditComplete} style={styles.editorHeaderButton}>
+              <Text variant="body1" weight="bold" color="#56AEE9">
+                적용
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.cropContainer}>
+            {currentImageUri && (
+              <ImageCropView
+                ref={cropViewRef}
+                imageUri={currentImageUri}
+                style={styles.cropView}
+                cropAreaWidth={Dimensions.get('window').width * 0.9}
+                cropAreaHeight={Dimensions.get('window').width * 0.9}
+                containerColor="rgba(0, 0, 0, 0.8)"
+                areaColor="rgba(255, 255, 255, 0.3)"
+              />
+            )}
+          </View>
+
+          <View style={styles.editorToolbar}>
+            <TouchableOpacity
+              style={styles.toolbarButton}
+              onPress={() => {
+                console.log('회전 버튼 클릭');
+                cropViewRef.current?.rotateImage(true);
+              }}
+            >
+              <Icon name="rotate-right" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                회전
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.toolbarButton}
+              onPress={() => {
+                console.log('좌우반전 버튼 클릭');
+                cropViewRef.current?.flipImage('horizontal');
+              }}
+            >
+              <Icon name="flip" size={24} color="#FFFFFF" />
+              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
+                좌우반전
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {/* DateTimePicker */}
       {renderDatePicker()}
-
-      {/* 이미지 편집기 */}
-      {renderImageEditor()}
     </View>
   );
 };
@@ -611,6 +698,15 @@ const styles = StyleSheet.create({
   modalCancelButton: {
     marginTop: 16,
   },
+  emptyImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImageText: {
+    marginTop: 8,
+  },
+  // 이미지 편집기 관련 스타일
   editorContainer: {
     flex: 1,
     backgroundColor: '#000000',
