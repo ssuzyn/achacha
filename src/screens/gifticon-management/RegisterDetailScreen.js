@@ -670,7 +670,7 @@ const styles = StyleSheet.create({
     width: 180,
   },
   formContainer: {
-    marginTop: 20,
+    marginTop: 5,
   },
   formSectionTitle: {
     marginTop: 5,
