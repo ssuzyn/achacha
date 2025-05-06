@@ -1,6 +1,6 @@
 // 기프티콘 조회 스크린
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Image, TouchableOpacity, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -11,47 +11,77 @@ import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 
-// 더미 데이터
+// 더미 데이터 - API 응답값 형식에 맞춰서 수정
 const DUMMY_GIFTICONS = [
   {
-    id: '1',
-    brand: '스타벅스',
-    name: '아이스 카페 아메리카노 T',
-    expiryDate: '2023-12-31',
-    imageUrl: require('../../assets/images/dummy-starbucks.png'),
-    daysLeft: 7,
+    gifticonId: 123,
+    gifticonName: '아이스 카페 아메리카노 T',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-12-31',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'MY_BOX',
+    userId: 78,
+    userName: '홍길동',
+    shareBoxId: null,
+    shareBoxName: null,
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
   },
   {
-    id: '2',
-    brand: '스타벅스',
-    name: '아이스 카페 아메리카노 T',
-    expiryDate: '2023-12-25',
-    imageUrl: require('../../assets/images/dummy-starbucks.png'),
-    daysLeft: 7,
+    gifticonId: 124,
+    gifticonName: '아이스 카페 아메리카노 T',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-11-20',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'MY_BOX',
+    userId: 78,
+    userName: '홍길동',
+    shareBoxId: null,
+    shareBoxName: null,
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
   },
   {
-    id: '3',
-    brand: '스타벅스',
-    name: 'APP전용 e카드 3만원 교환권',
-    expiryDate: '2024-01-05',
-    imageUrl: require('../../assets/images/dummy-starbuckscard.png'),
-    daysLeft: 7,
+    gifticonId: 125,
+    gifticonName: 'APP전용 e카드 3만원 교환권',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-06-15',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'SHARE_BOX',
+    userId: 78,
+    userName: '홍길동',
+    shareBoxId: 90,
+    shareBoxName: '스터디 그룹',
+    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
   },
   {
-    id: '4',
-    brand: '스타벅스',
-    name: '아이스 카페 아메리카노 T',
-    expiryDate: '2024-01-10',
-    imageUrl: require('../../assets/images/dummy-starbucks.png'),
-    daysLeft: 7,
+    gifticonId: 126,
+    gifticonName: '아이스 카페 아메리카노 T',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-05-10',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'SHARE_BOX',
+    userId: 78,
+    userName: '홍길동',
+    shareBoxId: 91,
+    shareBoxName: '가족 모임',
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
   },
   {
-    id: '5',
-    brand: '스타벅스',
-    name: 'APP전용 e카드 3만원 교환권',
-    expiryDate: '2024-01-15',
-    daysLeft: 7,
-    imageUrl: require('../../assets/images/dummy-starbuckscard.png'),
+    gifticonId: 127,
+    gifticonName: '아이스 카페 아메리카노 T',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2024-03-01',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'USED',
+    userId: 78,
+    userName: '홍길동',
+    shareBoxId: null,
+    shareBoxName: null,
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
   },
 ];
 
@@ -68,6 +98,8 @@ const ManageListScreen = () => {
   const [sortBy, setSortBy] = useState('recent');
   // 정렬 드롭다운 표시 상태
   const [showSortDropdown, setShowSortDropdown] = useState(false);
+  // 필터링된 기프티콘 상태
+  const [filteredGifticons, setFilteredGifticons] = useState([]);
 
   // 카테고리 탭 데이터
   const categories = [
@@ -79,7 +111,7 @@ const ManageListScreen = () => {
   // 필터 탭 데이터
   const filterTabs = [
     { id: 'all', title: '전체' },
-    { id: 'coupon', title: '상품형' },
+    { id: 'coupon', title: '상품권' },
     { id: 'price', title: '금액형' },
   ];
 
@@ -88,6 +120,51 @@ const ManageListScreen = () => {
     { id: 'recent', title: '등록순' },
     { id: 'expiry', title: '임박순' },
   ];
+
+  // 카테고리에 따른 기프티콘 필터링
+  useEffect(() => {
+    filterGifticons();
+  }, [selectedCategory, selectedFilter, sortBy]);
+
+  // 선택된 카테고리에 따라 기프티콘 필터링
+  const filterGifticons = () => {
+    let filtered = [...DUMMY_GIFTICONS];
+
+    // 카테고리 필터링
+    switch (selectedCategory) {
+      case 'mybas':
+        filtered = filtered.filter(item => item.scope === 'MY_BOX');
+        break;
+      case 'sharebas':
+        filtered = filtered.filter(item => item.scope === 'SHARE_BOX');
+        break;
+      case 'used':
+        filtered = filtered.filter(item => item.scope === 'USED');
+        break;
+      default:
+        break;
+    }
+
+    // 필터 적용
+    if (selectedFilter !== 'all') {
+      if (selectedFilter === 'coupon') {
+        filtered = filtered.filter(item => item.gifticonType === 'COUPON');
+      } else if (selectedFilter === 'price') {
+        filtered = filtered.filter(item => item.gifticonType === 'AMOUNT');
+      }
+    }
+
+    // 정렬 적용
+    if (sortBy === 'recent') {
+      // ID 기준 최신순 (임시로 ID가 높을수록 최신이라고 가정)
+      filtered.sort((a, b) => b.gifticonId - a.gifticonId);
+    } else if (sortBy === 'expiry') {
+      // 유효기간 임박순
+      filtered.sort((a, b) => new Date(a.gifticonExpiryDate) - new Date(b.gifticonExpiryDate));
+    }
+
+    setFilteredGifticons(filtered);
+  };
 
   // 카테고리 변경 처리
   const handleCategoryChange = categoryId => {
@@ -110,12 +187,21 @@ const ManageListScreen = () => {
     setShowSortDropdown(!showSortDropdown);
   };
 
+  // 날짜 차이 계산 함수
+  const calculateDaysLeft = expiryDate => {
+    const today = new Date();
+    const expiry = new Date(expiryDate);
+    const diffTime = expiry - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
   // 기프티콘 아이템 렌더링
   const renderGifticonItem = item => (
     <TouchableOpacity
-      key={item.id}
+      key={item.gifticonId}
       style={styles.gifticonItem}
-      onPress={() => navigation.navigate('GifticonDetail', { id: item.id })}
+      onPress={() => navigation.navigate('GifticonDetail', { id: item.gifticonId })}
     >
       <Shadow
         distance={6}
@@ -124,13 +210,17 @@ const ManageListScreen = () => {
         style={styles.shadowContainer}
       >
         <View style={styles.gifticonContent}>
-          <Image source={item.imageUrl} style={styles.gifticonImage} />
+          <Image source={item.thumbnailPath} style={styles.gifticonImage} />
           <View style={styles.gifticonInfo}>
-            <Text style={styles.brandText}>{item.brand}</Text>
-            <Text style={styles.nameText}>{item.name}</Text>
+            <Text style={styles.brandText}>{item.brandName}</Text>
+            <Text style={styles.nameText}>{item.gifticonName}</Text>
           </View>
           <View style={styles.expiryContainer}>
-            <Text style={styles.expiryText}>D-{item.daysLeft}</Text>
+            <Text style={styles.expiryText}>
+              {item.scope === 'USED'
+                ? '사용완료'
+                : `D-${calculateDaysLeft(item.gifticonExpiryDate)}`}
+            </Text>
           </View>
         </View>
       </Shadow>
@@ -209,7 +299,17 @@ const ManageListScreen = () => {
       {/* 기프티콘 리스트 */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.gifticonList}>
-          {DUMMY_GIFTICONS.map(item => renderGifticonItem(item))}
+          {filteredGifticons.length > 0 ? (
+            filteredGifticons.map(item => renderGifticonItem(item))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                {selectedCategory === 'mybas' && '마이박스에 기프티콘이 없습니다.'}
+                {selectedCategory === 'sharebas' && '쉐어박스에 기프티콘이 없습니다.'}
+                {selectedCategory === 'used' && '사용완료된 기프티콘이 없습니다.'}
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -335,6 +435,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#3498DB',
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#888',
   },
 });
 
