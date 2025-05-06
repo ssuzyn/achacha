@@ -6,11 +6,16 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.infrastructure.config.AIServiceProperties;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -49,40 +54,59 @@ public class AIServiceAdapter implements AIServicePort {
 
 			// 4. AI 서비스 서버 호출
 			String url = properties.getApiUrl() + "/api/extract-gifticon";
-			ResponseEntity<String> response = restTemplate.exchange(
-				url,
-				HttpMethod.POST,
-				requestEntity,
-				String.class
-			);
+			ResponseEntity<String> response;
+
+			try {
+				response = restTemplate.exchange(
+					url,
+					HttpMethod.POST,
+					requestEntity,
+					String.class
+				);
+			} catch (ResourceAccessException e) {
+				log.error("AI 서비스 연결 실패: {}", e.getMessage());
+				throw new CustomException(ErrorCode.AI_SERVICE_CONNECTION_ERROR);
+			} catch (HttpClientErrorException | HttpServerErrorException e) {
+				log.error("AI 서비스 오류 응답: {}, 상태 코드: {}", e.getMessage(), e.getStatusCode());
+				throw new CustomException(ErrorCode.AI_SERVICE_RESPONSE_ERROR);
+			}
 
 			// 5. 응답 로깅 및 검증
 			String responseBody = response.getBody();
-			log.info("AI 서비스 응답: {}", responseBody);  // debug -> info로 변경
+			log.info("AI 서비스 응답: {}", responseBody);
 
 			if (responseBody == null || responseBody.trim().isEmpty()) {
 				log.error("AI 서비스 응답이 비어있습니다.");
-				throw new RuntimeException("AI 서비스 응답이 비어있습니다.");
+				throw new CustomException(ErrorCode.AI_SERVICE_EMPTY_RESPONSE);
 			}
 
 			// 6. 응답 파싱 및 DTO 변환
 			return parseResponse(responseBody);
+
+		} catch (CustomException e) {
+			// 이미 CustomException으로 래핑된 예외는 그대로 전파
+			throw e;
 		} catch (Exception e) {
 			log.error("AI 서비스 처리 실패", e);
-			throw new RuntimeException("기프티콘 정보 추출 중 오류가 발생했습니다.", e);
+			throw new CustomException(ErrorCode.AI_SERVICE_RESPONSE_ERROR);
 		}
 	}
 
-	private GifticonMetadataResponseDto parseResponse(String responseBody) throws Exception {
-		JsonNode rootNode = objectMapper.readTree(responseBody);
+	private GifticonMetadataResponseDto parseResponse(String responseBody) {
+		try {
+			JsonNode rootNode = objectMapper.readTree(responseBody);
 
-		return GifticonMetadataResponseDto.builder()
-			.gifticonBarcodeNumber(getNullableTextValue(rootNode, "gifticonBarcodeNumber"))
-			.brandName(getNullableTextValue(rootNode, "brandName"))
-			.gifticonName(getNullableTextValue(rootNode, "gifticonName"))
-			.gifticonExpiryDate(getNullableTextValue(rootNode, "gifticonExpiryDate"))
-			.gifticonOriginalAmount(getIntegerValue(rootNode, "gifticonOriginalAmount"))
-			.build();
+			return GifticonMetadataResponseDto.builder()
+				.gifticonBarcodeNumber(getNullableTextValue(rootNode, "gifticonBarcodeNumber"))
+				.brandName(getNullableTextValue(rootNode, "brandName"))
+				.gifticonName(getNullableTextValue(rootNode, "gifticonName"))
+				.gifticonExpiryDate(getNullableTextValue(rootNode, "gifticonExpiryDate"))
+				.gifticonOriginalAmount(getIntegerValue(rootNode, "gifticonOriginalAmount"))
+				.build();
+		} catch (Exception e) {
+			log.error("AI 서비스 응답 파싱 실패: {}", e.getMessage());
+			throw new CustomException(ErrorCode.AI_SERVICE_PARSE_ERROR);
+		}
 	}
 
 	private String getNullableTextValue(JsonNode node, String fieldName) {
