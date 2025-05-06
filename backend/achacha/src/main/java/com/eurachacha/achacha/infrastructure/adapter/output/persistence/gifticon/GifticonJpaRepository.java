@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -128,4 +129,50 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> 
 	Optional<AvailableGifticonDetailResponseDto> findAvailableGifticonDetail(
 		@Param("gifticonId") Integer gifticonId
 	);
+
+	@Query("""
+		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto(
+		      g.id,
+		      g.name,
+		      g.type,
+		      g.expiryDate,
+		      b.id,
+		      b.name,
+		      CASE 
+		        WHEN oh.id IS NOT NULL AND oh.transferType = 'GIVE_AWAY' THEN 'GIVE_AWAY'
+		        WHEN oh.id IS NOT NULL AND oh.transferType = 'PRESENT' THEN 'PRESENT'
+		        ELSE 'SELF_USE'
+		      END,
+		      COALESCE(oh.createdAt, uh.createdAt),
+		      (
+		        SELECT f.path
+		          FROM File f
+		         WHERE f.referenceEntityType = 'GIFTICON'
+		           AND f.referenceEntityId = g.id
+		           AND f.type = :fileType
+		           AND f.id = (
+		             SELECT MIN(f2.id)
+		               FROM File f2
+		              WHERE f2.referenceEntityType = 'GIFTICON'
+		                AND f2.referenceEntityId = g.id
+		                AND f2.type = :fileType
+		           )
+		      )
+		  )
+		  FROM Gifticon g
+		  JOIN g.brand b
+		  LEFT JOIN GifticonOwnerHistory oh ON g.id = oh.gifticon.id AND oh.fromUser.id = :userId
+		  LEFT JOIN UsageHistory uh ON g.id = uh.gifticon.id AND uh.toUser.id = :userId
+		      AND (g.type = 'PRODUCT' OR (g.type = 'AMOUNT' AND uh.usageAmount = g.originalAmount))
+		  WHERE (oh.id IS NOT NULL OR uh.id IS NOT NULL)
+		    AND (:type IS NULL OR g.type = :type)
+		  ORDER BY COALESCE(oh.createdAt, uh.createdAt) DESC
+		""")
+	Slice<UsedGifticonResponseDto> findUsedGifticons(
+		@Param("userId") Integer userId,
+		@Param("type") GifticonType type,
+		@Param("fileType") FileType fileType,
+		Pageable pageable
+	);
+
 }
