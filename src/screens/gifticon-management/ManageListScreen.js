@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Image, TouchableOpacity, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
 import { Text } from '../../components/ui';
 import CategoryTabs from '../../components/common/CategoryTabs';
@@ -122,10 +122,14 @@ const DUMMY_GIFTICONS = [
 const ManageListScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
 
-  // 카테고리 상태
-  const [selectedCategory, setSelectedCategory] = useState('mybas');
+  // route.params에서 initialTab을 가져와 초기 탭 설정
+  const initialTab = route.params?.initialTab || 'mybas';
+
+  // 카테고리 상태 - 초기값은 route.params에서 받은 initialTab으로 설정
+  const [selectedCategory, setSelectedCategory] = useState(initialTab);
   // 필터 상태
   const [selectedFilter, setSelectedFilter] = useState('all');
   // 정렬 상태
@@ -154,6 +158,13 @@ const ManageListScreen = () => {
     { id: 'recent', title: '등록순' },
     { id: 'expiry', title: '임박순' },
   ];
+
+  // 파라미터에서 initialTab이 변경되면 selectedCategory 업데이트
+  useEffect(() => {
+    if (route.params?.initialTab) {
+      setSelectedCategory(route.params.initialTab);
+    }
+  }, [route.params?.initialTab]);
 
   // 카테고리에 따른 기프티콘 필터링
   useEffect(() => {

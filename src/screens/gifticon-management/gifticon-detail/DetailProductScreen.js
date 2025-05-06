@@ -159,10 +159,21 @@ const DetailProductScreen = () => {
     } else {
       // 이미 사용 중인 경우 사용 완료 처리
       console.log('기프티콘 사용 완료');
-      // 여기에 사용 완료 로직 추가 (API 호출 등)
 
-      // 사용 완료 후 ManageListScreen으로 이동
-      navigation.navigate('List');
+      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
+      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
+
+      // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'Main',
+            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+          },
+        ],
+      });
     }
   };
 
