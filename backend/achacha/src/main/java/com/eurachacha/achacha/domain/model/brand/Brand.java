@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.domain.model.gifticon;
+package com.eurachacha.achacha.domain.model.brand;
 
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 
