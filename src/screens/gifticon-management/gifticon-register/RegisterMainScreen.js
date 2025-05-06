@@ -36,6 +36,19 @@ const RegisterMainScreen = () => {
   const [croppedImageResult, setCroppedImageResult] = useState(null);
   const cropViewRef = useRef(null);
 
+  // 기프티콘 타입 및 등록 위치 모달 상태
+  const [isTypeModalVisible, setTypeModalVisible] = useState(false);
+  const [gifticonType, setGifticonType] = useState('PRODUCT'); // 'PRODUCT' 또는 'AMOUNT'
+  const [boxType, setBoxType] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
+  const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+
+  // 더미 데이터: 쉐어박스 목록
+  const shareBoxes = [
+    { id: 1, name: '으라차차 해인네' },
+    { id: 2, name: '으라차차 주은이네' },
+    { id: 3, name: '으라차차 대성이네' },
+  ];
+
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
     navigation.goBack();
@@ -43,12 +56,18 @@ const RegisterMainScreen = () => {
 
   // 수동 등록 처리
   const handleManualRegister = useCallback(() => {
-    // 수동 등록 화면으로 이동
-    navigation.navigate('RegisterDetail');
-  }, [navigation]);
+    // 타입 선택 모달 먼저 표시
+    setTypeModalVisible(true);
+  }, []);
 
-  // 이미지 선택 모달 표시
-  const showImageOptions = useCallback(() => {
+  // 이미지 선택 모달 표시 전 타입 선택 모달 표시
+  const showTypeModal = useCallback(() => {
+    setTypeModalVisible(true);
+  }, []);
+
+  // 타입 선택 완료 후 이미지 옵션 모달 표시
+  const handleTypeSelected = useCallback(() => {
+    setTypeModalVisible(false);
     setImageOptionVisible(true);
   }, []);
 
@@ -204,15 +223,20 @@ const RegisterMainScreen = () => {
       const resultUri = croppedImageResult ? croppedImageResult.uri : currentImageUri;
       console.log('최종 사용 이미지:', resultUri);
 
-      // 편집한 이미지와 함께 상세 화면으로 이동
-      navigation.navigate('RegisterDetail', { selectedImage: { uri: resultUri } });
+      // 편집한 이미지와 함께 상세 화면으로 이동 (기프티콘 타입과 박스 타입도 전달)
+      navigation.navigate('RegisterDetail', {
+        selectedImage: { uri: resultUri },
+        gifticonType,
+        boxType,
+        shareBoxId: boxType === 'SHARE_BOX' ? selectedShareBoxId : null,
+      });
       setImageEditorVisible(false);
     } catch (error) {
       console.error('이미지 편집 예외 발생:', error);
       Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
       setImageEditorVisible(false);
     }
-  }, [navigation, currentImageUri, croppedImageResult]);
+  }, [navigation, currentImageUri, croppedImageResult, gifticonType, boxType, selectedShareBoxId]);
 
   // 이미지 편집 취소
   const handleImageEditCancel = useCallback(() => {
@@ -254,7 +278,7 @@ const RegisterMainScreen = () => {
           offset={[0, 1]}
           style={styles.shadowContainer}
         >
-          <TouchableOpacity onPress={showImageOptions}>
+          <TouchableOpacity onPress={showTypeModal}>
             <Card style={styles.uploadCard}>
               <View style={styles.uploadContent}>
                 <Image
@@ -352,6 +376,126 @@ const RegisterMainScreen = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* 기프티콘 타입 및 박스 선택 모달 */}
+      <Modal
+        visible={isTypeModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setTypeModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setTypeModalVisible(false)}
+        >
+          <View style={[styles.modalContent, styles.typeModalContent]}>
+            {/* 상품형/금액형 선택 버튼 */}
+            <View style={styles.typeButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.typeButton, gifticonType === 'PRODUCT' && styles.typeButtonSelected]}
+                onPress={() => setGifticonType('PRODUCT')}
+              >
+                <Text
+                  style={[
+                    styles.typeButtonText,
+                    gifticonType === 'PRODUCT' && styles.typeButtonTextSelected,
+                  ]}
+                >
+                  상품형
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.typeButton, gifticonType === 'AMOUNT' && styles.typeButtonSelected]}
+                onPress={() => setGifticonType('AMOUNT')}
+              >
+                <Text
+                  style={[
+                    styles.typeButtonText,
+                    gifticonType === 'AMOUNT' && styles.typeButtonTextSelected,
+                  ]}
+                >
+                  금액형
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text variant="h4" weight="bold" style={styles.modalTitle}>
+              기본
+            </Text>
+
+            {/* 마이박스 선택 */}
+            <View style={styles.typeSection}>
+              <View style={styles.typeRow}>
+                <TouchableOpacity
+                  style={[
+                    styles.checkboxContainer,
+                    boxType === 'MY_BOX' && styles.checkboxContainerSelected,
+                  ]}
+                  onPress={() => {
+                    setBoxType('MY_BOX');
+                    setSelectedShareBoxId(null);
+                  }}
+                >
+                  <View style={styles.checkbox}>
+                    {boxType === 'MY_BOX' && (
+                      <Icon name="check" type="material" size={16} color={theme.colors.primary} />
+                    )}
+                  </View>
+                  <Text style={styles.checkboxLabel}>마이박스</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <Text variant="h4" weight="bold" style={[styles.modalTitle, styles.sectionTitle]}>
+              쉐어 박스
+            </Text>
+
+            {/* 쉐어박스 선택 */}
+            <View style={styles.boxSection}>
+              {shareBoxes.map(box => (
+                <View key={box.id} style={styles.typeRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.checkboxContainer,
+                      boxType === 'SHARE_BOX' &&
+                        selectedShareBoxId === box.id &&
+                        styles.checkboxContainerSelected,
+                    ]}
+                    onPress={() => {
+                      setBoxType('SHARE_BOX');
+                      setSelectedShareBoxId(box.id);
+                    }}
+                  >
+                    <View style={styles.checkbox}>
+                      {boxType === 'SHARE_BOX' && selectedShareBoxId === box.id && (
+                        <Icon name="check" type="material" size={16} color={theme.colors.primary} />
+                      )}
+                    </View>
+                    <Text style={styles.checkboxLabel}>{box.name}</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.typeButtonContainer}>
+              <Button
+                title="취소"
+                variant="outline"
+                onPress={() => setTypeModalVisible(false)}
+                style={styles.typeModalButton}
+              />
+              <Button
+                title="확인"
+                variant="primary"
+                onPress={handleTypeSelected}
+                style={styles.typeModalButton}
+              />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* 이미지 옵션 모달 */}
       <Modal
@@ -681,9 +825,16 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 16,
     padding: 20,
   },
+  typeModalContent: {
+    maxHeight: '90%',
+  },
   modalTitle: {
-    textAlign: 'center',
     marginBottom: 20,
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  sectionTitle: {
+    marginTop: 15,
   },
   modalOption: {
     flexDirection: 'row',
@@ -697,6 +848,56 @@ const styles = StyleSheet.create({
   },
   modalCancelButton: {
     marginTop: 16,
+  },
+  // 기프티콘 타입 및 위치 선택 모달 스타일
+  typeSection: {
+    marginBottom: 20,
+  },
+  boxSection: {
+    marginBottom: 20,
+  },
+  typeRow: {
+    marginBottom: 12,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E6E6E6',
+  },
+  checkboxContainerSelected: {
+    borderColor: '#4A90E2',
+    backgroundColor: '#F5F9FF',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  checkboxSelected: {
+    borderColor: '#4A90E2',
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: '#333333',
+  },
+  typeButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  typeModalButton: {
+    flex: 1,
+    marginHorizontal: 5,
   },
   // 이미지 편집기 관련 스타일
   editorContainer: {
@@ -763,6 +964,35 @@ const styles = StyleSheet.create({
   },
   emptyImageText: {
     color: '#DDDDDD',
+  },
+  // 상품형/금액형 버튼 스타일
+  typeButtonsContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  typeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#F8F8F8',
+    borderRightWidth: 0.5,
+    borderLeftWidth: 0.5,
+    borderColor: '#E0E0E0',
+  },
+  typeButtonSelected: {
+    backgroundColor: '#4A90E2',
+  },
+  typeButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666666',
+  },
+  typeButtonTextSelected: {
+    color: 'white',
   },
 });
 
