@@ -71,17 +71,51 @@ const DUMMY_GIFTICONS = [
   },
   {
     gifticonId: 127,
-    gifticonName: '아이스 카페 아메리카노 T',
+    gifticonName: '아메리카노',
     gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2024-03-01',
+    gifticonExpiryDate: '2025-04-23',
     brandId: 45,
     brandName: '스타벅스',
     scope: 'USED',
-    userId: 78,
-    userName: '홍길동',
-    shareBoxId: null,
-    shareBoxName: null,
+    usageType: 'SELF_USE', // 사용하기
+    usedAt: '2025-01-15T14:30:00',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+  },
+  {
+    gifticonId: 128,
+    gifticonName: '카페라떼',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-02-15',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'USED',
+    usageType: 'PRESENT', // 선물하기
+    usedAt: '2025-01-20T10:15:00',
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+  },
+  {
+    gifticonId: 130,
+    gifticonName: '빙수',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-02-20',
+    brandId: 47,
+    brandName: '설빙',
+    scope: 'USED',
+    usageType: 'GIVE_AWAY', // 나눔하기
+    usedAt: '2025-01-22T11:30:00',
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+  },
+  {
+    gifticonId: 129,
+    gifticonName: '문화상품권',
+    gifticonType: 'AMOUNT',
+    gifticonExpiryDate: '2025-03-31',
+    brandId: 46,
+    brandName: '컬쳐랜드',
+    scope: 'USED',
+    usageType: 'SELF_USE',
+    usedAt: '2025-01-25T16:45:00',
+    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
   },
 ];
 
@@ -196,6 +230,15 @@ const ManageListScreen = () => {
     return diffDays > 0 ? diffDays : 0;
   };
 
+  // 날짜 포맷 함수
+  const formatDate = dateString => {
+    const date = new Date(dateString);
+    const yy = String(date.getFullYear()).slice(2);
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yy}.${mm}.${dd}`;
+  };
+
   // 기프티콘 아이템 렌더링
   const renderGifticonItem = item => (
     <TouchableOpacity
@@ -209,7 +252,12 @@ const ManageListScreen = () => {
         offset={[0, 1]}
         style={styles.shadowContainer}
       >
-        <View style={styles.gifticonContent}>
+        <View
+          style={[
+            styles.gifticonContent,
+            item.scope === 'USED' ? styles.usedGifticonContent : null,
+          ]}
+        >
           <Image source={item.thumbnailPath} style={styles.gifticonImage} />
           <View style={styles.gifticonInfo}>
             <Text style={styles.brandText}>{item.brandName}</Text>
@@ -228,11 +276,11 @@ const ManageListScreen = () => {
             )}
           </View>
           <View style={styles.expiryContainer}>
-            <Text style={styles.expiryText}>
-              {item.scope === 'USED'
-                ? '사용완료'
-                : `D-${calculateDaysLeft(item.gifticonExpiryDate)}`}
-            </Text>
+            {item.scope === 'USED' ? (
+              <Text style={styles.dateText}>{formatDate(item.gifticonExpiryDate)}</Text>
+            ) : (
+              <Text style={styles.expiryText}>D-{calculateDaysLeft(item.gifticonExpiryDate)}</Text>
+            )}
           </View>
         </View>
       </Shadow>
@@ -421,6 +469,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#E6F4FB',
     borderRadius: 10,
   },
+  usedGifticonContent: {
+    backgroundColor: '#E8F4F0',
+  },
   gifticonImage: {
     width: 40,
     height: 40,
@@ -460,6 +511,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#3498DB',
+  },
+  dateText: {
+    fontSize: 14,
+    fontWeight: 'medium',
+    color: '#555',
   },
   emptyContainer: {
     alignItems: 'center',
