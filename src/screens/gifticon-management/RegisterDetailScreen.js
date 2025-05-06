@@ -46,7 +46,6 @@ const RegisterDetailScreen = () => {
   // 초기 화면 로드시 이미지가 있는지 확인
   useEffect(() => {
     if (route.params?.selectedImage) {
-      console.log('초기 이미지 수신:', route.params.selectedImage);
       setCurrentImageUri(route.params.selectedImage.uri);
     }
   }, [route.params]);
@@ -54,7 +53,6 @@ const RegisterDetailScreen = () => {
   // useEffect로 크롭 결과를 감시하여 적용
   useEffect(() => {
     if (croppedImageResult && croppedImageResult.uri) {
-      console.log('크롭 결과 감지됨, URI 적용:', croppedImageResult.uri);
       setCurrentImageUri(croppedImageResult.uri);
     }
   }, [croppedImageResult]);
@@ -100,7 +98,6 @@ const RegisterDetailScreen = () => {
         });
         return granted === PermissionsAndroid.RESULTS.GRANTED;
       } catch (err) {
-        console.warn(err);
         return false;
       }
     }
@@ -109,8 +106,6 @@ const RegisterDetailScreen = () => {
 
   // 갤러리에서 이미지 선택
   const handlePickImage = () => {
-    console.log('갤러리 버튼 클릭됨');
-
     try {
       // 옵션 설정
       const options = {
@@ -124,42 +119,26 @@ const RegisterDetailScreen = () => {
         maxHeight: 2000,
       };
 
-      console.log('이미지 라이브러리 호출 전');
-
       // 이미지 라이브러리 호출
       launchImageLibrary(options, response => {
-        console.log('이미지 선택 응답:', JSON.stringify(response));
-
         if (response.didCancel) {
-          console.log('사용자가 이미지 선택을 취소했습니다');
+          // 사용자가 취소
         } else if (response.error) {
-          console.error('이미지 선택 오류: ', response.error);
           Alert.alert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
         } else {
-          // 직접 파일 경로 확인 로그
-          console.log('이미지 응답 전체:', response);
-
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
 
-          console.log('이미지 응답 처리:', imageAsset);
-          console.log('이미지 uri:', imageAsset.uri);
-
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
-            console.log('이미지 URI 설정:', imageAsset.uri);
+            // 선택한 이미지 편집 모드 시작
             setCurrentImageUri(imageAsset.uri);
             setImageEditorVisible(true);
           } else {
-            console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
           }
         }
       });
-
-      console.log('이미지 라이브러리 호출 후');
     } catch (error) {
-      console.error('이미지 선택 예외 발생:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
   };
@@ -188,56 +167,38 @@ const RegisterDetailScreen = () => {
         maxHeight: 2000,
       };
 
-      console.log('카메라 호출 전');
-
       // 카메라 호출
       launchCamera(options, response => {
-        console.log('카메라 응답:', JSON.stringify(response));
-
         if (response.didCancel) {
-          console.log('사용자가 카메라 촬영을 취소했습니다');
+          // 사용자가 취소
         } else if (response.error) {
-          console.error('카메라 오류: ', response.error);
           Alert.alert('오류', '카메라를 사용하는 중 오류가 발생했습니다: ' + response.error);
         } else {
-          // 직접 파일 경로 확인 로그
-          console.log('이미지 응답 전체:', response);
-
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
 
-          console.log('이미지 응답 처리:', imageAsset);
-          console.log('이미지 uri:', imageAsset.uri);
-
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
-            console.log('이미지 URI 설정:', imageAsset.uri);
+            // 선택한 이미지 편집 모드 시작
             setCurrentImageUri(imageAsset.uri);
             setImageEditorVisible(true);
           } else {
-            console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
           }
         }
       });
-
-      console.log('카메라 호출 후');
     } catch (error) {
-      console.error('카메라 촬영 예외 발생:', error);
       Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
     }
   };
 
-  // 이미지 편집 완료 후 처리 - 간단하게 재작성
+  // 이미지 편집 완료 후 처리
   const handleImageEditComplete = () => {
-    console.log('이미지 편집 완료 버튼 클릭됨');
     // 편집기 닫기만 하고, 이미지는 onImageCrop에서 처리
     setImageEditorVisible(false);
   };
 
   // 이미지 편집 취소
   const handleImageEditCancel = () => {
-    console.log('이미지 편집 취소됨');
     // 취소 시 크롭 결과 초기화
     setCroppedImageResult(null);
     setImageEditorVisible(false);
@@ -465,19 +426,15 @@ const RegisterDetailScreen = () => {
                   sourceUrl={currentImageUri}
                   style={styles.cropView}
                   onError={error => {
-                    console.error('이미지 크롭 에러:', error);
                     Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
                   }}
                   onImageCrop={res => {
                     // 크롭 결과 확인
-                    console.log('이미지 크롭 결과 발생:', res);
                     if (res && res.uri) {
                       // 크롭 결과를 상태에 저장
                       setCroppedImageResult({ ...res });
                       // 현재 이미지 URI도 즉시 업데이트
                       setCurrentImageUri(res.uri);
-                    } else {
-                      console.error('크롭 결과가 없거나 URI가 없음');
                     }
                   }}
                   cropAreaWidth={300}
@@ -503,7 +460,6 @@ const RegisterDetailScreen = () => {
             <TouchableOpacity
               style={styles.toolbarButton}
               onPress={() => {
-                console.log('회전 버튼 클릭');
                 if (cropViewRef.current) {
                   try {
                     // 회전 후 즉시 저장 시도
@@ -514,10 +470,8 @@ const RegisterDetailScreen = () => {
                       }
                     }, 300); // 약간의 딜레이 추가
                   } catch (error) {
-                    console.error('회전 오류:', error);
+                    // 오류 처리
                   }
-                } else {
-                  console.error('cropViewRef가 없습니다');
                 }
               }}
             >
