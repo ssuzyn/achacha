@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 
 @Component
 public class PageableFactory {
@@ -26,5 +27,9 @@ public class PageableFactory {
 			case EXPIRY_ASC -> Sort.by("expiryDate").ascending().and(Sort.by("id").ascending());
 			case CREATED_DESC -> Sort.by("createdAt").descending();
 		};
+	}
+
+	public Pageable createPageable(Integer page, Integer size, GifticonUsedSortType sort) {
+		return PageRequest.of(page, size);
 	}
 }
