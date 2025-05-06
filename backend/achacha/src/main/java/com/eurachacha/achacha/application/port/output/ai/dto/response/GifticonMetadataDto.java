@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.application.port.input.gifticon.dto.response;
+package com.eurachacha.achacha.application.port.output.ai.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -12,7 +12,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @ToString
-public class GifticonMetadataResponseDto {
+public class GifticonMetadataDto {
 	private String gifticonBarcodeNumber; // 바코드 번호 (공백과 구분자 없이)
 	private Integer brandId; // 브랜드 아이디
 	private String brandName; // 브랜드 이름
