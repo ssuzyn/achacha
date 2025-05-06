@@ -305,25 +305,27 @@ const RegisterDetailScreen = () => {
         contentContainerStyle={styles.contentContainer}
       >
         {/* 이미지 선택 영역 */}
-        <TouchableOpacity style={styles.imageContainer} onPress={showImageOptions}>
-          {currentImageUri ? (
-            <Image source={{ uri: currentImageUri }} style={styles.image} resizeMode="contain" />
-          ) : (
-            <View style={styles.imagePlaceholder}>
-              <RNEIcon name="image" type="material" size={60} color="#CCCCCC" />
-              <Text variant="body2" color="#666666" style={styles.placeholderText}>
-                이미지를 등록해주세요
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
+        <View style={styles.imageContainerWrapper}>
+          <TouchableOpacity style={styles.imageContainer} onPress={showImageOptions}>
+            {currentImageUri ? (
+              <Image source={{ uri: currentImageUri }} style={styles.image} resizeMode="cover" />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <RNEIcon name="image" type="material" size={60} color="#CCCCCC" />
+                <Text variant="body2" color="#666666" style={styles.placeholderText}>
+                  이미지를 등록해주세요
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
 
-        <Button
-          title={currentImageUri ? '이미지 편집하기' : '이미지 등록하기'}
-          variant="outline"
-          style={styles.imageButton}
-          onPress={showImageOptions}
-        />
+          <Button
+            title={currentImageUri ? '이미지 편집하기' : '이미지 등록하기'}
+            variant="outline"
+            style={styles.imageButton}
+            onPress={showImageOptions}
+          />
+        </View>
 
         {/* 입력 폼 */}
         <View style={styles.formContainer}>
@@ -624,15 +626,20 @@ const styles = StyleSheet.create({
   rightPlaceholder: {
     width: 48,
   },
+  imageContainerWrapper: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
   imageContainer: {
-    width: '100%',
-    height: 250,
-    backgroundColor: '#F9F9F9',
+    width: 180,
+    height: 180,
     borderRadius: 10,
-    marginTop: 20,
+    backgroundColor: '#F9F9F9',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   image: {
     width: '100%',
@@ -646,7 +653,8 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   imageButton: {
-    marginTop: 16,
+    marginTop: 15,
+    width: 180,
   },
   formContainer: {
     marginTop: 20,
