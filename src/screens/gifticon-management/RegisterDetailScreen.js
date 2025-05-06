@@ -40,6 +40,7 @@ const RegisterDetailScreen = () => {
   const [isImageEditorVisible, setImageEditorVisible] = useState(false);
   const [aspectRatio, setAspectRatio] = useState(null);
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
+  const [croppedImageResult, setCroppedImageResult] = useState(null);
   const cropViewRef = useRef(null);
 
   // 초기 화면 로드시 이미지가 있는지 확인
@@ -49,6 +50,14 @@ const RegisterDetailScreen = () => {
       setCurrentImageUri(route.params.selectedImage.uri);
     }
   }, [route.params]);
+
+  // useEffect로 크롭 결과를 감시하여 적용
+  useEffect(() => {
+    if (croppedImageResult && croppedImageResult.uri) {
+      console.log('크롭 결과 감지됨, URI 적용:', croppedImageResult.uri);
+      setCurrentImageUri(croppedImageResult.uri);
+    }
+  }, [croppedImageResult]);
 
   // 뒤로가기 처리
   const handleGoBack = () => {
@@ -70,7 +79,12 @@ const RegisterDetailScreen = () => {
 
   // 이미지 선택 모달 표시
   const showImageOptions = () => {
-    setImageOptionVisible(true);
+    // 이미 이미지가 있으면 바로 편집 화면으로, 없으면 옵션 모달 보여주기
+    if (currentImageUri) {
+      setImageEditorVisible(true);
+    } else {
+      setImageOptionVisible(true);
+    }
   };
 
   // 안드로이드 카메라 권한 요청
@@ -214,38 +228,18 @@ const RegisterDetailScreen = () => {
     }
   };
 
-  // 이미지 편집 완료 후 처리
+  // 이미지 편집 완료 후 처리 - 간단하게 재작성
   const handleImageEditComplete = () => {
     console.log('이미지 편집 완료 버튼 클릭됨');
-    if (cropViewRef.current) {
-      try {
-        cropViewRef.current
-          .cropImage()
-          .then(result => {
-            console.log('이미지 크롭 성공:', result);
-            setCurrentImageUri(result);
-            setImageEditorVisible(false);
-          })
-          .catch(error => {
-            console.error('이미지 저장 오류:', error);
-            Alert.alert('오류', '이미지를 저장하는 중 오류가 발생했습니다.');
-            setImageEditorVisible(false);
-          });
-      } catch (error) {
-        console.error('이미지 편집 예외 발생:', error);
-        Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
-        setImageEditorVisible(false);
-      }
-    } else {
-      console.error('cropViewRef가 없습니다');
-      Alert.alert('오류', '이미지 편집기를 사용할 수 없습니다. 다시 시도해주세요.');
-      setImageEditorVisible(false);
-    }
+    // 편집기 닫기만 하고, 이미지는 onImageCrop에서 처리
+    setImageEditorVisible(false);
   };
 
   // 이미지 편집 취소
   const handleImageEditCancel = () => {
     console.log('이미지 편집 취소됨');
+    // 취소 시 크롭 결과 초기화
+    setCroppedImageResult(null);
     setImageEditorVisible(false);
   };
 
@@ -331,24 +325,10 @@ const RegisterDetailScreen = () => {
 
         {/* 입력 폼 */}
         <View style={styles.formContainer}>
+          <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+            바코드 번호 입력
+          </Text>
           <InputLine
-            label="브랜드"
-            value={brand}
-            onChangeText={setBrand}
-            placeholder="브랜드명을 입력해주세요."
-            containerStyle={styles.inputContainer}
-          />
-
-          <InputLine
-            label="상품명"
-            value={productName}
-            onChangeText={setProductName}
-            placeholder="상품명을 입력해주세요."
-            containerStyle={styles.inputContainer}
-          />
-
-          <InputLine
-            label="바코드 번호"
             value={barcode}
             onChangeText={setBarcode}
             placeholder="바코드 번호를 입력해주세요."
@@ -356,13 +336,35 @@ const RegisterDetailScreen = () => {
             containerStyle={styles.inputContainer}
           />
 
-          <Text variant="h4" weight="bold" style={styles.formLabel}>
-            유효기간
+          <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+            기프티콘 정보 입력
           </Text>
-          <TouchableOpacity style={styles.datePickerButton} onPress={showDatePickerHandler}>
-            <Text variant="body1">{formatDate(expiryDate)}</Text>
-            <Icon name="calendar-today" size={22} color="#333333" />
-          </TouchableOpacity>
+          <InputLine
+            value={brand}
+            onChangeText={setBrand}
+            placeholder="브랜드명을 입력해주세요."
+            containerStyle={styles.inputContainer}
+          />
+
+          <InputLine
+            value={productName}
+            onChangeText={setProductName}
+            placeholder="상품명을 입력해주세요."
+            containerStyle={styles.inputContainer}
+          />
+
+          <InputLine
+            value={formatDate(expiryDate)}
+            placeholder="유효기간을 입력해주세요."
+            containerStyle={styles.inputContainer}
+            rightIcon={
+              <TouchableOpacity onPress={showDatePickerHandler}>
+                <Icon name="calendar-today" size={22} color="#333333" />
+              </TouchableOpacity>
+            }
+            editable={false}
+            onTouchStart={showDatePickerHandler}
+          />
 
           {showDatePicker && (
             <DateTimePicker
@@ -452,8 +454,19 @@ const RegisterDetailScreen = () => {
                   style={styles.cropView}
                   onError={error => {
                     console.error('이미지 크롭 에러:', error);
-                    console.error('에러가 발생한 이미지 URI:', currentImageUri);
                     Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
+                  }}
+                  onImageCrop={res => {
+                    // 크롭 결과 확인
+                    console.log('이미지 크롭 결과 발생:', res);
+                    if (res && res.uri) {
+                      // 크롭 결과를 상태에 저장
+                      setCroppedImageResult({ ...res });
+                      // 현재 이미지 URI도 즉시 업데이트
+                      setCurrentImageUri(res.uri);
+                    } else {
+                      console.error('크롭 결과가 없거나 URI가 없음');
+                    }
                   }}
                   cropAreaWidth={300}
                   cropAreaHeight={300}
@@ -481,7 +494,13 @@ const RegisterDetailScreen = () => {
                 console.log('회전 버튼 클릭');
                 if (cropViewRef.current) {
                   try {
+                    // 회전 후 즉시 저장 시도
                     cropViewRef.current.rotateImage(true);
+                    setTimeout(() => {
+                      if (cropViewRef.current) {
+                        cropViewRef.current.saveImage(true, 100);
+                      }
+                    }, 300); // 약간의 딜레이 추가
                   } catch (error) {
                     console.error('회전 오류:', error);
                   }
@@ -630,20 +649,11 @@ const styles = StyleSheet.create({
   formContainer: {
     marginTop: 20,
   },
-  inputContainer: {
-    marginBottom: 16,
-  },
-  formLabel: {
+  formSectionTitle: {
+    marginTop: 20,
     marginBottom: 10,
   },
-  datePickerButton: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+  inputContainer: {
     marginBottom: 16,
   },
   registerButton: {

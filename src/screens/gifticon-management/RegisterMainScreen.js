@@ -33,6 +33,7 @@ const RegisterMainScreen = () => {
   const [currentImageUri, setCurrentImageUri] = useState(null);
   const [aspectRatio, setAspectRatio] = useState(null);
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
+  const [croppedImageResult, setCroppedImageResult] = useState(null);
   const cropViewRef = useRef(null);
 
   // 뒤로가기 처리
@@ -195,32 +196,25 @@ const RegisterMainScreen = () => {
   // 이미지 편집 완료 후 처리
   const handleImageEditComplete = useCallback(() => {
     console.log('이미지 편집 완료 버튼 클릭됨');
-    if (cropViewRef.current) {
-      try {
-        cropViewRef.current
-          .cropImage()
-          .then(result => {
-            console.log('이미지 크롭 성공:', result);
-            // 편집한 이미지와 함께 상세 화면으로 이동
-            navigation.navigate('RegisterDetail', { selectedImage: { uri: result } });
-            setImageEditorVisible(false);
-          })
-          .catch(error => {
-            console.error('이미지 저장 오류:', error);
-            Alert.alert('오류', '이미지를 저장하는 중 오류가 발생했습니다.');
-            setImageEditorVisible(false);
-          });
-      } catch (error) {
-        console.error('이미지 편집 예외 발생:', error);
-        Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
-        setImageEditorVisible(false);
+    try {
+      if (cropViewRef.current) {
+        const result = cropViewRef.current.saveImage(true, 90);
+        console.log('이미지 크롭 결과 트라이:', result);
       }
-    } else {
-      console.error('cropViewRef가 없습니다');
-      Alert.alert('오류', '이미지 편집기를 사용할 수 없습니다. 다시 시도해주세요.');
+
+      // 편집 완료 후 croppedImageResult 또는 원본 URI 사용
+      const resultUri = croppedImageResult ? croppedImageResult.uri : currentImageUri;
+      console.log('최종 사용 이미지:', resultUri);
+
+      // 편집한 이미지와 함께 상세 화면으로 이동
+      navigation.navigate('RegisterDetail', { selectedImage: { uri: resultUri } });
+      setImageEditorVisible(false);
+    } catch (error) {
+      console.error('이미지 편집 예외 발생:', error);
+      Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
       setImageEditorVisible(false);
     }
-  }, [navigation]);
+  }, [navigation, currentImageUri, croppedImageResult]);
 
   // 이미지 편집 취소
   const handleImageEditCancel = useCallback(() => {
@@ -450,6 +444,10 @@ const RegisterMainScreen = () => {
                     console.error('에러가 발생한 이미지 URI:', currentImageUri);
                     Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
                   }}
+                  onImageCrop={res => {
+                    console.log('이미지 크롭 결과:', res);
+                    setCroppedImageResult(res);
+                  }}
                   cropAreaWidth={300}
                   cropAreaHeight={300}
                   containerColor="black"
@@ -604,7 +602,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 10,
-    marginBottom: 2,
+    marginBottom: 0,
   },
   uploadContent: {
     alignItems: 'center',
@@ -640,8 +638,8 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: '#EEEEEE',
-    marginTop: 20,
-    marginBottom: 30,
+    marginTop: 10,
+    marginBottom: 20,
   },
   infoSection: {
     marginBottom: 20,
