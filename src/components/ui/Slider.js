@@ -125,11 +125,7 @@ const Slider = ({
           onSlidingComplete={handleSlidingComplete}
           disabled={disabled}
           trackStyle={[styles.track, trackStyle]}
-          thumbStyle={[
-            styles.thumb,
-            { backgroundColor: thumbTintColor || backgroundColor },
-            thumbStyle,
-          ]}
+          thumbStyle={[styles.thumb, { backgroundColor: thumbTintColor || '#A7DAF9' }, thumbStyle]}
           minimumTrackTintColor={minimumTrackTintColor || primaryColor}
           maximumTrackTintColor={maximumTrackTintColor || inactiveColor || theme.colors.grey2}
           thumbTintColor={thumbTintColor || backgroundColor}
@@ -204,9 +200,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   thumbLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#FFFFFF',
     textAlign: 'center',
   },
   minMaxContainer: {
