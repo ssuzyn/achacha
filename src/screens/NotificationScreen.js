@@ -103,8 +103,12 @@ const NotificationScreen = () => {
 
   // 설정 버튼 처리
   const handleSettingsPress = useCallback(() => {
-    // 설정 화면으로 이동 또는 설정 메뉴 표시
-  }, []);
+    // 설정 화면으로 이동하면서 헤더바와 바텀탭바 보이도록 처리
+    showTabBar(); // 탭바 미리 표시
+
+    // 루트 네비게이터로 이동하고 TabSettings 탭을 선택
+    navigation.navigate('Main', { screen: 'TabSettings' });
+  }, [navigation, showTabBar]);
 
   // 알림 항목 선택 처리
   const handleNotificationPress = useCallback(item => {
