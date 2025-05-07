@@ -360,34 +360,36 @@ const DetailAmountScreen = () => {
                     style={[
                       styles.gifticonImage,
                       isUsed && styles.grayScaleImage,
-                      // SELF_USE일 때 이미지 높이 조정
                       isUsed &&
                         gifticonData.usageType === 'SELF_USE' &&
-                        gifticonData.barcodeImageUrl &&
-                        styles.gifticonImageWithBarcode,
+                        styles.smallerGifticonImage,
                     ]}
                     resizeMode="contain"
                   />
 
-                  {/* SELF_USE 경우에만 바코드 표시 - 이미지 바로 아래 */}
-                  {isUsed &&
-                    gifticonData.usageType === 'SELF_USE' &&
-                    gifticonData.barcodeImageUrl && (
-                      <View style={styles.barcodeBottom}>
-                        <Image
-                          source={gifticonData.barcodeImageUrl}
-                          style={styles.barcodeBottomImage}
-                          resizeMode="contain"
-                        />
-                        <Text style={styles.barcodeBottomText}>{gifticonData.barcodeNumber}</Text>
-                      </View>
-                    )}
+                  {/* SELF_USE 유형의 사용완료 기프티콘인 경우만 바코드 표시 */}
+                  {isUsed && gifticonData.usageType === 'SELF_USE' && (
+                    <View style={styles.usedBarcodeContainer}>
+                      <Image
+                        source={
+                          gifticonData.barcodeImageUrl ||
+                          require('../../../assets/images/barcode.png')
+                        }
+                        style={styles.usedBarcodeImage}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.usedBarcodeNumberText}>
+                        {gifticonData.barcodeNumber || '8013-7621-1234-5678'}
+                      </Text>
+                    </View>
+                  )}
 
                   {isUsed && (
                     <View style={styles.usedOverlay}>
                       <Text style={styles.usedText}>{getUsageTypeText()}</Text>
                     </View>
                   )}
+
                   {!isUsed && (
                     <View
                       style={[
@@ -624,13 +626,12 @@ const styles = StyleSheet.create({
     height: 300,
     backgroundColor: '#E5F4FE',
     position: 'relative',
-    flexDirection: 'column',
+    paddingBottom: 10,
   },
   gifticonImage: {
     width: '60%',
-    height: '65%',
+    height: '90%',
     borderRadius: 8,
-    marginTop: 5,
   },
   infoContainer: {
     padding: 16,
@@ -743,6 +744,11 @@ const styles = StyleSheet.create({
     // React Native는 기본적으로 grayscale 필터를 지원하지 않기 때문에
     // 투명도를 낮춰 흑백처럼 보이게 합니다.
   },
+  smallerGifticonImage: {
+    height: '50%',
+    marginBottom: 5,
+    marginTop: 20,
+  },
   usedOverlay: {
     position: 'absolute',
     top: 0,
@@ -842,7 +848,25 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  // 바코드 관련 스타일
+  // 사용완료된 기프티콘 바코드 스타일
+  usedBarcodeContainer: {
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 0,
+    padding: 20,
+    borderRadius: 8,
+  },
+  usedBarcodeImage: {
+    width: '100%',
+    height: 60,
+  },
+  usedBarcodeNumberText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+    marginTop: 5,
+  },
+  // 사용 모드 바코드 스타일
   barcodeContainer: {
     backgroundColor: '#FFFFFF',
     padding: 16,
@@ -870,24 +894,6 @@ const styles = StyleSheet.create({
   magnifyButton: {
     marginLeft: 12,
     padding: 8,
-  },
-  barcodeBottom: {
-    width: '90%',
-    marginTop: 5,
-    alignItems: 'center',
-  },
-  barcodeBottomImage: {
-    width: '100%',
-    height: 60,
-  },
-  barcodeBottomText: {
-    fontSize: 16,
-    color: '#333',
-    fontWeight: 'bold',
-    marginTop: 5,
-  },
-  gifticonImageWithBarcode: {
-    height: '55%',
   },
 });
 
