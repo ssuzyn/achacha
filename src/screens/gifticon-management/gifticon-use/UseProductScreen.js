@@ -1,28 +1,18 @@
 // 상품형 사용 스크린
 
 import React, { useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  Image,
-  StatusBar,
-  TouchableOpacity,
-  SafeAreaView,
-  Dimensions,
-} from 'react-native';
+import { View, StyleSheet, Image, StatusBar, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Orientation from 'react-native-orientation-locker';
-import { Text, Button } from '../../../components/ui';
-import { useTheme } from '../../../hooks/useTheme';
+import { Text } from '../../../components/ui';
 
 const UseProductScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { theme } = useTheme();
 
   // route.params에서 정보 가져오기
-  const { id, barcodeNumber } = route.params || {};
+  const { barcodeNumber } = route.params || {};
 
   // 기본 상품 정보
   const productInfo = {
@@ -98,9 +88,12 @@ const UseProductScreen = () => {
         </View>
 
         <View style={styles.actionSection}>
-          <Button title="사용완료" onPress={handleUseComplete} style={styles.completeButton} />
+          <TouchableOpacity style={styles.actionButton} onPress={handleUseComplete}>
+            <Text style={styles.actionButtonText}>사용완료</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelText}>취소</Text>
+            <Text style={styles.cancelButtonText}>취소</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -130,44 +123,56 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
+    justifyContent: 'flex-start',
   },
   barcodeSection: {
-    flex: 2,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 20,
   },
   barcodeImage: {
-    width: '90%',
-    height: '50%',
-    marginBottom: 20,
+    width: '100%',
+    height: 150,
+    marginBottom: 10,
   },
   barcodeNumber: {
     fontSize: 22,
     fontWeight: '600',
     color: '#000',
     marginTop: 10,
+    textAlign: 'center',
   },
   actionSection: {
-    width: 100,
+    width: 150,
     justifyContent: 'center',
-    paddingLeft: 20,
   },
-  completeButton: {
-    backgroundColor: '#64B5F6',
+  actionButton: {
+    backgroundColor: '#56AEE9',
     borderRadius: 8,
-    marginBottom: 20,
-    paddingVertical: 15,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+    width: '100%',
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#EEEEEE',
     borderRadius: 8,
-    padding: 15,
+    padding: 16,
     alignItems: 'center',
+    width: '100%',
   },
-  cancelText: {
-    color: '#333',
-    fontWeight: '500',
+  cancelButtonText: {
+    color: '#278CCC',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 
