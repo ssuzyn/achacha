@@ -1,0 +1,10 @@
+package com.eurachacha.achacha.infrastructure.adapter.output.persistence.sharebox;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
+
+@Repository
+public interface ShareBoxJpaRepository extends JpaRepository<ShareBox, Integer> {
+}
