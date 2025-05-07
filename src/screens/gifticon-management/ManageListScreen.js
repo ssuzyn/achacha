@@ -947,7 +947,7 @@ const styles = StyleSheet.create({
   bookmarkContainer: {
     position: 'absolute',
     top: -2,
-    left: -2,
+    left: 12,
     zIndex: 10,
   },
 });
