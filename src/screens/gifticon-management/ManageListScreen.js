@@ -141,7 +141,7 @@ const DUMMY_GIFTICONS = [
   },
   {
     gifticonId: 131,
-    gifticonName: '치즈 케이크',
+    gifticonName: '아이스 카페 아메리카노 T',
     gifticonType: 'PRODUCT',
     gifticonExpiryDate: '2025-07-20',
     brandId: 45,
@@ -346,7 +346,9 @@ const ManageListScreen = () => {
             {/* 텍스트 정보 영역 */}
             <View style={styles.textContainer}>
               <Text style={styles.brandText}>{item.brandName}</Text>
-              <Text style={styles.nameText}>{item.gifticonName}</Text>
+              <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+                {item.gifticonName}
+              </Text>
 
               {/* 쉐어박스 정보 다시 추가 */}
               {item.scope === 'SHARE_BOX' && item.shareBoxName && (
@@ -613,10 +615,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 2,
+    paddingRight: 80, // D-day 태그를 위한 여백 확보
   },
   dDayContainer: {
     position: 'absolute',
-    top: 16,
+    top: '50%',
     right: 16,
     paddingHorizontal: 10,
     paddingVertical: 4,
