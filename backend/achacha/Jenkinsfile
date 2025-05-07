@@ -16,6 +16,15 @@ pipeline {
 
         // FastAPI 환경변수
         AI_SERVICE_URL = credentials('FASTAPI_AI_URL')
+
+        // AWS 환경변수
+        AWS_ACCESS_TOKEN = credentials('AWS_ACCESS_TOKEN')
+        AWS_SECRET_TOKEN = credentials('AWS_SECRET_TOKEN')
+
+        // CloudFront 환경변수
+        AWS_CLOUDFRONT_KEYPAIR_ID = credentials('AWS_CLOUDFRONT_KEYPAIR_ID')
+        AWS_CLOUDFRONT_PRIVATE_KEY = credentials('AWS_CLOUDFRONT_PRIVATE_KEY')
+
     }
     stages {
         stage('Clone Repository') {
@@ -82,6 +91,10 @@ pipeline {
                                       -e CLOVA_OCR_API_URL="${CLOVA_OCR_API_URL}" \\
                                       -e CLOVA_OCR_SECRET_KEY="${CLOVA_OCR_SECRET_KEY}" \\
                                       -e AI_SERVICE_URL="${AI_SERVICE_URL}" \\
+                                      -e AWS_ACCESS_TOKEN="${AWS_ACCESS_TOKEN}" \\
+                                      -e AWS_SECRET_TOKEN="${AWS_SECRET_TOKEN}" \\
+                                      -e AWS_CLOUDFRONT_KEYPAIR_ID="${AWS_CLOUDFRONT_KEYPAIR_ID}" \\
+                                      -e AWS_CLOUDFRONT_PRIVATE_KEY="${AWS_CLOUDFRONT_PRIVATE_KEY}" \\
                                       -p 8081:8080 \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
