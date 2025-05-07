@@ -30,34 +30,8 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 		      u.name,
 		      g.sharebox.id,
 		      sb.name,
-		      (
-		        SELECT f1.path
-		          FROM File f1
-		         WHERE f1.referenceEntityType = 'GIFTICON'
-		           AND f1.referenceEntityId = g.id
-		           AND f1.type = 'THUMBNAIL'
-		           AND f1.id = (
-		             SELECT MIN(f2.id)
-		               FROM File f2
-		              WHERE f2.referenceEntityType = 'GIFTICON'
-		                AND f2.referenceEntityId = g.id
-		                AND f2.type = 'THUMBNAIL'
-		           )
-		      ),
-		      (
-		        SELECT f1.path
-		          FROM File f1
-		         WHERE f1.referenceEntityType = 'GIFTICON'
-		           AND f1.referenceEntityId = g.id
-		           AND f1.type = 'ORIGINAL'
-		           AND f1.id = (
-		             SELECT MIN(f2.id)
-		               FROM File f2
-		              WHERE f2.referenceEntityType = 'GIFTICON'
-		                AND f2.referenceEntityId = g.id
-		                AND f2.type = 'ORIGINAL'
-		           )
-		      ),
+		      null,
+		      null,
 		      g.createdAt,
 		      CASE WHEN g.type = 'AMOUNT' THEN g.originalAmount ELSE NULL END,
 		      CASE WHEN g.type = 'AMOUNT' THEN g.remainingAmount ELSE NULL END
@@ -68,7 +42,7 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 		  LEFT JOIN g.sharebox sb
 		  WHERE g.isDeleted = false
 		    AND g.isUsed = false
-		    AND (g.remainingAmount > 0 OR g.remainingAmount = -1)
+		    AND (g.remainingAmount > 0 OR g.remainingAmount is null)
 		    AND g.expiryDate > CURRENT_DATE
 		    AND g.id = :gifticonId
 		""")
