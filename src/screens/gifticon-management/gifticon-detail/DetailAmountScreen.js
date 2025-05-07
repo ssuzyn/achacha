@@ -250,6 +250,11 @@ const DetailAmountScreen = () => {
     }
   };
 
+  // 사용 취소 기능
+  const handleCancel = () => {
+    setIsUsing(false);
+  };
+
   // 돋보기 기능 - 확대 화면으로 이동
   const handleMagnify = () => {
     navigation.navigate('UseAmountScreen', {
@@ -495,28 +500,53 @@ const DetailAmountScreen = () => {
               {/* 버튼 영역 - 사용 상태에 따라 다른 UI */}
               {isUsing ? (
                 // 사용 모드일 때 - 사용완료 버튼만 표시
-                <TouchableOpacity
-                  onPress={handleUse}
-                  style={{
-                    width: '100%',
-                    borderRadius: 8,
-                    height: 56,
-                    backgroundColor: '#56AEE9',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <Text
+                <>
+                  <TouchableOpacity
+                    onPress={handleUse}
                     style={{
-                      color: '#FFFFFF',
-                      fontSize: 16,
-                      fontWeight: 'bold',
+                      width: '100%',
+                      borderRadius: 8,
+                      height: 56,
+                      backgroundColor: '#56AEE9',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                      marginBottom: 10,
                     }}
                   >
-                    사용완료
-                  </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      사용완료
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleCancel}
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      height: 56,
+                      backgroundColor: '#E5F4FE',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: '#278CCC',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      취소
+                    </Text>
+                  </TouchableOpacity>
+                </>
               ) : (
                 // 일반 모드일 때 - 상단 버튼 영역 (사용하기/사용내역)
                 <>
