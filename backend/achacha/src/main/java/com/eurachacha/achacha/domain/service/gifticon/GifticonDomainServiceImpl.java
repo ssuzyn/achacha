@@ -40,7 +40,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateAvailableGifticon(Integer userId, Gifticon gifticon) {
+	public void validateGifticonAvailability(Integer userId, Gifticon gifticon) {
 
 		if (isDeleted(gifticon)) {
 			throw new CustomException(ErrorCode.GIFTICON_DELETED);
@@ -52,10 +52,6 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 		if (isExpired(gifticon)) {
 			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
-		}
-
-		if (gifticon.getSharebox() == null && !validateGifticonAccess(userId, gifticon.getUser().getId())) {
-			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
 		}
 	}
 }

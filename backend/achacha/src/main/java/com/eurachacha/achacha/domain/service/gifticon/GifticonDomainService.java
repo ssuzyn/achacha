@@ -18,5 +18,5 @@ public interface GifticonDomainService {
 	// 기프티콘 사용 여부 확인
 	boolean isUsed(Gifticon gifticon);
 
-	void validateAvailableGifticon(Integer userId, Gifticon gifticon);
+	void validateGifticonAvailability(Integer userId, Gifticon gifticon);
 }
