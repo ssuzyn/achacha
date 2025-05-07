@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // 금액형 사용 스크린
 
 import React, { useEffect, useState } from 'react';
@@ -61,31 +62,27 @@ const UseAmountScreen = () => {
   };
 
   // 금액 입력 완료 및 사용완료 처리
-  const handleConfirmAmount = () => {
-    // 금액 입력 값 검증
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      // 실제 구현에서는 오류 메시지 표시
-      console.log('유효한 금액을 입력해주세요');
+  const handleUseComplete = () => {
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      // console.log('유효한 금액을 입력해주세요');
+      // 알림 처리 (예: 토스트 메시지)
       return;
     }
 
-    console.log(`사용 금액: ${amount}원 사용 완료`);
+    // console.log(`사용 금액: ${amount}원 사용 완료`);
 
-    // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
-    // 예: await api.updateGifticonStatus(id, 'USED', amount);
+    // 사용완료 처리 로직 - API 호출 등
 
-    // 모달 닫기
-    setModalVisible(false);
-
-    // 가로 모드에서 세로 모드로 전환
-    Orientation.lockToPortrait();
-
-    // 사용내역 화면으로 이동
-    const { id } = route.params || {};
-    navigation.navigate('DetailAmountHistoryScreen', {
-      id: id,
-      usedAmount: amount,
-      isFromUseScreen: true,
+    // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+    // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: 'Main',
+          params: { screen: 'TabGifticonManage', initialTab: 'used' },
+        },
+      ],
     });
   };
 
@@ -167,7 +164,7 @@ const UseAmountScreen = () => {
 
               <TouchableOpacity
                 style={[styles.modalButton, styles.confirmModalButton]}
-                onPress={handleConfirmAmount}
+                onPress={handleUseComplete}
               >
                 <Text style={[styles.modalButtonText, styles.confirmButtonText]}>완료</Text>
               </TouchableOpacity>

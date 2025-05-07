@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // 상품형 사용 스크린
 
 import React, { useEffect } from 'react';
@@ -41,16 +42,9 @@ const UseProductScreen = () => {
 
   // 사용 완료 처리
   const handleUseComplete = () => {
-    // 사용 완료 처리 로직
-    console.log('사용 완료');
+    // 사용완료 처리 로직 - API 호출 등
 
-    // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
-    // 예: await api.updateGifticonStatus(id, 'USED');
-
-    // 가로 모드에서 세로 모드로 전환
-    Orientation.lockToPortrait();
-
-    // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+    // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
     // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
     navigation.reset({
       index: 0,

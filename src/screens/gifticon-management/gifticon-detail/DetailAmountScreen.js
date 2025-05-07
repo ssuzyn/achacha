@@ -182,7 +182,7 @@ const DetailAmountScreen = () => {
         setIsLoading(false);
       }, 500);
     } catch (error) {
-      console.error('기프티콘 데이터 로드 실패:', error);
+      // console.error('기프티콘 데이터 로드 실패:', error);
       setIsLoading(false);
     }
   };
@@ -236,7 +236,8 @@ const DetailAmountScreen = () => {
         message: `${gifticonData.brandName} ${gifticonData.gifticonName} 기프티콘을 공유합니다.`,
       });
     } catch (error) {
-      console.error(error);
+      // console.error(error);
+      // 오류 처리
     }
   };
 
@@ -256,17 +257,18 @@ const DetailAmountScreen = () => {
     // 금액 입력 값 검증
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
       // 실제 구현에서는 오류 메시지 표시
-      console.log('유효한 금액을 입력해주세요');
+      // console.log('유효한 금액을 입력해주세요');
       return;
     }
 
     // 입력한 금액이 잔액보다 크면 오류
     if (Number(amount) > gifticonData.gifticonRemainingAmount) {
-      console.log('잔액보다 큰 금액을 사용할 수 없습니다');
+      // 실제 구현에서는 오류 메시지 표시
+      // console.log('잔액보다 큰 금액을 사용할 수 없습니다');
       return;
     }
 
-    console.log(`사용 금액: ${amount}원 사용 완료`);
+    // console.log(`사용 금액: ${amount}원 사용 완료`);
 
     // API 호출로 기프티콘 사용 처리 (실제 구현 시 주석 해제)
     // 예: await api.useGifticon(gifticonId, amount);
@@ -308,13 +310,13 @@ const DetailAmountScreen = () => {
   // 선물하기 기능
   const handleGift = () => {
     // 선물하기 로직 구현
-    console.log('기프티콘 선물하기');
+    // console.log('기프티콘 선물하기');
   };
 
   // 사용내역 기능
   const handleHistory = () => {
     // 사용내역 조회 로직
-    console.log('사용내역 조회');
+    // console.log('사용내역 조회');
     navigation.navigate('DetailAmountHistoryScreen', { id: gifticonData.gifticonId });
   };
 

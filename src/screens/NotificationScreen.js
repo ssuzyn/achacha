@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, memo, useState } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -62,16 +62,6 @@ const dummyNotifications = [
   },
 ];
 
-// 알림이 없을 때 표시할 컴포넌트 - memo로 최적화
-const EmptyNotifications = memo(({ theme }) => (
-  <View style={styles.emptyContainer}>
-    <Icon name="notifications-off" type="material" size={50} color={theme.colors.grey3} />
-    <Text variant="body1" style={styles.emptyText} color={theme.colors.grey2}>
-      새로운 알림이 없습니다
-    </Text>
-  </View>
-));
-
 const NotificationScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
@@ -91,7 +81,8 @@ const NotificationScreen = () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         setNotifications(dummyNotifications);
       } catch (error) {
-        console.error('알림 데이터 로드 실패:', error);
+        // console.error('알림 데이터 로드 실패:', error);
+        // 에러 처리 로직이 필요하면 여기에 추가 (로깅 없이)
       } finally {
         setIsLoading(false);
       }
@@ -196,7 +187,6 @@ const NotificationScreen = () => {
           maxToRenderPerBatch={5}
           windowSize={5}
           removeClippedSubviews={Platform.OS === 'android'}
-          ListEmptyComponent={<EmptyNotifications theme={theme} />}
         />
       )}
     </View>
@@ -234,16 +224,6 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingVertical: 16,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    marginTop: 16,
-    fontSize: 16,
   },
   loadingContainer: {
     flex: 1,

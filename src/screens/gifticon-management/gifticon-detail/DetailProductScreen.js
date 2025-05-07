@@ -139,7 +139,7 @@ const DetailProductScreen = () => {
         setIsLoading(false);
       }, 500); // 0.5초 지연 (로딩 효과)
     } catch (error) {
-      console.error('기프티콘 데이터 로드 실패:', error);
+      // console.error('기프티콘 데이터 로드 실패:', error);
       setIsLoading(false);
       // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
     }
@@ -184,7 +184,8 @@ const DetailProductScreen = () => {
         message: `${gifticonData.brandName} ${gifticonData.gifticonName} 기프티콘을 공유합니다.`,
       });
     } catch (error) {
-      console.error(error);
+      // console.error(error);
+      // 오류 처리
     }
   };
 
@@ -195,7 +196,7 @@ const DetailProductScreen = () => {
       setIsUsing(true);
     } else {
       // 이미 사용 중인 경우 사용 완료 처리
-      console.log('기프티콘 사용 완료');
+      // console.log('기프티콘 사용 완료');
 
       // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
       // 예: await api.updateGifticonStatus(gifticonId, 'USED');
@@ -230,7 +231,7 @@ const DetailProductScreen = () => {
   // 선물하기 기능
   const handleGift = () => {
     // 선물하기 로직 구현
-    console.log('기프티콘 선물하기');
+    // console.log('기프티콘 선물하기');
   };
 
   // 로딩 중이거나 데이터가 없는 경우 로딩 화면 표시

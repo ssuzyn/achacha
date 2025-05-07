@@ -12,20 +12,16 @@ const SplashScreenComponent = ({ navigation }) => {
   const [timePassed, setTimePassed] = useState(false);
   const { theme } = useTheme();
 
-  console.log('SplashScreen 렌더링됨 (Guide Always)');
-
   // Always assume first launch for testing & start timer
   useEffect(() => {
     let timer = null;
 
     // --- Temporarily disable first launch check ---
-    console.log('개발 테스트: 항상 첫 실행으로 간주');
     setIsFirstLaunch(true); // Always set to true for testing
     // setIsLoadingStorage(false); // No longer needed
 
     // Start timer immediately
     timer = setTimeout(() => {
-      console.log(`Splash Timer ${SPLASH_DURATION}ms 완료`);
       setTimePassed(true);
     }, SPLASH_DURATION);
     // --- End of temporary modification ---
@@ -35,13 +31,11 @@ const SplashScreenComponent = ({ navigation }) => {
       try {
         const firstLaunch = await checkIsFirstLaunch(); 
         setIsFirstLaunch(firstLaunch);
-        console.log(firstLaunch ? '첫 실행 감지됨' : '첫 실행 아님', '(from appStorage)');
       } catch (error) {
         setIsFirstLaunch(false);
       } finally {
         setIsLoadingStorage(false);
         timer = setTimeout(() => {
-          console.log(`Splash Timer ${SPLASH_DURATION}ms 완료`);
           setTimePassed(true);
         }, SPLASH_DURATION);
       }
@@ -60,7 +54,6 @@ const SplashScreenComponent = ({ navigation }) => {
   useEffect(() => {
     if (timePassed && isFirstLaunch !== null) {
       const nextRoute = isFirstLaunch ? 'GuideFirst' : 'Permission'; // Will always be GuideFirst now
-      console.log(`${nextRoute} 화면으로 이동 (Guide Always)`);
 
       navigation.dispatch(
         CommonActions.reset({
