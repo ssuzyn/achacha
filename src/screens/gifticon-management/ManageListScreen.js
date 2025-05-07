@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
   gifticonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     position: 'relative', // D-day 태그의 절대 위치를 위해 필요
@@ -886,11 +886,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#888',
   },
-  sharedByOtherContent: {
-    // 보더 스타일 제거 (주석처리나 삭제)
-    // borderWidth: 2,
-    // borderColor: '#278CCC',
-  },
   sharedByText: {
     fontSize: 12,
     color: '#278CCC',
@@ -908,7 +903,7 @@ const styles = StyleSheet.create({
   shareBoxText: {
     fontSize: 12,
     color: '#888',
-    fontStyle: 'italic',
+    fontWeight: 'bold',
   },
   // 스와이프 액션 관련 스타일
   leftAction: {
