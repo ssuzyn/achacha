@@ -57,12 +57,12 @@ const HomeScreen = () => {
             <View style={styles.giftImageContainer}>
               <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
             </View>
-            <Text variant="body1" weight="semiBold" style={styles.giftBrand}>
+            <Text variant="body1" weight="regular" style={styles.giftBrand}>
               {item.brand}
             </Text>
             <Text
               variant="body2"
-              weight="regular"
+              weight="bold"
               style={styles.giftName}
               numberOfLines={1}
               ellipsizeMode="tail"
@@ -139,11 +139,19 @@ const HomeScreen = () => {
 
         {/* 하단 선물 카드 */}
         <View style={styles.bottomCardSection}>
-          <Card.GiftCard2
-            title="기프티콘 선물해봐요!"
-            subtitle="포장은 저희가 해드릴게요."
-            image={require('../assets/images/home-gift.png')}
-          />
+          <View style={styles.giftMessageCard}>
+            <View style={styles.giftMessageTextContainer}>
+              <Text style={styles.giftMessageTitle}>기프티콘 선물해봐요!</Text>
+              <Text style={styles.giftMessageSubtitle}>포장은 저희가 해드릴게요.</Text>
+            </View>
+            <View style={styles.giftMessageImageContainer}>
+              <Image
+                source={require('../assets/images/home-gift.png')}
+                style={styles.giftMessageImage}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -219,13 +227,13 @@ const styles = StyleSheet.create({
     height: '85%',
   },
   giftBrand: {
-    color: '#333',
+    color: '#000000',
     textAlign: 'center',
     marginTop: 2,
     letterSpacing: -0.2,
   },
   giftName: {
-    color: '#666',
+    color: '#000000',
     textAlign: 'center',
     paddingHorizontal: 10,
     letterSpacing: -0.1,
@@ -238,7 +246,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignSelf: 'center',
     marginTop: 10,
-    marginBottom: 5,
+    marginBottom: 6,
   },
   dDayText: {
     color: '#D33434',
@@ -247,6 +255,45 @@ const styles = StyleSheet.create({
   },
   bottomCardSection: {
     paddingHorizontal: 5,
+  },
+  giftMessageCard: {
+    backgroundColor: '#E5F4FE',
+    borderRadius: 15,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    height: 140,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  giftMessageTextContainer: {
+    flex: 1.5,
+    paddingRight: 10,
+    justifyContent: 'flex-end',
+    height: '100%',
+    paddingBottom: 10,
+  },
+  giftMessageTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 5,
+    letterSpacing: -0.5,
+  },
+  giftMessageSubtitle: {
+    fontSize: 16,
+    color: '#333',
+    letterSpacing: -0.3,
+  },
+  giftMessageImageContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+    marginTop: -20,
+  },
+  giftMessageImage: {
+    width: 100,
+    height: 100,
   },
   shadowContainer: {
     borderRadius: 12,
