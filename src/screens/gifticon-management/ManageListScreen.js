@@ -826,7 +826,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    paddingBottom: 14,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     position: 'relative', // D-day 태그의 절대 위치를 위해 필요
