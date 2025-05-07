@@ -20,6 +20,7 @@ import { Text } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
+import AlertDialog from '../../../components/ui/AlertDialog';
 
 const DetailAmountScreen = () => {
   const insets = useSafeAreaInsets();
@@ -46,6 +47,11 @@ const DetailAmountScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   // 입력된 금액 상태
   const [amount, setAmount] = useState('');
+  // AlertDialog 상태
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertType, setAlertType] = useState('delete'); // 'delete' 또는 'cancelShare'
+  // 공유자인지 확인 (공유박스에서 내가 공유한 것인지)
+  const [isSharer, setIsSharer] = useState(false);
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -73,6 +79,10 @@ const DetailAmountScreen = () => {
       }
       if (route.params.usedAt) {
         setUsedAt(route.params.usedAt);
+      }
+      // 공유박스에서 내가 공유한 것인지 확인
+      if (route.params.isSharer) {
+        setIsSharer(route.params.isSharer);
       }
       // refresh 플래그가 true이면 데이터 다시 로드
       if (route.params.refresh && gifticonId) {
@@ -126,6 +136,9 @@ const DetailAmountScreen = () => {
                 : null,
             gifticonCreatedAt: '2024-12-20T11:30:00',
             gifticonOriginalAmount: 10000,
+            // 더미 데이터에 공유자 ID 추가
+            userId: 78, // 사용자 ID
+            isSharer: route.params?.isSharer || false, // 공유자 여부
             // 사용 내역 추가
             transactions: [
               {
@@ -175,10 +188,13 @@ const DetailAmountScreen = () => {
             gifticonRemainingAmount: 8000,
             barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
             barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
+            // 더미 데이터에 공유자 ID 추가
+            isSharer: route.params?.isSharer || false, // 공유자 여부
           };
         }
 
         setGifticonData(dummyData);
+        setIsSharer(dummyData.isSharer);
         setIsLoading(false);
       }, 500);
     } catch (error) {
@@ -320,6 +336,44 @@ const DetailAmountScreen = () => {
     navigation.navigate('DetailAmountHistoryScreen', { id: gifticonData.gifticonId });
   };
 
+  // 기프티콘 삭제 다이얼로그 표시
+  const handleDelete = () => {
+    setAlertType('delete');
+    setAlertVisible(true);
+  };
+
+  // 공유 취소 다이얼로그 표시
+  const handleCancelShare = () => {
+    setAlertType('cancelShare');
+    setAlertVisible(true);
+  };
+
+  // 다이얼로그 확인 버튼 처리
+  const handleConfirm = () => {
+    setAlertVisible(false);
+
+    if (alertType === 'delete') {
+      // 삭제 처리 로직
+      // 실제 구현에서는 API 호출로 기프티콘 삭제
+      // console.log('기프티콘 삭제:', gifticonId);
+
+      // 리스트 화면으로 이동
+      navigation.goBack();
+    } else if (alertType === 'cancelShare') {
+      // 공유 취소 처리 로직
+      // 실제 구현에서는 API 호출로 공유 취소
+      // console.log('공유 취소:', gifticonId);
+
+      // 리스트 화면으로 이동
+      navigation.goBack();
+    }
+  };
+
+  // 다이얼로그 취소 버튼 처리
+  const handleCancelDialog = () => {
+    setAlertVisible(false);
+  };
+
   // 로딩 중이거나 데이터가 없는 경우 로딩 화면 표시
   if (isLoading || !gifticonData) {
     return (
@@ -416,6 +470,28 @@ const DetailAmountScreen = () => {
                     ]}
                     resizeMode="contain"
                   />
+
+                  {/* 상단 액션 아이콘 */}
+                  {!isUsed && (
+                    <View style={styles.actionIconsContainer}>
+                      {/* 마이박스일 경우 삭제 아이콘만 표시 */}
+                      {scope === 'MY_BOX' && (
+                        <TouchableOpacity style={styles.actionIconButton} onPress={handleDelete}>
+                          <Icon name="delete" type="material" size={24} color="#FF6B6B" />
+                        </TouchableOpacity>
+                      )}
+
+                      {/* 쉐어박스이고 내가 공유한 경우에만 공유 취소 아이콘 표시 */}
+                      {scope === 'SHARE_BOX' && isSharer && (
+                        <TouchableOpacity
+                          style={styles.actionIconButton}
+                          onPress={handleCancelShare}
+                        >
+                          <Icon name="person-remove" type="material" size={24} color="#FF6B6B" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  )}
 
                   {/* SELF_USE 유형의 사용완료 기프티콘인 경우만 바코드 표시 */}
                   {isUsed && gifticonData.usageType === 'SELF_USE' && (
@@ -784,6 +860,23 @@ const DetailAmountScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* 알림 다이얼로그 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        onBackdropPress={handleCancelDialog}
+        title={alertType === 'delete' ? '기프티콘 삭제' : '공유 취소'}
+        message={
+          alertType === 'delete'
+            ? '이 기프티콘을 삭제하시겠습니까?'
+            : '이 기프티콘의 공유를 취소하시겠습니까?'
+        }
+        confirmText="확인"
+        cancelText="취소"
+        onConfirm={handleConfirm}
+        onCancel={handleCancelDialog}
+        type="warning"
+      />
     </View>
   );
 };
@@ -1225,6 +1318,28 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 60,
+  },
+  // 액션 아이콘 컨테이너 스타일
+  actionIconsContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+    zIndex: 10,
+  },
+  actionIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
   },
 });
 

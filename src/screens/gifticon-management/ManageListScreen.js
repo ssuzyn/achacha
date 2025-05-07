@@ -600,6 +600,9 @@ const ManageListScreen = () => {
 
   // 기프티콘 클릭 시 상세 페이지로 이동하는 함수
   const handleGifticonPress = item => {
+    // 내가 공유한 기프티콘인지 확인
+    const isSharer = item.scope === 'SHARE_BOX' && item.userId === currentUserId;
+
     // 기프티콘 유형에 따라 다른 상세 페이지로 이동
     if (item.gifticonType === 'PRODUCT') {
       navigation.navigate('DetailProduct', {
@@ -607,6 +610,7 @@ const ManageListScreen = () => {
         scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
         usageType: item.usageType, // USED 일 경우에만 사용됨
         usedAt: item.usedAt, // USED 일 경우에만 사용됨
+        isSharer: isSharer, // 내가 공유한 기프티콘인지 여부
       });
     } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('DetailAmount', {
@@ -614,6 +618,7 @@ const ManageListScreen = () => {
         scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
         usageType: item.usageType, // USED 일 경우에만 사용됨
         usedAt: item.usedAt, // USED 일 경우에만 사용됨
+        isSharer: isSharer, // 내가 공유한 기프티콘인지 여부
       });
     }
   };
