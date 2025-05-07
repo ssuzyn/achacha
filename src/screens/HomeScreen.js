@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     height: 80,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 8,
+    paddingTop: 5,
   },
   giftImage: {
     width: '55%',
@@ -237,7 +237,8 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
     borderRadius: 5,
     alignSelf: 'center',
-    marginTop: 8,
+    marginTop: 10,
+    marginBottom: 5,
   },
   dDayText: {
     color: '#D33434',
