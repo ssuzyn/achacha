@@ -2,10 +2,12 @@ package com.koup28.achacha_app.presentation.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -15,7 +17,8 @@ import androidx.wear.compose.material.*
 fun MainMenuScreen(
     // storedData: String? // 파라미터 제거
     onGifticonManageClick: () -> Unit, // 기프티콘 관리 버튼 클릭 콜백
-    onNotificationBoxClick: () -> Unit // 알림함 버튼 클릭 콜백
+    onNotificationBoxClick: () -> Unit, // 알림함 버튼 클릭 콜백
+    onDeleteTokenClick: () -> Unit // 토큰 삭제 콜백 추가
 ) {
     Scaffold(
         timeText = { TimeText(modifier = Modifier.padding(top = 6.dp)) },
@@ -70,6 +73,30 @@ fun MainMenuScreen(
                     contentColor = Color.Black // 텍스트 색상 설정
                 ),
                 modifier = Modifier.fillMaxWidth(0.8f) // 너비 조정
+            )
+            Spacer(modifier = Modifier.height(8.dp)) // 버튼 사이 간격
+
+            // 토큰 삭제 버튼 (Chip) -> 원형, 보더만 있는 스타일, 크기 조정
+            Chip(
+                onClick = onDeleteTokenClick,
+                label = {
+                    Text(
+                        text = "X", 
+                        style = MaterialTheme.typography.title3, 
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth() 
+                    )
+                },
+                colors = ChipDefaults.outlinedChipColors( 
+                    contentColor = Color(0xFFF48FB1)    
+                ),
+                border = ChipDefaults.outlinedChipBorder( 
+                    borderColor = Color(0xFFF48FB1)     
+                ),
+                modifier = Modifier
+                    .size(40.dp) // 버튼 크기를 40.dp로 직접 지정 (기존 SmallButtonSize보다 작게)
+                    .clip(CircleShape),
+                shape = CircleShape 
             )
 
             // // 저장된 정보 표시 제거

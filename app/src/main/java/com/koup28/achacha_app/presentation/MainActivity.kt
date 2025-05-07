@@ -377,7 +377,7 @@ class MainActivity : ComponentActivity() {
                 when (currentScreen.value) {
                     ScreenState.CONNECTING -> {
                         ConnectPhoneScreen(
-                            onConnectClick = { // 에뮬레이터 테스트용 임시 수정 유지
+                            onConnectClick = { 
                                 addLog("[DEBUG_EMULATOR] Skipping Nearby connection. Forcing navigation to Main Menu.")
                                 _currentScreen.value = ScreenState.MAIN_MENU
                             }
@@ -391,7 +391,26 @@ class MainActivity : ComponentActivity() {
                             },
                             onNotificationBoxClick = { 
                                 addLog("MainMenu: Notification Box button clicked. Navigating to NotificationBoxScreen.")
-                                _currentScreen.value = ScreenState.NOTIFICATION_BOX // 알림함 화면으로 전환
+                                _currentScreen.value = ScreenState.NOTIFICATION_BOX
+                            },
+                            onDeleteTokenClick = { // 토큰 삭제 콜백 수정
+                                addLog("MainMenu: Delete Token button clicked.")
+                                lifecycleScope.launch {
+                                    try {
+                                        userDataStore.clearFcmToken() // DataStore에서 토큰 삭제
+                                        addLog("[DataStore] FCM Token cleared successfully.")
+                                        _receivedToken.value = null     // 내부 토큰 상태 초기화
+                                        _connectionError.value = null // 이전 연결 오류 초기화
+                                        _currentScreen.value = ScreenState.CONNECTING // 연결 화면 상태로 변경
+                                        resetNearbyStateInternal(false) // Nearby 관련 상태 초기화
+                                        checkAndRequestNearbyPermissions() // 권한 확인 및 연결 프로세스 재시작
+                                        addLog("Navigating to CONNECTING screen and re-initiating connection process after token deletion.")
+                                    } catch (e: Exception) {
+                                        addLog("[DataStore] Failed to clear FCM token: ${e.message}")
+                                        _connectionError.value = "토큰 삭제 중 오류: ${e.localizedMessage}" 
+                                        // 필요시 사용자에게 오류를 더 명확히 알리는 UI 업데이트
+                                    }
+                                }
                             }
                         )
                     }

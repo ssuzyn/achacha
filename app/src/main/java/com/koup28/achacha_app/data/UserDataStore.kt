@@ -32,5 +32,12 @@ class UserDataStore(private val context: Context) {
             it[FCM_TOKEN_KEY] // 키에 해당하는 값이 없으면 null 반환
         }
 
+    // FCM 토큰 삭제 함수 추가
+    suspend fun clearFcmToken() {
+        context.userDataStore.edit {
+            it.remove(FCM_TOKEN_KEY) // 해당 키의 값을 제거
+        }
+    }
+
     // 필요하다면 다른 사용자 데이터 저장/읽기 함수 추가 가능
 } 
