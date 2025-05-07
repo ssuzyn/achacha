@@ -23,7 +23,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.material.*
 import com.google.android.gms.nearby.Nearby
 import com.google.android.gms.nearby.connection.*
-import com.koup28.achacha_app.presentation.theme.MyApplicationTheme
+import com.koup28.achacha_app.presentation.theme.AchachaAppTheme
 import com.koup28.achacha_app.presentation.ui.MainMenuScreen
 import com.koup28.achacha_app.presentation.ui.ConnectPhoneScreen
 import com.koup28.achacha_app.presentation.ui.GifticonListScreen
@@ -372,104 +372,104 @@ class MainActivity : ComponentActivity() {
         // ---------------------------------------------------------
 
         setContent {
-             MyApplicationTheme {
-                 // --- 현재 화면 상태에 따라 UI 렌더링 --- (수정)
-                 when (currentScreen.value) {
-                     ScreenState.CONNECTING -> {
-                         ConnectPhoneScreen(
-                             onConnectClick = { // 에뮬레이터 테스트용 임시 수정 유지
-                                 addLog("[DEBUG_EMULATOR] Skipping Nearby connection. Forcing navigation to Main Menu.")
-                                 _currentScreen.value = ScreenState.MAIN_MENU
-                             }
-                         )
-                     }
-                     ScreenState.MAIN_MENU -> {
-                         MainMenuScreen(
-                             onGifticonManageClick = { 
-                                 addLog("MainMenu: Navigating to Gifticon List.")
-                                 _currentScreen.value = ScreenState.GIFTICON_LIST
-                             },
-                             onNotificationBoxClick = { 
-                                 addLog("MainMenu: Notification Box button clicked. Navigating to NotificationBoxScreen.")
-                                 _currentScreen.value = ScreenState.NOTIFICATION_BOX // 알림함 화면으로 전환
-                             }
-                         )
-                     }
-                     ScreenState.GIFTICON_LIST -> {
-                         GifticonListScreen(
-                             onGifticonClick = { gifticonId ->
-                                 addLog("GifticonList: Clicked on gifticon ID: $gifticonId")
-                                 // --- 클릭된 ID로 인덱스 찾기 --- (수정)
-                                 val clickedIndex = tempGifticonList.indexOfFirst { it.gifticonId == gifticonId }
-                                 if (clickedIndex != -1) {
-                                     _currentGifticonIndex.value = clickedIndex // 인덱스 저장
-                                     _selectedGifticonId.value = gifticonId // ID도 저장
-                                     _currentScreen.value = ScreenState.GIFTICON_DETAIL
-                                 } else {
-                                     addLog("[Error] Clicked gifticon ID not found in list: $gifticonId")
-                                     // Optional: Show error message to user
-                                 }
-                                 // --------------------------------
-                             },
-                             onBackPress = { _currentScreen.value = ScreenState.MAIN_MENU }
-                         )
-                     }
-                     ScreenState.GIFTICON_DETAIL -> {
-                         // Check if index is valid before rendering
-                         if (_currentGifticonIndex.value != -1 && _selectedGifticonId.value != null) {
-                             GifticonDetailScreen(
-                                 // Pass the full list, initial index, and callback (수정)
-                                 gifticons = tempGifticonList,
-                                 initialIndex = _currentGifticonIndex.value,
-                                 onCurrentGifticonIndexChanged = { newIndex ->
-                                     _currentGifticonIndex.value = newIndex // Update state on swipe
-                                     _selectedGifticonId.value = tempGifticonList.getOrNull(newIndex)?.gifticonId
-                                 },
-                                 onShowBarcodeClick = { gifticonId ->
-                                     addLog("GifticonDetail: Show barcode clicked for ID: $gifticonId")
-                                     _selectedGifticonId.value = gifticonId // 바코드 볼 ID 저장
-                                     _currentScreen.value = ScreenState.BARCODE // 바코드 화면으로 전환
-                                     fetchBarcodeInfo(gifticonId) // API 호출
-                                 },
-                                 onShareClick = { gifticonId ->
-                                     addLog("GifticonDetail: Share clicked for ID: $gifticonId")
-                                     _selectedGifticonId.value = gifticonId // 나눔할 ID 저장
-                                     _currentScreen.value = ScreenState.SHARE_WAITING // 나눔 대기 화면으로 전환
-                                     // TODO: 실제 나눔 요청 API 호출 또는 로직 구현
-                                 },
-                                 onUseClick = { gifticonId ->
-                                     addLog("GifticonDetail: Use clicked for ID: $gifticonId")
-                                     // 클릭된 기프티콘 정보 찾기 (타입, 잔액 확인용)
-                                     val clickedGifticon = tempGifticonList.find { it.gifticonId == gifticonId }
-                                     if (clickedGifticon != null) {
-                                         if (clickedGifticon.gifticonType == "AMOUNT") {
-                                             // 금액권일 경우
-                                             addLog("GifticonDetail: Amount type gifticon. Navigating to EnterAmountScreen.")
-                                             _selectedGifticonId.value = gifticonId // ID 저장
-                                             _selectedGifticonRemainingAmount.value = clickedGifticon.gifticonRemainingAmount // 잔액 저장
-                                             _currentScreen.value = ScreenState.ENTER_AMOUNT // 금액 입력 화면으로 전환
-                                         } else {
-                                             // 상품권일 경우 (직접 사용 처리)
-                                             addLog("GifticonDetail: Product type gifticon. Triggering use action.")
-                                             // TODO: 상품권 사용 처리 API 호출 구현
-                                         }
-                                     } else {
-                                         addLog("[Error] Clicked gifticon for use not found: $gifticonId")
-                                     }
-                                 },
-                                 onBackPress = { _currentScreen.value = ScreenState.GIFTICON_LIST }
-                             )
-                         } else {
-                             // Handle invalid index state (e.g., navigate back or show error)
-                             addLog("[Error] Invalid gifticon index: ${_currentGifticonIndex.value}. Navigating back to list.")
-                             // Potentially navigate back automatically
-                             LaunchedEffect(Unit) { _currentScreen.value = ScreenState.GIFTICON_LIST }
-                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                 Text("Error: Invalid Gifticon Index")
-                             }
-                         }
-                     }
-                     ScreenState.SHARE_WAITING -> {
+            AchachaAppTheme {
+                // --- 현재 화면 상태에 따라 UI 렌더링 --- (수정)
+                when (currentScreen.value) {
+                    ScreenState.CONNECTING -> {
+                        ConnectPhoneScreen(
+                            onConnectClick = { // 에뮬레이터 테스트용 임시 수정 유지
+                                addLog("[DEBUG_EMULATOR] Skipping Nearby connection. Forcing navigation to Main Menu.")
+                                _currentScreen.value = ScreenState.MAIN_MENU
+                            }
+                        )
+                    }
+                    ScreenState.MAIN_MENU -> {
+                        MainMenuScreen(
+                            onGifticonManageClick = { 
+                                addLog("MainMenu: Navigating to Gifticon List.")
+                                _currentScreen.value = ScreenState.GIFTICON_LIST
+                            },
+                            onNotificationBoxClick = { 
+                                addLog("MainMenu: Notification Box button clicked. Navigating to NotificationBoxScreen.")
+                                _currentScreen.value = ScreenState.NOTIFICATION_BOX // 알림함 화면으로 전환
+                            }
+                        )
+                    }
+                    ScreenState.GIFTICON_LIST -> {
+                        GifticonListScreen(
+                            onGifticonClick = { gifticonId ->
+                                addLog("GifticonList: Clicked on gifticon ID: $gifticonId")
+                                // --- 클릭된 ID로 인덱스 찾기 --- (수정)
+                                val clickedIndex = tempGifticonList.indexOfFirst { it.gifticonId == gifticonId }
+                                if (clickedIndex != -1) {
+                                    _currentGifticonIndex.value = clickedIndex // 인덱스 저장
+                                    _selectedGifticonId.value = gifticonId // ID도 저장
+                                    _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                                } else {
+                                    addLog("[Error] Clicked gifticon ID not found in list: $gifticonId")
+                                    // Optional: Show error message to user
+                                }
+                                // --------------------------------
+                            },
+                            onBackPress = { _currentScreen.value = ScreenState.MAIN_MENU }
+                        )
+                    }
+                    ScreenState.GIFTICON_DETAIL -> {
+                        // Check if index is valid before rendering
+                        if (_currentGifticonIndex.value != -1 && _selectedGifticonId.value != null) {
+                            GifticonDetailScreen(
+                                // Pass the full list, initial index, and callback (수정)
+                                gifticons = tempGifticonList,
+                                initialIndex = _currentGifticonIndex.value,
+                                onCurrentGifticonIndexChanged = { newIndex ->
+                                    _currentGifticonIndex.value = newIndex // Update state on swipe
+                                    _selectedGifticonId.value = tempGifticonList.getOrNull(newIndex)?.gifticonId
+                                },
+                                onShowBarcodeClick = { gifticonId ->
+                                    addLog("GifticonDetail: Show barcode clicked for ID: $gifticonId")
+                                    _selectedGifticonId.value = gifticonId // 바코드 볼 ID 저장
+                                    _currentScreen.value = ScreenState.BARCODE // 바코드 화면으로 전환
+                                    fetchBarcodeInfo(gifticonId) // API 호출
+                                },
+                                onShareClick = { gifticonId ->
+                                    addLog("GifticonDetail: Share clicked for ID: $gifticonId")
+                                    _selectedGifticonId.value = gifticonId // 나눔할 ID 저장
+                                    _currentScreen.value = ScreenState.SHARE_WAITING // 나눔 대기 화면으로 전환
+                                    // TODO: 실제 나눔 요청 API 호출 또는 로직 구현
+                                },
+                                onUseClick = { gifticonId ->
+                                    addLog("GifticonDetail: Use clicked for ID: $gifticonId")
+                                    // 클릭된 기프티콘 정보 찾기 (타입, 잔액 확인용)
+                                    val clickedGifticon = tempGifticonList.find { it.gifticonId == gifticonId }
+                                    if (clickedGifticon != null) {
+                                        if (clickedGifticon.gifticonType == "AMOUNT") {
+                                            // 금액권일 경우
+                                            addLog("GifticonDetail: Amount type gifticon. Navigating to EnterAmountScreen.")
+                                            _selectedGifticonId.value = gifticonId // ID 저장
+                                            _selectedGifticonRemainingAmount.value = clickedGifticon.gifticonRemainingAmount // 잔액 저장
+                                            _currentScreen.value = ScreenState.ENTER_AMOUNT // 금액 입력 화면으로 전환
+                                        } else {
+                                            // 상품권일 경우 (직접 사용 처리)
+                                            addLog("GifticonDetail: Product type gifticon. Triggering use action.")
+                                            // TODO: 상품권 사용 처리 API 호출 구현
+                                        }
+                                    } else {
+                                        addLog("[Error] Clicked gifticon for use not found: $gifticonId")
+                                    }
+                                },
+                                onBackPress = { _currentScreen.value = ScreenState.GIFTICON_LIST }
+                            )
+                        } else {
+                            // Handle invalid index state (e.g., navigate back or show error)
+                            addLog("[Error] Invalid gifticon index: ${_currentGifticonIndex.value}. Navigating back to list.")
+                            // Potentially navigate back automatically
+                            LaunchedEffect(Unit) { _currentScreen.value = ScreenState.GIFTICON_LIST }
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text("Error: Invalid Gifticon Index")
+                            }
+                        }
+                    }
+                    ScreenState.SHARE_WAITING -> {
                         com.koup28.achacha_app.presentation.ui.ShareWaitScreen(
                             // gifticonId = _selectedGifticonId.value, // ShareWaitScreen에서 직접 사용하지 않음
                             onBackClick = {
@@ -482,8 +482,8 @@ class MainActivity : ComponentActivity() {
                                 // TODO: 실제 나눔 시작 로직 (Nearby Advertising 시작 등)은 여기서 또는 SharingScreen에서 호출
                             }
                         )
-                     }
-                     ScreenState.SHARING -> {
+                    }
+                    ScreenState.SHARING -> {
                         com.koup28.achacha_app.presentation.ui.SharingScreen(
                             gifticonId = _selectedGifticonId.value,
                             onBackClick = {
@@ -492,25 +492,25 @@ class MainActivity : ComponentActivity() {
                                 _currentScreen.value = ScreenState.GIFTICON_DETAIL // 상세 화면으로 바로 돌아감
                             }
                         )
-                     }
-                     ScreenState.BARCODE -> {
-                         com.koup28.achacha_app.presentation.ui.BarcodeScreen(
-                             gifticonId = _selectedGifticonId.value, // BarcodeScreen 자체에서 ID가 필요할 수 있음
-                             barcodeInfo = _barcodeInfo.value,
-                             isLoading = _isBarcodeLoading.value,
-                             error = _barcodeError.value,
-                             onBackClick = {
-                                 addLog("BarcodeScreen: Back clicked. Returning to GifticonDetail.")
-                                 _barcodeInfo.value = null // 상태 초기화
-                                 _barcodeError.value = null
-                                 _currentScreen.value = ScreenState.GIFTICON_DETAIL
-                             },
-                             onRetryClick = {
-                                 _selectedGifticonId.value?.let { fetchBarcodeInfo(it) }
-                             }
-                         )
-                     }
-                     ScreenState.ENTER_AMOUNT -> {
+                    }
+                    ScreenState.BARCODE -> {
+                        com.koup28.achacha_app.presentation.ui.BarcodeScreen(
+                            gifticonId = _selectedGifticonId.value, // BarcodeScreen 자체에서 ID가 필요할 수 있음
+                            barcodeInfo = _barcodeInfo.value,
+                            isLoading = _isBarcodeLoading.value,
+                            error = _barcodeError.value,
+                            onBackClick = {
+                                addLog("BarcodeScreen: Back clicked. Returning to GifticonDetail.")
+                                _barcodeInfo.value = null // 상태 초기화
+                                _barcodeError.value = null
+                                _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                            },
+                            onRetryClick = {
+                                _selectedGifticonId.value?.let { fetchBarcodeInfo(it) }
+                            }
+                        )
+                    }
+                    ScreenState.ENTER_AMOUNT -> {
                         com.koup28.achacha_app.presentation.ui.EnterAmountScreen(
                             gifticonId = _selectedGifticonId.value,
                             remainingAmount = _selectedGifticonRemainingAmount.value,
@@ -525,29 +525,29 @@ class MainActivity : ComponentActivity() {
                                 _currentScreen.value = ScreenState.GIFTICON_DETAIL // 취소 시 상세 화면으로 복귀
                             }
                         )
-                     }
-                     ScreenState.NOTIFICATION_BOX -> {
+                    }
+                    ScreenState.NOTIFICATION_BOX -> {
                         com.koup28.achacha_app.presentation.ui.NotificationBoxScreen(
                             onBackClick = {
                                 addLog("NotificationBoxScreen: Back clicked. Returning to MainMenu.")
                                 _currentScreen.value = ScreenState.MAIN_MENU // 메인 메뉴로 돌아가기
                             }
                         )
-                     }
-                     ScreenState.ERROR -> {
-                         ConnectPhoneScreen(
-                              onConnectClick = { // 에뮬레이터 테스트용 임시 수정
-                                  addLog("[DEBUG_EMULATOR] Retrying from error state. Forcing navigation to Main Menu.")
-                                  _connectionError.value = null // 오류 초기화
-                                  _currentScreen.value = ScreenState.MAIN_MENU // 에러 시에도 일단 메인으로 (임시)
-                                  // checkAndRequestNearbyPermissions() // 원래 재시도 로직
-                              }
-                             // TODO: 오류 화면을 별도로 만들거나 ConnectPhoneScreen 개선 필요
-                         )
-                     }
-                 }
-                 // -----------------------------------------
-             }
+                    }
+                    ScreenState.ERROR -> {
+                        ConnectPhoneScreen(
+                             onConnectClick = { // 에뮬레이터 테스트용 임시 수정
+                                 addLog("[DEBUG_EMULATOR] Retrying from error state. Forcing navigation to Main Menu.")
+                                 _connectionError.value = null // 오류 초기화
+                                 _currentScreen.value = ScreenState.MAIN_MENU // 에러 시에도 일단 메인으로 (임시)
+                                 // checkAndRequestNearbyPermissions() // 원래 재시도 로직
+                             }
+                            // TODO: 오류 화면을 별도로 만들거나 ConnectPhoneScreen 개선 필요
+                        )
+                    }
+                }
+                // -----------------------------------------
+            }
         }
     }
 
