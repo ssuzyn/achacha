@@ -48,9 +48,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'white',
+    backgroundColor: '#F8FBFF',
     borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 13,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   selectedContainer: {
     borderColor: '#56AEE9',
-    backgroundColor: '#F8FBFF',
+    backgroundColor: '#EBF7FF',
   },
   image: {
     width: 40,
@@ -79,15 +79,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   brand: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
   },
   menuName: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
   },
   dday: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#278CCC',
     fontWeight: '500',
   },
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '500',
   },
 });
