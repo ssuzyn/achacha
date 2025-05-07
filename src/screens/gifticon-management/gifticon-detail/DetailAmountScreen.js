@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   StatusBar,
   Share,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -40,6 +42,10 @@ const DetailAmountScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   // 기프티콘 데이터 상태
   const [gifticonData, setGifticonData] = useState(null);
+  // 금액 입력 모달 표시 상태
+  const [modalVisible, setModalVisible] = useState(false);
+  // 입력된 금액 상태
+  const [amount, setAmount] = useState('');
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -68,8 +74,14 @@ const DetailAmountScreen = () => {
       if (route.params.usedAt) {
         setUsedAt(route.params.usedAt);
       }
+      // refresh 플래그가 true이면 데이터 다시 로드
+      if (route.params.refresh && gifticonId) {
+        loadGifticonData(gifticonId);
+        // 사용하기 모드 종료
+        setIsUsing(false);
+      }
     }
-  }, [route.params]);
+  }, [route.params, gifticonId]);
 
   // 기프티콘 ID가 있으면 데이터 로드
   useEffect(() => {
@@ -228,26 +240,52 @@ const DetailAmountScreen = () => {
     }
   };
 
-  // 사용하기 기능
+  // 사용하기 버튼 클릭
   const handleUse = () => {
-    if (!isUsing) {
-      // 사용 모드로 전환
-      setIsUsing(true);
-    } else {
-      // 이미 사용 중인 경우 사용 완료 처리
-      console.log('기프티콘 사용 완료');
+    // 사용 모드로 전환
+    setIsUsing(true);
+  };
 
-      // 사용완료 탭으로 이동
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'Main',
-            params: { screen: 'TabGifticonManage', initialTab: 'used' },
-          },
-        ],
-      });
+  // 금액 입력 모달 표시
+  const handleAmountInput = () => {
+    setModalVisible(true);
+  };
+
+  // 금액 입력 완료 처리
+  const handleConfirmAmount = () => {
+    // 금액 입력 값 검증
+    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+      // 실제 구현에서는 오류 메시지 표시
+      console.log('유효한 금액을 입력해주세요');
+      return;
     }
+
+    // 입력한 금액이 잔액보다 크면 오류
+    if (Number(amount) > gifticonData.gifticonRemainingAmount) {
+      console.log('잔액보다 큰 금액을 사용할 수 없습니다');
+      return;
+    }
+
+    console.log(`사용 금액: ${amount}원 사용 완료`);
+
+    // API 호출로 기프티콘 사용 처리 (실제 구현 시 주석 해제)
+    // 예: await api.useGifticon(gifticonId, amount);
+
+    // 모달 닫기
+    setModalVisible(false);
+    setAmount('');
+
+    // 사용 모드 종료하고 원래 상세 화면으로 돌아가기
+    setIsUsing(false);
+
+    // 데이터 새로고침 - 잔액이 줄어든 상태로 표시
+    loadGifticonData(gifticonId);
+  };
+
+  // 모달 취소
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setAmount('');
   };
 
   // 사용 취소 기능
@@ -499,10 +537,10 @@ const DetailAmountScreen = () => {
             <View style={styles.buttonContainer}>
               {/* 버튼 영역 - 사용 상태에 따라 다른 UI */}
               {isUsing ? (
-                // 사용 모드일 때 - 사용완료 버튼만 표시
+                // 사용 모드일 때 - 금액입력/취소 버튼을 두 줄로 표시
                 <>
                   <TouchableOpacity
-                    onPress={handleUse}
+                    onPress={handleAmountInput}
                     style={{
                       width: '100%',
                       borderRadius: 8,
@@ -521,7 +559,7 @@ const DetailAmountScreen = () => {
                         fontWeight: 'bold',
                       }}
                     >
-                      사용완료
+                      금액입력
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -691,6 +729,52 @@ const DetailAmountScreen = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* 금액 입력 모달 */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>사용 금액 입력</Text>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.amountInput}
+                placeholder="0"
+                keyboardType="number-pad"
+                value={amount}
+                onChangeText={setAmount}
+                maxLength={10}
+              />
+              <Text style={styles.wonText}>원</Text>
+            </View>
+
+            <Text style={styles.remainingAmountText}>
+              잔액: {formatAmount(gifticonData?.gifticonRemainingAmount || 0)}
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelModalButton]}
+                onPress={handleCloseModal}
+              >
+                <Text style={styles.modalButtonText}>취소</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmModalButton]}
+                onPress={handleConfirmAmount}
+              >
+                <Text style={[styles.modalButtonText, styles.confirmButtonText]}>완료</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1047,6 +1131,88 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     height: 56,
     backgroundColor: '#A7DAF9',
+  },
+  // 모달 관련 스타일
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333333',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+    paddingBottom: 8,
+    marginBottom: 8,
+    width: '100%',
+  },
+  amountInput: {
+    flex: 1,
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'right',
+    paddingRight: 8,
+  },
+  wonText: {
+    fontSize: 18,
+    color: '#333333',
+  },
+  remainingAmountText: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 24,
+    alignSelf: 'flex-end',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  cancelModalButton: {
+    backgroundColor: '#EEEEEE',
+  },
+  confirmModalButton: {
+    backgroundColor: '#56AEE9',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333333',
+  },
+  confirmButtonText: {
+    color: '#FFFFFF',
   },
 });
 
