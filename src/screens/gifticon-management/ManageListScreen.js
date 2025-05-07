@@ -329,14 +329,14 @@ const ManageListScreen = () => {
   // 바코드 조회 처리
   const handleBarcodeView = item => {
     if (item.gifticonType === 'PRODUCT') {
-      navigation.navigate('UseProduct', {
+      navigation.navigate('UseProductScreen', {
         id: item.gifticonId,
         barcodeNumber: item.gifticonId + '-' + Math.floor(Math.random() * 10000000), // 임시 바코드 번호
         brandName: item.brandName,
         gifticonName: item.gifticonName,
       });
     } else if (item.gifticonType === 'AMOUNT') {
-      navigation.navigate('UseAmount', {
+      navigation.navigate('UseAmountScreen', {
         id: item.gifticonId,
         barcodeNumber: item.gifticonId + '-' + Math.floor(Math.random() * 10000000), // 임시 바코드 번호
         brandName: item.brandName,
