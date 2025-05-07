@@ -123,7 +123,7 @@ fun GifticonDetailScreen(
                     Spacer(modifier = Modifier.height(4.dp)) // 유효기간과 잔액 사이 간격
                     Text(
                         text = "잔액: %,d원".format(currentGifticon.gifticonRemainingAmount),
-                        style = MaterialTheme.typography.caption1, // 유효기간과 동일한 스타일
+                        style = MaterialTheme.typography.body2, // caption1에서 body2로 변경하여 폰트 크기 증가
                         textAlign = TextAlign.Center,
                         color = Color.Gray // 약간 흐린 색으로 표시 (선택 사항)
                     )

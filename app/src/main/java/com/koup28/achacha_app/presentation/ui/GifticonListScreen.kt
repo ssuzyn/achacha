@@ -105,9 +105,10 @@ fun GifticonListScreen(
              uiState.error != null -> { /* ... 에러 UI ... */ }
              else -> {
                 ScalingLazyColumn(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
                     state = listState,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top)
                 ) {
                     item { 
                          Text(
@@ -133,7 +134,6 @@ fun GifticonListScreen(
                                     ) {
                                         Column(
                                             modifier = Modifier.weight(1f)
-                                                .padding(start = 8.dp, end = 8.dp)
                                         ) {
                                             Text(
                                                 text = gifticon.brandName,
@@ -152,14 +152,14 @@ fun GifticonListScreen(
                                         Text(
                                             text = when { 
                                                 dDay == null -> "-" 
-                                                dDay < 0 -> "만료" // 이 경우는 이제 더미 데이터에서 발생하지 않음
+                                                dDay < 0 -> "만료" 
                                                 else -> "D-$dDay"
                                             },
                                             style = MaterialTheme.typography.body1,
                                             textAlign = TextAlign.End,
                                             color = when {
                                                 dDay == null -> Color.Gray
-                                                dDay < 0 -> Color.DarkGray // 이 경우는 이제 더미 데이터에서 발생하지 않음
+                                                dDay < 0 -> Color.DarkGray 
                                                 dDay < 7 -> Color.Red
                                                 else -> Color.Unspecified
                                             }
@@ -167,7 +167,8 @@ fun GifticonListScreen(
                                     }
                                 },
                                 colors = ChipDefaults.secondaryChipColors(),
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                             )
                         }
                     }

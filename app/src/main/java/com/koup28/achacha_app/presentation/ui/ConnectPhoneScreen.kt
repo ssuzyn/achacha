@@ -17,6 +17,7 @@ import androidx.wear.compose.material.VignettePosition
 import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Button
+import com.koup28.achacha_app.presentation.theme.TitleFontFamily
 
 @Composable
 fun ConnectPhoneScreen(
@@ -36,7 +37,8 @@ fun ConnectPhoneScreen(
             Text(
                 text = "ㅇㅊㅊ",
                 style = MaterialTheme.typography.title2,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontFamily = TitleFontFamily
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(

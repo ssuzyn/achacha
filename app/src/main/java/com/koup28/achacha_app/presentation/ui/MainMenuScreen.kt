@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
+import com.koup28.achacha_app.presentation.theme.TitleFontFamily
 
 @Composable
 fun MainMenuScreen(
@@ -36,9 +37,10 @@ fun MainMenuScreen(
                 text = "ㅇㅊㅊ", // 제목 변경
                 style = MaterialTheme.typography.title1, // 제목 크기 조정
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 16.dp) // 상단 패딩 추가
+                fontFamily = TitleFontFamily, // 여기에 TitleFontFamily 적용
+                modifier = Modifier.padding(top = 24.dp) // 상단 패딩을 24.dp로 증가
             )
-            Spacer(modifier = Modifier.height(24.dp)) // 버튼 위 간격 조정
+            Spacer(modifier = Modifier.height(16.dp)) // 버튼 위 간격을 16.dp로 감소
 
             // 기프티콘 관리 버튼 (Chip) - 스타일 적용
             Chip(
@@ -64,17 +66,17 @@ fun MainMenuScreen(
                 label = { 
                     Text(
                         text = "알림함",
-                        modifier = Modifier.fillMaxWidth(), // 너비 채우기
-                        textAlign = TextAlign.Center // 중앙 정렬
+                        modifier = Modifier.fillMaxWidth(), 
+                        textAlign = TextAlign.Center 
                     ) 
                 },
                 colors = ChipDefaults.chipColors(
-                    backgroundColor = Color(0xFFAECBFA), // 배경색 설정
-                    contentColor = Color.Black // 텍스트 색상 설정
+                    backgroundColor = Color(0xFFAECBFA), 
+                    contentColor = Color.Black 
                 ),
-                modifier = Modifier.fillMaxWidth(0.8f) // 너비 조정
+                modifier = Modifier.fillMaxWidth(0.8f) 
             )
-            Spacer(modifier = Modifier.height(8.dp)) // 버튼 사이 간격
+            Spacer(modifier = Modifier.height(16.dp)) // 버튼 사이 간격을 16.dp로 증가
 
             // 토큰 삭제 버튼 (Chip) -> 원형, 보더만 있는 스타일, 크기 조정
             Chip(

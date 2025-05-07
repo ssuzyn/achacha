@@ -99,7 +99,7 @@ fun NotificationBoxScreen(
                     text = "알림함",
                     style = MaterialTheme.typography.title2,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
                 )
             }
 
