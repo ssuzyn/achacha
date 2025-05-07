@@ -120,7 +120,7 @@ const DetailProductScreen = () => {
             gifticonId: id,
             gifticonName: '아메리카노',
             gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-12-31',
+            gifticonExpiryDate: '2024-06-30',
             brandId: 45,
             brandName: '스타벅스',
             scope: scope, // 파라미터에서 받은 scope 사용
@@ -171,7 +171,10 @@ const DetailProductScreen = () => {
     const expiry = new Date(expiryDate);
     const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
+    if (diffDays < 0) {
+      return '만료됨';
+    }
+    return diffDays;
   };
 
   // 공유하기 기능
@@ -321,9 +324,25 @@ const DetailProductScreen = () => {
                     </View>
                   )}
                   {!isUsed && (
-                    <View style={styles.ddayButtonContainer}>
-                      <Text style={styles.ddayButtonText}>
-                        D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
+                    <View
+                      style={[
+                        styles.ddayButtonContainer,
+                        typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                          ? styles.expiredButtonContainer
+                          : {},
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.ddayButtonText,
+                          typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                            ? styles.expiredButtonText
+                            : {},
+                        ]}
+                      >
+                        {typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                          ? calculateDaysLeft(gifticonData.gifticonExpiryDate)
+                          : `D-${calculateDaysLeft(gifticonData.gifticonExpiryDate)}`}
                       </Text>
                     </View>
                   )}
@@ -616,6 +635,12 @@ const styles = StyleSheet.create({
     color: '#D33434',
     fontSize: 18,
     fontWeight: 'semibold',
+  },
+  expiredButtonContainer: {
+    backgroundColor: 'rgba(153, 153, 153, 0.8)',
+  },
+  expiredButtonText: {
+    color: '#FFFFFF',
   },
 });
 

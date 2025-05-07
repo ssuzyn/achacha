@@ -147,7 +147,7 @@ const DetailAmountScreen = () => {
             gifticonId: id || 124,
             gifticonName: '문화상품권',
             gifticonType: 'AMOUNT',
-            gifticonExpiryDate: '2025-12-31',
+            gifticonExpiryDate: '2025-06-15',
             brandId: 46,
             brandName: '컬쳐랜드',
             scope: scope,
@@ -200,7 +200,10 @@ const DetailAmountScreen = () => {
     const expiry = new Date(expiryDate);
     const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
+    if (diffDays < 0) {
+      return '만료됨';
+    }
+    return diffDays;
   };
 
   // 금액 포맷 함수
@@ -363,9 +366,25 @@ const DetailAmountScreen = () => {
                     </View>
                   )}
                   {!isUsed && (
-                    <View style={styles.ddayButtonContainer}>
-                      <Text style={styles.ddayButtonText}>
-                        D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
+                    <View
+                      style={[
+                        styles.ddayButtonContainer,
+                        typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                          ? styles.expiredButtonContainer
+                          : {},
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.ddayButtonText,
+                          typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                            ? styles.expiredButtonText
+                            : {},
+                        ]}
+                      >
+                        {typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                          ? calculateDaysLeft(gifticonData.gifticonExpiryDate)
+                          : `D-${calculateDaysLeft(gifticonData.gifticonExpiryDate)}`}
                       </Text>
                     </View>
                   )}
@@ -733,6 +752,12 @@ const styles = StyleSheet.create({
     color: '#D33434',
     fontSize: 18,
     fontWeight: 'semibold',
+  },
+  expiredButtonContainer: {
+    backgroundColor: 'rgba(153, 153, 153, 0.8)',
+  },
+  expiredButtonText: {
+    color: '#FFFFFF',
   },
   loadingContent: {
     flex: 1,
