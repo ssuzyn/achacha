@@ -13,9 +13,24 @@ import { Shadow } from 'react-native-shadow-2';
 // 더미 데이터 - API 응답값 형식에 맞춰서 수정
 const DUMMY_GIFTICONS = [
   {
+    gifticonId: 122,
+    gifticonName: 'APP전용 e카드 3만원 교환권',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-09-31',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'MY_BOX',
+    userId: 78,
+    userName: '홍길동',
+    shareBoxId: null,
+    shareBoxName: null,
+    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    gifticonCreatedAt: '2025-01-15T10:30:00',
+  },
+  {
     gifticonId: 123,
     gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
+    gifticonType: 'AMOUNT',
     gifticonExpiryDate: '2025-12-31',
     brandId: 45,
     brandName: '스타벅스',
@@ -25,6 +40,7 @@ const DUMMY_GIFTICONS = [
     shareBoxId: null,
     shareBoxName: null,
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2025-01-05T15:45:00',
   },
   {
     gifticonId: 124,
@@ -39,6 +55,7 @@ const DUMMY_GIFTICONS = [
     shareBoxId: null,
     shareBoxName: null,
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2025-01-20T09:15:00',
   },
   {
     gifticonId: 125,
@@ -53,6 +70,7 @@ const DUMMY_GIFTICONS = [
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
     thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    gifticonCreatedAt: '2025-01-02T14:20:00',
   },
   {
     gifticonId: 126,
@@ -67,10 +85,11 @@ const DUMMY_GIFTICONS = [
     shareBoxId: 91,
     shareBoxName: '가족 모임',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2025-01-10T11:30:00',
   },
   {
     gifticonId: 127,
-    gifticonName: '아메리카노',
+    gifticonName: '아이스 카페 아메리카노 T',
     gifticonType: 'PRODUCT',
     gifticonExpiryDate: '2025-04-23',
     brandId: 45,
@@ -79,10 +98,11 @@ const DUMMY_GIFTICONS = [
     usageType: 'SELF_USE', // 사용하기
     usedAt: '2025-01-15T14:30:00',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2024-12-20T13:10:00',
   },
   {
     gifticonId: 128,
-    gifticonName: '카페라떼',
+    gifticonName: '아이스 카페 아메리카노 T',
     gifticonType: 'PRODUCT',
     gifticonExpiryDate: '2025-02-15',
     brandId: 45,
@@ -91,30 +111,33 @@ const DUMMY_GIFTICONS = [
     usageType: 'PRESENT', // 선물하기
     usedAt: '2025-01-20T10:15:00',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2024-12-15T16:40:00',
   },
   {
     gifticonId: 130,
-    gifticonName: '빙수',
+    gifticonName: '아이스 카페 아메리카노 T',
     gifticonType: 'PRODUCT',
     gifticonExpiryDate: '2025-02-20',
     brandId: 47,
-    brandName: '설빙',
+    brandName: '스타벅스',
     scope: 'USED',
     usageType: 'GIVE_AWAY', // 나눔하기
     usedAt: '2025-01-22T11:30:00',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2024-12-10T09:25:00',
   },
   {
     gifticonId: 129,
-    gifticonName: '문화상품권',
+    gifticonName: 'APP전용 e카드 3만원 교환권',
     gifticonType: 'AMOUNT',
     gifticonExpiryDate: '2025-03-31',
     brandId: 46,
-    brandName: '컬쳐랜드',
+    brandName: '스타벅스',
     scope: 'USED',
     usageType: 'SELF_USE',
     usedAt: '2025-01-25T16:45:00',
     thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    gifticonCreatedAt: '2024-12-05T10:50:00',
   },
 ];
 
@@ -217,8 +240,8 @@ const ManageListScreen = () => {
         // 사용완료 탭에서는 사용일시 기준 최신순
         filtered.sort((a, b) => new Date(b.usedAt) - new Date(a.usedAt));
       } else {
-        // ID 기준 최신순 (임시로 ID가 높을수록 최신이라고 가정)
-        filtered.sort((a, b) => b.gifticonId - a.gifticonId);
+        // 등록일시 기준 최신순
+        filtered.sort((a, b) => new Date(b.gifticonCreatedAt) - new Date(a.gifticonCreatedAt));
       }
     } else if (sortBy === 'expiry') {
       // D-day 기준 임박순
