@@ -729,12 +729,14 @@ const styles = StyleSheet.create({
     // 실제 앱에서는 이미지 처리 라이브러리 사용을 고려할 수 있습니다.
   },
   smallerGifticonImage: {
-    height: '60%', // SELF_USE일 때 이미지 크기 줄임
-    marginBottom: 10,
+    height: '55%', // 기존 높이보다 살짝 줄임
+    marginTop: 25, // 상단 여백 추가
+    marginBottom: 8, // 하단 여백 조정
   },
   usedBarcodeContainer: {
     alignItems: 'center',
     width: '90%',
+    marginTop: 5, // 바코드 상단 여백 추가
     marginBottom: 10,
     padding: 10,
     borderRadius: 8,
