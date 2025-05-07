@@ -8,29 +8,26 @@ import {
   StatusBar,
   TouchableOpacity,
   SafeAreaView,
-  Dimensions,
   Modal,
   TextInput,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Orientation from 'react-native-orientation-locker';
-import { Text, Button } from '../../../components/ui';
-import { useTheme } from '../../../hooks/useTheme';
+import { Text } from '../../../components/ui';
 
 const UseAmountScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { theme } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [amount, setAmount] = useState('');
 
   // route.params에서 정보 가져오기
-  const { id, barcodeNumber } = route.params || {};
+  const { barcodeNumber } = route.params || {};
 
   // 기본 상품 정보
   const productInfo = {
-    name: '컬쳐랜드 | 문화상품권',
+    name: '스타벅스 | APP전용 e카드 3만원 교환권',
     barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
     barcodeImage: require('../../../assets/images/barcode.png'),
   };
@@ -82,16 +79,12 @@ const UseAmountScreen = () => {
     // 가로 모드에서 세로 모드로 전환
     Orientation.lockToPortrait();
 
-    // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-    // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-    navigation.reset({
-      index: 0,
-      routes: [
-        {
-          name: 'Main',
-          params: { screen: 'TabGifticonManage', initialTab: 'used' },
-        },
-      ],
+    // 원래 상품 상세 페이지(DetailAmount)로 이동
+    const { id } = route.params || {};
+    navigation.navigate('DetailAmount', {
+      gifticonId: id,
+      refresh: true,
+      usedAmount: amount,
     });
   };
 
@@ -122,9 +115,12 @@ const UseAmountScreen = () => {
         </View>
 
         <View style={styles.actionSection}>
-          <Button title="금액 입력" onPress={handleShowModal} style={styles.amountButton} />
+          <TouchableOpacity style={styles.actionButton} onPress={handleShowModal}>
+            <Text style={styles.actionButtonText}>금액 입력</Text>
+          </TouchableOpacity>
+
           <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelText}>취소</Text>
+            <Text style={styles.cancelButtonText}>취소</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -196,45 +192,58 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 20,
+    justifyContent: 'flex-start',
   },
   barcodeSection: {
-    flex: 2,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 20,
   },
   barcodeImage: {
-    width: '90%',
-    height: '50%',
-    marginBottom: 20,
+    width: '100%',
+    height: 150,
+    marginBottom: 10,
   },
   barcodeNumber: {
     fontSize: 22,
     fontWeight: '600',
     color: '#000',
     marginTop: 10,
+    textAlign: 'center',
   },
   actionSection: {
-    width: 100,
+    width: 150,
     justifyContent: 'center',
-    paddingLeft: 20,
   },
-  amountButton: {
-    backgroundColor: '#3498DB',
+  actionButton: {
+    backgroundColor: '#56AEE9',
     borderRadius: 8,
-    marginBottom: 20,
-    paddingVertical: 15,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+    width: '100%',
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#E0E0E0',
+    backgroundColor: '#EEEEEE',
     borderRadius: 8,
-    padding: 15,
+    padding: 16,
     alignItems: 'center',
+    width: '100%',
   },
-  cancelText: {
-    color: '#333',
-    fontWeight: '500',
+  cancelButtonText: {
+    color: '#278CCC',
+    fontSize: 18,
+    fontWeight: '600',
   },
+  // 모달 스타일
   modalOverlay: {
     flex: 1,
     justifyContent: 'center',
@@ -294,7 +303,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F2',
   },
   confirmModalButton: {
-    backgroundColor: '#3498DB',
+    backgroundColor: '#56AEE9',
   },
   modalButtonText: {
     fontSize: 16,
