@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 import MapGifticonItem from './MapGifticonItem';
 
 const MapGifticonList = ({ gifticons, onUseGifticon, onSelectBrand, selectedBrand }) => {
+  // 기프티콘 목록을 유효기간 임박순으로 정렬
+  const sortedGifticons = useMemo(() => {
+    if (!gifticons || gifticons.length === 0) return [];
+
+    return [...gifticons].sort((a, b) => {
+      const dateA = new Date(a.gifticonExpiryDate);
+      const dateB = new Date(b.gifticonExpiryDate);
+      return dateA - dateB; // 오름차순 정렬 (가장 가까운 날짜가 먼저)
+    });
+  }, [gifticons]);
+
   // 보유하고 있는 기프티콘이 없을 때
   if (!gifticons || gifticons.length === 0) {
     return (
@@ -17,7 +28,7 @@ const MapGifticonList = ({ gifticons, onUseGifticon, onSelectBrand, selectedBran
     <View style={styles.container}>
       <Text style={styles.header}>사용 가능한 기프티콘</Text>
       <BottomSheetFlatList
-        data={gifticons}
+        data={sortedGifticons}
         renderItem={({ item }) => (
           <MapGifticonItem
             gifticon={item}
