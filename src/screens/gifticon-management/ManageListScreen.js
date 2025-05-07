@@ -157,12 +157,26 @@ const ManageListScreen = () => {
     { id: 'expiry', title: '임박순' },
   ];
 
+  // 사용완료 탭 정렬 옵션
+  const usedSortOptions = [{ id: 'recent', title: '최근 사용 순' }];
+
   // 파라미터에서 initialTab이 변경되면 selectedCategory 업데이트
   useEffect(() => {
     if (route.params?.initialTab) {
       setSelectedCategory(route.params.initialTab);
+      // 사용완료 탭으로 변경 시 정렬 옵션도 변경
+      if (route.params.initialTab === 'used') {
+        setSortBy('recent');
+      }
     }
   }, [route.params?.initialTab]);
+
+  // 카테고리 변경 시 정렬 옵션 초기화
+  useEffect(() => {
+    if (selectedCategory === 'used') {
+      setSortBy('recent');
+    }
+  }, [selectedCategory]);
 
   // 카테고리에 따른 기프티콘 필터링
   useEffect(() => {
@@ -199,11 +213,20 @@ const ManageListScreen = () => {
 
     // 정렬 적용
     if (sortBy === 'recent') {
-      // ID 기준 최신순 (임시로 ID가 높을수록 최신이라고 가정)
-      filtered.sort((a, b) => b.gifticonId - a.gifticonId);
+      if (selectedCategory === 'used') {
+        // 사용완료 탭에서는 사용일시 기준 최신순
+        filtered.sort((a, b) => new Date(b.usedAt) - new Date(a.usedAt));
+      } else {
+        // ID 기준 최신순 (임시로 ID가 높을수록 최신이라고 가정)
+        filtered.sort((a, b) => b.gifticonId - a.gifticonId);
+      }
     } else if (sortBy === 'expiry') {
-      // 유효기간 임박순
-      filtered.sort((a, b) => new Date(a.gifticonExpiryDate) - new Date(b.gifticonExpiryDate));
+      // D-day 기준 임박순
+      filtered.sort((a, b) => {
+        const aDaysLeft = calculateDaysLeft(a.gifticonExpiryDate);
+        const bDaysLeft = calculateDaysLeft(b.gifticonExpiryDate);
+        return aDaysLeft - bDaysLeft;
+      });
     }
 
     setFilteredGifticons(filtered);
@@ -343,7 +366,11 @@ const ManageListScreen = () => {
         <View style={styles.sortContainer}>
           <TouchableOpacity style={styles.sortButton} onPress={toggleSortDropdown}>
             <Text style={styles.sortButtonText}>
-              {sortOptions.find(option => option.id === sortBy)?.title}
+              {
+                (selectedCategory === 'used' ? usedSortOptions : sortOptions).find(
+                  option => option.id === sortBy
+                )?.title
+              }
             </Text>
             <Icon
               name={showSortDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
@@ -356,7 +383,7 @@ const ManageListScreen = () => {
           {/* 정렬 드롭다운 메뉴 */}
           {showSortDropdown && (
             <View style={styles.sortDropdown}>
-              {sortOptions.map(option => (
+              {(selectedCategory === 'used' ? usedSortOptions : sortOptions).map(option => (
                 <TouchableOpacity
                   key={option.id}
                   style={styles.sortOption}
