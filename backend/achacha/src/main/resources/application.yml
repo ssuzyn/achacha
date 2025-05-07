@@ -7,6 +7,11 @@ spring:
       hibernate:
         jdbc:
           time_zone=Asia/Seoul:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: achacha
+      auto-index-creation: true
 
   profiles:
     group:
