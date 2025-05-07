@@ -11,5 +11,12 @@ public interface GifticonDomainService {
 
 	// 기프티콘 조회 권한 여부 확인
 	boolean validateGifticonAccess(Integer requestUserId, Integer gifticonUserId);
-	
+
+	// 기프티콘 삭제 여부 확인
+	boolean isDeleted(Gifticon gifticon);
+
+	// 기프티콘 사용 여부 확인
+	boolean isUsed(Gifticon gifticon);
+
+	void validateAvailableGifticon(Integer userId, Gifticon gifticon);
 }

@@ -6,6 +6,8 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 @Service
 public class GifticonDomainServiceImpl implements GifticonDomainService {
@@ -27,4 +29,33 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		return Objects.equals(requestUserId, gifticonUserId);
 	}
 
+	@Override
+	public boolean isDeleted(Gifticon gifticon) {
+		return gifticon.getIsDeleted();
+	}
+
+	@Override
+	public boolean isUsed(Gifticon gifticon) {
+		return gifticon.getIsUsed();
+	}
+
+	@Override
+	public void validateAvailableGifticon(Integer userId, Gifticon gifticon) {
+
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		if (isExpired(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
+		}
+
+		if (gifticon.getSharebox() == null && !validateGifticonAccess(userId, gifticon.getUser().getId())) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+	}
 }
