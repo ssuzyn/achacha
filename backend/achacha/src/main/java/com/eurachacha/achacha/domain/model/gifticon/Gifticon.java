@@ -2,6 +2,7 @@ package com.eurachacha.achacha.domain.model.gifticon;
 
 import java.time.LocalDate;
 
+import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
