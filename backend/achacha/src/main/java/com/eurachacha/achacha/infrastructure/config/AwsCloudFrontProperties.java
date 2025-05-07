@@ -11,4 +11,5 @@ import lombok.RequiredArgsConstructor;
 public class AwsCloudFrontProperties {
 	private final String domain;
 	private final String keypairId;
+	private final String privateKey;
 }

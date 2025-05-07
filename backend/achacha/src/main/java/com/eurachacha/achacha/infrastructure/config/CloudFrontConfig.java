@@ -20,18 +20,15 @@ public class CloudFrontConfig {
 
 	private final AwsCloudFrontProperties cloudFrontProperties;
 
-	@Value("${AWS_CLOUDFRONT_PRIVATE_KEY}")
-	private String cloudFrontPrivateKey;
-
 	@Bean
 	public CloudFrontSigner cloudFrontSigner() {
-		if (cloudFrontPrivateKey == null || cloudFrontPrivateKey.isEmpty()) {
+		if (cloudFrontProperties.getPrivateKey() == null || cloudFrontProperties.getPrivateKey().isEmpty()) {
 			throw new IllegalStateException("CloudFront private key is not configured");
 		}
 
 		try {
 			// Base64 디코딩 후, DER 형식으로 SignedURL 생성
-			byte[] privateKeyBytes = Base64.getDecoder().decode(cloudFrontPrivateKey);
+			byte[] privateKeyBytes = Base64.getDecoder().decode(cloudFrontProperties.getPrivateKey());
 			return new CloudFrontSigner(
 				cloudFrontProperties.getKeypairId(),
 				privateKeyBytes

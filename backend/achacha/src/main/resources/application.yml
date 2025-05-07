@@ -44,3 +44,4 @@ aws:
   cloudfront:
     domain: d23wsj9ifltpil.cloudfront.net
     keypair-id: ${AWS_CLOUDFRONT_KEYPAIR_ID}
+    private-key: ${AWS_CLOUDFRONT_PRIVATE_KEY}
