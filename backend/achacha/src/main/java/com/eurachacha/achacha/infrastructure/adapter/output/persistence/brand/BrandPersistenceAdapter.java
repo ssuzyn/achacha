@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository;
 
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.domain.model.brand.Brand;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,5 +26,11 @@ public class BrandPersistenceAdapter implements BrandRepository {
 	@Override
 	public Optional<Brand> findByNameEquals(String name) {
 		return brandJpaRepository.findByNameEqualsIgnoreCase(name);
+	}
+
+	@Override
+	public Brand findById(Integer id) {
+		return brandJpaRepository.findById(id)
+			.orElseThrow(() -> new CustomException(ErrorCode.BRAND_NOT_FOUND));
 	}
 }
