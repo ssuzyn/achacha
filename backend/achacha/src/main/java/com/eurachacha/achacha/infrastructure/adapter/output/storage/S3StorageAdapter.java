@@ -17,6 +17,7 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.infrastructure.config.AwsCloudFrontProperties;
 import com.eurachacha.achacha.infrastructure.config.AwsS3Properties;
 import com.eurachacha.achacha.infrastructure.config.CloudFrontConfig;
+import com.eurachacha.achacha.infrastructure.util.CloudFrontSigner;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -27,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class S3StorageAdapter implements FileStoragePort {
 
 	private final AmazonS3 amazonS3;
-	private final CloudFrontConfig.CloudFrontSigner cloudFrontSigner;
+	private final CloudFrontSigner cloudFrontSigner;
 	private final AwsS3Properties awsS3Properties;
 	private final AwsCloudFrontProperties cloudFrontProperties;
 
