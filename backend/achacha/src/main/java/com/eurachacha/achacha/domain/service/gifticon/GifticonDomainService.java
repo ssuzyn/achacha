@@ -10,5 +10,13 @@ public interface GifticonDomainService {
 	boolean isExpired(Gifticon gifticon);
 
 	// 기프티콘 조회 권한 여부 확인
-	void validateGifticonAccess(Integer requestUserId, Integer gifticonUserId);
+	boolean validateGifticonAccess(Integer requestUserId, Integer gifticonUserId);
+
+	// 기프티콘 삭제 여부 확인
+	boolean isDeleted(Gifticon gifticon);
+
+	// 기프티콘 사용 여부 확인
+	boolean isUsed(Gifticon gifticon);
+
+	void validateGifticonAvailability(Integer userId, Gifticon gifticon);
 }

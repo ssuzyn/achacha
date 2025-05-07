@@ -13,6 +13,8 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.ai.OcrTrainingDataRepository;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
@@ -26,6 +28,7 @@ import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
@@ -184,8 +187,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 페이징 처리
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
-		// 쿼리 실행
-		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.getAvailableGifticons(userId,
+		// 기프티콘 조회 쿼리 실행
+		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
 			scope, type, pageable);
 
 		return AvailableGifticonsResponseDto.builder()
@@ -198,21 +201,80 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	@Override
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
-		Integer userId = 2; // 유저 로직 추가 시 변경 필요
+		Integer userId = 3; // 유저 로직 추가 시 변경 필요
 
-		AvailableGifticonDetailResponseDto detailResponseDto = gifticonRepository.getAvailableGifticonDetail(
+		Gifticon findGifticon = gifticonRepository.getGifticonDetail(
 			gifticonId);
 
-		System.out.println(detailResponseDto.getShareBoxId());
-		if (detailResponseDto.getShareBoxId() == null) { // 공유되지 않은 기프티콘인 경우
-			gifticonDomainService.validateGifticonAccess(userId, detailResponseDto.getUserId());
+		/*
+		 * 사용가능 기프티콘 검증 로직
+		 *  1. 삭제 여부 판단
+		 *  2. 사용 여부 판단
+		 *  3. 유효기간 여부 판단
+		 */
+		gifticonDomainService.validateGifticonAvailability(userId, findGifticon);
+
+		// 공유되지 않은 기프티콘인 경우 소유자 판단
+		if (findGifticon.getSharebox() == null) {
+			boolean isOwner = gifticonDomainService.validateGifticonAccess(userId, findGifticon.getUser().getId());
+			if (!isOwner) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 		}
 
-		if (detailResponseDto.getShareBoxId() != null) { // 공유된 기프티콘인 경우
-			participationRepository.checkParticipation(userId, detailResponseDto.getShareBoxId());
+		// 공유된 기프티콘인 경우 참여 여부 판단
+		if (findGifticon.getSharebox() != null) {
+			boolean hasParticipation = participationRepository.checkParticipation(userId,
+				findGifticon.getSharebox().getId());
+
+			if (!hasParticipation) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 		}
 
-		return detailResponseDto;
+		// 기프티콘 스코프 결정에 따른 값
+		String scope = findGifticon.getSharebox() == null ? "MY_BOX" : "SHARE_BOX";
+		Integer shareBoxId = findGifticon.getSharebox() == null ? null : findGifticon.getSharebox().getId();
+		String shareBoxName = findGifticon.getSharebox() == null ? null : findGifticon.getSharebox().getName();
+
+		return AvailableGifticonDetailResponseDto.builder()
+			.gifticonId(findGifticon.getId())
+			.gifticonName(findGifticon.getName())
+			.gifticonType(findGifticon.getType())
+			.gifticonExpiryDate(findGifticon.getExpiryDate())
+			.brandId(findGifticon.getBrand().getId())
+			.brandName(findGifticon.getBrand().getName())
+			.scope(scope)
+			.userId(findGifticon.getUser().getId())
+			.userName(findGifticon.getUser().getName())
+			.shareBoxId(shareBoxId)
+			.shareBoxName(shareBoxName)
+			.thumbnailPath(null) // 파일로직 구현 후 수정
+			.originalImagePath(null) // 파일로직 구현 후 수정
+			.gifticonCreatedAt(findGifticon.getCreatedAt())
+			.gifticonOriginalAmount(findGifticon.getOriginalAmount())
+			.gifticonRemainingAmount(findGifticon.getRemainingAmount())
+			.build();
+	}
+
+	@Override
+	public UsedGifticonsResponseDto getUsedGifticons(GifticonType type, GifticonUsedSortType sort, Integer page,
+		Integer size) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 페이징 처리
+		Pageable pageable = pageableFactory.createPageable(page, size, sort);
+
+		// 쿼리 실행
+		Slice<UsedGifticonResponseDto> gifticonSlice =
+			gifticonRepository.getUsedGifticons(userId, type, pageable);
+
+		return UsedGifticonsResponseDto.builder()
+			.gifticons(gifticonSlice.getContent())
+			.hasNextPage(gifticonSlice.hasNext())
+			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
+			.build();
 	}
 
 	private Integer findBrandId(String brandName) {
