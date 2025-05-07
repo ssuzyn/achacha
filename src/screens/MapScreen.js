@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   headerText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   mapContainer: {
