@@ -8,12 +8,12 @@ import {
   Image,
   TouchableOpacity,
   StatusBar,
-  Alert,
   Animated,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
 import { Text } from '../../components/ui';
+import AlertDialog from '../../components/ui/AlertDialog';
 import CategoryTabs from '../../components/common/CategoryTabs';
 import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
@@ -322,6 +322,10 @@ const ManageListScreen = () => {
     return `${yy}.${mm}.${dd}`;
   };
 
+  // AlertDialog 상태 관리
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [selectedGifticon, setSelectedGifticon] = useState(null);
+
   // 바코드 조회 처리
   const handleBarcodeView = item => {
     if (item.gifticonType === 'PRODUCT') {
@@ -337,83 +341,79 @@ const ManageListScreen = () => {
     }
   };
 
+  // 사용 완료 다이얼로그 표시
+  const showUseCompleteDialog = item => {
+    setSelectedGifticon(item);
+    setDialogVisible(true);
+  };
+
   // 사용 완료 처리
-  const handleMarkAsUsed = item => {
-    Alert.alert(
-      '사용 완료 처리',
-      `${item.brandName} - ${item.gifticonName}을(를) 사용 완료 처리하시겠습니까?`,
-      [
-        {
-          text: '취소',
-          style: 'cancel',
-        },
-        {
-          text: '확인',
-          onPress: () => {
-            // 여기서 API 호출로 상태 변경 (예시)
-            console.log(`기프티콘 ID ${item.gifticonId} 사용 완료 처리됨`);
+  const handleMarkAsUsed = () => {
+    if (!selectedGifticon) return;
 
-            // 상태 업데이트 및 화면 갱신 (임시 구현)
-            const updatedGifticons = filteredGifticons.filter(
-              gifticon => gifticon.gifticonId !== item.gifticonId
-            );
-            setFilteredGifticons(updatedGifticons);
+    // 여기서 API 호출로 상태 변경 (예시)
+    console.log(`기프티콘 ID ${selectedGifticon.gifticonId} 사용 완료 처리됨`);
 
-            // 성공 메시지 표시
-            Alert.alert('완료', '기프티콘이 사용 완료 처리되었습니다.');
-          },
-        },
-      ]
+    // 상태 업데이트 및 화면 갱신 (임시 구현)
+    const updatedGifticons = filteredGifticons.filter(
+      gifticon => gifticon.gifticonId !== selectedGifticon.gifticonId
     );
+    setFilteredGifticons(updatedGifticons);
+
+    // 다이얼로그 닫기
+    setDialogVisible(false);
+    setSelectedGifticon(null);
   };
 
   // 좌측 액션 (바코드 조회) 렌더링
   const renderLeftActions = (progress, dragX, item) => {
-    const trans = dragX.interpolate({
-      inputRange: [0, 50, 100, 101],
-      outputRange: [-20, 0, 0, 0],
+    const scale = dragX.interpolate({
+      inputRange: [0, 80],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = dragX.interpolate({
+      inputRange: [0, 60, 80],
+      outputRange: [0, 0.8, 1],
       extrapolate: 'clamp',
     });
 
     return (
-      <RectButton style={styles.leftAction} onPress={() => handleBarcodeView(item)}>
-        <Animated.View
-          style={[
-            styles.actionIconContainer,
-            {
-              transform: [{ translateX: trans }],
-            },
-          ]}
-        >
-          <Icon name="qr-code-scanner" type="material" color="#FFFFFF" size={24} />
-          <Text style={styles.actionText}>바코드 조회</Text>
-        </Animated.View>
-      </RectButton>
+      <Animated.View style={[styles.leftAction, { opacity }]}>
+        <RectButton style={styles.actionButton} onPress={() => showUseCompleteDialog(item)}>
+          <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
+            <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
+            <Text style={styles.actionText}>사용 완료</Text>
+          </Animated.View>
+        </RectButton>
+      </Animated.View>
     );
   };
 
-  // 우측 액션 (사용 완료) 렌더링
+  // 우측 액션 (바코드 조회) 렌더링
   const renderRightActions = (progress, dragX, item) => {
-    const trans = dragX.interpolate({
-      inputRange: [-101, -100, -50, 0],
-      outputRange: [0, 0, 0, 20],
+    const scale = dragX.interpolate({
+      inputRange: [-80, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = dragX.interpolate({
+      inputRange: [-80, -60, 0],
+      outputRange: [1, 0.8, 0],
       extrapolate: 'clamp',
     });
 
     return (
-      <RectButton style={styles.rightAction} onPress={() => handleMarkAsUsed(item)}>
-        <Animated.View
-          style={[
-            styles.actionIconContainer,
-            {
-              transform: [{ translateX: trans }],
-            },
-          ]}
-        >
-          <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
-          <Text style={styles.actionText}>사용 완료</Text>
-        </Animated.View>
-      </RectButton>
+      <Animated.View style={[styles.rightAction, { opacity }]}>
+        <RectButton style={styles.actionButton} onPress={() => handleBarcodeView(item)}>
+          <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
+            <Icon name="qr-code-scanner" type="material" color="#FFFFFF" size={24} />
+            <Text style={styles.actionText}>바코드 조회</Text>
+          </Animated.View>
+        </RectButton>
+      </Animated.View>
     );
   };
 
@@ -514,6 +514,10 @@ const ManageListScreen = () => {
           });
         }}
         friction={2}
+        leftThreshold={80}
+        rightThreshold={80}
+        overshootLeft={false}
+        overshootRight={false}
       >
         <TouchableOpacity
           style={styles.gifticonItem}
@@ -701,6 +705,27 @@ const ManageListScreen = () => {
           )}
         </View>
       </ScrollView>
+
+      {/* 사용 완료 확인 다이얼로그 */}
+      {selectedGifticon && (
+        <AlertDialog
+          isVisible={dialogVisible}
+          title="사용 완료 처리"
+          message={`${selectedGifticon.brandName} - ${selectedGifticon.gifticonName}을(를) 사용 완료 처리하시겠습니까?`}
+          confirmText="확인"
+          cancelText="취소"
+          onConfirm={handleMarkAsUsed}
+          onCancel={() => {
+            setDialogVisible(false);
+            setSelectedGifticon(null);
+          }}
+          onBackdropPress={() => {
+            setDialogVisible(false);
+            setSelectedGifticon(null);
+          }}
+          type="info"
+        />
+      )}
     </View>
   );
 };
@@ -884,27 +909,33 @@ const styles = StyleSheet.create({
   // 스와이프 액션 관련 스타일
   leftAction: {
     flex: 1,
-    backgroundColor: '#278CCC', // 파란색 계열
-    justifyContent: 'center',
-    marginBottom: 10,
-    borderRadius: 12,
-  },
-  rightAction: {
-    flex: 1,
     backgroundColor: '#4CAF50', // 초록색 계열
     justifyContent: 'center',
     marginBottom: 10,
-    borderRadius: 12,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
   },
-  actionIconContainer: {
+  rightAction: {
+    flex: 1,
+    backgroundColor: '#278CCC', // 파란색 계열
+    justifyContent: 'center',
+    marginBottom: 10,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  actionButton: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    width: 100,
+  },
+  actionIconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
   },
   actionText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     marginTop: 4,
   },
