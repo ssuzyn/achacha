@@ -9,45 +9,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonCommonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
-import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 @Repository
-public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> {
-	@Query("""
-		select new com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonCommonResponseDto(
-		   g.id,
-		   g.name,
-		   g.type,
-		   g.expiryDate,
-		   g.brand.id,
-		   CASE WHEN g.sharebox.id IS NULL THEN 'MY_BOX' ELSE 'SHARE_BOX' END,
-		   g.user.id,
-		   g.sharebox.id)
-		from Gifticon g
-		where (g.user.id = :userId OR 
-		      (g.sharebox.id IS NOT NULL AND 
-		       EXISTS (select 1 from Participation p where p.sharebox.id = g.sharebox.id and p.user.id = :userId)))
-		and (g.remainingAmount > 0 or g.remainingAmount = -1)
-		and g.isDeleted = false
-		and g.isUsed = false
-		and (:#{#scope.name()} = 'ALL' 
-		     OR (:#{#scope.name()} = 'MY_BOX' AND g.sharebox.id IS NULL)
-		     OR (:#{#scope.name()} = 'SHARE_BOX' AND g.sharebox.id IS NOT NULL))
-		and (:type IS NULL OR g.type = :type)
-		""")
-	Slice<AvailableGifticonCommonResponseDto> findAvailableGifticons(
-		@Param("userId") Integer userId,
-		@Param("scope") GifticonScopeType gifticonScope,
-		@Param("type") GifticonType gifticonType,
-		Pageable pageable
-	);
-
+public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>, GifticonRepositoryCustom {
 	@Query("""
 		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto(
 		      g.id,
