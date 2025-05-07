@@ -511,7 +511,7 @@ const DetailAmountScreen = () => {
                     style={{
                       color: '#FFFFFF',
                       fontSize: 16,
-                      fontWeight: 'semibold',
+                      fontWeight: 'bold',
                     }}
                   >
                     사용완료
