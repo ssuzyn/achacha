@@ -3,12 +3,9 @@ package com.eurachacha.achacha.application.port.output.file;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Repository;
-
 import com.eurachacha.achacha.domain.model.gifticon.File;
 import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 
-@Repository
 public interface FileRepository {
 	File save(File file);
 
