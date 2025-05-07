@@ -1,8 +1,5 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -11,7 +8,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonCommonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
@@ -124,54 +120,11 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
 		// 기프티콘 조회 쿼리 실행
-		Slice<AvailableGifticonCommonResponseDto> gifticonSlice = gifticonRepository.getAvailableGifticons(userId,
+		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
 			scope, type, pageable);
 
-		List<AvailableGifticonResponseDto> dtos = new ArrayList<>();
-
-		for (AvailableGifticonCommonResponseDto findDto : gifticonSlice) {
-			// 브랜드 조회 쿼리 실행
-			String brandName =
-				findDto.getBrandId() != null ? brandRepository.findById(findDto.getBrandId()).getName() : null;
-
-			// 유저 조회 쿼리 실행
-			String userName =
-				findDto.getUserId() != null ? userRepository.findById(findDto.getUserId()).getName() : null;
-
-			// 쉐어박스 조회 쿼리 실행
-			String shareboxName = null;
-			if (findDto.getShareBoxId() != null) {
-				shareboxName = shareBoxRepository.findById(findDto.getShareBoxId()).getName();
-			}
-
-			String thumbnailPath = null;
-
-			// 파일 저장 로직 연결 시 주석 처리 해제(데이터가 없어서 무조건 null로 뜸 -> 오류 발생함)
-			// if (findDto.getGifticonId() != null) {
-			// 	File thumbnail = fileRepository.findFile(findDto.getGifticonId(), "GIFTICON", FileType.THUMBNAIL);
-			// 	thumbnailPath = thumbnail != null ? thumbnail.getPath() : null;
-			// }
-
-			AvailableGifticonResponseDto newDto = AvailableGifticonResponseDto.builder()
-				.gifticonId(findDto.getGifticonId())
-				.gifticonName(findDto.getGifticonName())
-				.gifticonType(findDto.getGifticonType())
-				.gifticonExpiryDate(findDto.getGifticonExpiryDate())
-				.brandId(findDto.getBrandId())
-				.brandName(brandName)
-				.scope(findDto.getScope())
-				.userId(findDto.getUserId())
-				.userName(userName)
-				.shareboxId(findDto.getShareBoxId())
-				.shareboxName(shareboxName)
-				.thumbnailPath(thumbnailPath)
-				.build();
-
-			dtos.add(newDto);
-		}
-
 		return AvailableGifticonsResponseDto.builder()
-			.gifticons(dtos)
+			.gifticons(gifticonSlice.getContent())
 			.hasNextPage(gifticonSlice.hasNext())
 			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
 			.build();
