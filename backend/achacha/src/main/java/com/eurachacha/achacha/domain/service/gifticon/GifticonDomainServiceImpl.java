@@ -6,8 +6,6 @@ import java.util.Objects;
 import org.springframework.stereotype.Service;
 
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
-import com.eurachacha.achacha.web.common.exception.CustomException;
-import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 @Service
 public class GifticonDomainServiceImpl implements GifticonDomainService {
@@ -25,9 +23,8 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 	// 기프티콘 조회 권한 여부 확인
 	@Override
-	public void validateGifticonAccess(Integer requestUserId, Integer gifticonUserId) {
-		if (!Objects.equals(requestUserId, gifticonUserId)) {
-			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-		}
+	public boolean validateGifticonAccess(Integer requestUserId, Integer gifticonUserId) {
+		return Objects.equals(requestUserId, gifticonUserId);
 	}
+
 }
