@@ -1,6 +1,8 @@
 package com.koup28.achacha_app.presentation.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,14 +24,16 @@ fun MainMenuScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center // 중앙 정렬 유지
         ) {
             Text(
                 text = "ㅇㅊㅊ", // 제목 변경
                 style = MaterialTheme.typography.title1, // 제목 크기 조정
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 16.dp) // 상단 패딩 추가
             )
             Spacer(modifier = Modifier.height(24.dp)) // 버튼 위 간격 조정
 
