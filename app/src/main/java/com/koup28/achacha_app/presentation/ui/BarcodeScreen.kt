@@ -3,12 +3,11 @@ package com.koup28.achacha_app.presentation.ui
 import android.app.Activity
 import android.util.Log
 import android.view.WindowManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +54,11 @@ fun BarcodeScreen(
     //     }
     // } // 임시 주석 처리
 
+    // 시스템 뒤로가기 버튼 처리
+    BackHandler(enabled = true) {
+        onBackClick()
+    }
+
     Scaffold(
         timeText = { TimeText(modifier = Modifier.padding(top = 6.dp)) },
         vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) }
@@ -63,8 +67,8 @@ fun BarcodeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.White)
-                .clickable { onBackClick() }
-                .padding(16.dp),
+                .clickable { onBackClick() } // 전체 화면 클릭 리스너 복원
+                .padding(16.dp), // 원래 패딩으로 복원
             contentAlignment = Alignment.Center
         ) {
             when {
@@ -87,7 +91,7 @@ fun BarcodeScreen(
                             Text("재시도")
                         }
                         Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = onBackClick) {
+                        Button(onClick = onBackClick) { // 이 버튼은 유지
                             Text("뒤로 (버튼)")
                         }
                     }
