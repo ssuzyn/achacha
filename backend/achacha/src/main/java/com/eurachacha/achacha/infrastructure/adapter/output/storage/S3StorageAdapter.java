@@ -31,21 +31,8 @@ public class S3StorageAdapter implements FileStoragePort {
 	private final AwsS3Properties awsS3Properties;
 	private final AwsCloudFrontProperties cloudFrontProperties;
 
-	// 최대 파일 크기 (5MB)
-	private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
-
 	@Override
 	public String uploadFile(MultipartFile file, FileType fileType, Integer entityId) {
-		// 파일 유효성 검사
-		if (file == null || file.isEmpty()) {
-			throw new CustomException(ErrorCode.S3_INVALID_FILE_ERROR);
-		}
-
-		// 파일 크기 검사
-		if (file.getSize() > MAX_FILE_SIZE) {
-			throw new CustomException(ErrorCode.S3_FILE_SIZE_EXCEED_ERROR);
-		}
-
 		try {
 			// 파일명만 생성 (경로 제외)
 			String fileName = entityId + "_" + UUID.randomUUID() + "." + getExtension(file.getOriginalFilename());
