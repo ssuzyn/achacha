@@ -407,7 +407,7 @@ const DetailAmountScreen = () => {
       case 'PRESENT':
         return '선물완료';
       case 'GIVE_AWAY':
-        return '나눔완료';
+        return '뿌리기 완료';
       default:
         return '사용완료';
     }

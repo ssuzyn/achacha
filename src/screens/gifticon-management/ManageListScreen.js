@@ -131,7 +131,7 @@ const DUMMY_GIFTICONS = [
     brandId: 47,
     brandName: '스타벅스',
     scope: 'USED',
-    usageType: 'GIVE_AWAY', // 나눔하기
+    usageType: 'GIVE_AWAY', // 뿌리기
     usedAt: '2025-01-22T11:30:00',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
     gifticonCreatedAt: '2024-12-10T09:25:00',

@@ -19,7 +19,7 @@ const NOTIFICATION_ICONS = {
   EXPIRY: 'calendar-month', // 유효기간 만료 알림
   NEARBY: 'share-location', // 주변 매장 알림
   USED: 'schedule', // 사용완료 여부 알림
-  SHARE: 'tap-and-play', // 기프티콘 나누기 알림
+  SHARE: 'tap-and-play', // 기프티콘 뿌리기 알림
   SHAREBOX: 'inventory-2', // 쉐어박스 알림
 };
 
@@ -49,8 +49,8 @@ const dummyNotifications = [
   {
     id: '4',
     type: 'SHARE',
-    title: '기프티콘 나누기 알림',
-    message: '나누기 성공! 아이스 카페 라떼 T가 무사히 나눔되었어요.',
+    title: '기프티콘 뿌리기 알림',
+    message: '뿌리기 성공! 아이스 카페 라떼 T가 무사히 나눔되었어요.',
     time: '2일 전',
   },
   {

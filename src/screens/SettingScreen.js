@@ -233,14 +233,14 @@ const SettingScreen = () => {
           />
         </View>
 
-        {/* 기프티콘 나누기 알림 */}
+        {/* 기프티콘 뿌리기 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text variant="body1" style={styles.notificationLabel}>
-              기프티콘 나누기 알림
+              기프티콘 뿌리기 알림
             </Text>
             <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              기프티콘 나누기 수신 알림
+              기프티콘 뿌리기 수신 알림
             </Text>
           </View>
           <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />

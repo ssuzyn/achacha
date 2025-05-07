@@ -119,10 +119,10 @@ const HomeScreen = () => {
           />
         </View>
 
-        {/* 중간 카드 섹션 (쉐어박스, 나누기) */}
+        {/* 중간 카드 섹션 (쉐어박스, 뿌리기) */}
         <View style={styles.middleCardSection}>
           <View style={styles.middleCardRow}>
-            {/* 쉐어박스 & 나누기 카드 */}
+            {/* 쉐어박스 & 뿌리기 카드 */}
             <Card.FeatureCard
               title={`나누면\n즐거움 두배,\n쉐어박스`}
               iconName="inventory-2"
@@ -131,7 +131,7 @@ const HomeScreen = () => {
 
             {/* 레이더 카드 */}
             <Card.RadarCard
-              text={`쓱 - 나누기\n행운의 주인공은?`}
+              text={`쓱 - 뿌리기\n행운의 주인공은?`}
               image={require('../assets/images/home-radar.png')}
             />
           </View>
