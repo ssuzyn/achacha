@@ -29,8 +29,15 @@ public enum ErrorCode {
 	// S3 스토리지 관련 에러 코드
 	S3_UPLOAD_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3_001", "파일 업로드 중 오류가 발생했습니다."),
 	S3_DELETE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "S3_002", "파일 삭제 중 오류가 발생했습니다."),
-	S3_INVALID_FILE_ERROR(HttpStatus.BAD_REQUEST, "S3_003", "잘못된 파일 형식입니다."),
-	S3_FILE_SIZE_EXCEED_ERROR(HttpStatus.BAD_REQUEST, "S3_004", "파일 크기가 제한을 초과했습니다."),
+
+	// 파일 검증 관련 에러 코드
+	FILE_EMPTY(HttpStatus.BAD_REQUEST, "FILE_001", "파일이 비어있습니다."),
+	FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "FILE_002", "파일 크기가 제한을 초과했습니다."),
+	FILE_INVALID_NAME(HttpStatus.BAD_REQUEST, "FILE_003", "유효하지 않은 파일명입니다."),
+	FILE_INVALID_EXTENSION(HttpStatus.BAD_REQUEST, "FILE_004", "지원하지 않는 파일 형식입니다."),
+	FILE_INVALID_MIME_TYPE(HttpStatus.BAD_REQUEST, "FILE_005", "유효하지 않은 파일 MIME 타입입니다."),
+	FILE_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "FILE_006", "파일 내용이 손상되었거나 유효하지 않습니다."),
+	FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_007", "파일 처리 중 오류가 발생했습니다."),
 
 	// CloudFront 관련 에러 코드
 	CLOUDFRONT_URL_GENERATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CF_001", "URL 생성 중 오류가 발생했습니다."),
