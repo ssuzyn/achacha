@@ -313,67 +313,84 @@ const ManageListScreen = () => {
   };
 
   // 기프티콘 아이템 렌더링
-  const renderGifticonItem = item => (
-    <TouchableOpacity
-      key={item.gifticonId}
-      style={styles.gifticonItem}
-      onPress={() => handleGifticonPress(item)}
-    >
-      <Shadow
-        distance={12}
-        startColor={'rgba(0, 0, 0, 0.008)'}
-        offset={[0, 1]}
-        style={styles.shadowContainer}
+  const renderGifticonItem = item => {
+    const daysLeft = item.scope === 'USED' ? null : calculateDaysLeft(item.gifticonExpiryDate);
+    const isUrgent = daysLeft !== null && daysLeft <= 7; // 7일 이하면 긴급(빨간색)
+
+    return (
+      <TouchableOpacity
+        key={item.gifticonId}
+        style={styles.gifticonItem}
+        onPress={() => handleGifticonPress(item)}
       >
-        <View
-          style={[
-            styles.gifticonContent,
-            // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
-            item.scope === 'SHARE_BOX' &&
-              item.userId !== currentUserId &&
-              styles.sharedByOtherContent,
-          ]}
+        <Shadow
+          distance={12}
+          startColor={'rgba(0, 0, 0, 0.008)'}
+          offset={[0, 1]}
+          style={styles.shadowContainer}
         >
-          {/* 이미지에 그림자 효과 추가 */}
-          <Shadow
-            distance={8}
-            startColor={'rgba(0, 0, 0, 0.03)'}
-            offset={[0, 2]}
-            style={styles.imageShadow}
+          <View
+            style={[
+              styles.gifticonContent,
+              // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
+              item.scope === 'SHARE_BOX' &&
+                item.userId !== currentUserId &&
+                styles.sharedByOtherContent,
+            ]}
           >
-            <Image source={item.thumbnailPath} style={styles.gifticonImage} />
-          </Shadow>
-          <View style={styles.gifticonInfo}>
-            <Text style={styles.brandText}>{item.brandName}</Text>
-            <Text style={styles.nameText}>{item.gifticonName}</Text>
-            {item.scope === 'SHARE_BOX' && item.shareBoxName && (
-              <View style={styles.shareBoxInfoContainer}>
-                <Icon
-                  name="inventory-2"
-                  type="material"
-                  size={12}
-                  color="#888"
-                  containerStyle={styles.shareBoxIcon}
-                />
-                <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                {item.userId !== currentUserId && (
-                  <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                )}
+            {/* 이미지 영역 */}
+            <View style={styles.imageSection}>
+              <Shadow
+                distance={8}
+                startColor={'rgba(0, 0, 0, 0.03)'}
+                offset={[0, 2]}
+                style={styles.imageShadow}
+              >
+                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+              </Shadow>
+
+              {/* D-day 또는 사용일자 태그 */}
+              <View
+                style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
+              >
+                <Text
+                  style={[
+                    styles.dDayText,
+                    isUrgent ? styles.urgentDDayText : styles.normalDDayText,
+                  ]}
+                >
+                  {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
+                </Text>
               </View>
-            )}
+            </View>
+
+            {/* 텍스트 정보 영역 */}
+            <View style={styles.textSection}>
+              <Text style={styles.brandText}>{item.brandName}</Text>
+              <Text style={styles.nameText}>{item.gifticonName}</Text>
+
+              {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                <View style={styles.shareBoxInfoContainer}>
+                  <Icon
+                    name="inventory-2"
+                    type="material"
+                    size={12}
+                    color="#888"
+                    containerStyle={styles.shareBoxIcon}
+                  />
+                  <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+                  {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
+                  {item.userId !== currentUserId && (
+                    <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
+                  )}
+                </View>
+              )}
+            </View>
           </View>
-          <View style={styles.expiryContainer}>
-            {item.scope === 'USED' ? (
-              <Text style={styles.expiryText}>{formatDate(item.usedAt)}</Text>
-            ) : (
-              <Text style={styles.expiryText}>D-{calculateDaysLeft(item.gifticonExpiryDate)}</Text>
-            )}
-          </View>
-        </View>
-      </Shadow>
-    </TouchableOpacity>
-  );
+        </Shadow>
+      </TouchableOpacity>
+    );
+  };
 
   // 기프티콘 클릭 시 상세 페이지로 이동하는 함수
   const handleGifticonPress = item => {
@@ -579,37 +596,44 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   gifticonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 10,
   },
+  imageSection: {
+    alignItems: 'center',
+    position: 'relative',
+    marginBottom: 8,
+  },
   imageShadow: {
-    borderRadius: 6,
-    marginRight: 12,
+    borderRadius: 10,
+    marginBottom: 5,
   },
   gifticonImage: {
-    width: 40,
-    height: 40,
-    borderRadius: 6,
+    width: 76,
+    height: 76,
+    borderRadius: 10,
   },
-  gifticonInfo: {
-    flex: 1,
+  textSection: {
+    alignItems: 'center',
   },
   brandText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 2,
   },
   nameText: {
     fontSize: 14,
     color: '#666',
-    marginTop: 2,
+    marginBottom: 2,
+    textAlign: 'center',
   },
   shareBoxInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 2,
   },
   shareBoxIcon: {
@@ -620,18 +644,29 @@ const styles = StyleSheet.create({
     color: '#888',
     fontStyle: 'italic',
   },
-  expiryContainer: {
-    marginLeft: 'auto',
+  dDayContainer: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 20,
   },
-  expiryText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#3498DB',
+  urgentDDay: {
+    backgroundColor: 'rgba(234, 84, 85, 0.15)',
   },
-  dateText: {
+  normalDDay: {
+    backgroundColor: 'rgba(114, 191, 255, 0.15)',
+  },
+  dDayText: {
     fontSize: 14,
-    fontWeight: 'medium',
-    color: '#555',
+    fontWeight: 'bold',
+  },
+  urgentDDayText: {
+    color: '#EA5455',
+  },
+  normalDDayText: {
+    color: '#72BFFF',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -642,12 +677,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#888',
   },
-  // 다른 사람이 공유한 기프티콘을 위한 특별 스타일
   sharedByOtherContent: {
     borderWidth: 2,
     borderColor: '#278CCC',
   },
-  // 공유자 정보를 표시하는 텍스트 스타일
   sharedByText: {
     fontSize: 12,
     color: '#278CCC',
