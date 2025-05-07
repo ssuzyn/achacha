@@ -158,7 +158,7 @@ const DetailAmountScreen = () => {
             thumbnailPath: require('../../../assets/images/dummy-starbuckscard.png'),
             originalImagePath: require('../../../assets/images/dummy-starbuckscard.png'),
             gifticonCreatedAt: '2025-01-15T10:30:00',
-            gifticonOriginalAmount: 10000,
+            gifticonOriginalAmount: 30000,
             gifticonRemainingAmount: 8000,
             barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
             barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
@@ -498,7 +498,6 @@ const DetailAmountScreen = () => {
                   title="사용완료"
                   onPress={handleUse}
                   style={[styles.useButton, styles.useCompleteButton]}
-                  variant="outline"
                   size="lg"
                 />
               ) : (
@@ -509,30 +508,37 @@ const DetailAmountScreen = () => {
                       title="사용하기"
                       onPress={handleUse}
                       style={styles.useButton}
-                      variant="primary"
                       size="lg"
                     />
                     <Button
                       title="사용내역"
                       onPress={handleHistory}
                       style={styles.historyButton}
-                      variant="outline"
                       size="lg"
                     />
                   </View>
 
                   {scope === 'MY_BOX' && (
                     // 마이박스일 때만 공유하기/선물하기 버튼 표시
-                    <View style={styles.actionButtonsRow}>
-                      <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                        <Icon name="share" type="material" size={24} color="#666" />
-                        <Text style={styles.actionButtonText}>공유하기</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity style={styles.actionButton} onPress={handleGift}>
-                        <Icon name="card-giftcard" type="material" size={24} color="#666" />
-                        <Text style={styles.actionButtonText}>선물하기</Text>
-                      </TouchableOpacity>
+                    <View style={styles.buttonRow}>
+                      <Button
+                        title="공유하기"
+                        onPress={handleShare}
+                        style={styles.useButton}
+                        size="lg"
+                        icon={<Icon name="inventory-2" type="material" size={24} color="#FFFFFF" />}
+                        titleStyle={{ color: '#FFFFFF' }}
+                      />
+                      <Button
+                        title="선물하기"
+                        onPress={handleGift}
+                        style={styles.historyButton}
+                        size="lg"
+                        icon={
+                          <Icon name="card-giftcard" type="material" size={24} color="#FFFFFF" />
+                        }
+                        titleStyle={{ color: '#FFFFFF' }}
+                      />
                     </View>
                   )}
                 </>
@@ -714,7 +720,7 @@ const styles = StyleSheet.create({
   },
   useButton: {
     flex: 1,
-    marginRight: 8,
+    marginRight: 4,
     borderRadius: 8,
     height: 56,
   },
@@ -725,28 +731,23 @@ const styles = StyleSheet.create({
   },
   historyButton: {
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 4,
     borderRadius: 8,
+    height: 56,
   },
   actionButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 4,
+    marginBottom: 12,
   },
   actionButton: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#F5F5F5',
+    height: 56,
+    backgroundColor: '#A7DAF9',
+    borderWidth: 0,
     borderRadius: 8,
     marginHorizontal: 4,
-  },
-  actionButtonText: {
-    marginTop: 6,
-    fontSize: 14,
-    color: '#666',
   },
   grayScaleImage: {
     opacity: 0.7,
