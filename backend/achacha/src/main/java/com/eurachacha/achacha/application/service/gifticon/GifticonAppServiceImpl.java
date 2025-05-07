@@ -161,6 +161,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.hasNextPage(gifticonSlice.hasNext())
 			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
 			.build();
+	}
 
 	private Integer findBrandId(String brandName) {
 		if (brandName == null || brandName.trim().isEmpty()) {
