@@ -331,12 +331,16 @@ const ManageListScreen = () => {
     if (item.gifticonType === 'PRODUCT') {
       navigation.navigate('UseProduct', {
         id: item.gifticonId,
-        barcodeNumber: '1234-5678-9012-3456', // 실제 바코드 번호로 수정 필요
+        barcodeNumber: item.gifticonId + '-' + Math.floor(Math.random() * 10000000), // 임시 바코드 번호
+        brandName: item.brandName,
+        gifticonName: item.gifticonName,
       });
     } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('UseAmount', {
         id: item.gifticonId,
-        barcodeNumber: '1234-5678-9012-3456', // 실제 바코드 번호로 수정 필요
+        barcodeNumber: item.gifticonId + '-' + Math.floor(Math.random() * 10000000), // 임시 바코드 번호
+        brandName: item.brandName,
+        gifticonName: item.gifticonName,
       });
     }
   };
@@ -368,13 +372,13 @@ const ManageListScreen = () => {
   // 좌측 액션 (바코드 조회) 렌더링
   const renderLeftActions = (progress, dragX, item) => {
     const scale = dragX.interpolate({
-      inputRange: [0, 80],
+      inputRange: [0, 60],
       outputRange: [0, 1],
       extrapolate: 'clamp',
     });
 
     const opacity = dragX.interpolate({
-      inputRange: [0, 60, 80],
+      inputRange: [0, 40, 60],
       outputRange: [0, 0.8, 1],
       extrapolate: 'clamp',
     });
@@ -394,13 +398,13 @@ const ManageListScreen = () => {
   // 우측 액션 (바코드 조회) 렌더링
   const renderRightActions = (progress, dragX, item) => {
     const scale = dragX.interpolate({
-      inputRange: [-80, 0],
+      inputRange: [-60, 0],
       outputRange: [1, 0],
       extrapolate: 'clamp',
     });
 
     const opacity = dragX.interpolate({
-      inputRange: [-80, -60, 0],
+      inputRange: [-60, -40, 0],
       outputRange: [1, 0.8, 0],
       extrapolate: 'clamp',
     });
@@ -514,8 +518,8 @@ const ManageListScreen = () => {
           });
         }}
         friction={2}
-        leftThreshold={80}
-        rightThreshold={80}
+        leftThreshold={60}
+        rightThreshold={60}
         overshootLeft={false}
         overshootRight={false}
       >
@@ -908,7 +912,7 @@ const styles = StyleSheet.create({
   },
   // 스와이프 액션 관련 스타일
   leftAction: {
-    flex: 1,
+    width: 100, // 1/3 정도 보이도록 너비 조정
     backgroundColor: '#4CAF50', // 초록색 계열
     justifyContent: 'center',
     marginBottom: 10,
@@ -916,7 +920,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 12,
   },
   rightAction: {
-    flex: 1,
+    width: 100, // 1/3 정도 보이도록 너비 조정
     backgroundColor: '#278CCC', // 파란색 계열
     justifyContent: 'center',
     marginBottom: 10,
