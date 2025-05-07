@@ -357,9 +357,32 @@ const DetailAmountScreen = () => {
                 <View style={styles.imageContainer}>
                   <Image
                     source={gifticonData.thumbnailPath}
-                    style={[styles.gifticonImage, isUsed && styles.grayScaleImage]}
+                    style={[
+                      styles.gifticonImage,
+                      isUsed && styles.grayScaleImage,
+                      // SELF_USE일 때 이미지 높이 조정
+                      isUsed &&
+                        gifticonData.usageType === 'SELF_USE' &&
+                        gifticonData.barcodeImageUrl &&
+                        styles.gifticonImageWithBarcode,
+                    ]}
                     resizeMode="contain"
                   />
+
+                  {/* SELF_USE 경우에만 바코드 표시 - 이미지 바로 아래 */}
+                  {isUsed &&
+                    gifticonData.usageType === 'SELF_USE' &&
+                    gifticonData.barcodeImageUrl && (
+                      <View style={styles.barcodeBottom}>
+                        <Image
+                          source={gifticonData.barcodeImageUrl}
+                          style={styles.barcodeBottomImage}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.barcodeBottomText}>{gifticonData.barcodeNumber}</Text>
+                      </View>
+                    )}
+
                   {isUsed && (
                     <View style={styles.usedOverlay}>
                       <Text style={styles.usedText}>{getUsageTypeText()}</Text>
@@ -601,11 +624,13 @@ const styles = StyleSheet.create({
     height: 300,
     backgroundColor: '#E5F4FE',
     position: 'relative',
+    flexDirection: 'column',
   },
   gifticonImage: {
     width: '60%',
-    height: '90%',
+    height: '65%',
     borderRadius: 8,
+    marginTop: 5,
   },
   infoContainer: {
     padding: 16,
@@ -845,6 +870,24 @@ const styles = StyleSheet.create({
   magnifyButton: {
     marginLeft: 12,
     padding: 8,
+  },
+  barcodeBottom: {
+    width: '90%',
+    marginTop: 5,
+    alignItems: 'center',
+  },
+  barcodeBottomImage: {
+    width: '100%',
+    height: 60,
+  },
+  barcodeBottomText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
+    marginTop: 5,
+  },
+  gifticonImageWithBarcode: {
+    height: '55%',
   },
 });
 

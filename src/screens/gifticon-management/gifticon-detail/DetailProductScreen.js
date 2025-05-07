@@ -113,6 +113,10 @@ const DetailProductScreen = () => {
                 ? require('../../../assets/images/dummy-starbucks.png')
                 : null,
             gifticonCreatedAt: '2025-01-01T10:30:00',
+            // SELF_USE 경우에만 바코드 정보 제공
+            barcodeNumber: usageType === 'SELF_USE' ? '8013-7621-1234-5678' : null,
+            barcodeImageUrl:
+              usageType === 'SELF_USE' ? require('../../../assets/images/barcode.png') : null,
           };
         } else {
           // 일반 기프티콘 더미 데이터
@@ -315,9 +319,32 @@ const DetailProductScreen = () => {
                 <View style={styles.imageContainer}>
                   <Image
                     source={gifticonData.thumbnailPath}
-                    style={[styles.gifticonImage, isUsed && styles.grayScaleImage]}
+                    style={[
+                      styles.gifticonImage,
+                      isUsed && styles.grayScaleImage,
+                      // SELF_USE일 때 이미지 높이 조정
+                      isUsed &&
+                        gifticonData.usageType === 'SELF_USE' &&
+                        gifticonData.barcodeImageUrl &&
+                        styles.gifticonImageWithBarcode,
+                    ]}
                     resizeMode="contain"
                   />
+
+                  {/* SELF_USE 경우에만 바코드 표시 - 이미지 바로 아래 */}
+                  {isUsed &&
+                    gifticonData.usageType === 'SELF_USE' &&
+                    gifticonData.barcodeImageUrl && (
+                      <View style={styles.barcodeBottom}>
+                        <Image
+                          source={gifticonData.barcodeImageUrl}
+                          style={styles.barcodeBottomImage}
+                          resizeMode="contain"
+                        />
+                        <Text style={styles.barcodeBottomText}>{gifticonData.barcodeNumber}</Text>
+                      </View>
+                    )}
+
                   {isUsed && (
                     <View style={styles.usedOverlay}>
                       <Text style={styles.usedText}>{getUsageTypeText()}</Text>
@@ -486,38 +513,32 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
     position: 'relative',
+    flexDirection: 'column',
   },
   gifticonImage: {
     width: '60%',
-    height: '90%',
+    height: '65%',
     marginTop: 5,
   },
-  // 바코드 관련 스타일
-  barcodeContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 300,
+  // 바코드가 있을 때 이미지 스타일
+  gifticonImageWithBarcode: {
+    height: '55%',
   },
-  barcodeImage: {
+  // 이미지 바로 아래 바코드 스타일
+  barcodeBottom: {
     width: '90%',
-    height: '80%',
-  },
-  barcodeNumberContainer: {
-    flexDirection: 'row',
+    marginTop: 5,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
   },
-  barcodeNumberText: {
-    fontSize: 18,
+  barcodeBottomImage: {
+    width: '100%',
+    height: 60,
+  },
+  barcodeBottomText: {
+    fontSize: 16,
     color: '#333',
-    fontWeight: '500',
-  },
-  magnifyButton: {
-    marginLeft: 12,
-    padding: 8,
+    fontWeight: 'bold',
+    marginTop: 5,
   },
   infoContainer: {
     padding: 16,
@@ -641,6 +662,33 @@ const styles = StyleSheet.create({
   },
   expiredButtonText: {
     color: '#FFFFFF',
+  },
+  // 바코드 관련 스타일
+  barcodeContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 300,
+  },
+  barcodeImage: {
+    width: '90%',
+    height: '80%',
+  },
+  barcodeNumberContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  barcodeNumberText: {
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '500',
+  },
+  magnifyButton: {
+    marginLeft: 12,
+    padding: 8,
   },
 });
 
