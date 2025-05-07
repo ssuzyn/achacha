@@ -120,7 +120,7 @@ const DetailProductScreen = () => {
             gifticonId: id,
             gifticonName: '아메리카노',
             gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-06-30',
+            gifticonExpiryDate: '2025-05-10',
             brandId: 45,
             brandName: '스타벅스',
             scope: scope, // 파라미터에서 받은 scope 사용
@@ -354,7 +354,9 @@ const DetailProductScreen = () => {
                         styles.ddayButtonContainer,
                         typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
                           ? styles.expiredButtonContainer
-                          : {},
+                          : calculateDaysLeft(gifticonData.gifticonExpiryDate) <= 7
+                            ? styles.urgentDDayContainer
+                            : styles.normalDDayContainer,
                       ]}
                     >
                       <Text
@@ -362,7 +364,9 @@ const DetailProductScreen = () => {
                           styles.ddayButtonText,
                           typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
                             ? styles.expiredButtonText
-                            : {},
+                            : calculateDaysLeft(gifticonData.gifticonExpiryDate) <= 7
+                              ? styles.urgentDDayText
+                              : styles.normalDDayText,
                         ]}
                       >
                         {typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
@@ -687,6 +691,20 @@ const styles = StyleSheet.create({
   },
   expiredButtonText: {
     color: '#FFFFFF',
+  },
+  urgentDDayContainer: {
+    backgroundColor: 'rgba(234, 84, 85, 0.2)',
+  },
+  normalDDayContainer: {
+    backgroundColor: 'rgba(114, 191, 255, 0.2)',
+  },
+  urgentDDayText: {
+    color: '#EA5455',
+    fontWeight: 'bold',
+  },
+  normalDDayText: {
+    color: '#72BFFF',
+    fontWeight: 'bold',
   },
 });
 
