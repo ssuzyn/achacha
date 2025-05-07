@@ -8,15 +8,6 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
-  cloud:
-    aws:
-      s3:
-        region: ap-northeast-2
-        enabled: true # Spring Cloud AWS 스타터가 S3 관련 빈 자동 구성
-      credentials:
-        access-key: ${AWS_ACCESS_TOKEN}
-        secret-key: ${AWS_SECRET_TOKEN}
-
   servlet:
     multipart:
       max-file-size: 5MB # 파일 하나 당 최대 용량
@@ -44,6 +35,10 @@ ai-service:
   api-url: ${AI_SERVICE_URL}
 
 aws:
+  region: ap-northeast-2
+  credentials:
+    access-key: ${AWS_ACCESS_TOKEN}
+    secret-key: ${AWS_SECRET_TOKEN}
   s3:
     bucket: achacha-bucket
   cloudfront:
