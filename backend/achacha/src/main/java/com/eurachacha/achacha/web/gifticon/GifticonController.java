@@ -3,9 +3,9 @@ package com.eurachacha.achacha.web.gifticon;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,6 +15,7 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Gifti
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RequestMapping("/api/gifticons")
@@ -34,9 +35,15 @@ public class GifticonController {
 		return ResponseEntity.ok(result);
 	}
 
-	@PostMapping
-	public ResponseEntity<GifticonResponseDto> saveGifticon(@RequestBody GifticonSaveRequestDto requestDto) {
-		GifticonResponseDto responseDto = gifticonAppService.saveGifticon(requestDto);
+	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<GifticonResponseDto> saveGifticon(
+		@Valid @RequestPart("gifticon") GifticonSaveRequestDto gifticonSaveRequestDto,
+		@RequestPart("originalImage") MultipartFile originalImage,
+		@RequestPart("thumbnailImage") MultipartFile thumbnailImage,
+		@RequestPart("barcodeImage") MultipartFile barcodeImage) {
+
+		GifticonResponseDto responseDto = gifticonAppService.saveGifticon(gifticonSaveRequestDto, originalImage,
+			thumbnailImage, barcodeImage);
 		return ResponseEntity.ok(responseDto);
 	}
 
