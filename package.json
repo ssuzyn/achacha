@@ -28,6 +28,7 @@
     "react-native-ble-manager": "^12.1.4",
     "react-native-dropdown-picker": "^5.4.6",
     "react-native-elements": "^3.4.3",
+    "react-native-gesture-handler": "^2.25.0",
     "react-native-image-crop-picker": "^0.42.0",
     "react-native-image-crop-tools": "^1.6.4",
     "react-native-image-picker": "^8.2.1",
