@@ -120,7 +120,7 @@ const DetailProductScreen = () => {
             gifticonId: id,
             gifticonName: '아메리카노',
             gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2024-06-30',
+            gifticonExpiryDate: '2025-06-30',
             brandId: 45,
             brandName: '스타벅스',
             scope: scope, // 파라미터에서 받은 scope 사용

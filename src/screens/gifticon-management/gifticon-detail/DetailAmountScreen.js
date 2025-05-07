@@ -149,7 +149,7 @@ const DetailAmountScreen = () => {
             gifticonType: 'AMOUNT',
             gifticonExpiryDate: '2025-06-15',
             brandId: 46,
-            brandName: '컬쳐랜드',
+            brandName: '스타벅스',
             scope: scope,
             userId: 78,
             userName: '홍길동',
