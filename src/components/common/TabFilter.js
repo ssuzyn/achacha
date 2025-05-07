@@ -37,6 +37,7 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
               {
                 borderColor: isSelected ? colors.primary : colors.grey2,
                 borderWidth: theme.Chip.buttonStyle.borderWidth,
+                minWidth: 65,
               },
             ]}
             titleStyle={[
@@ -44,6 +45,7 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
               theme.Chip.titleStyle,
               {
                 color: isSelected ? colors.black : colors.grey3,
+                fontSize: 13,
               },
             ]}
           />
@@ -56,14 +58,15 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    padding: 10,
+    padding: 2,
+    paddingHorizontal: 1,
     justifyContent: 'flex-start',
   },
   tab: {
-    height: 42,
-    paddingHorizontal: 10,
+    height: 40,
+    paddingHorizontal: 6,
     borderRadius: 10,
-    marginRight: 10,
+    marginRight: 6,
     backgroundColor: 'white',
   },
   tabText: {

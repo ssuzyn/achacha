@@ -278,30 +278,6 @@ const ManageListScreen = () => {
                 <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
               </View>
             )}
-            {item.scope === 'USED' && (
-              <View style={styles.usageTypeContainer}>
-                <Icon
-                  name={
-                    item.usageType === 'SELF_USE'
-                      ? 'check-circle'
-                      : item.usageType === 'PRESENT'
-                        ? 'card-giftcard'
-                        : 'share'
-                  }
-                  type="material"
-                  size={12}
-                  color="#888"
-                  containerStyle={styles.usageTypeIcon}
-                />
-                <Text style={styles.usageTypeText}>
-                  {item.usageType === 'SELF_USE'
-                    ? '사용완료'
-                    : item.usageType === 'PRESENT'
-                      ? '선물완료'
-                      : '나눔완료'}
-                </Text>
-              </View>
-            )}
           </View>
           <View style={styles.expiryContainer}>
             {item.scope === 'USED' ? (
@@ -552,19 +528,6 @@ const styles = StyleSheet.create({
     marginRight: 3,
   },
   shareBoxText: {
-    fontSize: 12,
-    color: '#888',
-    fontStyle: 'italic',
-  },
-  usageTypeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  usageTypeIcon: {
-    marginRight: 3,
-  },
-  usageTypeText: {
     fontSize: 12,
     color: '#888',
     fontStyle: 'italic',
