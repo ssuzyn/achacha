@@ -14,18 +14,23 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
+import com.eurachacha.achacha.application.port.output.ai.OcrTrainingDataRepository;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
+import com.eurachacha.achacha.domain.model.ai.OcrTrainingData;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +48,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final OcrPort ocrPort;
 	private final AIServicePort aiServicePort;
 	private final BrandRepository brandRepository;
+	private final OcrTrainingDataRepository ocrTrainingDataRepository;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -57,15 +63,26 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			ocrResult, gifticonType.name());
 		log.info("기프티콘 메타데이터 추출 완료: {}", metadata);
 
+		// OCR 결과와 AI 추출 메타데이터를 한 번에 저장
+		OcrTrainingData savedTrainingData = ocrTrainingDataRepository.saveOcrResultWithMetadata(
+			ocrResult,
+			gifticonType.name(),
+			metadata.getGifticonBarcodeNumber(),
+			metadata.getBrandName(),
+			metadata.getGifticonName(),
+			metadata.getGifticonExpiryDate(),
+			metadata.getGifticonOriginalAmount()
+		);
+
 		// 브랜드 ID 조회
 		Integer brandId = findBrandId(metadata.getBrandName());
 
 		// 브랜드명 설정
 		String brandName = brandId != null ? metadata.getBrandName() : null;
 
-		// 3. MongoDB에 OCR 결과 넣는 과정 필요, (saveGifticon에서 사용자가 수정한 값을 학습 데이터도 이후에 넣어야 함 사용)
+		log.info("OCR 및 AI 추출 메타데이터 저장 완료 (ID: {})", savedTrainingData.getId());
 
-		// 최종 응답용 DTO 생성 및 반환
+		// 최종 응답용 DTO에 OCR 학습 데이터 ID 추가하여 반환
 		return GifticonMetadataResponseDto.builder()
 			.gifticonName(metadata.getGifticonName())
 			.brandName(brandName)
@@ -73,22 +90,49 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.gifticonBarcodeNumber(metadata.getGifticonBarcodeNumber())
 			.gifticonExpiryDate(metadata.getGifticonExpiryDate())
 			.gifticonOriginalAmount(metadata.getGifticonOriginalAmount())
+			.ocrTrainingDataId(savedTrainingData.getId())
 			.build();
 	}
 
 	@Transactional
 	@Override
-	public GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto) {
+	public GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto, MultipartFile originalImage,
+		MultipartFile thumbnailImage, MultipartFile barcodeImage) {
+		log.info("기프티콘 저장 시작 - 이름: {}, 타입: {}", requestDto.getGifticonName(), requestDto.getGifticonType());
+
+		// 금액형 기프티콘이면서 금액이 없는 경우 체크
+		if (requestDto.getGifticonType() == GifticonType.AMOUNT && requestDto.getGifticonAmount() == null) {
+			throw new CustomException(ErrorCode.INVALID_AMOUNT_GIFTICON_VALUE);
+		}
+
+		// 타입에 따른 금액 처리
+		Integer amount = null;
+		if (requestDto.getGifticonType() == GifticonType.AMOUNT) {
+			amount = requestDto.getGifticonAmount();
+		}
+
+		// Brand 객체 조회
+		Brand brand = brandRepository.findById(requestDto.getBrandId());
+
+		// ShareBox 객체 조회, Participants 조회로 참여하고 있는 기프티콘 박스인지 체크해야 함.
+		ShareBox shareBox = null;
+		// if (requestDto.getShareBoxId() != null) {
+		// 	// ShareBox 조회 로직 (필요시 구현)
+		// 	// shareBox = shareBoxRepository.findById(requestDto.getShareBoxId())
+		// 	//     .orElseThrow(() -> new CustomException(ErrorCode.SHAREBOX_NOT_FOUND));
+		// }
+
 		// 도메인 객체 생성
 		Gifticon newGifticon = Gifticon.builder()
-			.name(requestDto.getName())
-			.barcode(requestDto.getBarcode())
-			.type(requestDto.getType())
-			.expiryDate(requestDto.getExpiryDate())
-			.originalAmount(requestDto.getOriginalAmount())
-			.remainingAmount(requestDto.getOriginalAmount())
-			.sharebox(null)
-			.brand(null)
+			.name(requestDto.getGifticonName())
+			.barcode(requestDto.getGifticonBarcodeNumber())
+			.type(requestDto.getGifticonType())
+			.expiryDate(requestDto.getGifticonExpiryDate())
+			.originalAmount(requestDto.getGifticonAmount())
+			.remainingAmount(requestDto.getGifticonAmount())
+			.sharebox(shareBox)
+			.brand(brand)
+			.user(null) // 인증 구현 시 현재 사용자 설정
 			.build();
 
 		// 도메인 서비스를 통한 유효성 검증
@@ -96,6 +140,36 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// 저장소를 통한 영속화
 		Gifticon savedGifticon = gifticonRepository.save(newGifticon);
+
+		// 파일 처리 로직 추가 필요
+		// fileService.saveGifticonImages(savedGifticon.getId(),
+		//     requestDto.getOriginalImage(),
+		//     requestDto.getThumbnailImage(),
+		//     requestDto.getBarcodeImage());
+
+		// 사용자 수정 메타데이터 저장 - 타입에 따라 다른 메서드 호출
+		if (requestDto.getGifticonType() == GifticonType.AMOUNT) {
+			// 금액형 기프티콘인 경우
+			ocrTrainingDataRepository.updateUserCorrectedForAmount(
+				requestDto.getOcrTrainingDataId(),
+				requestDto.getGifticonBarcodeNumber(),
+				brand.getName(),
+				requestDto.getGifticonName(),
+				requestDto.getGifticonExpiryDate().toString(),
+				amount
+			);
+		} else {
+			// 상품형 기프티콘인 경우
+			ocrTrainingDataRepository.updateUserCorrectedForProduct(
+				requestDto.getOcrTrainingDataId(),
+				requestDto.getGifticonBarcodeNumber(),
+				brand.getName(),
+				requestDto.getGifticonName(),
+				requestDto.getGifticonExpiryDate().toString()
+			);
+		}
+
+		log.info("사용자 수정 메타데이터 저장 완료 (ID: {})", requestDto.getOcrTrainingDataId());
 
 		// 응답 DTO 반환
 		return GifticonResponseDto.from(savedGifticon);
