@@ -339,52 +339,23 @@ const ManageListScreen = () => {
             ]}
           >
             {/* 이미지 영역 */}
-            <View style={styles.imageSection}>
-              <Shadow
-                distance={8}
-                startColor={'rgba(0, 0, 0, 0.03)'}
-                offset={[0, 2]}
-                style={styles.imageShadow}
-              >
-                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
-              </Shadow>
-
-              {/* D-day 또는 사용일자 태그 */}
-              <View
-                style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
-              >
-                <Text
-                  style={[
-                    styles.dDayText,
-                    isUrgent ? styles.urgentDDayText : styles.normalDDayText,
-                  ]}
-                >
-                  {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
-                </Text>
-              </View>
+            <View style={styles.imageContainer}>
+              <Image source={item.thumbnailPath} style={styles.gifticonImage} />
             </View>
 
             {/* 텍스트 정보 영역 */}
-            <View style={styles.textSection}>
+            <View style={styles.textContainer}>
               <Text style={styles.brandText}>{item.brandName}</Text>
               <Text style={styles.nameText}>{item.gifticonName}</Text>
+            </View>
 
-              {item.scope === 'SHARE_BOX' && item.shareBoxName && (
-                <View style={styles.shareBoxInfoContainer}>
-                  <Icon
-                    name="inventory-2"
-                    type="material"
-                    size={12}
-                    color="#888"
-                    containerStyle={styles.shareBoxIcon}
-                  />
-                  <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                  {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                  {item.userId !== currentUserId && (
-                    <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                  )}
-                </View>
-              )}
+            {/* D-day 또는 사용일자 태그 */}
+            <View style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}>
+              <Text
+                style={[styles.dDayText, isUrgent ? styles.urgentDDayText : styles.normalDDayText]}
+              >
+                {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
+              </Text>
             </View>
           </View>
         </Shadow>
@@ -589,68 +560,48 @@ const styles = StyleSheet.create({
   },
   shadowContainer: {
     width: '100%',
-    borderRadius: 10,
+    borderRadius: 12,
     marginBottom: 10,
   },
   gifticonItem: {
     width: '100%',
   },
   gifticonContent: {
-    flexDirection: 'column',
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    borderRadius: 12,
+    position: 'relative', // D-day 태그의 절대 위치를 위해 필요
   },
-  imageSection: {
-    alignItems: 'center',
-    position: 'relative',
-    marginBottom: 8,
-  },
-  imageShadow: {
-    borderRadius: 10,
-    marginBottom: 5,
+  imageContainer: {
+    marginRight: 16,
   },
   gifticonImage: {
-    width: 76,
-    height: 76,
-    borderRadius: 10,
+    width: 64,
+    height: 64,
+    borderRadius: 8,
   },
-  textSection: {
-    alignItems: 'center',
+  textContainer: {
+    flex: 1,
   },
   brandText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   nameText: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  shareBoxInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 2,
-  },
-  shareBoxIcon: {
-    marginRight: 3,
-  },
-  shareBoxText: {
-    fontSize: 12,
-    color: '#888',
-    fontStyle: 'italic',
   },
   dDayContainer: {
     position: 'absolute',
-    top: 8,
-    right: 8,
-    paddingHorizontal: 12,
+    top: 16,
+    right: 16,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 20,
+    borderRadius: 6,
   },
   urgentDDay: {
     backgroundColor: 'rgba(234, 84, 85, 0.15)',
@@ -659,7 +610,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(114, 191, 255, 0.15)',
   },
   dDayText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
   },
   urgentDDayText: {
