@@ -30,7 +30,7 @@ const DUMMY_GIFTICONS = [
   {
     gifticonId: 123,
     gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'AMOUNT',
+    gifticonType: 'PRODUCT',
     gifticonExpiryDate: '2025-12-31',
     brandId: 45,
     brandName: '스타벅스',
