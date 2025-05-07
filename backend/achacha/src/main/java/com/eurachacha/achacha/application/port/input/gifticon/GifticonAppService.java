@@ -14,7 +14,8 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 public interface GifticonAppService {
 	GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType);
 
-	GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto);
+	GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto, MultipartFile originalImage,
+		MultipartFile thumbnailImage, MultipartFile barcodeImage);
 
 	AvailableGifticonsResponseDto getAvailableGifticons(GifticonScopeType scope, GifticonType type,
 		GifticonSortType sort, Integer page, Integer size);
