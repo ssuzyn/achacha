@@ -320,8 +320,8 @@ const ManageListScreen = () => {
       onPress={() => handleGifticonPress(item)}
     >
       <Shadow
-        distance={6}
-        startColor={'rgba(0, 0, 0, 0.03)'}
+        distance={12}
+        startColor={'rgba(0, 0, 0, 0.008)'}
         offset={[0, 1]}
         style={styles.shadowContainer}
       >
@@ -334,7 +334,15 @@ const ManageListScreen = () => {
               styles.sharedByOtherContent,
           ]}
         >
-          <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+          {/* 이미지에 그림자 효과 추가 */}
+          <Shadow
+            distance={8}
+            startColor={'rgba(0, 0, 0, 0.03)'}
+            offset={[0, 2]}
+            style={styles.imageShadow}
+          >
+            <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+          </Shadow>
           <View style={styles.gifticonInfo}>
             <Text style={styles.brandText}>{item.brandName}</Text>
             <Text style={styles.nameText}>{item.gifticonName}</Text>
@@ -574,14 +582,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#E6F4FB',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
+  },
+  imageShadow: {
+    borderRadius: 6,
+    marginRight: 12,
   },
   gifticonImage: {
     width: 40,
     height: 40,
     borderRadius: 6,
-    marginRight: 12,
   },
   gifticonInfo: {
     flex: 1,
