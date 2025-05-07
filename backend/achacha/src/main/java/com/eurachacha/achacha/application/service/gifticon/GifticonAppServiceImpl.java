@@ -29,6 +29,8 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -127,7 +129,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	@Override
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
-		Integer userId = 2; // 유저 로직 추가 시 변경 필요
+		Integer userId = 3; // 유저 로직 추가 시 변경 필요
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(
 			gifticonId);
@@ -137,13 +139,25 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 *  1. 삭제 여부 판단
 		 *  2. 사용 여부 판단
 		 *  3. 유효기간 여부 판단
-		 *  4. 공유하지 않은 기프티콘인 경우 소유자 판단
 		 */
-		gifticonDomainService.validateAvailableGifticon(userId, findGifticon);
+		gifticonDomainService.validateGifticonAvailability(userId, findGifticon);
+
+		// 공유되지 않은 기프티콘인 경우 소유자 판단
+		if (findGifticon.getSharebox() == null) {
+			boolean isOwner = gifticonDomainService.validateGifticonAccess(userId, findGifticon.getUser().getId());
+			if (!isOwner) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
 
 		// 공유된 기프티콘인 경우 참여 여부 판단
 		if (findGifticon.getSharebox() != null) {
-			participationRepository.checkParticipation(userId, findGifticon.getSharebox().getId());
+			boolean hasParticipation = participationRepository.checkParticipation(userId,
+				findGifticon.getSharebox().getId());
+
+			if (!hasParticipation) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 		}
 
 		// 기프티콘 스코프 결정에 따른 값
