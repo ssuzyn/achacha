@@ -10,85 +10,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
-import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 @Repository
-public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer> {
-	@Query("""
-		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto(
-		      g.id,
-		      g.name,
-		      g.type,
-		      g.expiryDate,
-		      b.id,
-		      b.name,
-		      CASE WHEN g.sharebox.id IS NULL THEN 'MY_BOX' ELSE 'SHARE_BOX' END,
-		      u.id,
-		      u.name,
-		      g.sharebox.id,
-		      sb.name,
-		      (
-		        SELECT f.path
-		          FROM File f
-		         WHERE f.referenceEntityType = 'GIFTICON'
-		           AND f.referenceEntityId = g.id
-		           AND f.type = :fileType
-		           AND f.id = (
-		             SELECT MIN(f2.id)
-		               FROM File f2
-		              WHERE f2.referenceEntityType = 'GIFTICON'
-		                AND f2.referenceEntityId = g.id
-		                AND f2.type = :fileType
-		           )
-		      )
-		  )
-		  FROM Gifticon g
-		  JOIN g.brand b
-		  JOIN g.user u
-		  LEFT JOIN g.sharebox sb
-		  WHERE g.isDeleted = false
-		    AND g.isUsed = false
-		    AND (g.remainingAmount > 0 OR g.remainingAmount = -1)
-		    AND g.expiryDate > CURRENT_DATE
-		    AND (
-		      (:#{#scope.name()} = 'ALL' AND (
-		        g.user.id = :userId OR
-		        (g.sharebox.id IS NOT NULL AND 
-		          EXISTS (
-		            SELECT p
-		            FROM Participation p
-		            WHERE p.sharebox.id = g.sharebox.id
-		              AND p.user.id = :userId
-		          ))
-		      )) OR
-		      (:#{#scope.name()} = 'MY_BOX' AND g.sharebox.id IS NULL AND g.user.id = :userId) OR
-		      (:#{#scope.name()} = 'SHARE_BOX' AND g.sharebox.id IS NOT NULL AND 
-		        (
-		          g.user.id = :userId OR
-		          EXISTS (
-		            SELECT p
-		            FROM Participation p
-		            WHERE p.sharebox.id = g.sharebox.id
-		              AND p.user.id = :userId
-		          )
-		        )
-		      )
-		    )
-		    AND (:type IS NULL OR g.type = :type)
-		""")
-	Slice<AvailableGifticonResponseDto> findAvailableGifticons(
-		@Param("userId") Integer userId,
-		@Param("scope") GifticonScopeType gifticonScope,
-		@Param("type") GifticonType gifticonType,
-		@Param("fileType") FileType fileType,
-		Pageable pageable
-	);
-
+public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>, GifticonRepositoryCustom {
 	@Query("""
 		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto(
 		      g.id,

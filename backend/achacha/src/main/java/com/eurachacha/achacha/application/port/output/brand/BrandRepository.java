@@ -9,4 +9,6 @@ public interface BrandRepository {
 	List<Brand> findByNameContaining(String keyword);
 
 	Optional<Brand> findByNameEquals(String name);
+
+	Brand findById(Integer id);
 }

@@ -18,9 +18,12 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedG
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
+import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
+import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
+import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -42,6 +45,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final GifticonDomainService gifticonDomainService;
 	private final GifticonRepository gifticonRepository;
 	private final ParticipationRepository participationRepository;
+	private final UserRepository userRepository;
+	private final ShareBoxRepository shareBoxRepository;
+	private final FileRepository fileRepository;
 	private final PageableFactory pageableFactory;
 	private final OcrPort ocrPort;
 	private final AIServicePort aiServicePort;
@@ -113,8 +119,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 페이징 처리
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
-		// 쿼리 실행
-		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.getAvailableGifticons(userId,
+		// 기프티콘 조회 쿼리 실행
+		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
 			scope, type, pageable);
 
 		return AvailableGifticonsResponseDto.builder()

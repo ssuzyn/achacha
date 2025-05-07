@@ -9,6 +9,8 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 public interface FileRepository {
 	File save(File file);
 
+	File findFile(Integer referenceEntityId, String referenceEntityType, FileType fileType);
+
 	Optional<File> findByReferenceEntityTypeAndReferenceEntityIdAndType(
 		String referenceEntityType, Integer referenceEntityId, FileType type);
 

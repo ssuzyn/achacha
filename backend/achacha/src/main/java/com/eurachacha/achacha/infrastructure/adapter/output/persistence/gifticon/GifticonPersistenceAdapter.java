@@ -29,9 +29,9 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	}
 
 	@Override
-	public Slice<AvailableGifticonResponseDto> getAvailableGifticons(Integer userId, GifticonScopeType scope,
+	public Slice<AvailableGifticonResponseDto> findAvailableGifticons(Integer userId, GifticonScopeType scope,
 		GifticonType type, Pageable pageable) {
-		return gifticonJpaRepository.findAvailableGifticons(userId, scope, type, FileType.THUMBNAIL, pageable);
+		return gifticonJpaRepository.findAvailableGifticons(userId, scope, type, pageable);
 	}
 
 	@Override

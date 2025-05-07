@@ -13,7 +13,7 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 public interface GifticonRepository {
 	Gifticon save(Gifticon gifticon);
 
-	Slice<AvailableGifticonResponseDto> getAvailableGifticons(Integer userId, GifticonScopeType scope,
+	Slice<AvailableGifticonResponseDto> findAvailableGifticons(Integer userId, GifticonScopeType scope,
 		GifticonType type, Pageable pageable);
 
 	AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId);
