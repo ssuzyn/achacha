@@ -80,8 +80,8 @@ const DUMMY_GIFTICONS = [
     brandId: 45,
     brandName: '스타벅스',
     scope: 'SHARE_BOX',
-    userId: 78,
-    userName: '홍길동',
+    userId: 79,
+    userName: '김철수',
     shareBoxId: 91,
     shareBoxName: '가족 모임',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
@@ -139,6 +139,21 @@ const DUMMY_GIFTICONS = [
     thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
     gifticonCreatedAt: '2024-12-05T10:50:00',
   },
+  {
+    gifticonId: 131,
+    gifticonName: '치즈 케이크',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-07-20',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'SHARE_BOX',
+    userId: 80,
+    userName: '이영희',
+    shareBoxId: 90,
+    shareBoxName: '스터디 그룹',
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2025-01-05T13:25:00',
+  },
 ];
 
 const ManageListScreen = () => {
@@ -182,6 +197,9 @@ const ManageListScreen = () => {
 
   // 사용완료 탭 정렬 옵션
   const usedSortOptions = [{ id: 'recent', title: '최근 사용 순' }];
+
+  // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
+  const currentUserId = 78;
 
   // 파라미터에서 initialTab이 변경되면 selectedCategory 업데이트
   useEffect(() => {
@@ -307,7 +325,15 @@ const ManageListScreen = () => {
         offset={[0, 1]}
         style={styles.shadowContainer}
       >
-        <View style={styles.gifticonContent}>
+        <View
+          style={[
+            styles.gifticonContent,
+            // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
+            item.scope === 'SHARE_BOX' &&
+              item.userId !== currentUserId &&
+              styles.sharedByOtherContent,
+          ]}
+        >
           <Image source={item.thumbnailPath} style={styles.gifticonImage} />
           <View style={styles.gifticonInfo}>
             <Text style={styles.brandText}>{item.brandName}</Text>
@@ -322,6 +348,10 @@ const ManageListScreen = () => {
                   containerStyle={styles.shareBoxIcon}
                 />
                 <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+                {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
+                {item.userId !== currentUserId && (
+                  <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
+                )}
               </View>
             )}
           </View>
@@ -600,6 +630,18 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#888',
+  },
+  // 다른 사람이 공유한 기프티콘을 위한 특별 스타일
+  sharedByOtherContent: {
+    borderWidth: 2,
+    borderColor: '#278CCC',
+  },
+  // 공유자 정보를 표시하는 텍스트 스타일
+  sharedByText: {
+    fontSize: 12,
+    color: '#278CCC',
+    fontWeight: 'bold',
+    fontStyle: 'normal',
   },
 });
 
