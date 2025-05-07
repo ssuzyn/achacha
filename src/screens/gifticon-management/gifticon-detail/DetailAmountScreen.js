@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // 상세 스크린 - 금액형
 
 import React, { useState, useEffect } from 'react';
@@ -13,7 +14,7 @@ import {
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Button } from '../../../components/ui';
+import { Text } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
@@ -98,11 +99,11 @@ const DetailAmountScreen = () => {
           // 사용완료된 기프티콘 더미 데이터
           dummyData = {
             gifticonId: id,
-            gifticonName: '문화상품권',
+            gifticonName: 'APP전용 e카드 3만원 교환권',
             gifticonType: 'AMOUNT',
             gifticonExpiryDate: '2025-03-31',
             brandId: 46,
-            brandName: '컬쳐랜드',
+            brandName: '스타벅스',
             scope: scope,
             usageType: usageType || 'SELF_USE', // 사용유형
             usageHistoryCreatedAt: usedAt || '2025-01-25T16:45:00', // 사용일시
@@ -145,7 +146,7 @@ const DetailAmountScreen = () => {
           // 일반 기프티콘 더미 데이터
           dummyData = {
             gifticonId: id || 124,
-            gifticonName: '문화상품권',
+            gifticonName: 'APP전용 e카드 3만원 교환권',
             gifticonType: 'AMOUNT',
             gifticonExpiryDate: '2025-06-15',
             brandId: 46,
@@ -494,51 +495,133 @@ const DetailAmountScreen = () => {
               {/* 버튼 영역 - 사용 상태에 따라 다른 UI */}
               {isUsing ? (
                 // 사용 모드일 때 - 사용완료 버튼만 표시
-                <Button
-                  title="사용완료"
+                <TouchableOpacity
                   onPress={handleUse}
-                  style={[styles.useButton, styles.useCompleteButton]}
-                  size="lg"
-                />
+                  style={{
+                    width: '100%',
+                    borderRadius: 8,
+                    height: 56,
+                    backgroundColor: '#56AEE9',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: '#FFFFFF',
+                      fontSize: 16,
+                      fontWeight: 'semibold',
+                    }}
+                  >
+                    사용완료
+                  </Text>
+                </TouchableOpacity>
               ) : (
                 // 일반 모드일 때 - 상단 버튼 영역 (사용하기/사용내역)
                 <>
                   <View style={styles.buttonRow}>
-                    <Button
-                      title="사용하기"
+                    <TouchableOpacity
                       onPress={handleUse}
-                      style={styles.useButton}
-                      size="lg"
-                    />
-                    <Button
-                      title="사용내역"
+                      style={{
+                        flex: 1,
+                        marginRight: 4,
+                        borderRadius: 8,
+                        height: 56,
+                        backgroundColor: '#56AEE9',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: '#FFFFFF',
+                          fontSize: 16,
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        사용하기
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
                       onPress={handleHistory}
-                      style={styles.historyButton}
-                      size="lg"
-                    />
+                      style={{
+                        flex: 1,
+                        marginLeft: 4,
+                        borderRadius: 8,
+                        height: 56,
+                        backgroundColor: '#E5F4FE',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: '#278CCC',
+                          fontSize: 16,
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        사용내역
+                      </Text>
+                    </TouchableOpacity>
                   </View>
 
                   {scope === 'MY_BOX' && (
                     // 마이박스일 때만 공유하기/선물하기 버튼 표시
                     <View style={styles.buttonRow}>
-                      <Button
-                        title="공유하기"
+                      <TouchableOpacity
                         onPress={handleShare}
-                        style={styles.useButton}
-                        size="lg"
-                        icon={<Icon name="inventory-2" type="material" size={24} color="#FFFFFF" />}
-                        titleStyle={{ color: '#FFFFFF' }}
-                      />
-                      <Button
-                        title="선물하기"
+                        style={{
+                          flex: 1,
+                          marginRight: 4,
+                          borderRadius: 8,
+                          height: 56,
+                          backgroundColor: '#EEEEEE',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                        }}
+                      >
+                        <Icon name="inventory-2" type="material" size={22} color="#000000" />
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            color: '#000000',
+                            fontSize: 16,
+                            fontWeight: 'semibold',
+                          }}
+                        >
+                          공유하기
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
                         onPress={handleGift}
-                        style={styles.historyButton}
-                        size="lg"
-                        icon={
-                          <Icon name="card-giftcard" type="material" size={24} color="#FFFFFF" />
-                        }
-                        titleStyle={{ color: '#FFFFFF' }}
-                      />
+                        style={{
+                          flex: 1,
+                          marginLeft: 4,
+                          borderRadius: 8,
+                          height: 56,
+                          backgroundColor: '#EEEEEE',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                        }}
+                      >
+                        <Icon name="card-giftcard" type="material" size={22} color="#000000" />
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            color: '#000000',
+                            fontSize: 16,
+                            fontWeight: 'semibold',
+                          }}
+                        >
+                          선물하기
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   )}
                 </>
@@ -564,7 +647,7 @@ const DetailAmountScreen = () => {
                       <Text
                         style={[
                           styles.amountText,
-                          { color: transaction.type === 'charge' ? '#1E88E5' : '#F44336' },
+                          { color: transaction.type === 'charge' ? '#1E88E5' : '#56AEE9' },
                         ]}
                       >
                         {transaction.type === 'charge' ? '' : '-'}
@@ -723,6 +806,7 @@ const styles = StyleSheet.create({
     marginRight: 4,
     borderRadius: 8,
     height: 56,
+    backgroundColor: '#56AEE9',
   },
   useCompleteButton: {
     borderWidth: 1,
@@ -734,6 +818,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     borderRadius: 8,
     height: 56,
+    backgroundColor: '#E5F4FE',
   },
   actionButtonsRow: {
     flexDirection: 'row',
@@ -858,7 +943,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   amountText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   transactionSection: {
@@ -918,6 +1003,20 @@ const styles = StyleSheet.create({
   magnifyButton: {
     marginLeft: 12,
     padding: 8,
+  },
+  shareButton: {
+    flex: 1,
+    marginRight: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#A7DAF9',
+  },
+  giftButton: {
+    flex: 1,
+    marginLeft: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#A7DAF9',
   },
 });
 

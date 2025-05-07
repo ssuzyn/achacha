@@ -13,7 +13,7 @@ import {
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Button } from '../../../components/ui';
+import { Text } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
@@ -99,7 +99,7 @@ const DetailProductScreen = () => {
           // 사용완료된 기프티콘 더미 데이터
           dummyData = {
             gifticonId: id,
-            gifticonName: '아메리카노',
+            gifticonName: '아이스 카페 아메리카노 T',
             gifticonType: 'PRODUCT',
             gifticonExpiryDate: '2025-12-31',
             brandId: 45,
@@ -118,7 +118,7 @@ const DetailProductScreen = () => {
           // 일반 기프티콘 더미 데이터
           dummyData = {
             gifticonId: id,
-            gifticonName: '아메리카노',
+            gifticonName: '아이스 카페 아메리카노 T',
             gifticonType: 'PRODUCT',
             gifticonExpiryDate: '2025-05-10',
             brandId: 45,
@@ -428,25 +428,81 @@ const DetailProductScreen = () => {
           {!isUsed && (
             <View style={styles.buttonContainer}>
               {/* 사용하기/사용완료 버튼 */}
-              <Button
-                title={isUsing ? '사용완료' : '사용하기'}
+              <TouchableOpacity
                 onPress={handleUse}
-                style={[styles.useButton, isUsing && styles.useCompleteButton]}
-                variant={isUsing ? 'outline' : 'primary'}
-                size="lg"
-              />
+                style={{
+                  width: '100%',
+                  borderRadius: 8,
+                  height: 56,
+                  backgroundColor: '#56AEE9',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  flexDirection: 'row',
+                }}
+              >
+                <Text
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {isUsing ? '사용완료' : '사용하기'}
+                </Text>
+              </TouchableOpacity>
 
               {!isUsing && scope === 'MY_BOX' && (
                 // 마이박스일 때만 공유하기, 선물하기 버튼 표시
-                <View style={styles.actionButtonsRow}>
-                  <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                    <Icon name="share" type="material" size={24} color="#666" />
-                    <Text style={styles.actionButtonText}>공유하기</Text>
+                <View style={[styles.buttonRow, { marginTop: 10 }]}>
+                  <TouchableOpacity
+                    onPress={handleShare}
+                    style={{
+                      flex: 1,
+                      marginRight: 4,
+                      borderRadius: 8,
+                      height: 56,
+                      backgroundColor: '#EEEEEE',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                    }}
+                  >
+                    <Icon name="inventory-2" type="material" size={22} color="#000000" />
+                    <Text
+                      style={{
+                        marginLeft: 8,
+                        color: '#000000',
+                        fontSize: 16,
+                        fontWeight: 'semibold',
+                      }}
+                    >
+                      공유하기
+                    </Text>
                   </TouchableOpacity>
-
-                  <TouchableOpacity style={styles.actionButton} onPress={handleGift}>
-                    <Icon name="card-giftcard" type="material" size={24} color="#666" />
-                    <Text style={styles.actionButtonText}>선물하기</Text>
+                  <TouchableOpacity
+                    onPress={handleGift}
+                    style={{
+                      flex: 1,
+                      marginLeft: 4,
+                      borderRadius: 8,
+                      height: 56,
+                      backgroundColor: '#EEEEEE',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                    }}
+                  >
+                    <Icon name="card-giftcard" type="material" size={22} color="#000000" />
+                    <Text
+                      style={{
+                        marginLeft: 8,
+                        color: '#000000',
+                        fontSize: 16,
+                        fontWeight: 'semibold',
+                      }}
+                    >
+                      선물하기
+                    </Text>
                   </TouchableOpacity>
                 </View>
               )}
@@ -584,35 +640,17 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 10,
   },
-  useButton: {
-    borderRadius: 8,
-    marginBottom: 12,
-    width: '100%',
-    height: 56,
-  },
-  useCompleteButton: {
-    borderColor: '#4CAF50',
-    borderWidth: 1,
-  },
-  actionButtonsRow: {
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginBottom: 12,
   },
-  actionButton: {
+  historyButton: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#F5F5F5',
+    marginLeft: 4,
+    height: 56,
     borderRadius: 8,
-    marginHorizontal: 4,
-  },
-  actionButtonText: {
-    marginTop: 6,
-    fontSize: 14,
-    color: '#666',
+    backgroundColor: '#56AEE9',
   },
   loadingContainer: {
     backgroundColor: '#FFFFFF',
