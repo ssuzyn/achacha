@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useTheme } from 'react-native-elements';
 import Slider from '../components/ui/Slider';
-import { Button, Divider, Text } from '../components/ui';
+import { Divider, Text } from '../components/ui';
 import Switch from '../components/ui/Switch';
 
 const SettingScreen = () => {
@@ -284,20 +284,14 @@ const SettingScreen = () => {
       </View>
 
       {/* 버튼 영역 */}
-      <View style={styles.footerButtonContainer}>
-        <Button
-          title="회원탈퇴"
-          type="outline"
-          buttonStyle={[styles.withdrawButton, { borderColor: theme.colors.grey4 }]}
-          titleStyle={{ color: theme.colors.grey3 }}
-          containerStyle={styles.buttonStyle}
-        />
+      <View style={styles.footerButtonsWrapper}>
+        <TouchableOpacity style={styles.withdrawTouchable}>
+          <Text style={styles.withdrawText}>회원탈퇴</Text>
+        </TouchableOpacity>
         <View style={styles.buttonSpacer} />
-        <Button
-          title="로그아웃"
-          buttonStyle={[styles.logoutButton, { backgroundColor: theme.colors.primary }]}
-          containerStyle={styles.buttonStyle}
-        />
+        <TouchableOpacity style={styles.logoutTouchable}>
+          <Text style={styles.logoutText}>로그아웃</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 워치 연결 모달 */}
@@ -349,8 +343,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    marginBottom: 8,
+    paddingVertical: 5,
+    marginBottom: 5,
   },
   infoLabel: {
     fontSize: 16,
@@ -362,7 +356,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 5,
     marginBottom: 4,
   },
   notificationInfo: {
@@ -386,34 +380,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  footerButtonContainer: {
+  footerButtonsWrapper: {
     marginVertical: 24,
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
   },
-  buttonStyle: {
-    flex: 1,
-    maxWidth: '45%',
-  },
   buttonSpacer: {
-    width: 12,
+    width: 10,
   },
-  withdrawButton: {
-    paddingHorizontal: 20,
+  withdrawTouchable: {
+    borderColor: '#718096',
     borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '30%',
   },
-  logoutButton: {
-    paddingHorizontal: 20,
+  logoutTouchable: {
+    borderColor: '#A7DAF9',
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '30%',
+  },
+  withdrawText: {
+    color: '#718096',
+    fontSize: 16,
+  },
+  logoutText: {
+    color: '#A7DAF9',
+    fontSize: 16,
   },
   sectionDivider: {
     marginBottom: 20,
+    marginTop: 20,
   },
   watchItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 5,
     marginBottom: 4,
   },
   arrowContainer: {
