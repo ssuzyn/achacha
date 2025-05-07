@@ -298,6 +298,7 @@ const DetailAmountScreen = () => {
     navigation.navigate('UseAmountScreen', {
       id: gifticonData.gifticonId,
       barcodeNumber: gifticonData.barcodeNumber,
+      returnScreen: 'DetailAmountScreen',
     });
   };
 
