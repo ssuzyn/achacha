@@ -79,12 +79,12 @@ const UseAmountScreen = () => {
     // 가로 모드에서 세로 모드로 전환
     Orientation.lockToPortrait();
 
-    // 원래 상품 상세 페이지(DetailAmount)로 이동
+    // 사용내역 화면으로 이동
     const { id } = route.params || {};
-    navigation.navigate('DetailAmount', {
-      gifticonId: id,
-      refresh: true,
+    navigation.navigate('DetailAmountHistoryScreen', {
+      id: id,
       usedAmount: amount,
+      isFromUseScreen: true,
     });
   };
 

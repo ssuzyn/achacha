@@ -275,11 +275,15 @@ const DetailAmountScreen = () => {
     setModalVisible(false);
     setAmount('');
 
-    // 사용 모드 종료하고 원래 상세 화면으로 돌아가기
+    // 사용 모드 종료
     setIsUsing(false);
 
-    // 데이터 새로고침 - 잔액이 줄어든 상태로 표시
-    loadGifticonData(gifticonId);
+    // 사용내역 화면으로 이동
+    navigation.navigate('DetailAmountHistoryScreen', {
+      id: gifticonId,
+      usedAmount: amount,
+      isFromDetailScreen: true,
+    });
   };
 
   // 모달 취소
