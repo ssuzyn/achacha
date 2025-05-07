@@ -391,7 +391,7 @@ const DetailProductScreen = () => {
                       {/* 마이박스일 경우 삭제 아이콘만 표시 */}
                       {scope === 'MY_BOX' && (
                         <TouchableOpacity style={styles.actionIconButton} onPress={handleDelete}>
-                          <Icon name="delete" type="material" size={24} color="#FF6B6B" />
+                          <Icon name="delete" type="material" size={24} color="#718096" />
                         </TouchableOpacity>
                       )}
 
@@ -401,7 +401,7 @@ const DetailProductScreen = () => {
                           style={styles.actionIconButton}
                           onPress={handleCancelShare}
                         >
-                          <Icon name="person-remove" type="material" size={24} color="#FF6B6B" />
+                          <Icon name="person-remove" type="material" size={24} color="#718096" />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -911,15 +911,10 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    backgroundColor: '#F9F9F9',
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
   },
 });
 
