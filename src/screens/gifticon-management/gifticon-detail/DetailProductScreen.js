@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     borderColor: '#E6F4FB',
   },
   imageContainer: {
-    backgroundColor: '#E5F4FE',
+    backgroundColor: '#EEEEEE',
     padding: 16,
     paddingTop: 0,
     alignItems: 'center',

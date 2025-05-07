@@ -750,7 +750,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
     height: 300,
-    backgroundColor: '#E5F4FE',
+    backgroundColor: '#EEEEEE',
     position: 'relative',
     paddingBottom: 10,
   },
