@@ -34,7 +34,7 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	}
 
 	@Override
-	public Gifticon getAvailableGifticonDetail(Integer gifticonId) {
+	public Gifticon getGifticonDetail(Integer gifticonId) {
 		return gifticonJpaRepository.findGifticonDetailById(gifticonId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
 	}
