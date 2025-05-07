@@ -731,6 +731,9 @@ const DetailAmountScreen = () => {
               </View>
             </View>
           )}
+
+          {/* 하단 여백 추가 */}
+          <View style={styles.bottomPadding} />
         </View>
       </ScrollView>
 
@@ -814,7 +817,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContentContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    paddingBottom: 40,
   },
   contentContainer: {
     padding: 16,
@@ -1217,6 +1220,9 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: '#FFFFFF',
+  },
+  bottomPadding: {
+    height: 60,
   },
 });
 
