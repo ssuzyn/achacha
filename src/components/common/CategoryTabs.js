@@ -30,15 +30,13 @@ const CategoryTabs = ({ categories = [], selectedId, onSelectCategory }) => {
           return (
             <TouchableOpacity
               key={category.id}
-              style={styles.tab}
+              style={[styles.tab, isSelected && styles.selectedTab]}
               onPress={() => handleSelectCategory(category.id)}
               activeOpacity={0.8}
             >
-              <View style={[styles.tabInner, isSelected ? styles.selectedTabInner : null]}>
-                <Text style={styles.tabText} color="white" weight={isSelected ? 'bold' : 'medium'}>
-                  {category.name}
-                </Text>
-              </View>
+              <Text style={styles.tabText} color="white" weight={isSelected ? 'bold' : 'medium'}>
+                {category.name}
+              </Text>
             </TouchableOpacity>
           );
         })}
@@ -51,7 +49,7 @@ const styles = StyleSheet.create({
   outerContainer: {
     backgroundColor: '#56AEE9',
     borderRadius: 12,
-    padding: 3,
+    padding: 4,
     margin: 12,
     marginBottom: 2,
     marginHorizontal: 0,
@@ -68,22 +66,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 4,
+    paddingVertical: 10,
+    margin: 2,
   },
-  tabInner: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  selectedTabInner: {
+  selectedTab: {
     backgroundColor: '#278CCC',
+    borderRadius: 8,
   },
   tabText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '500',
     textAlign: 'center',
     color: 'white',
   },
