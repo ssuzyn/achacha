@@ -1,5 +1,8 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.file;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
@@ -17,8 +20,32 @@ public class FilePersistenceAdapter implements FileRepository {
 	private final FileJpaRepository fileJpaRepository;
 
 	@Override
+	public File save(File file) {
+		return fileJpaRepository.save(file);
+	}
+
+	@Override
 	public File findFile(Integer referenceEntityId, String referenceEntityType, FileType fileType) {
 		return fileJpaRepository.findFile(referenceEntityId, referenceEntityType, fileType)
 			.orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+	}
+
+	@Override
+	public Optional<File> findByReferenceEntityTypeAndReferenceEntityIdAndType(
+		String referenceEntityType, Integer referenceEntityId, FileType type) {
+		return fileJpaRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(
+			referenceEntityType, referenceEntityId, type);
+	}
+
+	@Override
+	public List<File> findAllByReferenceEntityTypeAndReferenceEntityId(
+		String referenceEntityType, Integer referenceEntityId) {
+		return fileJpaRepository.findAllByReferenceEntityTypeAndReferenceEntityId(
+			referenceEntityType, referenceEntityId);
+	}
+
+	@Override
+	public void delete(File file) {
+		fileJpaRepository.delete(file);
 	}
 }

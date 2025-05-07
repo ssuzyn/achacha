@@ -6,7 +6,12 @@ spring:
     properties:
       hibernate:
         jdbc:
-          time_zone=Asia/Seoul:
+          time_zone: Asia/Seoul
+
+  servlet:
+    multipart:
+      max-file-size: 5MB # 파일 하나 당 최대 용량
+      max-request-size: 15MB # 모든 파일의 최대 용량
 
   profiles:
     group:
@@ -28,3 +33,15 @@ clova:
 
 ai-service:
   api-url: ${AI_SERVICE_URL}
+
+aws:
+  region: ap-northeast-2
+  credentials:
+    access-key: ${AWS_ACCESS_TOKEN}
+    secret-key: ${AWS_SECRET_TOKEN}
+  s3:
+    bucket: achacha-bucket
+  cloudfront:
+    domain: d23wsj9ifltpil.cloudfront.net
+    keypair-id: ${AWS_CLOUDFRONT_KEYPAIR_ID}
+    private-key: ${AWS_CLOUDFRONT_PRIVATE_KEY}

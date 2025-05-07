@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.file;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,4 +18,10 @@ public interface FileJpaRepository extends JpaRepository<File, Integer> {
 		@Param("id") Integer referenceEntityId,
 		@Param("referenceType") String referenceEntityType,
 		@Param("type") FileType fileType);
+
+	Optional<File> findByReferenceEntityTypeAndReferenceEntityIdAndType(
+		String referenceEntityType, Integer referenceEntityId, FileType type);
+
+	List<File> findAllByReferenceEntityTypeAndReferenceEntityId(
+		String referenceEntityType, Integer referenceEntityId);
 }
