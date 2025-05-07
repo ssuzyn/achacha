@@ -26,9 +26,13 @@ const DetailProductScreen = () => {
   const { showTabBar } = useTabBar();
 
   // scope 상태 관리
-  const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
+  const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX', 'SHARE_BOX' 또는 'USED'
   // 기프티콘 ID 관리
   const [gifticonId, setGifticonId] = useState(null);
+  // 사용 유형 관리 (사용완료 경우에만)
+  const [usageType, setUsageType] = useState(null);
+  // 사용일시 관리 (사용완료 경우에만)
+  const [usedAt, setUsedAt] = useState(null);
   // 기프티콘 데이터 상태
   const [gifticonData, setGifticonData] = useState(null);
   // 로딩 상태
@@ -48,7 +52,7 @@ const DetailProductScreen = () => {
     return unsubscribe;
   }, [navigation, showTabBar]);
 
-  // route.params에서 scope와 gifticonId를 가져오는 부분
+  // route.params에서 scope와 gifticonId, usageType, usedAt을 가져오는 부분
   useEffect(() => {
     if (route.params) {
       if (route.params.scope) {
@@ -56,6 +60,12 @@ const DetailProductScreen = () => {
       }
       if (route.params.gifticonId) {
         setGifticonId(route.params.gifticonId);
+      }
+      if (route.params.usageType) {
+        setUsageType(route.params.usageType);
+      }
+      if (route.params.usedAt) {
+        setUsedAt(route.params.usedAt);
       }
     }
   }, [route.params]);
@@ -83,24 +93,48 @@ const DetailProductScreen = () => {
       // 더미 데이터 - API 명세에 맞춤 (테스트용)
       // 실제 구현에서는 삭제하고 API 호출로 대체
       setTimeout(() => {
-        const dummyData = {
-          gifticonId: id,
-          gifticonName: '아메리카노',
-          gifticonType: 'PRODUCT',
-          gifticonExpiryDate: '2025-12-31',
-          brandId: 45,
-          brandName: '스타벅스',
-          scope: scope, // 파라미터에서 받은 scope 사용
-          userId: 78,
-          userName: '홍길동',
-          shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
-          shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
-          thumbnailPath: require('../../../assets/images/dummy-starbucks.png'),
-          originalImagePath: require('../../../assets/images/dummy-starbucks.png'),
-          gifticonCreatedAt: '2025-01-15T10:30:00',
-          barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
-          barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
-        };
+        let dummyData;
+
+        if (scope === 'USED') {
+          // 사용완료된 기프티콘 더미 데이터
+          dummyData = {
+            gifticonId: id,
+            gifticonName: '아메리카노',
+            gifticonType: 'PRODUCT',
+            gifticonExpiryDate: '2025-12-31',
+            brandId: 45,
+            brandName: '스타벅스',
+            scope: scope,
+            usageType: usageType || 'SELF_USE', // 사용유형
+            usageHistoryCreatedAt: usedAt || '2025-01-15T14:30:00', // 사용일시
+            thumbnailPath: require('../../../assets/images/dummy-starbucks.png'),
+            originalImagePath:
+              usageType === 'SELF_USE'
+                ? require('../../../assets/images/dummy-starbucks.png')
+                : null,
+            gifticonCreatedAt: '2025-01-01T10:30:00',
+          };
+        } else {
+          // 일반 기프티콘 더미 데이터
+          dummyData = {
+            gifticonId: id,
+            gifticonName: '아메리카노',
+            gifticonType: 'PRODUCT',
+            gifticonExpiryDate: '2025-12-31',
+            brandId: 45,
+            brandName: '스타벅스',
+            scope: scope, // 파라미터에서 받은 scope 사용
+            userId: 78,
+            userName: '홍길동',
+            shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
+            shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
+            thumbnailPath: require('../../../assets/images/dummy-starbucks.png'),
+            originalImagePath: require('../../../assets/images/dummy-starbucks.png'),
+            gifticonCreatedAt: '2025-01-15T10:30:00',
+            barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
+            barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
+          };
+        }
         setGifticonData(dummyData);
         setIsLoading(false);
       }, 500); // 0.5초 지연 (로딩 효과)
@@ -213,6 +247,23 @@ const DetailProductScreen = () => {
     );
   }
 
+  // 사용완료된 상품일 경우 다른 UI 표시
+  const isUsed = scope === 'USED';
+
+  // 사용 방식에 따른 텍스트 결정
+  const getUsageTypeText = () => {
+    switch (gifticonData.usageType) {
+      case 'SELF_USE':
+        return '사용완료';
+      case 'PRESENT':
+        return '선물완료';
+      case 'GIVE_AWAY':
+        return '나눔완료';
+      default:
+        return '사용완료';
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -231,7 +282,11 @@ const DetailProductScreen = () => {
         <View style={styles.rightPlaceholder} />
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContentContainer}
+      >
         <View style={styles.contentContainer}>
           {/* 카드 영역 */}
           <View style={styles.cardContainer}>
@@ -253,13 +308,18 @@ const DetailProductScreen = () => {
                   </View>
                 </View>
               ) : (
-                // 일반 모드일 때 기프티콘 이미지 표시
+                // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
                   <Image
                     source={gifticonData.thumbnailPath}
-                    style={styles.gifticonImage}
+                    style={[styles.gifticonImage, isUsed && styles.grayScaleImage]}
                     resizeMode="contain"
                   />
+                  {isUsed && (
+                    <View style={styles.usedOverlay}>
+                      <Text style={styles.usedText}>{getUsageTypeText()}</Text>
+                    </View>
+                  )}
                 </View>
               )}
 
@@ -272,9 +332,11 @@ const DetailProductScreen = () => {
                   <Text style={styles.infoValue}>
                     ~ {formatDate(gifticonData.gifticonExpiryDate)}
                   </Text>
-                  <Text style={styles.expiryDday}>
-                    D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
-                  </Text>
+                  {!isUsed && (
+                    <Text style={styles.expiryDday}>
+                      D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
+                    </Text>
+                  )}
                 </View>
 
                 <View style={styles.infoRow}>
@@ -285,7 +347,7 @@ const DetailProductScreen = () => {
                 </View>
 
                 {/* 마이박스가 아닌 경우에만 등록자 정보 표시 */}
-                {scope !== 'MY_BOX' && (
+                {scope !== 'MY_BOX' && scope !== 'USED' && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>등록자</Text>
                     <Text style={styles.infoValue}>{gifticonData.userName}</Text>
@@ -298,25 +360,34 @@ const DetailProductScreen = () => {
                     <Text style={styles.infoValue}>{gifticonData.shareBoxName}</Text>
                   </View>
                 )}
+
+                {/* 사용완료된 경우 사용일시 표시 */}
+                {isUsed && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>사용일시</Text>
+                    <Text style={styles.infoValue}>
+                      {formatDateTime(gifticonData.usageHistoryCreatedAt)}
+                    </Text>
+                  </View>
+                )}
               </View>
             </View>
           </View>
 
-          {/* 버튼 영역 - scope에 따라 다른 UI 표시 */}
-          <View style={styles.buttonContainer}>
-            {/* 사용하기/사용완료 버튼 */}
-            <Button
-              title={isUsing ? '사용완료' : '사용하기'}
-              onPress={handleUse}
-              style={[styles.useButton, isUsing && styles.useCompleteButton]}
-              variant={isUsing ? 'outline' : 'primary'}
-              size="lg"
-            />
+          {/* 버튼 영역 - 사용완료가 아닌 경우에만 표시 */}
+          {!isUsed && (
+            <View style={styles.buttonContainer}>
+              {/* 사용하기/사용완료 버튼 */}
+              <Button
+                title={isUsing ? '사용완료' : '사용하기'}
+                onPress={handleUse}
+                style={[styles.useButton, isUsing && styles.useCompleteButton]}
+                variant={isUsing ? 'outline' : 'primary'}
+                size="lg"
+              />
 
-            {!isUsing &&
-              // 사용 모드가 아닐 때만 추가 버튼 표시
-              (scope === 'MY_BOX' ? (
-                // 마이박스일 때 - 공유하기, 선물하기 버튼
+              {!isUsing && scope === 'MY_BOX' && (
+                // 마이박스일 때만 공유하기, 선물하기 버튼 표시
                 <View style={styles.actionButtonsRow}>
                   <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
                     <Icon name="share" type="material" size={24} color="#666" />
@@ -328,16 +399,9 @@ const DetailProductScreen = () => {
                     <Text style={styles.actionButtonText}>선물하기</Text>
                   </TouchableOpacity>
                 </View>
-              ) : (
-                // 쉐어박스일 때 - 출처 정보 표시
-                <View style={styles.sourceContainer}>
-                  <View style={styles.sourceButton}>
-                    <Icon name="inventory-2" type="material" size={24} color="#4A90E2" />
-                    <Text style={styles.sourceText}>{gifticonData.shareBoxName}</Text>
-                  </View>
-                </View>
-              ))}
-          </View>
+              )}
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -372,6 +436,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollViewContentContainer: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   contentContainer: {
     padding: 16,
@@ -495,24 +563,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  sourceContainer: {
-    marginTop: 10,
-  },
-  sourceButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#EBF5FF',
-    borderRadius: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  sourceText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#4A90E2',
-    fontWeight: '500',
-  },
   loadingContainer: {
     backgroundColor: '#FFFFFF',
   },
@@ -524,6 +574,33 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#666',
+  },
+  grayScaleImage: {
+    opacity: 0.7,
+    // React Native는 기본적으로 grayscale 필터를 지원하지 않기 때문에
+    // 투명도를 낮춰 흑백처럼 보이게 합니다.
+    // 실제 앱에서는 이미지 처리 라이브러리 사용을 고려할 수 있습니다.
+  },
+  usedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 20,
+  },
+  usedText: {
+    color: 'white',
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+    overflow: 'hidden',
   },
 });
 
