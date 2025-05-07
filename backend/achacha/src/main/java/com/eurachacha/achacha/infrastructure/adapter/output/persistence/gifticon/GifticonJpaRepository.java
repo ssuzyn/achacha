@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
@@ -18,37 +17,15 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 @Repository
 public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>, GifticonRepositoryCustom {
 	@Query("""
-		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto(
-		      g.id,
-		      g.name,
-		      g.type,
-		      g.expiryDate,
-		      b.id,
-		      b.name,
-		      CASE WHEN g.sharebox.id IS NULL THEN 'MY_BOX' ELSE 'SHARE_BOX' END,
-		      u.id,
-		      u.name,
-		      g.sharebox.id,
-		      sb.name,
-		      null,
-		      null,
-		      g.createdAt,
-		      CASE WHEN g.type = 'AMOUNT' THEN g.originalAmount ELSE NULL END,
-		      CASE WHEN g.type = 'AMOUNT' THEN g.remainingAmount ELSE NULL END
-		  )
-		  FROM Gifticon g
-		  JOIN g.brand b
-		  JOIN g.user u
-		  LEFT JOIN g.sharebox sb
-		  WHERE g.isDeleted = false
-		    AND g.isUsed = false
-		    AND (g.remainingAmount > 0 OR g.remainingAmount is null)
-		    AND g.expiryDate > CURRENT_DATE
-		    AND g.id = :gifticonId
+		SELECT
+			g
+		FROM Gifticon g
+		JOIN FETCH g.brand
+		JOIN FETCH g.user
+		LEFT JOIN FETCH g.sharebox
+		WHERE g.id = :gifticonId
 		""")
-	Optional<AvailableGifticonDetailResponseDto> findAvailableGifticonDetail(
-		@Param("gifticonId") Integer gifticonId
-	);
+	Optional<Gifticon> findGifticonDetailById(@Param("gifticonId") Integer gifticonId);
 
 	@Query("""
 		SELECT new com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto(

@@ -4,7 +4,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
@@ -35,9 +34,9 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	}
 
 	@Override
-	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
-		return gifticonJpaRepository.findAvailableGifticonDetail(
-			gifticonId).orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
+	public Gifticon getAvailableGifticonDetail(Integer gifticonId) {
+		return gifticonJpaRepository.findGifticonDetailById(gifticonId)
+			.orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
 	}
 
 	@Override
