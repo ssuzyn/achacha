@@ -16,18 +16,32 @@ import { Text, Divider } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
+import { useRoute } from '@react-navigation/native';
 
 const DetailAmountHistoryScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { showTabBar } = useTabBar();
+  const route = useRoute();
   const [transactions, setTransactions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [scope, setScope] = useState('MY_BOX');
+  const [usageType, setUsageType] = useState(null);
 
   // 바텀탭 표시
   useEffect(() => {
     showTabBar();
+
+    // 라우트 파라미터에서 scope와 usageType 정보 가져오기
+    if (route.params) {
+      if (route.params.scope) {
+        setScope(route.params.scope);
+      }
+      if (route.params.usageType) {
+        setUsageType(route.params.usageType);
+      }
+    }
 
     // 더미 기프티콘 데이터 초기화
     setTransactions([
@@ -148,95 +162,103 @@ const DetailAmountHistoryScreen = () => {
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.contentContainer}>
-          <View style={styles.infoHeaderContainer}>
-            <Text style={styles.brandText}>{gifticonData.brand}</Text>
-            <Text style={styles.nameText}>{gifticonData.name}</Text>
+        {scope === 'USED' && usageType !== 'SELF_USE' ? (
+          <View style={styles.noAccessContainer}>
+            <Text style={styles.noAccessText}>
+              직접 사용한 기프티콘만 사용내역을 확인할 수 있습니다.
+            </Text>
           </View>
-
-          {/* 잔액 정보 */}
-          <View style={styles.balanceSection}>
-            <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>총 금액</Text>
-              <Text style={styles.balanceValue}>{formatNumber(gifticonData.totalBalance)}원</Text>
+        ) : (
+          <View style={styles.contentContainer}>
+            <View style={styles.infoHeaderContainer}>
+              <Text style={styles.brandText}>{gifticonData.brand}</Text>
+              <Text style={styles.nameText}>{gifticonData.name}</Text>
             </View>
-            <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>사용 금액</Text>
-              <Text style={styles.balanceValue}>{formatNumber(gifticonData.usedAmount)}원</Text>
-            </View>
-            <View style={styles.balanceRow}>
-              <Text style={styles.balanceLabel}>남은 금액</Text>
-              <Text style={[styles.balanceValue, { color: '#56AEE9' }]}>
-                {formatNumber(gifticonData.remainingBalance)}원
-              </Text>
-            </View>
-          </View>
 
-          <Divider style={styles.divider} />
+            {/* 잔액 정보 */}
+            <View style={styles.balanceSection}>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>총 금액</Text>
+                <Text style={styles.balanceValue}>{formatNumber(gifticonData.totalBalance)}원</Text>
+              </View>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>사용 금액</Text>
+                <Text style={styles.balanceValue}>{formatNumber(gifticonData.usedAmount)}원</Text>
+              </View>
+              <View style={styles.balanceRow}>
+                <Text style={styles.balanceLabel}>남은 금액</Text>
+                <Text style={[styles.balanceValue, { color: '#56AEE9' }]}>
+                  {formatNumber(gifticonData.remainingBalance)}원
+                </Text>
+              </View>
+            </View>
 
-          {/* 거래 내역 */}
-          <View style={styles.transactionsContainer}>
-            {transactions.map(transaction => (
-              <View key={transaction.id}>
-                {editingId === transaction.id ? (
-                  <View style={styles.editItemContainer}>
-                    <View style={styles.editInfoSection}>
-                      <Text style={styles.transactionUser}>{transaction.userName}</Text>
-                      <Text style={styles.transactionDate}>{transaction.date}</Text>
-                    </View>
-                    <View style={styles.editActionSection}>
-                      <TextInput
-                        style={styles.editInput}
-                        value={editValue}
-                        onChangeText={setEditValue}
-                        keyboardType="numeric"
-                        placeholder="금액 입력"
-                      />
-                      <TouchableOpacity
-                        style={[styles.editButton, styles.cancelButton]}
-                        onPress={handleCancelEdit}
-                      >
-                        <Text style={styles.cancelButtonText}>취소</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.editButton, styles.saveButton]}
-                        onPress={() => handleSaveEdit(transaction.id)}
-                      >
-                        <Text style={styles.saveButtonText}>수정</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ) : (
-                  <View style={styles.transactionItem}>
-                    <View style={styles.transactionLeft}>
-                      <Text style={styles.transactionUser}>{transaction.userName}</Text>
-                      <Text style={styles.transactionDate}>{transaction.date}</Text>
-                    </View>
-                    <View style={styles.transactionRight}>
-                      <Text style={[styles.amountText, { color: '#56AEE9' }]}>
-                        {renderAmount(transaction.amount, transaction.type)}
-                      </Text>
-                      <View style={styles.actionIcons}>
+            <Divider style={styles.divider} />
+
+            {/* 거래 내역 */}
+            <View style={styles.transactionsContainer}>
+              {transactions.map(transaction => (
+                <View key={transaction.id}>
+                  {editingId === transaction.id ? (
+                    <View style={styles.editItemContainer}>
+                      <View style={styles.editInfoSection}>
+                        <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                        <Text style={styles.transactionDate}>{transaction.date}</Text>
+                      </View>
+                      <View style={styles.editActionSection}>
+                        <TextInput
+                          style={styles.editInput}
+                          value={editValue}
+                          onChangeText={setEditValue}
+                          keyboardType="numeric"
+                          placeholder="금액 입력"
+                        />
                         <TouchableOpacity
-                          onPress={() => handleEdit(transaction.id)}
-                          style={styles.iconButton}
+                          style={[styles.editButton, styles.cancelButton]}
+                          onPress={handleCancelEdit}
                         >
-                          <Icon name="edit" type="feather" size={20} color="#AAAAAA" />
+                          <Text style={styles.cancelButtonText}>취소</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          onPress={() => handleDelete(transaction.id)}
-                          style={styles.iconButton}
+                          style={[styles.editButton, styles.saveButton]}
+                          onPress={() => handleSaveEdit(transaction.id)}
                         >
-                          <Icon name="trash-2" type="feather" size={20} color="#AAAAAA" />
+                          <Text style={styles.saveButtonText}>수정</Text>
                         </TouchableOpacity>
                       </View>
                     </View>
-                  </View>
-                )}
-              </View>
-            ))}
+                  ) : (
+                    <View style={styles.transactionItem}>
+                      <View style={styles.transactionLeft}>
+                        <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                        <Text style={styles.transactionDate}>{transaction.date}</Text>
+                      </View>
+                      <View style={styles.transactionRight}>
+                        <Text style={[styles.amountText, { color: '#56AEE9' }]}>
+                          {renderAmount(transaction.amount, transaction.type)}
+                        </Text>
+                        <View style={styles.actionIcons}>
+                          <TouchableOpacity
+                            onPress={() => handleEdit(transaction.id)}
+                            style={styles.iconButton}
+                          >
+                            <Icon name="edit" type="feather" size={20} color="#AAAAAA" />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => handleDelete(transaction.id)}
+                            style={styles.iconButton}
+                          >
+                            <Icon name="trash-2" type="feather" size={20} color="#AAAAAA" />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -400,6 +422,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 14,
+  },
+  noAccessContainer: {
+    padding: 24,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 300,
+  },
+  noAccessText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
   },
 });
 

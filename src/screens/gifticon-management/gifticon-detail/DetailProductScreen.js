@@ -320,6 +320,13 @@ const DetailProductScreen = () => {
                       <Text style={styles.usedText}>{getUsageTypeText()}</Text>
                     </View>
                   )}
+                  {!isUsed && (
+                    <View style={styles.ddayButtonContainer}>
+                      <Text style={styles.ddayButtonText}>
+                        D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
 
@@ -332,11 +339,6 @@ const DetailProductScreen = () => {
                   <Text style={styles.infoValue}>
                     ~ {formatDate(gifticonData.gifticonExpiryDate)}
                   </Text>
-                  {!isUsed && (
-                    <Text style={styles.expiryDday}>
-                      D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
-                    </Text>
-                  )}
                 </View>
 
                 <View style={styles.infoRow}>
@@ -445,26 +447,31 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardContainer: {
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 5,
+    marginBottom: 5,
   },
   gifticonCard: {
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E6F4FB',
   },
   imageContainer: {
-    backgroundColor: '#D2F2FF',
+    backgroundColor: '#E5F4FE',
     padding: 16,
+    paddingTop: 0,
     alignItems: 'center',
-    justifyContent: 'center',
-    height: 350,
+    justifyContent: 'flex-start',
+    height: 300,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E6F4FB',
+    position: 'relative',
   },
   gifticonImage: {
     width: '60%',
     height: '90%',
+    marginTop: 5,
   },
   // 바코드 관련 스타일
   barcodeContainer: {
@@ -472,7 +479,7 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    height: 350,
+    height: 300,
   },
   barcodeImage: {
     width: '90%',
@@ -512,7 +519,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
     paddingHorizontal: 8,
   },
   infoLabel: {
@@ -525,12 +532,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: '#333',
-  },
-  expiryDday: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#5DADE2',
-    marginLeft: 10,
   },
   buttonContainer: {
     marginTop: 10,
@@ -601,6 +602,20 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 5,
     overflow: 'hidden',
+  },
+  ddayButtonContainer: {
+    position: 'absolute',
+    bottom: 15,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(252, 217, 217, 0.8)',
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  ddayButtonText: {
+    color: '#D33434',
+    fontSize: 18,
+    fontWeight: 'semibold',
   },
 });
 

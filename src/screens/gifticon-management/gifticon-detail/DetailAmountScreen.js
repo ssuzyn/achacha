@@ -362,6 +362,13 @@ const DetailAmountScreen = () => {
                       <Text style={styles.usedText}>{getUsageTypeText()}</Text>
                     </View>
                   )}
+                  {!isUsed && (
+                    <View style={styles.ddayButtonContainer}>
+                      <Text style={styles.ddayButtonText}>
+                        D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
+                      </Text>
+                    </View>
+                  )}
                 </View>
               )}
 
@@ -374,11 +381,6 @@ const DetailAmountScreen = () => {
                   <Text style={styles.infoValue}>
                     ~ {formatDate(gifticonData.gifticonExpiryDate)}
                   </Text>
-                  {!isUsed && (
-                    <Text style={styles.expiryDday}>
-                      D-{calculateDaysLeft(gifticonData.gifticonExpiryDate)}
-                    </Text>
-                  )}
                 </View>
 
                 <View style={styles.infoRow}>
@@ -564,7 +566,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   gifticonCard: {
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     overflow: 'hidden',
     borderWidth: 1,
@@ -572,46 +574,19 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     padding: 16,
+    paddingTop: 0,
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
-    height: 200,
-    backgroundColor: '#D2F2FF',
+    height: 300,
+    backgroundColor: '#E5F4FE',
+    position: 'relative',
   },
   gifticonImage: {
-    width: '80%',
-    height: '100%',
+    width: '60%',
+    height: '90%',
     borderRadius: 8,
-  },
-  // 바코드 관련 스타일
-  barcodeContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E6F4FB',
-    height: 220,
-  },
-  barcodeImage: {
-    width: '90%',
-    height: 150,
-  },
-  barcodeNumberContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-  },
-  barcodeNumberText: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: '500',
-  },
-  magnifyButton: {
-    marginLeft: 12,
-    padding: 8,
   },
   infoContainer: {
     padding: 16,
@@ -632,7 +607,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
     paddingHorizontal: 8,
   },
   infoLabel: {
@@ -646,16 +621,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#333',
   },
-  expiryDday: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#5DADE2',
-    marginLeft: 10,
-  },
+
   divider: {
     height: 1,
     backgroundColor: '#E0E0E0',
-    marginVertical: 16,
+    marginVertical: 12,
   },
   amountInfoRow: {
     flexDirection: 'row',
@@ -675,12 +645,12 @@ const styles = StyleSheet.create({
   amountValue: {
     fontSize: 16,
     color: '#333',
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   remainingAmount: {
-    color: '#3498DB',
+    color: '#278CCC',
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 16,
   },
   buttonContainer: {
     marginTop: 10,
@@ -750,6 +720,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: 'hidden',
   },
+  ddayButtonContainer: {
+    position: 'absolute',
+    bottom: 15,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(252, 217, 217, 0.8)',
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    borderRadius: 5,
+  },
+  ddayButtonText: {
+    color: '#D33434',
+    fontSize: 18,
+    fontWeight: 'semibold',
+  },
   loadingContent: {
     flex: 1,
     justifyContent: 'center',
@@ -807,6 +791,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+  },
+  // 바코드 관련 스타일
+  barcodeContainer: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E6F4FB',
+    height: 220,
+  },
+  barcodeImage: {
+    width: '90%',
+    height: 150,
+  },
+  barcodeNumberContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+  },
+  barcodeNumberText: {
+    fontSize: 18,
+    color: '#333',
+    fontWeight: '500',
+  },
+  magnifyButton: {
+    marginLeft: 12,
+    padding: 8,
   },
 });
 
