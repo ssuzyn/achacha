@@ -11,6 +11,7 @@ import { ThemeProvider } from 'react-native-elements';
 import theme from './src/theme/theme';
 import * as Font from 'expo-font';
 import { navigationRef } from './src/navigation/NavigationService';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // 특정 경고 무시 설정
 LogBox.ignoreLogs([
@@ -68,20 +69,22 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider theme={theme}>
-      <SafeAreaProvider>
-        <View style={styles.container} onLayout={onLayoutRootView}>
-          <HeaderBarProvider>
-            <TabBarProvider>
-              <NavigationContainer ref={navigationRef}>
-                <AppNavigator />
-                <StatusBar style="auto" />
-              </NavigationContainer>
-            </TabBarProvider>
-          </HeaderBarProvider>
-        </View>
-      </SafeAreaProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider theme={theme}>
+        <SafeAreaProvider>
+          <View style={styles.container} onLayout={onLayoutRootView}>
+            <HeaderBarProvider>
+              <TabBarProvider>
+                <NavigationContainer ref={navigationRef}>
+                  <AppNavigator />
+                  <StatusBar style="auto" />
+                </NavigationContainer>
+              </TabBarProvider>
+            </HeaderBarProvider>
+          </View>
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 

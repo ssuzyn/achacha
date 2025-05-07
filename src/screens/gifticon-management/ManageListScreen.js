@@ -1,7 +1,16 @@
 // 기프티콘 조회 스크린
 
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Image, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  StatusBar,
+  Alert,
+  Animated,
+} from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
 import { Text } from '../../components/ui';
@@ -9,6 +18,7 @@ import CategoryTabs from '../../components/common/CategoryTabs';
 import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
+import { Swipeable, RectButton } from 'react-native-gesture-handler';
 
 // 더미 데이터 - API 응답값 형식에 맞춰서 수정
 const DUMMY_GIFTICONS = [
@@ -312,74 +322,272 @@ const ManageListScreen = () => {
     return `${yy}.${mm}.${dd}`;
   };
 
+  // 바코드 조회 처리
+  const handleBarcodeView = item => {
+    if (item.gifticonType === 'PRODUCT') {
+      navigation.navigate('UseProduct', {
+        id: item.gifticonId,
+        barcodeNumber: '1234-5678-9012-3456', // 실제 바코드 번호로 수정 필요
+      });
+    } else if (item.gifticonType === 'AMOUNT') {
+      navigation.navigate('UseAmount', {
+        id: item.gifticonId,
+        barcodeNumber: '1234-5678-9012-3456', // 실제 바코드 번호로 수정 필요
+      });
+    }
+  };
+
+  // 사용 완료 처리
+  const handleMarkAsUsed = item => {
+    Alert.alert(
+      '사용 완료 처리',
+      `${item.brandName} - ${item.gifticonName}을(를) 사용 완료 처리하시겠습니까?`,
+      [
+        {
+          text: '취소',
+          style: 'cancel',
+        },
+        {
+          text: '확인',
+          onPress: () => {
+            // 여기서 API 호출로 상태 변경 (예시)
+            console.log(`기프티콘 ID ${item.gifticonId} 사용 완료 처리됨`);
+
+            // 상태 업데이트 및 화면 갱신 (임시 구현)
+            const updatedGifticons = filteredGifticons.filter(
+              gifticon => gifticon.gifticonId !== item.gifticonId
+            );
+            setFilteredGifticons(updatedGifticons);
+
+            // 성공 메시지 표시
+            Alert.alert('완료', '기프티콘이 사용 완료 처리되었습니다.');
+          },
+        },
+      ]
+    );
+  };
+
+  // 좌측 액션 (바코드 조회) 렌더링
+  const renderLeftActions = (progress, dragX, item) => {
+    const trans = dragX.interpolate({
+      inputRange: [0, 50, 100, 101],
+      outputRange: [-20, 0, 0, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <RectButton style={styles.leftAction} onPress={() => handleBarcodeView(item)}>
+        <Animated.View
+          style={[
+            styles.actionIconContainer,
+            {
+              transform: [{ translateX: trans }],
+            },
+          ]}
+        >
+          <Icon name="qr-code-scanner" type="material" color="#FFFFFF" size={24} />
+          <Text style={styles.actionText}>바코드 조회</Text>
+        </Animated.View>
+      </RectButton>
+    );
+  };
+
+  // 우측 액션 (사용 완료) 렌더링
+  const renderRightActions = (progress, dragX, item) => {
+    const trans = dragX.interpolate({
+      inputRange: [-101, -100, -50, 0],
+      outputRange: [0, 0, 0, 20],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <RectButton style={styles.rightAction} onPress={() => handleMarkAsUsed(item)}>
+        <Animated.View
+          style={[
+            styles.actionIconContainer,
+            {
+              transform: [{ translateX: trans }],
+            },
+          ]}
+        >
+          <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
+          <Text style={styles.actionText}>사용 완료</Text>
+        </Animated.View>
+      </RectButton>
+    );
+  };
+
+  // 스와이프 레퍼런스 저장
+  const swipeableRefs = useRef({});
+
   // 기프티콘 아이템 렌더링
   const renderGifticonItem = item => {
     const daysLeft = item.scope === 'USED' ? null : calculateDaysLeft(item.gifticonExpiryDate);
     const isUrgent = daysLeft !== null && daysLeft <= 7; // 7일 이하면 긴급(빨간색)
 
-    return (
-      <TouchableOpacity
-        key={item.gifticonId}
-        style={styles.gifticonItem}
-        onPress={() => handleGifticonPress(item)}
-      >
-        <Shadow
-          distance={12}
-          startColor={'rgba(0, 0, 0, 0.008)'}
-          offset={[0, 1]}
-          style={styles.shadowContainer}
+    // 사용 완료된 기프티콘은 스와이프 불가능
+    if (item.scope === 'USED') {
+      return (
+        <TouchableOpacity
+          key={item.gifticonId}
+          style={styles.gifticonItem}
+          onPress={() => handleGifticonPress(item)}
         >
-          <View
-            style={[
-              styles.gifticonContent,
-              // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
-              item.scope === 'SHARE_BOX' &&
-                item.userId !== currentUserId &&
-                styles.sharedByOtherContent,
-            ]}
+          <Shadow
+            distance={12}
+            startColor={'rgba(0, 0, 0, 0.008)'}
+            offset={[0, 1]}
+            style={styles.shadowContainer}
           >
-            {/* 이미지 영역 */}
-            <View style={styles.imageContainer}>
-              <Image source={item.thumbnailPath} style={styles.gifticonImage} />
-            </View>
+            <View
+              style={[
+                styles.gifticonContent,
+                // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
+                item.scope === 'SHARE_BOX' &&
+                  item.userId !== currentUserId &&
+                  styles.sharedByOtherContent,
+              ]}
+            >
+              {/* 이미지 영역 */}
+              <View style={styles.imageContainer}>
+                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+              </View>
 
-            {/* 텍스트 정보 영역 */}
-            <View style={styles.textContainer}>
-              <Text style={styles.brandText}>{item.brandName}</Text>
-              <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-                {item.gifticonName}
-              </Text>
+              {/* 텍스트 정보 영역 */}
+              <View style={styles.textContainer}>
+                <Text style={styles.brandText}>{item.brandName}</Text>
+                <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+                  {item.gifticonName}
+                </Text>
 
-              {/* 쉐어박스 정보 다시 추가 */}
-              {item.scope === 'SHARE_BOX' && item.shareBoxName && (
-                <View style={styles.shareBoxInfoContainer}>
-                  <Icon
-                    name="inventory-2"
-                    type="material"
-                    size={12}
-                    color="#888"
-                    containerStyle={styles.shareBoxIcon}
-                  />
-                  <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                  {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                  {item.userId !== currentUserId && (
-                    <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                  )}
-                </View>
-              )}
-            </View>
+                {/* 쉐어박스 정보 다시 추가 */}
+                {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                  <View style={styles.shareBoxInfoContainer}>
+                    <Icon
+                      name="inventory-2"
+                      type="material"
+                      size={12}
+                      color="#888"
+                      containerStyle={styles.shareBoxIcon}
+                    />
+                    <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+                    {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
+                    {item.userId !== currentUserId && (
+                      <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
+                    )}
+                  </View>
+                )}
+              </View>
 
-            {/* D-day 또는 사용일자 태그 */}
-            <View style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}>
-              <Text
-                style={[styles.dDayText, isUrgent ? styles.urgentDDayText : styles.normalDDayText]}
+              {/* D-day 또는 사용일자 태그 */}
+              <View
+                style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
               >
-                {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
-              </Text>
+                <Text
+                  style={[
+                    styles.dDayText,
+                    isUrgent ? styles.urgentDDayText : styles.normalDDayText,
+                  ]}
+                >
+                  {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
+                </Text>
+              </View>
             </View>
-          </View>
-        </Shadow>
-      </TouchableOpacity>
+          </Shadow>
+        </TouchableOpacity>
+      );
+    }
+
+    // 마이박스와 쉐어박스 기프티콘은 스와이프 가능
+    return (
+      <Swipeable
+        key={item.gifticonId}
+        ref={ref => (swipeableRefs.current[item.gifticonId] = ref)}
+        renderLeftActions={(progress, dragX) => renderLeftActions(progress, dragX, item)}
+        renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item)}
+        onSwipeableOpen={direction => {
+          // 다른 열린 swipeable 닫기
+          Object.keys(swipeableRefs.current).forEach(key => {
+            if (key !== String(item.gifticonId) && swipeableRefs.current[key]) {
+              swipeableRefs.current[key].close();
+            }
+          });
+        }}
+        friction={2}
+      >
+        <TouchableOpacity
+          style={styles.gifticonItem}
+          onPress={() => {
+            // 터치 시 열려있는 swipeable 닫기
+            if (swipeableRefs.current[item.gifticonId]) {
+              swipeableRefs.current[item.gifticonId].close();
+            }
+            handleGifticonPress(item);
+          }}
+        >
+          <Shadow
+            distance={12}
+            startColor={'rgba(0, 0, 0, 0.008)'}
+            offset={[0, 1]}
+            style={styles.shadowContainer}
+          >
+            <View
+              style={[
+                styles.gifticonContent,
+                // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
+                item.scope === 'SHARE_BOX' &&
+                  item.userId !== currentUserId &&
+                  styles.sharedByOtherContent,
+              ]}
+            >
+              {/* 이미지 영역 */}
+              <View style={styles.imageContainer}>
+                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+              </View>
+
+              {/* 텍스트 정보 영역 */}
+              <View style={styles.textContainer}>
+                <Text style={styles.brandText}>{item.brandName}</Text>
+                <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+                  {item.gifticonName}
+                </Text>
+
+                {/* 쉐어박스 정보 다시 추가 */}
+                {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                  <View style={styles.shareBoxInfoContainer}>
+                    <Icon
+                      name="inventory-2"
+                      type="material"
+                      size={12}
+                      color="#888"
+                      containerStyle={styles.shareBoxIcon}
+                    />
+                    <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+                    {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
+                    {item.userId !== currentUserId && (
+                      <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
+                    )}
+                  </View>
+                )}
+              </View>
+
+              {/* D-day 또는 사용일자 태그 */}
+              <View
+                style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
+              >
+                <Text
+                  style={[
+                    styles.dDayText,
+                    isUrgent ? styles.urgentDDayText : styles.normalDDayText,
+                  ]}
+                >
+                  {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
+                </Text>
+              </View>
+            </View>
+          </Shadow>
+        </TouchableOpacity>
+      </Swipeable>
     );
   };
 
@@ -672,6 +880,33 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#888',
     fontStyle: 'italic',
+  },
+  // 스와이프 액션 관련 스타일
+  leftAction: {
+    flex: 1,
+    backgroundColor: '#278CCC', // 파란색 계열
+    justifyContent: 'center',
+    marginBottom: 10,
+    borderRadius: 12,
+  },
+  rightAction: {
+    flex: 1,
+    backgroundColor: '#4CAF50', // 초록색 계열
+    justifyContent: 'center',
+    marginBottom: 10,
+    borderRadius: 12,
+  },
+  actionIconContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 100,
+  },
+  actionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginTop: 4,
   },
 });
 
