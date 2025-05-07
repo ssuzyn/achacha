@@ -293,23 +293,20 @@ const ManageListScreen = () => {
 
   // 기프티콘 클릭 시 상세 페이지로 이동하는 함수
   const handleGifticonPress = item => {
-    // 사용완료된 기프티콘은 상세화면으로 이동하지 않음
-    if (item.scope === 'USED') {
-      // 옵션: 사용완료된 기프티콘에 대한 토스트 메시지 표시 가능
-      console.log('사용완료된 기프티콘입니다.');
-      return;
-    }
-
     // 기프티콘 유형에 따라 다른 상세 페이지로 이동
     if (item.gifticonType === 'PRODUCT') {
       navigation.navigate('DetailProduct', {
         gifticonId: item.gifticonId,
-        scope: item.scope, // MY_BOX 또는 SHARE_BOX
+        scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
+        usageType: item.usageType, // USED 일 경우에만 사용됨
+        usedAt: item.usedAt, // USED 일 경우에만 사용됨
       });
     } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('DetailAmount', {
         gifticonId: item.gifticonId,
-        scope: item.scope, // MY_BOX 또는 SHARE_BOX
+        scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
+        usageType: item.usageType, // USED 일 경우에만 사용됨
+        usedAt: item.usedAt, // USED 일 경우에만 사용됨
       });
     }
   };
