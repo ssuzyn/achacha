@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     marginTop: 5,
-    marginBottom: 5,
+    marginBottom: 2,
   },
   gifticonCard: {
     backgroundColor: '#FFFFFF',
@@ -587,6 +587,8 @@ const styles = StyleSheet.create({
   useButton: {
     borderRadius: 8,
     marginBottom: 12,
+    width: '100%',
+    height: 56,
   },
   useCompleteButton: {
     borderColor: '#4CAF50',

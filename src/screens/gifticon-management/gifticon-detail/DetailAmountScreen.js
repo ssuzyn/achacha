@@ -499,6 +499,7 @@ const DetailAmountScreen = () => {
                   onPress={handleUse}
                   style={[styles.useButton, styles.useCompleteButton]}
                   variant="outline"
+                  size="lg"
                 />
               ) : (
                 // 일반 모드일 때 - 상단 버튼 영역 (사용하기/사용내역)
@@ -509,12 +510,14 @@ const DetailAmountScreen = () => {
                       onPress={handleUse}
                       style={styles.useButton}
                       variant="primary"
+                      size="lg"
                     />
                     <Button
                       title="사용내역"
                       onPress={handleHistory}
                       style={styles.historyButton}
                       variant="outline"
+                      size="lg"
                     />
                   </View>
 
@@ -611,7 +614,7 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 3,
   },
   gifticonCard: {
     backgroundColor: '#FFFFFF',
@@ -713,10 +716,12 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
     borderRadius: 8,
+    height: 56,
   },
   useCompleteButton: {
-    borderColor: '#4CAF50',
     borderWidth: 1,
+    width: '100%',
+    height: 56,
   },
   historyButton: {
     flex: 1,
