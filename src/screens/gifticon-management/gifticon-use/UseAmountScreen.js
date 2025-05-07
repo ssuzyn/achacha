@@ -7,13 +7,13 @@ import {
   Image,
   StatusBar,
   TouchableOpacity,
-  SafeAreaView,
   Modal,
   TextInput,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Orientation from 'react-native-orientation-locker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../../components/ui';
 
 const UseAmountScreen = () => {
@@ -21,6 +21,7 @@ const UseAmountScreen = () => {
   const route = useRoute();
   const [modalVisible, setModalVisible] = useState(false);
   const [amount, setAmount] = useState('');
+  const insets = useSafeAreaInsets();
 
   // route.params에서 정보 가져오기
   const { barcodeNumber } = route.params || {};
@@ -94,36 +95,44 @@ const UseAmountScreen = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
+    <View style={[styles.container, { backgroundColor: 'white' }]}>
       <StatusBar hidden />
 
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Icon name="arrow-back-ios" type="material" size={22} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{productInfo.name}</Text>
-      </View>
+      {/* 좌측 Safe Area */}
+      <View style={{ width: insets.left, height: '100%' }} />
 
-      <View style={styles.content}>
-        <View style={styles.barcodeSection}>
-          <Image
-            source={productInfo.barcodeImage}
-            style={styles.barcodeImage}
-            resizeMode="contain"
-          />
-          <Text style={styles.barcodeNumber}>{productInfo.barcodeNumber}</Text>
+      <View style={styles.mainContent}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <Icon name="arrow-back-ios" type="material" size={22} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{productInfo.name}</Text>
         </View>
 
-        <View style={styles.actionSection}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleShowModal}>
-            <Text style={styles.actionButtonText}>금액 입력</Text>
-          </TouchableOpacity>
+        <View style={styles.content}>
+          <View style={styles.barcodeSection}>
+            <Image
+              source={productInfo.barcodeImage}
+              style={styles.barcodeImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.barcodeNumber}>{productInfo.barcodeNumber}</Text>
+          </View>
 
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelButtonText}>취소</Text>
-          </TouchableOpacity>
+          <View style={styles.actionSection}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleShowModal}>
+              <Text style={styles.actionButtonText}>금액 입력</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+              <Text style={styles.cancelButtonText}>취소</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
+
+      {/* 우측 Safe Area */}
+      <View style={{ width: insets.right, height: '100%' }} />
 
       {/* 금액 입력 모달 */}
       <Modal
@@ -166,13 +175,18 @@ const UseAmountScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    flexDirection: 'row', // 가로 모드에서 좌우 안전 영역을 위해 row로 변경
+  },
+  mainContent: {
+    flex: 1,
+    flexDirection: 'column',
   },
   header: {
     flexDirection: 'row',
