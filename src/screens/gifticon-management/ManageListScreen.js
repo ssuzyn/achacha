@@ -428,6 +428,7 @@ const ManageListScreen = () => {
   const renderGifticonItem = item => {
     const daysLeft = item.scope === 'USED' ? null : calculateDaysLeft(item.gifticonExpiryDate);
     const isUrgent = daysLeft !== null && daysLeft <= 7; // 7일 이하면 긴급(빨간색)
+    const isSharedByOther = item.scope === 'SHARE_BOX' && item.userId !== currentUserId;
 
     // 사용 완료된 기프티콘은 스와이프 불가능
     if (item.scope === 'USED') {
@@ -443,15 +444,7 @@ const ManageListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View
-              style={[
-                styles.gifticonContent,
-                // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
-                item.scope === 'SHARE_BOX' &&
-                  item.userId !== currentUserId &&
-                  styles.sharedByOtherContent,
-              ]}
-            >
+            <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
                 <Image source={item.thumbnailPath} style={styles.gifticonImage} />
@@ -476,12 +469,19 @@ const ManageListScreen = () => {
                     />
                     <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
                     {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                    {item.userId !== currentUserId && (
+                    {isSharedByOther && (
                       <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
                     )}
                   </View>
                 )}
               </View>
+
+              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
+              {isSharedByOther && (
+                <View style={styles.bookmarkContainer}>
+                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
+                </View>
+              )}
 
               {/* D-day 또는 사용일자 태그 */}
               <View
@@ -539,15 +539,7 @@ const ManageListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View
-              style={[
-                styles.gifticonContent,
-                // 쉐어박스에서 다른 사람이 공유한 기프티콘인 경우 특별 스타일 적용
-                item.scope === 'SHARE_BOX' &&
-                  item.userId !== currentUserId &&
-                  styles.sharedByOtherContent,
-              ]}
-            >
+            <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
                 <Image source={item.thumbnailPath} style={styles.gifticonImage} />
@@ -572,12 +564,19 @@ const ManageListScreen = () => {
                     />
                     <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
                     {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                    {item.userId !== currentUserId && (
+                    {isSharedByOther && (
                       <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
                     )}
                   </View>
                 )}
               </View>
+
+              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
+              {isSharedByOther && (
+                <View style={styles.bookmarkContainer}>
+                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
+                </View>
+              )}
 
               {/* D-day 또는 사용일자 태그 */}
               <View
@@ -888,8 +887,9 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   sharedByOtherContent: {
-    borderWidth: 2,
-    borderColor: '#278CCC',
+    // 보더 스타일 제거 (주석처리나 삭제)
+    // borderWidth: 2,
+    // borderColor: '#278CCC',
   },
   sharedByText: {
     fontSize: 12,
@@ -942,6 +942,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     marginTop: 4,
+  },
+  // 북마크 컨테이너 스타일 추가
+  bookmarkContainer: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    zIndex: 10,
   },
 });
 
