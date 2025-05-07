@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Image, TouchableOpacity, StatusBar } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
 import { Text } from '../../components/ui';
@@ -123,7 +122,6 @@ const ManageListScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
-  const insets = useSafeAreaInsets();
 
   // route.params에서 initialTab을 가져와 초기 탭 설정
   const initialTab = route.params?.initialTab || 'mybas';
@@ -263,12 +261,7 @@ const ManageListScreen = () => {
         offset={[0, 1]}
         style={styles.shadowContainer}
       >
-        <View
-          style={[
-            styles.gifticonContent,
-            item.scope === 'USED' ? styles.usedGifticonContent : null,
-          ]}
-        >
+        <View style={styles.gifticonContent}>
           <Image source={item.thumbnailPath} style={styles.gifticonImage} />
           <View style={styles.gifticonInfo}>
             <Text style={styles.brandText}>{item.brandName}</Text>
@@ -285,10 +278,34 @@ const ManageListScreen = () => {
                 <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
               </View>
             )}
+            {item.scope === 'USED' && (
+              <View style={styles.usageTypeContainer}>
+                <Icon
+                  name={
+                    item.usageType === 'SELF_USE'
+                      ? 'check-circle'
+                      : item.usageType === 'PRESENT'
+                        ? 'card-giftcard'
+                        : 'share'
+                  }
+                  type="material"
+                  size={12}
+                  color="#888"
+                  containerStyle={styles.usageTypeIcon}
+                />
+                <Text style={styles.usageTypeText}>
+                  {item.usageType === 'SELF_USE'
+                    ? '사용완료'
+                    : item.usageType === 'PRESENT'
+                      ? '선물완료'
+                      : '나눔완료'}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={styles.expiryContainer}>
             {item.scope === 'USED' ? (
-              <Text style={styles.dateText}>{formatDate(item.gifticonExpiryDate)}</Text>
+              <Text style={styles.expiryText}>{formatDate(item.usedAt)}</Text>
             ) : (
               <Text style={styles.expiryText}>D-{calculateDaysLeft(item.gifticonExpiryDate)}</Text>
             )}
@@ -324,9 +341,6 @@ const ManageListScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
-
-      {/* 안전 영역 고려한 상단 여백 */}
-      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
       {/* 헤더 */}
       <View style={styles.headerSection}>
@@ -391,7 +405,11 @@ const ManageListScreen = () => {
       </View>
 
       {/* 기프티콘 리스트 */}
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <View style={styles.gifticonList}>
           {filteredGifticons.length > 0 ? (
             filteredGifticons.map(item => renderGifticonItem(item))
@@ -413,11 +431,12 @@ const ManageListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 12,
+    paddingTop: 0,
   },
   headerSection: {
-    paddingTop: 10,
+    paddingTop: 0,
     paddingBottom: 5,
-    paddingHorizontal: 12,
   },
   headerTitle: {
     fontSize: 26,
@@ -427,7 +446,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
     marginTop: 5,
   },
   tabFilterContainer: {
@@ -483,7 +501,10 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     marginTop: 5,
-    paddingHorizontal: 12,
+  },
+  scrollViewContent: {
+    paddingTop: 0,
+    paddingBottom: 30,
   },
   gifticonList: {
     paddingVertical: 5,
@@ -502,9 +523,6 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#E6F4FB',
     borderRadius: 10,
-  },
-  usedGifticonContent: {
-    backgroundColor: '#E8F4F0',
   },
   gifticonImage: {
     width: 40,
@@ -534,6 +552,19 @@ const styles = StyleSheet.create({
     marginRight: 3,
   },
   shareBoxText: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
+  },
+  usageTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  usageTypeIcon: {
+    marginRight: 3,
+  },
+  usageTypeText: {
     fontSize: 12,
     color: '#888',
     fontStyle: 'italic',
