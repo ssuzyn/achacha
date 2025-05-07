@@ -1,5 +1,8 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -8,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonCommonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
@@ -18,9 +22,12 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedG
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
+import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
+import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
+import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -42,6 +49,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final GifticonDomainService gifticonDomainService;
 	private final GifticonRepository gifticonRepository;
 	private final ParticipationRepository participationRepository;
+	private final UserRepository userRepository;
+	private final ShareBoxRepository shareBoxRepository;
+	private final FileRepository fileRepository;
 	private final PageableFactory pageableFactory;
 	private final OcrPort ocrPort;
 	private final AIServicePort aiServicePort;
@@ -113,12 +123,55 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 페이징 처리
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
-		// 쿼리 실행
-		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.getAvailableGifticons(userId,
+		// 기프티콘 조회 쿼리 실행
+		Slice<AvailableGifticonCommonResponseDto> gifticonSlice = gifticonRepository.getAvailableGifticons(userId,
 			scope, type, pageable);
 
+		List<AvailableGifticonResponseDto> dtos = new ArrayList<>();
+
+		for (AvailableGifticonCommonResponseDto findDto : gifticonSlice) {
+			// 브랜드 조회 쿼리 실행
+			String brandName =
+				findDto.getBrandId() != null ? brandRepository.findById(findDto.getBrandId()).getName() : null;
+
+			// 유저 조회 쿼리 실행
+			String userName =
+				findDto.getUserId() != null ? userRepository.findById(findDto.getUserId()).getName() : null;
+
+			// 쉐어박스 조회 쿼리 실행
+			String shareboxName = null;
+			if (findDto.getShareBoxId() != null) {
+				shareboxName = shareBoxRepository.findById(findDto.getShareBoxId()).getName();
+			}
+
+			String thumbnailPath = null;
+
+			// 파일 저장 로직 연결 시 주석 처리 해제(데이터가 없어서 무조건 null로 뜸 -> 오류 발생함)
+			// if (findDto.getGifticonId() != null) {
+			// 	File thumbnail = fileRepository.findFile(findDto.getGifticonId(), "GIFTICON", FileType.THUMBNAIL);
+			// 	thumbnailPath = thumbnail != null ? thumbnail.getPath() : null;
+			// }
+
+			AvailableGifticonResponseDto newDto = AvailableGifticonResponseDto.builder()
+				.gifticonId(findDto.getGifticonId())
+				.gifticonName(findDto.getGifticonName())
+				.gifticonType(findDto.getGifticonType())
+				.gifticonExpiryDate(findDto.getGifticonExpiryDate())
+				.brandId(findDto.getBrandId())
+				.brandName(brandName)
+				.scope(findDto.getScope())
+				.userId(findDto.getUserId())
+				.userName(userName)
+				.shareboxId(findDto.getShareBoxId())
+				.shareboxName(shareboxName)
+				.thumbnailPath(thumbnailPath)
+				.build();
+
+			dtos.add(newDto);
+		}
+
 		return AvailableGifticonsResponseDto.builder()
-			.gifticons(gifticonSlice.getContent())
+			.gifticons(dtos)
 			.hasNextPage(gifticonSlice.hasNext())
 			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
 			.build();
@@ -161,6 +214,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.hasNextPage(gifticonSlice.hasNext())
 			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
 			.build();
+	}
 
 	private Integer findBrandId(String brandName) {
 		if (brandName == null || brandName.trim().isEmpty()) {
