@@ -2,7 +2,6 @@ package com.eurachacha.achacha.infrastructure.adapter.output.persistence.giftico
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -17,6 +16,7 @@ import com.eurachacha.achacha.domain.model.sharebox.QParticipation;
 import com.eurachacha.achacha.domain.model.sharebox.QShareBox;
 import com.eurachacha.achacha.domain.model.user.QUser;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.QueryUtils;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.JPAExpressions;
@@ -42,23 +42,23 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 		QShareBox qShareBox = QShareBox.shareBox;
 		QParticipation qParticipation = QParticipation.participation;
 
-		// 직접 매핑을 사용
+		// Projections.fields를 사용한 자동 매핑
 		List<AvailableGifticonResponseDto> content = jpaQueryFactory
-			.select(
-				qGifticon.id,
-				qGifticon.name,
-				qGifticon.type,
-				qGifticon.expiryDate,
-				qBrand.id,
-				qBrand.name,
+			.select(Projections.fields(AvailableGifticonResponseDto.class,
+				qGifticon.id.as("gifticonId"),
+				qGifticon.name.as("gifticonName"),
+				qGifticon.type.as("gifticonType"),
+				qGifticon.expiryDate.as("gifticonExpiryDate"),
+				qBrand.id.as("brandId"),
+				qBrand.name.as("brandName"),
 				new CaseBuilder()
 					.when(qGifticon.sharebox.id.isNull()).then("MY_BOX")
-					.otherwise("SHARE_BOX"),
-				qUser.id,
-				qUser.name,
-				qGifticon.sharebox.id,
-				qShareBox.name
-			)
+					.otherwise("SHARE_BOX").as("scope"),
+				qUser.id.as("userId"),
+				qUser.name.as("userName"),
+				qGifticon.sharebox.id.as("shareboxId"),
+				qShareBox.name.as("shareboxName")
+			))
 			.from(qGifticon)
 			.join(qGifticon.brand, qBrand)
 			.join(qGifticon.user, qUser)
@@ -68,30 +68,13 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 				qGifticon.isUsed.eq(false),
 				qGifticon.remainingAmount.gt(0).or(qGifticon.remainingAmount.isNull()),
 				qGifticon.expiryDate.after(LocalDate.now()),
-				scopeConditionWithUser(scope, userId, qGifticon, qParticipation),
+				createScopeCondition(scope, userId, qGifticon, qParticipation),
 				typeCondition(type, qGifticon)
 			)
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize() + 1)
 			.orderBy(QueryUtils.getOrderSpecifier(pageable.getSort(), qGifticon))
-			.fetch()
-			.stream()
-			.map(tuple -> {
-				return AvailableGifticonResponseDto.builder()
-					.gifticonId(tuple.get(0, Integer.class))
-					.gifticonName(tuple.get(1, String.class))
-					.gifticonType(tuple.get(2, GifticonType.class))
-					.gifticonExpiryDate(tuple.get(3, LocalDate.class))
-					.brandId(tuple.get(4, Integer.class))
-					.brandName(tuple.get(5, String.class))
-					.scope(tuple.get(6, String.class))
-					.userId(tuple.get(7, Integer.class))
-					.userName(tuple.get(8, String.class))
-					.shareboxId(tuple.get(9, Integer.class))
-					.shareboxName(tuple.get(10, String.class))
-					.build();
-			})
-			.collect(Collectors.toList());
+			.fetch();
 
 		boolean hasNext = false;
 		if (content.size() > pageable.getPageSize()) {
@@ -103,43 +86,69 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 	}
 
 	/**
-	 * 범위 타입과 사용자 ID에 따른 조건식 생성
+	 * 범위 타입에 따른 적절한 조건식 선택
 	 */
-	private BooleanExpression scopeConditionWithUser(GifticonScopeType scope, Integer userId, QGifticon g,
-		QParticipation p) {
+	private BooleanExpression createScopeCondition(GifticonScopeType scope, Integer userId, QGifticon qGifticon,
+		QParticipation qParticipation) {
 		if (scope == GifticonScopeType.ALL) {
-			return g.user.id.eq(userId).or(
-				g.sharebox.id.isNotNull().and(
-					JPAExpressions
-						.selectOne()
-						.from(p)
-						.where(
-							p.sharebox.id.eq(g.sharebox.id),
-							p.user.id.eq(userId)
-						)
-						.exists()
-				)
-			);
+			return createAllScopeCondition(userId, qGifticon, qParticipation);
 		} else if (scope == GifticonScopeType.MY_BOX) {
-			return g.sharebox.id.isNull().and(g.user.id.eq(userId));
+			return createMyBoxScopeCondition(userId, qGifticon);
 		} else if (scope == GifticonScopeType.SHARE_BOX) {
-			return g.sharebox.id.isNotNull().and(
-				g.user.id.eq(userId).or(
-					JPAExpressions
-						.selectOne()
-						.from(p)
-						.where(
-							p.sharebox.id.eq(g.sharebox.id),
-							p.user.id.eq(userId)
-						)
-						.exists()
-				)
-			);
+			return createShareBoxScopeCondition(userId, qGifticon, qParticipation);
 		}
 		return null;
 	}
 
-	private BooleanExpression typeCondition(GifticonType type, QGifticon g) {
-		return type == null ? null : g.type.eq(type);
+	/**
+	 * 모든 범위(ALL) 조건 생성
+	 */
+	private BooleanExpression createAllScopeCondition(Integer userId, QGifticon qGifticon,
+		QParticipation qParticipation) {
+		return qGifticon.user.id.eq(userId).or(
+			qGifticon.sharebox.id.isNotNull().and(
+				existsParticipation(userId, qGifticon, qParticipation)
+			)
+		);
+	}
+
+	/**
+	 * 내 보관함(MY_BOX) 조건 생성
+	 */
+	private BooleanExpression createMyBoxScopeCondition(Integer userId, QGifticon qGifticon) {
+		return qGifticon.sharebox.id.isNull().and(qGifticon.user.id.eq(userId));
+	}
+
+	/**
+	 * 공유 보관함(SHARE_BOX) 조건 생성
+	 */
+	private BooleanExpression createShareBoxScopeCondition(Integer userId, QGifticon qGifticon,
+		QParticipation qParticipation) {
+		return qGifticon.sharebox.id.isNotNull().and(
+			qGifticon.user.id.eq(userId).or(
+				existsParticipation(userId, qGifticon, qParticipation)
+			)
+		);
+	}
+
+	/**
+	 * 공유박스 참여 확인 서브쿼리
+	 */
+	private BooleanExpression existsParticipation(Integer userId, QGifticon qGifticon, QParticipation qParticipation) {
+		return JPAExpressions
+			.selectOne()
+			.from(qParticipation)
+			.where(
+				qParticipation.sharebox.id.eq(qGifticon.sharebox.id),
+				qParticipation.user.id.eq(userId)
+			)
+			.exists();
+	}
+
+	/**
+	 * 기프티콘 타입 조건
+	 */
+	private BooleanExpression typeCondition(GifticonType type, QGifticon qGifticon) {
+		return type == null ? null : qGifticon.type.eq(type);
 	}
 }
