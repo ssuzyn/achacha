@@ -32,6 +32,8 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -135,18 +137,59 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		Integer userId = 2; // 유저 로직 추가 시 변경 필요
 
-		AvailableGifticonDetailResponseDto detailResponseDto = gifticonRepository.getAvailableGifticonDetail(
+		Gifticon findGifticon = gifticonRepository.getAvailableGifticonDetail(
 			gifticonId);
 
-		if (detailResponseDto.getShareBoxId() == null) { // 공유되지 않은 기프티콘인 경우
-			gifticonDomainService.validateGifticonAccess(userId, detailResponseDto.getUserId());
+		// 공유되지 않은 기프티콘인 경우
+		if (findGifticon.getSharebox() == null) {
+			if (!gifticonDomainService.validateGifticonAccess(userId, findGifticon.getUser().getId())) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 		}
 
-		if (detailResponseDto.getShareBoxId() != null) { // 공유된 기프티콘인 경우
-			participationRepository.checkParticipation(userId, detailResponseDto.getShareBoxId());
+		// 공유된 기프티콘인 경우
+		if (findGifticon.getSharebox() != null) {
+			participationRepository.checkParticipation(userId, findGifticon.getSharebox().getId());
 		}
 
-		return detailResponseDto;
+		// 유효기간이 만료된 기프티콘인 경우
+		if (gifticonDomainService.isExpired(findGifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
+		}
+
+		// 삭제된 기프티콘인 경우
+		if (findGifticon.getIsDeleted()) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용된 기프티콘인 경우
+		if (findGifticon.getIsUsed()) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 기프티콘 스코프 결정에 따른 값
+		String scope = findGifticon.getSharebox() == null ? "MY_BOX" : "SHARE_BOX";
+		Integer shareBoxId = findGifticon.getSharebox() == null ? null : findGifticon.getSharebox().getId();
+		String shareBoxName = findGifticon.getSharebox() == null ? null : findGifticon.getSharebox().getName();
+
+		return AvailableGifticonDetailResponseDto.builder()
+			.gifticonId(findGifticon.getId())
+			.gifticonName(findGifticon.getName())
+			.gifticonType(findGifticon.getType())
+			.gifticonExpiryDate(findGifticon.getExpiryDate())
+			.brandId(findGifticon.getBrand().getId())
+			.brandName(findGifticon.getBrand().getName())
+			.scope(scope)
+			.userId(findGifticon.getUser().getId())
+			.userName(findGifticon.getUser().getName())
+			.shareBoxId(shareBoxId)
+			.shareBoxName(shareBoxName)
+			.thumbnailPath(null) // 파일로직 구현 후 수정
+			.originalImagePath(null) // 파일로직 구현 후 수정
+			.gifticonCreatedAt(findGifticon.getCreatedAt())
+			.gifticonOriginalAmount(findGifticon.getOriginalAmount())
+			.gifticonRemainingAmount(findGifticon.getRemainingAmount())
+			.build();
 	}
 
 	@Override
