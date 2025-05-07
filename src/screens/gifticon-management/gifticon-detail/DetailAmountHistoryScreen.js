@@ -1,24 +1,58 @@
 // 금액형 사용내역 스크린
 
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Image, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  TextInput,
+  Alert,
+} from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Divider, Button } from '../../../components/ui';
+import { Text, Divider } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
 
 const DetailAmountHistoryScreen = () => {
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { showTabBar } = useTabBar();
+  const [transactions, setTransactions] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editValue, setEditValue] = useState('');
 
   // 바텀탭 표시
   useEffect(() => {
     showTabBar();
+
+    // 더미 기프티콘 데이터 초기화
+    setTransactions([
+      {
+        id: '1',
+        userName: '홍길동',
+        date: '2025.01.10 14:30',
+        amount: 3000,
+        type: 'payment',
+      },
+      {
+        id: '2',
+        userName: '김철수',
+        date: '2025.01.20 16:45',
+        amount: 5000,
+        type: 'payment',
+      },
+      {
+        id: '3',
+        userName: '이영희',
+        date: '2025.01.25 10:15',
+        amount: 20000,
+        type: 'payment',
+      },
+    ]);
   }, []);
 
   // 더미 기프티콘 데이터
@@ -27,26 +61,9 @@ const DetailAmountHistoryScreen = () => {
     brand: '스타벅스',
     name: 'APP전용 e카드 3만원 교환권',
     amount: 30000,
-    totalBalance: 10000,
-    usedAmount: 8000,
+    totalBalance: 30000,
+    usedAmount: 28000,
     remainingBalance: 2000,
-    imageUrl: require('../../../assets/images/dummy-starbuckscard.png'),
-    transactions: [
-      {
-        id: '1',
-        date: '25.04.23',
-        time: '22:12',
-        amount: 3000,
-        type: 'charge',
-      },
-      {
-        id: '2',
-        date: '25.04.23',
-        time: '22:12',
-        amount: 5000,
-        type: 'payment',
-      },
-    ],
   };
 
   // 숫자에 천단위 콤마 추가
@@ -61,12 +78,55 @@ const DetailAmountHistoryScreen = () => {
 
   // 수정하기 함수
   const handleEdit = transactionId => {
-    console.log('수정하기:', transactionId);
+    const transaction = transactions.find(t => t.id === transactionId);
+    if (transaction) {
+      setEditingId(transactionId);
+      setEditValue(transaction.amount.toString());
+    }
+  };
+
+  // 수정 취소 함수
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditValue('');
+  };
+
+  // 수정 저장 함수
+  const handleSaveEdit = transactionId => {
+    const amount = parseInt(editValue, 10);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('유효하지 않은 금액', '올바른 금액을 입력하세요.');
+      return;
+    }
+
+    setTransactions(prev =>
+      prev.map(item => (item.id === transactionId ? { ...item, amount } : item))
+    );
+    setEditingId(null);
+    setEditValue('');
   };
 
   // 삭제하기 함수
   const handleDelete = transactionId => {
-    console.log('삭제하기:', transactionId);
+    Alert.alert('거래 내역 삭제', '이 거래 내역을 삭제하시겠습니까?', [
+      {
+        text: '취소',
+        style: 'cancel',
+      },
+      {
+        text: '삭제',
+        onPress: () => {
+          setTransactions(prev => prev.filter(item => item.id !== transactionId));
+        },
+        style: 'destructive',
+      },
+    ]);
+  };
+
+  // amount 표시 함수
+  const renderAmount = (amount, type) => {
+    const prefix = type === 'payment' ? '-' : '';
+    return `${prefix}${formatNumber(amount)}원`;
   };
 
   return (
@@ -78,14 +138,9 @@ const DetailAmountHistoryScreen = () => {
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Button
-          variant="ghost"
-          onPress={handleGoBack}
-          style={styles.backButton}
-          leftIcon={
-            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
-          }
-        />
+        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+          <Icon name="chevron-left" type="feather" size={24} color={theme.colors.black} />
+        </TouchableOpacity>
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           기프티콘 사용내역
         </Text>
@@ -94,20 +149,9 @@ const DetailAmountHistoryScreen = () => {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.contentContainer}>
-          {/* 카드 영역 */}
-          <View style={styles.cardContainer}>
-            {/* 기프티콘 이미지 및 정보 카드 */}
-            <View style={styles.gifticonCard}>
-              <Image
-                source={gifticonData.imageUrl}
-                style={styles.gifticonImage}
-                resizeMode="contain"
-              />
-              <View style={styles.infoContainer}>
-                <Text style={styles.brandText}>{gifticonData.brand}</Text>
-                <Text style={styles.nameText}>{gifticonData.name}</Text>
-              </View>
-            </View>
+          <View style={styles.infoHeaderContainer}>
+            <Text style={styles.brandText}>{gifticonData.brand}</Text>
+            <Text style={styles.nameText}>{gifticonData.name}</Text>
           </View>
 
           {/* 잔액 정보 */}
@@ -122,7 +166,7 @@ const DetailAmountHistoryScreen = () => {
             </View>
             <View style={styles.balanceRow}>
               <Text style={styles.balanceLabel}>남은 금액</Text>
-              <Text style={styles.balanceValue}>
+              <Text style={[styles.balanceValue, { color: '#56AEE9' }]}>
                 {formatNumber(gifticonData.remainingBalance)}원
               </Text>
             </View>
@@ -132,41 +176,63 @@ const DetailAmountHistoryScreen = () => {
 
           {/* 거래 내역 */}
           <View style={styles.transactionsContainer}>
-            {gifticonData.transactions.map(transaction => (
-              <View key={transaction.id} style={styles.transactionItem}>
-                <View style={styles.transactionInfo}>
-                  <Text style={styles.transactionStore}>정주은</Text>
-                  <Text style={styles.transactionDate}>
-                    {transaction.date} {transaction.time}
-                  </Text>
-                </View>
-                <View style={styles.transactionAmount}>
-                  <Text
-                    style={[
-                      styles.amountText,
-                      { color: transaction.type === 'charge' ? '#1E88E5' : '#F44336' },
-                    ]}
-                  >
-                    {transaction.type === 'charge' ? '' : '-'}
-                    {formatNumber(transaction.amount)}원
-                  </Text>
-                  <View style={styles.actionButtons}>
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => handleEdit(transaction.id)}
-                    >
-                      <Text style={styles.actionButtonText}>수정하기</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.actionButton, styles.deleteButton]}
-                      onPress={() => handleDelete(transaction.id)}
-                    >
-                      <Text style={[styles.actionButtonText, styles.deleteButtonText]}>
-                        삭제하기
-                      </Text>
-                    </TouchableOpacity>
+            {transactions.map(transaction => (
+              <View key={transaction.id}>
+                {editingId === transaction.id ? (
+                  <View style={styles.editItemContainer}>
+                    <View style={styles.editInfoSection}>
+                      <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                      <Text style={styles.transactionDate}>{transaction.date}</Text>
+                    </View>
+                    <View style={styles.editActionSection}>
+                      <TextInput
+                        style={styles.editInput}
+                        value={editValue}
+                        onChangeText={setEditValue}
+                        keyboardType="numeric"
+                        placeholder="금액 입력"
+                      />
+                      <TouchableOpacity
+                        style={[styles.editButton, styles.cancelButton]}
+                        onPress={handleCancelEdit}
+                      >
+                        <Text style={styles.cancelButtonText}>취소</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[styles.editButton, styles.saveButton]}
+                        onPress={() => handleSaveEdit(transaction.id)}
+                      >
+                        <Text style={styles.saveButtonText}>수정</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
-                </View>
+                ) : (
+                  <View style={styles.transactionItem}>
+                    <View style={styles.transactionLeft}>
+                      <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                      <Text style={styles.transactionDate}>{transaction.date}</Text>
+                    </View>
+                    <View style={styles.transactionRight}>
+                      <Text style={[styles.amountText, { color: '#56AEE9' }]}>
+                        {renderAmount(transaction.amount, transaction.type)}
+                      </Text>
+                      <View style={styles.actionIcons}>
+                        <TouchableOpacity
+                          onPress={() => handleEdit(transaction.id)}
+                          style={styles.iconButton}
+                        >
+                          <Icon name="edit" type="feather" size={20} color="#AAAAAA" />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => handleDelete(transaction.id)}
+                          style={styles.iconButton}
+                        >
+                          <Icon name="trash-2" type="feather" size={20} color="#AAAAAA" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                )}
               </View>
             ))}
           </View>
@@ -181,7 +247,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    height: 60,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -193,6 +259,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     textAlign: 'center',
@@ -205,75 +272,66 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    padding: 16,
+    padding: 24,
   },
-  cardContainer: {
+  infoHeaderContainer: {
+    marginVertical: 16,
     alignItems: 'center',
-    marginVertical: 10,
-  },
-  gifticonCard: {
-    width: '100%',
-    maxWidth: 300,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1E88E5',
-    overflow: 'hidden',
-    alignItems: 'center',
-    padding: 16,
-  },
-  gifticonImage: {
-    width: '100%',
-    height: 160,
-    borderRadius: 8,
-  },
-  infoContainer: {
-    alignItems: 'center',
-    marginTop: 12,
   },
   brandText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
   nameText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#666',
     marginTop: 4,
+    textAlign: 'center',
   },
   balanceSection: {
-    marginTop: 20,
+    marginTop: 10,
+    borderRadius: 12,
+    padding: 16,
   },
   balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 5,
   },
   balanceLabel: {
-    fontSize: 14,
+    fontSize: 18,
     color: '#666',
   },
   balanceValue: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
   divider: {
-    marginVertical: 16,
+    marginVertical: 20,
   },
   transactionsContainer: {
     marginTop: 10,
   },
   transactionItem: {
-    backgroundColor: '#F9F9F9',
-    borderRadius: 10,
-    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
     marginBottom: 12,
   },
-  transactionInfo: {
-    marginBottom: 10,
+  transactionLeft: {
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
-  transactionStore: {
+  transactionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  transactionUser: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
@@ -283,35 +341,65 @@ const styles = StyleSheet.create({
     color: '#888',
     marginTop: 4,
   },
-  transactionAmount: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
   amountText: {
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#278CCC',
+    marginRight: 15,
   },
-  actionButtons: {
+  actionIcons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
-  actionButton: {
-    backgroundColor: '#E0E0E0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
+  iconButton: {
+    padding: 2,
+    marginLeft: 4,
+  },
+  editItemContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  editInfoSection: {
+    marginBottom: 12,
+  },
+  editActionSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+  },
+  editButton: {
+    height: 40,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginLeft: 8,
   },
-  actionButtonText: {
-    fontSize: 12,
-    color: '#333',
+  cancelButton: {
+    backgroundColor: '#CDE7F9',
   },
-  deleteButton: {
-    backgroundColor: '#FF5252',
+  saveButton: {
+    backgroundColor: '#56AEE9',
   },
-  deleteButtonText: {
-    color: '#FFFFFF',
+  cancelButtonText: {
+    color: '#56AEE9',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
   },
 });
 
