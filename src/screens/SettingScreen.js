@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Modal,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
+} from 'react-native';
 import { useTheme } from 'react-native-elements';
 import Slider from '../components/ui/Slider';
 import { Button, Divider, Text } from '../components/ui';
@@ -15,9 +23,115 @@ const SettingScreen = () => {
   const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(1);
   const [usageCompletionNotification, setUsageCompletionNotification] = useState(true);
   const [shareboxNotification, setShareboxNotification] = useState(true);
+  const [watchModalVisible, setWatchModalVisible] = useState(false);
+  const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
 
   // 슬라이더 마커 값
   const markers = [0, 1, 2, 3, 7, 30, 60, 90];
+
+  // 워치 연결 모달 열기
+  const openWatchModal = () => {
+    setWatchModalVisible(true);
+    setConnectionStep(0);
+  };
+
+  // 워치 연결 모달 닫기
+  const closeWatchModal = () => {
+    setWatchModalVisible(false);
+    setConnectionStep(0);
+  };
+
+  // 워치 연결 시작
+  const startConnection = () => {
+    setConnectionStep(1);
+
+    // 워치 연결 시뮬레이션 (3초 후 연결 완료)
+    setTimeout(() => {
+      setConnectionStep(2);
+    }, 3000);
+  };
+
+  // 모달 내용 렌더링
+  const renderModalContent = () => {
+    // 초기 연결 화면
+    if (connectionStep === 0) {
+      return (
+        <>
+          <View style={styles.modalContent}>
+            <View style={styles.watchImageContainer}>
+              <Image
+                source={require('../assets/images/watch.png')}
+                style={styles.watchImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.modalText}>스마트 워치에서 연결하기 버튼을 눌러주세요.</Text>
+          </View>
+          <View style={styles.modalFooter}>
+            <View style={styles.buttonRow}>
+              <Button
+                title="취소"
+                type="outline"
+                buttonStyle={[styles.cancelButton, { borderColor: theme.colors.grey4 }]}
+                titleStyle={{ color: theme.colors.grey3 }}
+                containerStyle={styles.modalButtonStyle}
+                onPress={closeWatchModal}
+              />
+              <View style={styles.buttonSpacer} />
+              <Button
+                title="연결"
+                buttonStyle={[styles.connectButton, { backgroundColor: theme.colors.primary }]}
+                containerStyle={styles.modalButtonStyle}
+                onPress={startConnection}
+              />
+            </View>
+          </View>
+        </>
+      );
+    }
+
+    // 연결 중 화면
+    else if (connectionStep === 1) {
+      return (
+        <>
+          <View style={styles.modalContent}>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={theme.colors.primary} />
+              <Text style={styles.loadingText}>연결 중입니다...</Text>
+            </View>
+          </View>
+        </>
+      );
+    }
+
+    // 연결 완료 화면
+    else if (connectionStep === 2) {
+      return (
+        <>
+          <View style={styles.modalContent}>
+            <View style={styles.successContainer}>
+              <View style={styles.watchImageContainer}>
+                <Image
+                  source={require('../assets/images/watch.png')}
+                  style={styles.watchImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.successText}>성공적으로 연결이 완료되었습니다.</Text>
+            </View>
+          </View>
+          <View style={styles.modalFooter}>
+            <Button
+              title="확인"
+              buttonStyle={[styles.confirmButton, { backgroundColor: theme.colors.primary }]}
+              containerStyle={{ width: '100%' }}
+              onPress={closeWatchModal}
+            />
+          </View>
+        </>
+      );
+    }
+  };
 
   return (
     <ScrollView
@@ -77,7 +191,7 @@ const SettingScreen = () => {
                 유효기간 알림 주기 설정
               </Text>
               <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-                만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90 일 단위
+                만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90일 단위
               </Text>
             </View>
 
@@ -124,14 +238,14 @@ const SettingScreen = () => {
           />
         </View>
 
-        {/* 기프티콘 나누기 알림 */}
+        {/* 기프티콘 뿌리기 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text variant="body1" style={styles.notificationLabel}>
-              기프티콘 나누기 알림
+              기프티콘 뿌리기 알림
             </Text>
             <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              기프티콘 나누기 수신 알림
+              기프티콘 뿌리기 수신 알림
             </Text>
           </View>
           <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
@@ -151,6 +265,29 @@ const SettingScreen = () => {
         </View>
       </View>
 
+      {/* 알림과 워치 섹션 사이 구분선 */}
+      <Divider style={styles.sectionDivider} />
+
+      {/* 워치 섹션 */}
+      <View style={styles.section}>
+        <Text variant="h3" style={styles.sectionTitle}>
+          워치 설정
+        </Text>
+        <TouchableOpacity style={styles.watchItem} onPress={openWatchModal}>
+          <View style={styles.notificationInfo}>
+            <Text variant="body1" style={styles.notificationLabel}>
+              워치 연결하기
+            </Text>
+            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+              워치와의 연동을 진행합니다.
+            </Text>
+          </View>
+          <View style={styles.arrowContainer}>
+            <Text style={styles.arrowText}>{'>'}</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       {/* 버튼 영역 */}
       <View style={styles.buttonContainer}>
         <Button
@@ -167,6 +304,20 @@ const SettingScreen = () => {
           containerStyle={styles.buttonStyle}
         />
       </View>
+
+      {/* 워치 연결 모달 */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={watchModalVisible}
+        onRequestClose={closeWatchModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { backgroundColor: 'white' }]}>
+            {renderModalContent()}
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -262,6 +413,97 @@ const styles = StyleSheet.create({
   },
   sectionDivider: {
     marginBottom: 20,
+  },
+  watchItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginBottom: 5,
+  },
+  arrowContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  arrowText: {
+    fontSize: 18,
+    color: '#aaa',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: '85%',
+    borderRadius: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 60,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalContent: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  modalFooter: {
+    alignItems: 'center',
+  },
+  modalButtonStyle: {
+    flex: 1,
+  },
+  connectButton: {
+    paddingVertical: 12,
+  },
+  cancelButton: {
+    paddingVertical: 12,
+    borderWidth: 1,
+  },
+  confirmButton: {
+    paddingVertical: 12,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  watchImageContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  watchImage: {
+    width: 150,
+    height: 150,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+  },
+  successContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  successText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 16,
   },
 });
 
