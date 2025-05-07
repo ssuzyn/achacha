@@ -18,12 +18,9 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedG
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
-import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
-import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
-import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -32,8 +29,6 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
-import com.eurachacha.achacha.web.common.exception.CustomException;
-import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,9 +42,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final GifticonDomainService gifticonDomainService;
 	private final GifticonRepository gifticonRepository;
 	private final ParticipationRepository participationRepository;
-	private final UserRepository userRepository;
-	private final ShareBoxRepository shareBoxRepository;
-	private final FileRepository fileRepository;
 	private final PageableFactory pageableFactory;
 	private final OcrPort ocrPort;
 	private final AIServicePort aiServicePort;
@@ -140,31 +132,18 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(
 			gifticonId);
 
-		// 공유되지 않은 기프티콘인 경우
-		if (findGifticon.getSharebox() == null) {
-			if (!gifticonDomainService.validateGifticonAccess(userId, findGifticon.getUser().getId())) {
-				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-			}
-		}
+		/*
+		 * 사용가능 기프티콘 검증 로직
+		 *  1. 삭제 여부 판단
+		 *  2. 사용 여부 판단
+		 *  3. 유효기간 여부 판단
+		 *  4. 공유하지 않은 기프티콘인 경우 소유자 판단
+		 */
+		gifticonDomainService.validateAvailableGifticon(userId, findGifticon);
 
-		// 공유된 기프티콘인 경우
+		// 공유된 기프티콘인 경우 참여 여부 판단
 		if (findGifticon.getSharebox() != null) {
 			participationRepository.checkParticipation(userId, findGifticon.getSharebox().getId());
-		}
-
-		// 유효기간이 만료된 기프티콘인 경우
-		if (gifticonDomainService.isExpired(findGifticon)) {
-			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
-		}
-
-		// 삭제된 기프티콘인 경우
-		if (findGifticon.getIsDeleted()) {
-			throw new CustomException(ErrorCode.GIFTICON_DELETED);
-		}
-
-		// 사용된 기프티콘인 경우
-		if (findGifticon.getIsUsed()) {
-			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
 		}
 
 		// 기프티콘 스코프 결정에 따른 값
