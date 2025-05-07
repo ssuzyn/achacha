@@ -69,21 +69,19 @@ const SettingScreen = () => {
           </View>
           <View style={styles.modalFooter}>
             <View style={styles.buttonRow}>
-              <Button
-                title="취소"
-                type="outline"
-                buttonStyle={[styles.cancelButton, { borderColor: theme.colors.grey4 }]}
-                titleStyle={{ color: theme.colors.grey3 }}
-                containerStyle={styles.modalButtonStyle}
+              <TouchableOpacity
+                style={[styles.buttonContainer, styles.cancelButton]}
                 onPress={closeWatchModal}
-              />
+              >
+                <Text style={styles.buttonText}>취소</Text>
+              </TouchableOpacity>
               <View style={styles.buttonSpacer} />
-              <Button
-                title="연결"
-                buttonStyle={[styles.connectButton, { backgroundColor: theme.colors.primary }]}
-                containerStyle={styles.modalButtonStyle}
+              <TouchableOpacity
+                style={[styles.buttonContainer, styles.connectButton]}
                 onPress={startConnection}
-              />
+              >
+                <Text style={styles.buttonText}>연결</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </>
@@ -121,12 +119,9 @@ const SettingScreen = () => {
             </View>
           </View>
           <View style={styles.modalFooter}>
-            <Button
-              title="확인"
-              buttonStyle={[styles.confirmButton, { backgroundColor: theme.colors.primary }]}
-              containerStyle={{ width: '100%' }}
-              onPress={closeWatchModal}
-            />
+            <TouchableOpacity style={styles.confirmButton} onPress={closeWatchModal}>
+              <Text style={styles.buttonText}>확인</Text>
+            </TouchableOpacity>
           </View>
         </>
       );
@@ -238,14 +233,14 @@ const SettingScreen = () => {
           />
         </View>
 
-        {/* 기프티콘 뿌리기 알림 */}
+        {/* 기프티콘 나누기 알림 */}
         <View style={styles.notificationItem}>
           <View style={styles.notificationInfo}>
             <Text variant="body1" style={styles.notificationLabel}>
-              기프티콘 뿌리기 알림
+              기프티콘 나누기 알림
             </Text>
             <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              기프티콘 뿌리기 수신 알림
+              기프티콘 나누기 수신 알림
             </Text>
           </View>
           <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
@@ -289,7 +284,7 @@ const SettingScreen = () => {
       </View>
 
       {/* 버튼 영역 */}
-      <View style={styles.buttonContainer}>
+      <View style={styles.footerButtonContainer}>
         <Button
           title="회원탈퇴"
           type="outline"
@@ -391,7 +386,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  buttonContainer: {
+  footerButtonContainer: {
     marginVertical: 24,
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -418,8 +413,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 10,
-    marginBottom: 5,
+    paddingVertical: 12,
+    marginBottom: 4,
   },
   arrowContainer: {
     justifyContent: 'center',
@@ -439,7 +434,7 @@ const styles = StyleSheet.create({
     width: '85%',
     borderRadius: 15,
     paddingHorizontal: 20,
-    paddingVertical: 60,
+    paddingVertical: 50,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -458,24 +453,33 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     alignItems: 'center',
+    width: '100%',
   },
-  modalButtonStyle: {
-    flex: 1,
-  },
-  connectButton: {
-    paddingVertical: 12,
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   cancelButton: {
-    paddingVertical: 12,
-    borderWidth: 1,
+    backgroundColor: '#A7DAF9',
+  },
+  connectButton: {
+    backgroundColor: '#56AEE9',
   },
   confirmButton: {
-    paddingVertical: 12,
-  },
-  buttonRow: {
-    flexDirection: 'row',
+    backgroundColor: '#56AEE9',
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 10,
     width: '100%',
+  },
+  buttonContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    flex: 1,
   },
   watchImageContainer: {
     justifyContent: 'center',
@@ -504,6 +508,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 16,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
   },
 });
 
