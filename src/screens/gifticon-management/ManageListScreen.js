@@ -347,6 +347,24 @@ const ManageListScreen = () => {
             <View style={styles.textContainer}>
               <Text style={styles.brandText}>{item.brandName}</Text>
               <Text style={styles.nameText}>{item.gifticonName}</Text>
+
+              {/* 쉐어박스 정보 다시 추가 */}
+              {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                <View style={styles.shareBoxInfoContainer}>
+                  <Icon
+                    name="inventory-2"
+                    type="material"
+                    size={12}
+                    color="#888"
+                    containerStyle={styles.shareBoxIcon}
+                  />
+                  <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+                  {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
+                  {item.userId !== currentUserId && (
+                    <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
+                  )}
+                </View>
+              )}
             </View>
 
             {/* D-day 또는 사용일자 태그 */}
@@ -594,6 +612,7 @@ const styles = StyleSheet.create({
   nameText: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 2,
   },
   dDayContainer: {
     position: 'absolute',
@@ -637,6 +656,19 @@ const styles = StyleSheet.create({
     color: '#278CCC',
     fontWeight: 'bold',
     fontStyle: 'normal',
+  },
+  shareBoxInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  shareBoxIcon: {
+    marginRight: 3,
+  },
+  shareBoxText: {
+    fontSize: 12,
+    color: '#888',
+    fontStyle: 'italic',
   },
 });
 
