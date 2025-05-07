@@ -25,9 +25,33 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 	// 기프티콘 조회 권한 여부 확인
 	@Override
-	public void validateGifticonAccess(Integer requestUserId, Integer gifticonUserId) {
-		if (!Objects.equals(requestUserId, gifticonUserId)) {
-			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+	public boolean validateGifticonAccess(Integer requestUserId, Integer gifticonUserId) {
+		return Objects.equals(requestUserId, gifticonUserId);
+	}
+
+	@Override
+	public boolean isDeleted(Gifticon gifticon) {
+		return gifticon.getIsDeleted();
+	}
+
+	@Override
+	public boolean isUsed(Gifticon gifticon) {
+		return gifticon.getIsUsed();
+	}
+
+	@Override
+	public void validateGifticonAvailability(Integer userId, Gifticon gifticon) {
+
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		if (isExpired(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
 		}
 	}
 }
