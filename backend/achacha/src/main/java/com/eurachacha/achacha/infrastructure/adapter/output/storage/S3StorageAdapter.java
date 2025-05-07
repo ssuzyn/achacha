@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -16,6 +17,8 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.infrastructure.config.AwsCloudFrontProperties;
 import com.eurachacha.achacha.infrastructure.config.AwsS3Properties;
 import com.eurachacha.achacha.infrastructure.config.CloudFrontConfig;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,8 +31,21 @@ public class S3StorageAdapter implements FileStoragePort {
 	private final AwsS3Properties awsS3Properties;
 	private final AwsCloudFrontProperties cloudFrontProperties;
 
+	// 최대 파일 크기 (5MB)
+	private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 	@Override
 	public String uploadFile(MultipartFile file, FileType fileType, Integer entityId) {
+		// 파일 유효성 검사
+		if (file == null || file.isEmpty()) {
+			throw new CustomException(ErrorCode.S3_INVALID_FILE_ERROR);
+		}
+
+		// 파일 크기 검사
+		if (file.getSize() > MAX_FILE_SIZE) {
+			throw new CustomException(ErrorCode.S3_FILE_SIZE_EXCEED_ERROR);
+		}
+
 		try {
 			// 파일명만 생성 (경로 제외)
 			String fileName = entityId + "_" + UUID.randomUUID() + "." + getExtension(file.getOriginalFilename());
@@ -48,25 +64,41 @@ public class S3StorageAdapter implements FileStoragePort {
 			).withCannedAcl(CannedAccessControlList.Private));
 
 			return fileName; // DB에는 파일명만 반환
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to upload file to S3", e);
+		} catch (IOException | AmazonS3Exception e) {
+			throw new CustomException(ErrorCode.S3_UPLOAD_ERROR);
 		}
 	}
 
 	@Override
 	public String generateFileUrl(String fileName, FileType fileType, long expirationTimeInMillis) {
-		String fullPath = fileType.getPathPrefix() + "/" + fileName;
-		String resourceUrl = "https://" + cloudFrontProperties.getDomain() + "/" + fullPath;
-		Date expirationDate = new Date(System.currentTimeMillis() + expirationTimeInMillis);
+		if (fileName == null || fileName.isEmpty()) {
+			throw new CustomException(ErrorCode.INVALID_PARAMETER);
+		}
 
-		return cloudFrontSigner.generateSignedUrl(resourceUrl, expirationDate);
+		try {
+			String fullPath = fileType.getPathPrefix() + "/" + fileName;
+			String resourceUrl = "https://" + cloudFrontProperties.getDomain() + "/" + fullPath;
+			Date expirationDate = new Date(System.currentTimeMillis() + expirationTimeInMillis);
+
+			return cloudFrontSigner.generateSignedUrl(resourceUrl, expirationDate);
+		} catch (Exception e) {
+			throw new CustomException(ErrorCode.CLOUDFRONT_URL_GENERATION_ERROR);
+		}
 	}
 
 	@Override
 	public void deleteFile(String fileName, FileType fileType) {
-		// 파일명과 파일 타입으로 전체 경로 구성
-		String fullPath = fileType.getPathPrefix() + "/" + fileName;
-		amazonS3.deleteObject(awsS3Properties.getBucket(), fullPath);
+		if (fileName == null || fileName.isEmpty()) {
+			throw new CustomException(ErrorCode.INVALID_PARAMETER);
+		}
+
+		try {
+			// 파일명과 파일 타입으로 전체 경로 구성
+			String fullPath = fileType.getPathPrefix() + "/" + fileName;
+			amazonS3.deleteObject(awsS3Properties.getBucket(), fullPath);
+		} catch (AmazonS3Exception e) {
+			throw new CustomException(ErrorCode.S3_DELETE_ERROR);
+		}
 	}
 
 	private String getExtension(String filename) {

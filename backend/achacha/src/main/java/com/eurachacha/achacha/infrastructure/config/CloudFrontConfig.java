@@ -6,11 +6,12 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.amazonaws.services.cloudfront.CloudFrontUrlSigner;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,7 +24,7 @@ public class CloudFrontConfig {
 	@Bean
 	public CloudFrontSigner cloudFrontSigner() {
 		if (cloudFrontProperties.getPrivateKey() == null || cloudFrontProperties.getPrivateKey().isEmpty()) {
-			throw new IllegalStateException("CloudFront private key is not configured");
+			throw new CustomException(ErrorCode.CLOUDFRONT_PRIVATE_KEY_ERROR);
 		}
 
 		try {
@@ -34,7 +35,7 @@ public class CloudFrontConfig {
 				privateKeyBytes
 			);
 		} catch (Exception e) {
-			throw new RuntimeException("Failed to initialize CloudFront signer", e);
+			throw new CustomException(ErrorCode.CLOUDFRONT_PRIVATE_KEY_ERROR);
 		}
 	}
 
@@ -57,7 +58,7 @@ public class CloudFrontConfig {
 				return CloudFrontUrlSigner.getSignedURLWithCannedPolicy(
 					resourcePath, keyPairId, privateKey, expirationDate);
 			} catch (Exception e) {
-				throw new RuntimeException("Failed to generate signed URL", e);
+				throw new CustomException(ErrorCode.CLOUDFRONT_URL_GENERATION_ERROR);
 			}
 		}
 	}
