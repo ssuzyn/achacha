@@ -7,7 +7,7 @@ import { updateMapMarkers, filterMarkersByBrand } from '../utils/mapMarkerUtils'
 
 const { width } = Dimensions.get('window');
 
-const KakaoMapWebView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand }, ref) => {
+const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand }, ref) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const webViewRef = useRef(null);
   const { location, errorMsg } = useLocationTracking();
@@ -316,6 +316,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     width: width,
+    width: 'auto', // width: width 대신 auto로 변경
+    marginLeft: 10, // 왼쪽 여백 추가
+    marginRight: 10, // 오른쪽 여백 추가
+    backgroundColor: '#fff',
   },
   webView: {
     flex: 1,
@@ -332,4 +336,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default KakaoMapWebView;
+export default KakaoMapView;
