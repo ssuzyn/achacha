@@ -95,7 +95,6 @@ pipeline {
                                       -e AWS_SECRET_TOKEN="${AWS_SECRET_TOKEN}" \\
                                       -e AWS_CLOUDFRONT_KEYPAIR_ID="${AWS_CLOUDFRONT_KEYPAIR_ID}" \\
                                       -e AWS_CLOUDFRONT_PRIVATE_KEY="${AWS_CLOUDFRONT_PRIVATE_KEY}" \\
-                                      -p 8081:8080 \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
                                       ${DOCKER_IMAGE}:latest;
