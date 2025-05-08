@@ -8,7 +8,6 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.web.common.exception.CustomException;
@@ -41,6 +40,6 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 
 	@Override
 	public Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable) {
-		return gifticonJpaRepository.findUsedGifticons(userId, type, FileType.THUMBNAIL, pageable);
+		return gifticonJpaRepository.findUsedGifticons(userId, type, pageable);
 	}
 }

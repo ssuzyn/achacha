@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -8,17 +9,26 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.brand.QBrand;
 import com.eurachacha.achacha.domain.model.gifticon.QGifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.history.QGifticonOwnerHistory;
+import com.eurachacha.achacha.domain.model.history.QUsageHistory;
+import com.eurachacha.achacha.domain.model.history.enums.TransferType;
+import com.eurachacha.achacha.domain.model.history.enums.UsageType;
 import com.eurachacha.achacha.domain.model.sharebox.QParticipation;
 import com.eurachacha.achacha.domain.model.sharebox.QShareBox;
 import com.eurachacha.achacha.domain.model.user.QUser;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.QueryUtils;
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.DateTimeExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -29,6 +39,7 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 
 	private final JPAQueryFactory jpaQueryFactory;
 
+	// 사용가능 기프티콘 목록 조회
 	@Override
 	public Slice<AvailableGifticonResponseDto> findAvailableGifticons(
 		Integer userId,
@@ -81,6 +92,88 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 			content = content.subList(0, pageable.getPageSize());
 			hasNext = true;
 		}
+
+		return new SliceImpl<>(content, pageable, hasNext);
+	}
+
+	@Override
+	public Slice<UsedGifticonResponseDto> findUsedGifticons(
+		Integer userId,
+		GifticonType type,
+		Pageable pageable) {
+
+		QGifticon qGifticon = QGifticon.gifticon;
+		QBrand qBrand = QBrand.brand;
+		QGifticonOwnerHistory qOwner = QGifticonOwnerHistory.gifticonOwnerHistory;
+		QUsageHistory qUsage = QUsageHistory.usageHistory;
+
+		// 1) usageHistory 중 MAX(createdAt) aggregation
+		DateTimeExpression<LocalDateTime> maxUsageTime = qUsage.createdAt.max();
+
+		// 2) CASE: 소유권 이력(createdAt) 있으면 그것, 없으면 maxUsageTime
+		DateTimeExpression<LocalDateTime> usedAtExpr = Expressions.cases()
+			.when(qOwner.id.isNotNull()).then(qOwner.createdAt)
+			.otherwise(maxUsageTime);
+
+		// usageType 표현식은 그대로
+		StringExpression usageTypeStrExpr = createTransferTypeExpression(qOwner);
+
+		List<Tuple> tuples = jpaQueryFactory
+			.select(
+				qGifticon.id,
+				qGifticon.name,
+				qGifticon.type,
+				qGifticon.expiryDate,
+				qBrand.id,
+				qBrand.name,
+				usageTypeStrExpr,
+				usedAtExpr
+			)
+			.from(qGifticon)
+			.join(qGifticon.brand, qBrand)
+			.leftJoin(qOwner)
+			.on(qGifticon.id.eq(qOwner.gifticon.id)
+				.and(qOwner.fromUser.id.eq(userId)))
+			.leftJoin(qUsage)
+			.on(qGifticon.id.eq(qUsage.gifticon.id)
+				.and(qUsage.user.id.eq(userId)))
+			.where(
+				createUsedGifticonCondition(userId, qGifticon, qOwner, qUsage),
+				qGifticon.isDeleted.eq(false),
+				typeCondition(type, qGifticon)
+			)
+			// 그룹핑에 owner.createdAt과 MAX(createdAt) aggregate를 뺄 수 없으니
+			// owner.id, owner.transferType, owner.createdAt 만 groupBy
+			.groupBy(
+				qGifticon.id,
+				qBrand.id,
+				qOwner.id,
+				qOwner.transferType,
+				qOwner.createdAt
+			)
+			.orderBy(usedAtExpr.desc())
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize() + 1)
+			.fetch();
+
+		// DTO 매핑, Slice 처리 로직은 그대로
+		List<UsedGifticonResponseDto> content = tuples.stream()
+			.map(tuple -> UsedGifticonResponseDto.builder()
+				.gifticonId(tuple.get(qGifticon.id))
+				.gifticonName(tuple.get(qGifticon.name))
+				.gifticonType(tuple.get(qGifticon.type))
+				.gifticonExpiryDate(tuple.get(qGifticon.expiryDate))
+				.brandId(tuple.get(qBrand.id))
+				.brandName(tuple.get(qBrand.name))
+				.usageType(UsageType.valueOf(tuple.get(usageTypeStrExpr)))
+				.usedAt(tuple.get(usedAtExpr))
+				.thumbnailPath(null)
+				.build()
+			).toList();
+
+		boolean hasNext = content.size() > pageable.getPageSize();
+		if (hasNext)
+			content = content.subList(0, pageable.getPageSize());
 
 		return new SliceImpl<>(content, pageable, hasNext);
 	}
@@ -143,6 +236,46 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 				qParticipation.user.id.eq(userId)
 			)
 			.exists();
+	}
+
+	/**
+	 * 이전 상태에 따른 usageType 표현식 생성
+	 * UsedGifticonResponseDto의 생성자에서 문자열을 받아 Enum으로 변환하므로 문자열 반환
+	 */
+	private StringExpression createTransferTypeExpression(QGifticonOwnerHistory qOwnerHistory) {
+		return new CaseBuilder()
+			.when(qOwnerHistory.id.isNotNull().and(qOwnerHistory.transferType.eq(TransferType.GIVE_AWAY)))
+			.then("GIVE_AWAY")
+			.when(qOwnerHistory.id.isNotNull().and(qOwnerHistory.transferType.eq(TransferType.PRESENT)))
+			.then("PRESENT")
+			.otherwise("SELF_USE");
+	}
+
+	/**
+	 * 사용 시간 표현식 생성
+	 */
+	private DateTimeExpression<LocalDateTime> createUsedAtExpression(
+		QGifticonOwnerHistory qOwnerHistory, QUsageHistory qUsageHistory) {
+		return new CaseBuilder()
+			.when(qOwnerHistory.createdAt.isNotNull())
+			.then(qOwnerHistory.createdAt)
+			.otherwise(qUsageHistory.createdAt);
+	}
+
+	/**
+	 * 사용된 기프티콘 조건 생성
+	 */
+	private BooleanExpression createUsedGifticonCondition(
+		Integer userId,
+		QGifticon qGifticon,
+		QGifticonOwnerHistory qOwnerHistory,
+		QUsageHistory qUsageHistory) {
+
+		return qOwnerHistory.id.isNotNull()
+			.or(qGifticon.user.id.eq(userId).and(qGifticon.isUsed.eq(true)))
+			.or(qGifticon.user.id.ne(userId)
+				.and(qGifticon.isUsed.eq(true))
+				.and(qUsageHistory.id.isNotNull()));
 	}
 
 	/**
