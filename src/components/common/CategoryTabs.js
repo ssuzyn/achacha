@@ -48,9 +48,9 @@ const CategoryTabs = ({ categories = [], selectedId, onSelectCategory }) => {
 const styles = StyleSheet.create({
   outerContainer: {
     backgroundColor: '#56AEE9',
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 3,
-    margin: 12,
+    margin: 2,
     marginBottom: 2,
     marginHorizontal: 0,
     width: '100%',

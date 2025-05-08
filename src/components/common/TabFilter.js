@@ -37,7 +37,7 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
               {
                 borderColor: isSelected ? colors.primary : colors.grey2,
                 borderWidth: theme.Chip.buttonStyle.borderWidth,
-                minWidth: 65,
+                minWidth: 55,
                 justifyContent: 'center',
               },
             ]}
@@ -45,7 +45,7 @@ const TabFilter = ({ tabs = [], onTabChange, initialTabId, containerStyle }) => 
               styles.tabText,
               theme.Chip.titleStyle,
               {
-                color: isSelected ? colors.black : colors.grey3,
+                color: isSelected ? colors.black : colors.black,
                 fontSize: 13,
                 textAlignVertical: 'center',
                 includeFontPadding: false,
