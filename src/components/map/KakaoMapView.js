@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { KAKAO_MAP_API_KEY, KAKAO_REST_API_KEY } from '@env';
-import useLocationTracking from '../hooks/useLocationTracking';
-import { updateMapMarkers, filterMarkersByBrand } from '../utils/mapMarkerUtils';
+import { KAKAO_REST_API_KEY } from '@env';
+import useLocationTracking from '../../hooks/useLocationTracking';
+import { updateMapMarkers, filterMarkersByBrand } from '../../utils/mapMarkerUtils';
+import GeofencingService from '../../services/GeofencingService';
+import { getKakaoMapHtml } from './KakaoMapHtml';
 
 const { width } = Dimensions.get('window');
 
@@ -12,11 +14,26 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
   const webViewRef = useRef(null);
   const { location, errorMsg } = useLocationTracking();
   const [debugMessage, setDebugMessage] = useState('');
+  const geofencingService = new GeofencingService(uniqueBrands);
 
   // mapScreen의 moveToCurrentLocation에 접근
   useImperativeHandle(ref, () => ({
     moveToCurrentLocation: () => moveToCurrentLocation(),
   }));
+
+  // 위치 정보가 확인된 후에만 지오펜싱 초기화
+  useEffect(() => {
+    if (location) {
+      geofencingService.initGeofencing();
+    }
+  }, [location]);
+
+  // 컴포넌트 언마운트 시 지오펜싱 정리
+  useEffect(() => {
+    return () => {
+      geofencingService.cleanup();
+    };
+  }, []);
 
   // 웹뷰에서 메시지를 받아 처리하는 함수
   const handleMessage = event => {
@@ -31,7 +48,6 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 
         setTimeout(() => {
           if (location) {
-            console.log('위치 이동 시도...');
             moveToCurrentLocation();
           }
         }, 1000);
@@ -161,8 +177,14 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 
       const results = await Promise.all(searchPromises);
 
-      // WebView로 매장 데이터 전송 - 유틸리티 함수 사용
+      // 전체 매장 데이터 저장(지오펜스 재설정에 사용)
+      window.allStoreData = results;
+
+      // WebView로 매장 데이터 전송
       updateMapMarkers(webViewRef, results);
+
+      // 모든 매장에 대한 지오펜스 설정
+      geofencingService.setupGeofences(results, selectedBrand);
     } catch (error) {
       console.error('매장 검색 실패:', error);
     }
@@ -177,111 +199,17 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     }
   }, [location, mapLoaded, uniqueBrands]);
 
-  // 선택된 브랜드가 변경될 때는 필터링만 수행 - 유틸리티 함수 사용
+  // 선택된 브랜드가 변경될 때는 필터링, 지오펜스 재설정
   useEffect(() => {
     if (mapLoaded && webViewRef.current) {
       filterMarkersByBrand(webViewRef, selectedBrand);
+
+      // 모든 매장 데이터가 있으면 지오펜스도 재설정
+      if (window.allStoreData) {
+        geofencingService.setupGeofences(window.allStoreData, selectedBrand);
+      }
     }
   }, [selectedBrand, mapLoaded]);
-
-  // 카카오맵 HTML 코드
-  const htmlContent = `
-   <!DOCTYPE html>
-   <html>
-   <head>
-     <meta charset="utf-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-     <title>카카오맵</title>
-     <style>
-       body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
-       #map { width: 100%; height: 100%; }
-     </style>
-   </head>
-   <body>
-     <div id="map"></div>
-
-     <script>
-       var map = null;
-       var storeMarkers = [];
-       
-       function debugLog(message) {
-         if (window.ReactNativeWebView) {
-           window.ReactNativeWebView.postMessage(JSON.stringify({
-             type: 'log',
-             message: message
-           }));
-         }
-       }
-
-       function debugError(message) {
-         if (window.ReactNativeWebView) {
-           window.ReactNativeWebView.postMessage(JSON.stringify({
-             type: 'error',
-             message: message
-           }));
-         }
-       }
-
-       document.addEventListener('DOMContentLoaded', function() {
-         debugLog('DOM 로드됨, 카카오맵 SDK 로드 시작...');
-         
-         const script = document.createElement('script');
-         script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false';
-         
-         script.onload = function() {
-           debugLog('카카오맵 SDK 스크립트 로드 완료');
-           
-           kakao.maps.load(function() {
-             debugLog('카카오맵 SDK 초기화 완료, 지도 생성 시작');
-             
-             try {
-               var mapContainer = document.getElementById('map');
-               if (!mapContainer) {
-                 debugError('맵 컨테이너를 찾을 수 없습니다.');
-                 return;
-               }
-               
-               var mapOption = { 
-                 center: new kakao.maps.LatLng(37.566826, 126.9786567),
-                 level: 4
-               };
-
-               debugLog('지도 생성 중...');
-               map = new kakao.maps.Map(mapContainer, mapOption);
-               
-               debugLog('지도 생성 성공!');
-               
-               if (window.ReactNativeWebView) {
-                 window.ReactNativeWebView.postMessage(JSON.stringify({
-                   type: 'mapLoaded',
-                   success: true,
-                   message: '카카오맵 로드 완료'
-                 }));
-               }
-             } catch (error) {
-               debugError('지도 생성 중 오류: ' + error.message);
-               
-               if (window.ReactNativeWebView) {
-                 window.ReactNativeWebView.postMessage(JSON.stringify({
-                   type: 'mapLoaded',
-                   success: false,
-                   error: error.message
-                 }));
-               }
-             }
-           });
-         };
-         
-         script.onerror = function(error) {
-           debugError('카카오맵 SDK 로드 실패: ' + error);
-         };
-         
-         document.head.appendChild(script);
-       });
-     </script>
-   </body>
-   </html>
- `;
 
   return (
     <View style={styles.container}>
@@ -294,7 +222,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
       <WebView
         ref={webViewRef}
         originWhitelist={['*']}
-        source={{ html: htmlContent }}
+        source={{ html: getKakaoMapHtml() }}
         style={styles.webView}
         javaScriptEnabled={true}
         domStorageEnabled={true}
@@ -315,10 +243,9 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: width,
-    width: 'auto', // width: width 대신 auto로 변경
-    marginLeft: 10, // 왼쪽 여백 추가
-    marginRight: 10, // 오른쪽 여백 추가
+    width: 'auto',
+    marginLeft: 10,
+    marginRight: 10,
     backgroundColor: '#fff',
   },
   webView: {

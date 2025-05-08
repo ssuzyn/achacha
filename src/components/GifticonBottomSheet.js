@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
-import MapGifticonList from './MapGifticonList';
+import MapGifticonList from './map/MapGifticonList';
 
 const GifticonBottomSheet = ({ gifticons, onUseGifticon, onSelectBrand, selectedBrand }) => {
   const bottomSheetRef = useRef(null);
