@@ -108,7 +108,18 @@ const FeatureCard = ({ title, iconName, count, style, onPress, ...props }) => {
 /**
  * RadarCard 컴포넌트 - HomeScreen의 레이더 카드
  */
-const RadarCard = ({ text, image, style, ...props }) => {
+const RadarCard = ({ text, image, style, onPress, ...props }) => {
+  // 터치 가능한 View로 래핑
+  const CardContent = () => (
+    <View style={[styles.radarCard, style]} {...props}>
+      <Text variant="h5" weight="bold" style={styles.radarText}>
+        {text}
+      </Text>
+      <Image source={image} style={styles.fullRadarImage} />
+    </View>
+  );
+
+  // onPress 속성이 있는 경우 TouchableOpacity로 감싸고, 그렇지 않으면 일반 View 사용
   return (
     // eslint-disable-next-line react-native/no-inline-styles
     <View style={{ width: '48%' }}>
@@ -118,12 +129,17 @@ const RadarCard = ({ text, image, style, ...props }) => {
         offset={[0, 1]}
         style={styles.featureShadowContainer}
       >
-        <View style={[styles.radarCard, style]} {...props}>
-          <Text variant="h5" weight="bold" style={styles.radarText}>
-            {text}
-          </Text>
-          <Image source={image} style={styles.fullRadarImage} />
-        </View>
+        {onPress ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onPress}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <CardContent />
+          </TouchableOpacity>
+        ) : (
+          <CardContent />
+        )}
       </Shadow>
     </View>
   );

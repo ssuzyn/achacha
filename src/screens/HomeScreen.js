@@ -86,6 +86,11 @@ const HomeScreen = () => {
     NavigationService.navigate('TabSharebox');
   };
 
+  // 기프티콘 MAP으로 이동하는 함수
+  const handleMapPress = () => {
+    NavigationService.navigate('TabMap');
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
@@ -137,6 +142,7 @@ const HomeScreen = () => {
             <Card.RadarCard
               text={`쓱 - 뿌리기\n행운의 주인공은?`}
               image={require('../assets/images/home-radar.png')}
+              onPress={handleMapPress}
             />
           </View>
         </View>
