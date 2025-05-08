@@ -28,7 +28,6 @@ export const useAuth = () => {
       // ---------------------------------
 
       // 현재는 임시 로직
-      alert('카카오 로그인이 구현되지 않았습니다.');
       setAuthState('success'); // 성공 상태 (옵션)
       navigation.navigate('Main'); // 홈으로 이동
     } catch (error) {
@@ -51,7 +50,6 @@ export const useAuth = () => {
       // ---------------------------------
 
       // 현재는 임시 로직
-      alert('구글 로그인이 구현되지 않았습니다.');
       setAuthState('success'); // 성공 상태 (옵션)
       navigation.navigate('Main'); // 홈으로 이동
     } catch (error) {
