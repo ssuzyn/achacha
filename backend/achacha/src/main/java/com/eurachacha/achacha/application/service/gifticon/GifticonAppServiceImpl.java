@@ -319,16 +319,15 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			userId, findGifticon.getId());
 		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
 
-		// 사용 타입
-		UsageType usageType = UsageType.SELF_USE;
-
-		// 사용 시간
-		LocalDateTime usedAt = null;
-
 		// 둘 다 없을 경우 사용하지 않은 기프티콘으로 간주
 		if (findOwnerHistory == null && findUsageHistory == null) {
 			throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
 		}
+
+		UsageType usageType = UsageType.SELF_USE; // 사용 타입
+		LocalDateTime usedAt = null; // 사용 시간
+		String thumbnailPath = null; // 썸네일 파일 경로
+		String originalImagePath = null; // 원본 이미지 파일 경로
 
 		// 타인에게 넘겨준 경우
 		if (findOwnerHistory != null) {
@@ -340,6 +339,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			usageType =
 				findOwnerHistory.getTransferType() == TransferType.GIVE_AWAY ? UsageType.GIVE_AWAY : UsageType.PRESENT;
 			usedAt = findOwnerHistory.getCreatedAt();
+			thumbnailPath = getGifticonImageUrl(findGifticon.getId(), FileType.THUMBNAIL);
 		}
 
 		// 본인이 사용한 경우
@@ -356,6 +356,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			}
 
 			usedAt = findUsageHistory.getCreatedAt();
+			thumbnailPath = getGifticonImageUrl(findGifticon.getId(), FileType.THUMBNAIL);
+			originalImagePath = getGifticonImageUrl(findGifticon.getId(), FileType.ORIGINAL);
 		}
 
 		Integer amount = findGifticon.getType() == GifticonType.AMOUNT ? findGifticon.getOriginalAmount() : null;
@@ -369,8 +371,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.brandName(findGifticon.getBrand().getName())
 			.usageType(usageType)
 			.usageHistoryCreatedAt(usedAt)
-			.thumbnailPath(null)
-			.originalImagePath(null)
+			.thumbnailPath(thumbnailPath)
+			.originalImagePath(originalImagePath)
 			.gifticonOriginalAmount(amount)
 			.gifticonCreatedAt(findGifticon.getCreatedAt())
 			.build();
@@ -416,5 +418,13 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		fileRepository.save(barcodeImageFile);
 
 		log.info("기프티콘 이미지 파일 저장 완료 (기프티콘 ID: {})", gifticonId);
+	}
+
+	private String getGifticonImageUrl(Integer gifticonId, FileType fileType) {
+		File file = fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType("gifticon", gifticonId,
+				fileType)
+			.orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
+
+		return fileStoragePort.generateFileUrl(file.getPath(), fileType, 300000L);
 	}
 }
