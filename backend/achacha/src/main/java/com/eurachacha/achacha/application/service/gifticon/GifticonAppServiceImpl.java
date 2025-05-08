@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
+import java.time.LocalDateTime;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -13,12 +15,15 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
+import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
+import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.domain.model.brand.Brand;
@@ -27,6 +32,10 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
+import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
+import com.eurachacha.achacha.domain.model.history.UsageHistory;
+import com.eurachacha.achacha.domain.model.history.enums.TransferType;
+import com.eurachacha.achacha.domain.model.history.enums.UsageType;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 import com.eurachacha.achacha.web.common.exception.CustomException;
@@ -48,6 +57,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final OcrPort ocrPort;
 	private final AIServicePort aiServicePort;
 	private final BrandRepository brandRepository;
+	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
+	private final UsageHistoryRepository usageHistoryRepository;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -131,8 +142,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		Integer userId = 3; // 유저 로직 추가 시 변경 필요
 
-		Gifticon findGifticon = gifticonRepository.getGifticonDetail(
-			gifticonId);
+		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
 		/*
 		 * 사용가능 기프티콘 검증 로직
@@ -202,6 +212,84 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.gifticons(gifticonSlice.getContent())
 			.hasNextPage(gifticonSlice.hasNext())
 			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
+			.build();
+	}
+
+	@Override
+	public UsedGifticonDetailResponseDto getUsedGifticonDetail(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
+
+		// 삭제 여부 검토
+		boolean deleted = gifticonDomainService.isDeleted(findGifticon);
+		if (deleted) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		GifticonOwnerHistory findOHistory = gifticonOwnerHistoryRepository.getGifticonOwnerHistoryDetail(
+			userId, findGifticon.getId());
+		UsageHistory findUHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+
+		// 사용 타입
+		UsageType usageType = UsageType.SELF_USE;
+
+		// 사용 시간
+		LocalDateTime usedAt = null;
+
+		// 둘 다 없을 경우 사용하지 않은 기프티콘으로 간주
+		if (findOHistory == null && findUHistory == null) {
+			throw new CustomException(ErrorCode.GIFTICON_NOT_FOUND);
+		}
+
+		// 타인에게 넘겨준 경우
+		if (findOHistory != null) {
+			// 송신자 검토
+			boolean isSendUser = gifticonDomainService.validateGifticonAccess(userId,
+				findOHistory.getFromUser().getId());
+			if (!isSendUser) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+
+			usageType =
+				findOHistory.getTransferType() == TransferType.GIVE_AWAY ? UsageType.GIVE_AWAY : UsageType.PRESENT;
+			usedAt = findOHistory.getCreatedAt();
+		}
+
+		// 본인이 사용한 경우
+		if (findUHistory != null) {
+			// 사용자 검토
+			boolean isUsedUser = gifticonDomainService.validateGifticonAccess(userId, findUHistory.getUser().getId());
+			if (!isUsedUser) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+
+			// 사용 여부 검토
+			boolean used = gifticonDomainService.isUsed(findGifticon);
+			if (!used) {
+				throw new CustomException(ErrorCode.GIFTICON_NOT_FOUND);
+			}
+
+			usedAt = findUHistory.getCreatedAt();
+		}
+
+		Integer amount = findGifticon.getType() == GifticonType.AMOUNT ? findGifticon.getOriginalAmount() : null;
+
+		return UsedGifticonDetailResponseDto.builder()
+			.gifticonId(findGifticon.getId())
+			.gifticonName(findGifticon.getName())
+			.gifticonType(findGifticon.getType())
+			.gifticonExpiryDate(findGifticon.getExpiryDate())
+			.brandId(findGifticon.getBrand().getId())
+			.brandName(findGifticon.getBrand().getName())
+			.usageType(usageType)
+			.usageHistoryCreatedAt(usedAt)
+			.thumbnailPath(null)
+			.originalImagePath(null)
+			.gifticonOriginalAmount(amount)
+			.gifticonCreatedAt(findGifticon.getCreatedAt())
 			.build();
 	}
 
