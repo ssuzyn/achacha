@@ -17,6 +17,8 @@ public interface GifticonRepository {
 
 	Gifticon getGifticonDetail(Integer gifticonId);
 
+	boolean existsByBarcode(String barcode);
+
 	Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable);
 
 }
