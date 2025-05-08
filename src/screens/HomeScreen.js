@@ -275,14 +275,14 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   giftMessageTitle: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: 'bold',
     color: '#000',
     marginBottom: 5,
     letterSpacing: -0.5,
   },
   giftMessageSubtitle: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#333',
     letterSpacing: -0.3,
   },

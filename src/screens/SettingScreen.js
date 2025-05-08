@@ -211,7 +211,7 @@ const SettingScreen = () => {
               주변 매장 알림
             </Text>
             <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              각 매장 기준 150m 이내 접근 시 알림
+              각 매장 기준 50m 이내 접근 시 알림
             </Text>
           </View>
           <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
