@@ -64,4 +64,11 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
 		}
 	}
+
+	@Override
+	public void checkException(boolean check, ErrorCode errorCode) {
+		if (check) {
+			throw new CustomException(errorCode);
+		}
+	}
 }

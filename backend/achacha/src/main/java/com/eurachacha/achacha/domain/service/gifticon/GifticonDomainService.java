@@ -2,6 +2,7 @@ package com.eurachacha.achacha.domain.service.gifticon;
 
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 public interface GifticonDomainService {
 	// 금액형 기프티콘 유효성 검증
@@ -20,4 +21,6 @@ public interface GifticonDomainService {
 	boolean isUsed(Gifticon gifticon);
 
 	void validateGifticonAvailability(Integer userId, Gifticon gifticon);
+
+	void checkException(boolean check, ErrorCode errorCode);
 }
