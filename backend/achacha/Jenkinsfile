@@ -124,7 +124,7 @@ pipeline {
             echo '[BE] 빌드 성공! ✅'
             script {
                 def message = """
-                :white_check_mark: **빌드 성공!**
+                ✅ **빌드 성공!**
                 **프로젝트**: ${env.JOB_NAME}
                 **Branch**: ${env.GIT_BRANCH ?: 'Unknown'}
                 **Commit**: ${env.GIT_COMMIT ?: 'Unknown'}
@@ -135,8 +135,7 @@ pipeline {
                 mattermostSend(
                     color: 'good',
                     message: message,
-                    channel: 'd205-mr',
-                    endpoint: env.MATTERMOST_WEBHOOK_URL
+                    markdown: true
                 )
 
                 updateGitlabCommitStatus(name: 'build', state: 'success')
@@ -147,7 +146,7 @@ pipeline {
             echo '[BE] 빌드 실패! ❌'
             script {
                 def message = """
-                :x: **빌드 실패!**
+                ❌ **빌드 실패!**
                 **프로젝트**: ${env.JOB_NAME}
                 **Branch**: ${env.GIT_BRANCH ?: 'Unknown'}
                 **Commit**: ${env.GIT_COMMIT ?: 'Unknown'}
@@ -159,8 +158,7 @@ pipeline {
                 mattermostSend(
                     color: 'danger',
                     message: message,
-                    channel: 'd205-mr',
-                    endpoint: env.MATTERMOST_WEBHOOK_URL
+                    markdown: true
                 )
 
                 updateGitlabCommitStatus(name: 'build', state: 'failed')
