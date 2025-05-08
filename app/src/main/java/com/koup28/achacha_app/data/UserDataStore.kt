@@ -15,27 +15,27 @@ val Context.userDataStore: DataStore<Preferences> by preferencesDataStore(name =
 class UserDataStore(private val context: Context) {
 
     companion object {
-        // 저장할 데이터의 키 정의 (FCM 토큰 예시)
-        val FCM_TOKEN_KEY = stringPreferencesKey("fcm_token")
+        // 저장할 데이터의 키 정의 (API Access Token)
+        val ACCESS_TOKEN_KEY = stringPreferencesKey("access_token")
     }
 
-    // FCM 토큰 저장 함수 (suspend 함수로 비동기 처리)
-    suspend fun saveFcmToken(token: String) {
+    // API Access Token 저장 함수
+    suspend fun saveAccessToken(token: String) {
         context.userDataStore.edit {
-            it[FCM_TOKEN_KEY] = token
+            it[ACCESS_TOKEN_KEY] = token
         }
     }
 
-    // FCM 토큰 읽기 Flow
-    val fcmTokenFlow: Flow<String?> = context.userDataStore.data
+    // API Access Token 읽기 Flow
+    val accessTokenFlow: Flow<String?> = context.userDataStore.data
         .map {
-            it[FCM_TOKEN_KEY] // 키에 해당하는 값이 없으면 null 반환
+            it[ACCESS_TOKEN_KEY] ?: "TEMP_TEST_TOKEN_BY_AI" // 저장된 토큰이 없으면 임시 토큰 반환
         }
 
-    // FCM 토큰 삭제 함수 추가
-    suspend fun clearFcmToken() {
+    // API Access Token 삭제 함수
+    suspend fun clearAccessToken() {
         context.userDataStore.edit {
-            it.remove(FCM_TOKEN_KEY) // 해당 키의 값을 제거
+            it.remove(ACCESS_TOKEN_KEY)
         }
     }
 
