@@ -194,9 +194,9 @@ const ManageListScreen = () => {
 
   // 필터 탭 데이터
   const filterTabs = [
-    { id: 'all', title: '전체' },
-    { id: 'product', title: '상품형' },
-    { id: 'amount', title: '금액형' },
+    { id: 'all', title: '전체', width: 45 },
+    { id: 'product', title: '상품형', width: 55 },
+    { id: 'amount', title: '금액형', width: 55 },
   ];
 
   // 정렬 옵션
@@ -219,6 +219,8 @@ const ManageListScreen = () => {
       if (route.params.initialTab === 'used') {
         setSortBy('recent');
       }
+      // 카테고리 변경 시 필터를 항상 '전체'로 초기화
+      setSelectedFilter('all');
     }
   }, [route.params?.initialTab]);
 
@@ -286,6 +288,8 @@ const ManageListScreen = () => {
   // 카테고리 변경 처리
   const handleCategoryChange = categoryId => {
     setSelectedCategory(categoryId);
+    // 카테고리 변경 시 필터를 항상 '전체'로 초기화
+    setSelectedFilter('all');
   };
 
   // 필터 변경 처리
@@ -408,7 +412,6 @@ const ManageListScreen = () => {
       outputRange: [1, 0.8, 0],
       extrapolate: 'clamp',
     });
-
     return (
       <Animated.View style={[styles.rightAction, { opacity }]}>
         <RectButton style={styles.actionButton} onPress={() => handleBarcodeView(item)}>
@@ -734,14 +737,14 @@ const ManageListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: 2,
     paddingTop: 0,
   },
   filterContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 0,
   },
   tabFilterContainer: {
     flex: 1,
@@ -802,7 +805,7 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   gifticonList: {
-    paddingVertical: 5,
+    paddingVertical: 1,
   },
   shadowContainer: {
     width: '100%',
@@ -815,14 +818,14 @@ const styles = StyleSheet.create({
   gifticonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    paddingBottom: 12,
+    padding: 8,
+    // paddingBottom: 5,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     position: 'relative', // D-day 태그의 절대 위치를 위해 필요
   },
   imageContainer: {
-    marginRight: 16,
+    marginRight: 15,
   },
   gifticonImage: {
     width: 64,
@@ -836,7 +839,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   nameText: {
     fontSize: 14,
@@ -846,7 +849,6 @@ const styles = StyleSheet.create({
   },
   dDayContainer: {
     position: 'absolute',
-    top: '50%',
     right: 16,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -886,7 +888,7 @@ const styles = StyleSheet.create({
   shareBoxInfoContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 0,
   },
   shareBoxIcon: {
     marginRight: 3,
@@ -906,7 +908,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 12,
   },
   rightAction: {
-    width: 100, // 1/3 정도 보이도록 너비 조정
+    width: '100', // 1/3 정도 보이도록 너비 조정
     backgroundColor: '#278CCC', // 파란색 계열
     justifyContent: 'center',
     marginBottom: 10,
