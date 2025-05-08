@@ -132,7 +132,7 @@ pipeline {
                 mattermostSend(
                     color: 'good',
                     message: message,
-                    channel: '백엔드-빌드-알림',
+                    channel: 'd205-mr',
                     endpoint: env.MATTERMOST_WEBHOOK_URL
                 )
 
@@ -156,7 +156,7 @@ pipeline {
                 mattermostSend(
                     color: 'danger',
                     message: message,
-                    channel: '백엔드-빌드-알림',
+                    channel: 'd205-mr',
                     endpoint: env.MATTERMOST_WEBHOOK_URL
                 )
 
