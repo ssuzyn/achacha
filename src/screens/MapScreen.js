@@ -1,12 +1,15 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
-import KakaoMapWebView from '../components/KakaoMapView';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, AppState } from 'react-native';
+import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import GeofencingService from '../services/GeofencingService';
 
 const MapScreen = () => {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const mapRef = useRef(null);
+  const [geofenceService] = useState(() => new GeofencingService(uniqueBrands));
+  const appState = useRef(AppState.currentState);
 
   // 목데이터
   const [gifticons] = useState([
@@ -151,6 +154,30 @@ const MapScreen = () => {
       thumbnailPath: '/images/gifticons/thumbnail/132.jpg',
     },
   ]);
+
+  useEffect(() => {
+    // 초기 지오펜싱 초기화
+    geofenceService.initGeofencing();
+
+    // 앱 상태 변경 리스너 설정
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('앱이 포그라운드로 돌아왔습니다 - 지오펜싱 재초기화');
+        geofenceService.initGeofencing();
+      }
+      appState.current = nextAppState;
+    });
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      subscription.remove();
+      geofenceService.cleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    geofenceService.uniqueBrands = uniqueBrands;
+  }, [uniqueBrands]);
 
   // 기프티콘 목록에서 브랜드 정보 추출(중복 없이)
   const getUniqueBrands = () => {
