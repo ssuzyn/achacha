@@ -9,11 +9,13 @@ import {
   TouchableOpacity,
   StatusBar,
   Share,
+  Modal,
+  Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '../../../components/ui';
+import { Text, Button } from '../../../components/ui';
 import AlertDialog from '../../../components/ui/AlertDialog';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
@@ -45,6 +47,18 @@ const DetailProductScreen = () => {
   const [alertType, setAlertType] = useState('delete'); // 'delete' 또는 'cancelShare'
   // 공유자인지 확인 (공유박스에서 내가 공유한 것인지)
   const [isSharer, setIsSharer] = useState(false);
+  // 공유 모달 상태 관리
+  const [isShareModalVisible, setShareModalVisible] = useState(false);
+  // 공유 위치 선택 상태
+  const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
+  const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+
+  // 더미 데이터: 쉐어박스 목록
+  const shareBoxes = [
+    { id: 1, name: '으라차차 해인네' },
+    { id: 2, name: '으라차차 주은이네' },
+    { id: 3, name: '으라차차 대성이네' },
+  ];
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -193,16 +207,51 @@ const DetailProductScreen = () => {
     return diffDays;
   };
 
-  // 공유하기 기능
-  const handleShare = async () => {
-    try {
-      await Share.share({
-        message: `${gifticonData.brandName} ${gifticonData.gifticonName} 기프티콘을 공유합니다.`,
-      });
-    } catch (error) {
-      // console.error(error);
-      // 오류 처리
+  // 공유하기 기능 - 모달 표시로 변경
+  const handleShare = () => {
+    // 기본 쉐어박스 선택 초기화
+    setShareBoxType('SHARE_BOX');
+    if (shareBoxes.length > 0) {
+      setSelectedShareBoxId(shareBoxes[0].id);
     }
+
+    // 공유 모달 표시
+    setShareModalVisible(true);
+  };
+
+  // 공유 완료 처리
+  const handleShareConfirm = () => {
+    // 공유 위치 선택 확인
+    if (shareBoxType === 'SHARE_BOX' && !selectedShareBoxId) {
+      Alert.alert('알림', '공유할 쉐어박스를 선택해주세요.');
+      return;
+    }
+
+    // 공유 API 호출 또는 처리 로직
+    // console.log('기프티콘 공유:', gifticonId, '위치:', shareBoxType, '쉐어박스:', getShareBoxName(selectedShareBoxId));
+
+    // 성공 메시지
+    Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
+      {
+        text: '확인',
+        onPress: () => {
+          // 모달 닫기
+          setShareModalVisible(false);
+          // 추가 로직이 필요하면 여기에 구현
+        },
+      },
+    ]);
+  };
+
+  // 공유 모달 닫기
+  const handleCloseShareModal = () => {
+    setShareModalVisible(false);
+  };
+
+  // 박스명 가져오기
+  const getShareBoxName = id => {
+    const box = shareBoxes.find(item => item.id === id);
+    return box ? box.name : '';
   };
 
   // 사용하기 기능
@@ -645,6 +694,70 @@ const DetailProductScreen = () => {
         </View>
       </ScrollView>
 
+      {/* 공유 모달 */}
+      <Modal
+        visible={isShareModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={handleCloseShareModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, styles.boxModalContent]}>
+            <Text variant="h4" weight="bold" style={styles.modalTitle}>
+              기프티콘 정보 선택
+            </Text>
+
+            <Text variant="h5" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
+              등록 위치
+            </Text>
+
+            <Text variant="h5" weight="bold" style={styles.modalSubtitle}>
+              공유 위치
+            </Text>
+
+            {/* 쉐어박스 선택 */}
+            <View style={styles.boxSection}>
+              {shareBoxes.map(box => (
+                <View key={box.id} style={styles.boxRow}>
+                  <TouchableOpacity
+                    style={[
+                      styles.checkboxContainer,
+                      shareBoxType === 'SHARE_BOX' &&
+                        selectedShareBoxId === box.id &&
+                        styles.checkboxContainerSelected,
+                    ]}
+                    onPress={() => {
+                      setShareBoxType('SHARE_BOX');
+                      setSelectedShareBoxId(box.id);
+                    }}
+                  >
+                    <View style={styles.checkbox}>
+                      {shareBoxType === 'SHARE_BOX' && selectedShareBoxId === box.id && (
+                        <Icon name="check" type="material" size={16} color={theme.colors.primary} />
+                      )}
+                    </View>
+                    <Text style={styles.checkboxLabel}>{box.name}</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+
+            <View style={styles.boxButtonContainer}>
+              <TouchableOpacity style={styles.cancelShareButton} onPress={handleCloseShareModal}>
+                <Text variant="body1" weight="bold" style={styles.cancelShareButtonText}>
+                  취소
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.confirmShareButton} onPress={handleShareConfirm}>
+                <Text variant="body1" weight="bold" style={styles.confirmShareButtonText}>
+                  공유
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* 알림 다이얼로그 */}
       <AlertDialog
         isVisible={alertVisible}
@@ -908,6 +1021,94 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+  },
+  // 모달 관련 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+  },
+  boxModalContent: {
+    maxHeight: '70%',
+  },
+  modalTitle: {
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalSubtitle: {
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    marginTop: 15,
+  },
+  boxSection: {
+    marginBottom: 20,
+  },
+  boxRow: {
+    marginBottom: 12,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E6E6E6',
+  },
+  checkboxContainerSelected: {
+    borderColor: '#4A90E2',
+    backgroundColor: '#F5F9FF',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    marginRight: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'white',
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: '#333333',
+  },
+  boxButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  cancelShareButton: {
+    flex: 1,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F2F2F2',
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  confirmShareButton: {
+    flex: 1,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  cancelShareButtonText: {
+    color: '#333333',
+  },
+  confirmShareButtonText: {
+    color: '#FFFFFF',
   },
 });
 
