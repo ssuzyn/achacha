@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // 쉐어박스 생성 스크린
 
 import React, { useState } from 'react';
@@ -334,15 +335,16 @@ const styles = StyleSheet.create({
     width: '100%',
     backgroundColor: '#F0F9FF',
     borderRadius: 15,
-    padding: 30,
+    padding: 20,
     alignItems: 'center',
     marginTop: 30,
   },
   codeValue: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
     color: '#000000',
     letterSpacing: 2,
+    padding: 10,
   },
   copyButton: {
     flex: 1,
@@ -378,10 +380,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 6,
-    paddingHorizontal: 12,
+    paddingHorizontal: 15,
     marginBottom: 20,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
