@@ -11,9 +11,11 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Clipboard,
+  Alert,
+  Share,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
@@ -22,53 +24,75 @@ import NavigationService from '../../navigation/NavigationService';
 const BoxCreateScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const navigation = useNavigation();
 
   // 쉐어박스 이름
   const [boxName, setBoxName] = useState('');
+  // 초대 코드
+  const [inviteCode, setInviteCode] = useState('');
+  // 화면 상태 (create: 생성 화면, share: 코드 공유 화면)
+  const [screenState, setScreenState] = useState('create');
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
-    NavigationService.goBack();
+    if (screenState === 'share') {
+      // 코드 공유 화면에서 뒤로가기 시 메인 화면으로 이동
+      NavigationService.goBack();
+    } else {
+      // 생성 화면에서 뒤로가기
+      NavigationService.goBack();
+    }
+  };
+
+  // 랜덤 초대 코드 생성 함수 (8자리 영문 숫자 조합)
+  const generateInviteCode = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+      result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
   };
 
   // 쉐어박스 생성 함수
   const handleCreate = () => {
     if (!boxName.trim()) {
       // 이름이 비어있으면 생성 불가
-      alert('박스명을 입력해주세요.');
+      Alert.alert('알림', '박스명을 입력해주세요.');
       return;
     }
 
-    // TODO: API 호출로 쉐어박스 생성 로직 구현
+    // API 호출로 쉐어박스 생성 로직 구현 (여기서는 랜덤 코드 생성으로 대체)
     console.log('쉐어박스 생성:', boxName);
 
-    // 생성 후 메인 화면으로 이동
-    NavigationService.goBack();
+    // 초대 코드 생성
+    const code = generateInviteCode();
+    setInviteCode(code);
+
+    // 화면 상태 변경
+    setScreenState('share');
   };
 
-  return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+  // 코드 복사 함수
+  const handleCopyCode = () => {
+    Clipboard.setString(inviteCode);
+    Alert.alert('알림', '코드가 클립보드에 복사되었습니다.');
+  };
 
-      {/* 안전 영역 상단 여백 */}
-      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+  // 카카오톡 공유 함수
+  const handleShareKakao = async () => {
+    try {
+      // 실제 구현에서는 카카오 SDK를 사용하겠지만, 여기서는 일반 공유 기능으로 대체
+      await Share.share({
+        message: `쉐어박스 '${boxName}'에 초대합니다! 초대 코드: ${inviteCode}`,
+      });
+    } catch (error) {
+      Alert.alert('공유 실패', '공유하는 중 오류가 발생했습니다.');
+    }
+  };
 
-      {/* 커스텀 헤더 */}
-      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
-          <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
-        </TouchableOpacity>
-        <Text variant="h3" weight="bold" style={styles.headerTitle}>
-          쉐어박스 생성
-        </Text>
-        <View style={styles.rightPlaceholder} />
-      </View>
-
+  // 생성 화면 렌더링
+  const renderCreateScreen = () => (
+    <>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -88,10 +112,7 @@ const BoxCreateScreen = () => {
           {/* 안내 텍스트 */}
           <View style={styles.textContainer}>
             <Text style={styles.guideText}>
-              쉐어박스를 생성하고{'\n'}친구에게 코드를 공유해보세요.
-            </Text>
-            <Text style={styles.subGuideText}>
-              쉐어박스 메인 페이지 상단에{'\n'}초대코드를 입력하면 친구와 함께 즐길 수 있어요!
+              쉐어박스를 생성하고{'\n'}함께 나누는 기프티콘을 관리해봐요!
             </Text>
           </View>
 
@@ -121,6 +142,74 @@ const BoxCreateScreen = () => {
           </Text>
         </TouchableOpacity>
       </View>
+    </>
+  );
+
+  // 코드 공유 화면 렌더링
+  const renderShareScreen = () => (
+    <>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.shareContentContainer}>
+          {/* 초대 코드 표시 영역 */}
+          <View style={styles.codeContainer}>
+            <Text style={styles.codeValue}>{inviteCode}</Text>
+          </View>
+
+          {/* 안내 텍스트 */}
+          <View style={styles.shareTextContainer}>
+            <Text style={styles.guideText}>
+              쉐어박스를 생성하고{'\n'}친구에게 코드를 공유해보세요.
+            </Text>
+            <Text style={styles.subGuideText}>
+              쉐어박스 메인 페이지 상단에{'\n'}초대코드를 입력하면 친구와 함께 즐길 수 있어요!
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* 버튼 영역 - 하단에 고정 */}
+      <View style={styles.buttonContainer}>
+        <View style={styles.rowButtonContainer}>
+          <TouchableOpacity style={styles.kakaoButton} onPress={handleShareKakao}>
+            <Text style={styles.kakaobuttonText}>카카오톡 공유</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.copyButton} onPress={handleCopyCode}>
+            <Text style={styles.buttonText}>코드 복사</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+
+      {/* 안전 영역 상단 여백 */}
+      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
+          <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+        </TouchableOpacity>
+        <Text variant="h3" weight="bold" style={styles.headerTitle}>
+          {screenState === 'create' ? '쉐어박스 생성' : '초대 코드'}
+        </Text>
+        <View style={styles.rightPlaceholder} />
+      </View>
+
+      {screenState === 'create' ? renderCreateScreen() : renderShareScreen()}
     </KeyboardAvoidingView>
   );
 };
@@ -163,6 +252,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  shareContentContainer: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+  },
   imageContainer: {
     marginTop: 40,
     marginBottom: 30,
@@ -175,6 +269,10 @@ const styles = StyleSheet.create({
   textContainer: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  shareTextContainer: {
+    alignItems: 'center',
+    marginVertical: 30,
   },
   guideText: {
     fontSize: 20,
@@ -210,6 +308,10 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },
+  rowButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   createButton: {
     height: 56,
     borderRadius: 10,
@@ -224,6 +326,49 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+  },
+  // 코드 공유 화면 스타일
+  codeContainer: {
+    width: '100%',
+    backgroundColor: '#F0F9FF',
+    borderRadius: 15,
+    padding: 30,
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  codeValue: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#000000',
+    letterSpacing: 2,
+  },
+  copyButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 10,
+    backgroundColor: '#56AEE9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  kakaoButton: {
+    flex: 1,
+    height: 56,
+    borderRadius: 10,
+    backgroundColor: '#FEE500',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  buttonText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  kakaobuttonText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#462000',
   },
 });
 
