@@ -125,7 +125,7 @@ fun GifticonListScreen(
                     if (gifticons.isEmpty()) {
                         item { 
                             Box(
-                                modifier = Modifier.fillMaxSize().padding(top = 60.dp),
+                                modifier = Modifier.fillMaxSize().padding(top = 24.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(

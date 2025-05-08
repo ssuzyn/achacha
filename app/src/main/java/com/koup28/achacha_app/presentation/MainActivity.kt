@@ -391,8 +391,8 @@ class MainActivity : ComponentActivity() {
                     ScreenState.CONNECTING -> {
                         ConnectPhoneScreen(
                             onConnectClick = { 
-                                addLog("[DEBUG_EMULATOR] Connect button clicked. Nearby connection should be initiated if permissions are granted.")
-                                // _currentScreen.value = ScreenState.MAIN_MENU // 강제 화면 이동 제거
+                                addLog("ConnectPhoneScreen: Connect button clicked. Initiating Nearby connection process.")
+                                checkAndRequestNearbyPermissions() // Nearby 연결 프로세스 시작
                             }
                         )
                     }
