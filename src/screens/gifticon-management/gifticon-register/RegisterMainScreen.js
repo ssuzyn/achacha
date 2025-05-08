@@ -1,6 +1,6 @@
 // 기프티콘 등록 스크린
 
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -22,21 +22,12 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-import { CropView } from 'react-native-image-crop-tools';
 
 const RegisterMainScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
-  const [isImageEditorVisible, setImageEditorVisible] = useState(false);
-  const [currentImageUri, setCurrentImageUri] = useState(null);
-  const [aspectRatio, setAspectRatio] = useState(null);
-  const [keepAspectRatio, setKeepAspectRatio] = useState(false);
-  const [croppedImageResult, setCroppedImageResult] = useState(null);
-  const cropViewRef = useRef(null);
-
-  // 기프티콘 타입 및 등록 위치 모달 상태
   const [isTypeModalVisible, setTypeModalVisible] = useState(false);
   const [gifticonType, setGifticonType] = useState('PRODUCT'); // 'PRODUCT' 또는 'AMOUNT'
   const [boxType, setBoxType] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
@@ -54,14 +45,8 @@ const RegisterMainScreen = () => {
     navigation.goBack();
   }, [navigation]);
 
-  // 이미지 선택 모달 표시 전 타입 선택 모달 표시
-  const showTypeModal = useCallback(() => {
-    setTypeModalVisible(true);
-  }, []);
-
-  // 타입 선택 완료 후 이미지 옵션 모달 표시
-  const handleTypeSelected = useCallback(() => {
-    setTypeModalVisible(false);
+  // 업로드 버튼 클릭 시 이미지 옵션 모달 바로 표시
+  const handleUploadPress = useCallback(() => {
     setImageOptionVisible(true);
   }, []);
 
@@ -122,10 +107,11 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
-            console.log('이미지 URI 설정:', imageAsset.uri);
-            setCurrentImageUri(imageAsset.uri);
-            setImageEditorVisible(true);
+            // 크롭 과정 없이 바로 상세 화면으로 이동
+            navigation.navigate('RegisterDetail', {
+              selectedImage: { uri: imageAsset.uri },
+            });
+            setImageOptionVisible(false);
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
@@ -138,7 +124,7 @@ const RegisterMainScreen = () => {
       console.error('이미지 선택 예외 발생:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
-  }, []);
+  }, [navigation]);
 
   // 카메라로 촬영
   const handleOpenCamera = useCallback(async () => {
@@ -186,10 +172,11 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작 (정확한 경로 사용)
-            console.log('이미지 URI 설정:', imageAsset.uri);
-            setCurrentImageUri(imageAsset.uri);
-            setImageEditorVisible(true);
+            // 크롭 과정 없이 바로 상세 화면으로 이동
+            navigation.navigate('RegisterDetail', {
+              selectedImage: { uri: imageAsset.uri },
+            });
+            setImageOptionVisible(false);
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
@@ -202,41 +189,7 @@ const RegisterMainScreen = () => {
       console.error('카메라 촬영 예외 발생:', error);
       Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
     }
-  }, []);
-
-  // 이미지 편집 완료 후 처리
-  const handleImageEditComplete = useCallback(() => {
-    console.log('이미지 편집 완료 버튼 클릭됨');
-    try {
-      if (cropViewRef.current) {
-        const result = cropViewRef.current.saveImage(true, 90);
-        console.log('이미지 크롭 결과 트라이:', result);
-      }
-
-      // 편집 완료 후 croppedImageResult 또는 원본 URI 사용
-      const resultUri = croppedImageResult ? croppedImageResult.uri : currentImageUri;
-      console.log('최종 사용 이미지:', resultUri);
-
-      // 편집한 이미지와 함께 상세 화면으로 이동 (기프티콘 타입과 박스 타입도 전달)
-      navigation.navigate('RegisterDetail', {
-        selectedImage: { uri: resultUri },
-        gifticonType,
-        boxType,
-        shareBoxId: boxType === 'SHARE_BOX' ? selectedShareBoxId : null,
-      });
-      setImageEditorVisible(false);
-    } catch (error) {
-      console.error('이미지 편집 예외 발생:', error);
-      Alert.alert('오류', '이미지를 편집하는 중 문제가 발생했습니다.');
-      setImageEditorVisible(false);
-    }
-  }, [navigation, currentImageUri, croppedImageResult, gifticonType, boxType, selectedShareBoxId]);
-
-  // 이미지 편집 취소
-  const handleImageEditCancel = useCallback(() => {
-    console.log('이미지 편집 취소됨');
-    setImageEditorVisible(false);
-  }, []);
+  }, [navigation, requestCameraPermission]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -272,7 +225,7 @@ const RegisterMainScreen = () => {
           offset={[0, 1]}
           style={styles.shadowContainer}
         >
-          <TouchableOpacity onPress={showTypeModal}>
+          <TouchableOpacity onPress={handleUploadPress}>
             <Card style={styles.uploadCard}>
               <View style={styles.uploadContent}>
                 <Image
@@ -371,7 +324,7 @@ const RegisterMainScreen = () => {
         </View>
       </ScrollView>
 
-      {/* 기프티콘 타입 및 박스 선택 모달 */}
+      {/* 기프티콘 타입 및 등록 위치 선택 모달 */}
       <Modal
         visible={isTypeModalVisible}
         transparent
@@ -479,7 +432,10 @@ const RegisterMainScreen = () => {
               <Button
                 title="확인"
                 variant="primary"
-                onPress={handleTypeSelected}
+                onPress={() => {
+                  setTypeModalVisible(false);
+                  setImageOptionVisible(true);
+                }}
                 style={styles.typeModalButton}
               />
             </View>
@@ -537,158 +493,6 @@ const RegisterMainScreen = () => {
               onPress={() => setImageOptionVisible(false)}
               style={styles.modalCancelButton}
             />
-          </View>
-        </View>
-      </Modal>
-
-      {/* 이미지 편집 모달 */}
-      <Modal visible={isImageEditorVisible} animationType="slide">
-        <View style={styles.editorContainer}>
-          <View style={styles.editorHeader}>
-            <TouchableOpacity onPress={handleImageEditCancel} style={styles.editorHeaderButton}>
-              <Text variant="body1" weight="bold" color="#56AEE9">
-                취소
-              </Text>
-            </TouchableOpacity>
-            <Text variant="h4" weight="bold" color="white">
-              이미지 편집
-            </Text>
-            <TouchableOpacity onPress={handleImageEditComplete} style={styles.editorHeaderButton}>
-              <Text variant="body1" weight="bold" color="#56AEE9">
-                적용
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.cropContainer}>
-            {currentImageUri ? (
-              <>
-                <CropView
-                  ref={cropViewRef}
-                  sourceUrl={currentImageUri}
-                  style={styles.cropView}
-                  onError={error => {
-                    console.error('이미지 크롭 에러:', error);
-                    console.error('에러가 발생한 이미지 URI:', currentImageUri);
-                    Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
-                  }}
-                  onImageCrop={res => {
-                    console.log('이미지 크롭 결과:', res);
-                    setCroppedImageResult(res);
-                  }}
-                  cropAreaWidth={300}
-                  cropAreaHeight={300}
-                  containerColor="black"
-                  areaColor="white"
-                  keepAspectRatio={keepAspectRatio}
-                  aspectRatio={aspectRatio}
-                  iosDimensionSwapEnabled={true}
-                />
-              </>
-            ) : (
-              <View style={styles.emptyImageContainer}>
-                <Icon name="image" type="material" size={50} color="#CCCCCC" />
-                <Text variant="body2" color="#DDDDDD" style={styles.emptyImageText}>
-                  이미지 로드 실패
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.editorToolbar}>
-            <TouchableOpacity
-              style={styles.toolbarButton}
-              onPress={() => {
-                console.log('회전 버튼 클릭');
-                if (cropViewRef.current) {
-                  try {
-                    cropViewRef.current.rotateImage(true);
-                  } catch (error) {
-                    console.error('회전 오류:', error);
-                  }
-                } else {
-                  console.error('cropViewRef가 없습니다');
-                }
-              }}
-            >
-              <Icon name="rotate-right" type="material" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                회전
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.toolbarButton, !keepAspectRatio && styles.activeToolbarButton]}
-              onPress={() => {
-                setKeepAspectRatio(false);
-                setAspectRatio(null);
-              }}
-            >
-              <Icon name="crop-free" type="material" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                자유
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.toolbarButton,
-                keepAspectRatio &&
-                  aspectRatio &&
-                  aspectRatio.width === 1 &&
-                  aspectRatio.height === 1 &&
-                  styles.activeToolbarButton,
-              ]}
-              onPress={() => {
-                setKeepAspectRatio(true);
-                setAspectRatio({ width: 1, height: 1 });
-              }}
-            >
-              <Icon name="crop-square" type="material" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                1:1
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.toolbarButton,
-                keepAspectRatio &&
-                  aspectRatio &&
-                  aspectRatio.width === 4 &&
-                  aspectRatio.height === 3 &&
-                  styles.activeToolbarButton,
-              ]}
-              onPress={() => {
-                setKeepAspectRatio(true);
-                setAspectRatio({ width: 4, height: 3 });
-              }}
-            >
-              <Icon name="crop-7-5" type="material" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                4:3
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.toolbarButton,
-                keepAspectRatio &&
-                  aspectRatio &&
-                  aspectRatio.width === 16 &&
-                  aspectRatio.height === 9 &&
-                  styles.activeToolbarButton,
-              ]}
-              onPress={() => {
-                setKeepAspectRatio(true);
-                setAspectRatio({ width: 16, height: 9 });
-              }}
-            >
-              <Icon name="crop-16-9" type="material" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                16:9
-              </Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>

@@ -59,6 +59,10 @@ const RegisterDetailScreen = () => {
   // 추가 필드 (금액형일 경우)
   const [amount, setAmount] = useState('');
 
+  // 화면 상태 관리 - 유형 및 위치 선택 완료 여부
+  const [isTypeBoxSelected, setIsTypeBoxSelected] = useState(false);
+  const [isTypeLocked, setIsTypeLocked] = useState(false); // 유형 선택 잠금 상태
+
   // 초기 화면 로드시 이미지가 있는지 확인
   useEffect(() => {
     if (route.params?.selectedImage) {
@@ -68,6 +72,8 @@ const RegisterDetailScreen = () => {
     // 기프티콘 타입 및 등록 위치 정보 가져오기
     if (route.params?.gifticonType) {
       setGifticonType(route.params.gifticonType);
+      setIsTypeBoxSelected(true);
+      // 최초 등록 시에는 타입 잠금 해제 상태로 유지
     }
 
     if (route.params?.boxType) {
@@ -76,6 +82,14 @@ const RegisterDetailScreen = () => {
 
     if (route.params?.shareBoxId) {
       setShareBoxId(route.params.shareBoxId);
+    }
+
+    // 타입 및 위치가 선택되어 있지 않으면 모달 자동 표시
+    if (!route.params?.gifticonType) {
+      // 약간의 딜레이 후 모달 표시 (화면 전환 애니메이션이 끝난 후)
+      setTimeout(() => {
+        setBoxModalVisible(true);
+      }, 300);
     }
   }, [route.params]);
 
@@ -107,6 +121,19 @@ const RegisterDetailScreen = () => {
   // 박스 모달 표시
   const showBoxModal = () => {
     setBoxModalVisible(true);
+  };
+
+  // 박스 선택 완료
+  const handleBoxSelected = () => {
+    // 타입과 박스 모두 선택되었는지 확인
+    if (gifticonType && boxType) {
+      setBoxModalVisible(false);
+      setIsTypeBoxSelected(true);
+      // 모달 확인 버튼 클릭 시 유형 선택 잠금
+      setIsTypeLocked(true);
+    } else {
+      Alert.alert('알림', '기프티콘 타입과 등록 위치를 모두 선택해주세요.');
+    }
   };
 
   // 이미지 선택 모달 표시
@@ -238,9 +265,10 @@ const RegisterDetailScreen = () => {
     setImageEditorVisible(false);
   };
 
-  // 박스 선택 완료
-  const handleBoxSelected = () => {
-    setBoxModalVisible(false);
+  // 박스명 가져오기
+  const getShareBoxName = id => {
+    const box = shareBoxes.find(item => item.id === id);
+    return box ? box.name : '';
   };
 
   // 기프티콘 등록 처리
@@ -289,12 +317,6 @@ const RegisterDetailScreen = () => {
         },
       },
     ]);
-  };
-
-  // 박스명 가져오기
-  const getShareBoxName = id => {
-    const box = shareBoxes.find(item => item.id === id);
-    return box ? box.name : '';
   };
 
   // 날짜를 YYYY.MM.DD 형식으로 포맷
@@ -358,99 +380,135 @@ const RegisterDetailScreen = () => {
 
           {/* 기프티콘 타입 및 박스 정보 */}
           <View style={styles.infoSection}>
-            <View style={styles.infoRow}>
+            <TouchableOpacity
+              style={[styles.infoRow, isTypeLocked && styles.disabledRow]}
+              onPress={() => {
+                if (!isTypeLocked) {
+                  showBoxModal();
+                } else {
+                  Alert.alert('알림', '기프티콘 유형은 최초 등록 후 변경할 수 없습니다.');
+                }
+              }}
+            >
               <Text variant="body1" weight="semiBold" style={styles.infoLabel}>
                 기프티콘 타입
               </Text>
-              <View style={styles.typeChip}>
-                <Text variant="body2" weight="regular" color="white">
-                  {gifticonType === 'PRODUCT' ? '상품형' : '금액형'}
-                </Text>
-              </View>
-            </View>
+              {isTypeBoxSelected ? (
+                <View style={styles.typeChip}>
+                  <Text variant="body2" weight="regular" color="white">
+                    {gifticonType === 'PRODUCT' ? '상품형' : '금액형'}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.boxSelector}>
+                  <Text variant="body2" style={[styles.boxText, { color: '#999' }]}>
+                    선택해주세요
+                  </Text>
+                  <Icon name="chevron-right" size={20} color={theme.colors.gray400} />
+                </View>
+              )}
+            </TouchableOpacity>
 
             <TouchableOpacity style={styles.infoRow} onPress={showBoxModal}>
               <Text variant="body1" weight="semiBold" style={styles.infoLabel}>
                 등록 위치
               </Text>
-              <View style={styles.boxSelector}>
-                <Text variant="body2" style={styles.boxText}>
-                  {boxType === 'MY_BOX' ? '마이박스' : getShareBoxName(shareBoxId)}
-                </Text>
-                <Icon name="chevron-right" size={20} color={theme.colors.gray400} />
-              </View>
+              {isTypeBoxSelected ? (
+                <View style={styles.boxSelector}>
+                  <Text variant="body2" style={styles.boxText}>
+                    {boxType === 'MY_BOX' ? '마이박스' : getShareBoxName(shareBoxId)}
+                  </Text>
+                  <Icon name="chevron-right" size={20} color={theme.colors.gray400} />
+                </View>
+              ) : (
+                <View style={styles.boxSelector}>
+                  <Text variant="body2" style={[styles.boxText, { color: '#999' }]}>
+                    선택해주세요
+                  </Text>
+                  <Icon name="chevron-right" size={20} color={theme.colors.gray400} />
+                </View>
+              )}
             </TouchableOpacity>
           </View>
 
-          {/* 입력 폼 */}
-          <View style={styles.formContainer}>
-            <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
-              바코드 번호 입력
-            </Text>
-            <InputLine
-              value={barcode}
-              onChangeText={setBarcode}
-              placeholder="바코드 번호를 입력해주세요."
-              keyboardType="numeric"
-              containerStyle={styles.inputContainer}
-            />
-
-            <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
-              기프티콘 정보 입력
-            </Text>
-            <InputLine
-              value={brand}
-              onChangeText={setBrand}
-              placeholder="브랜드명을 입력해주세요."
-              containerStyle={styles.inputContainer}
-            />
-
-            <InputLine
-              value={productName}
-              onChangeText={setProductName}
-              placeholder="상품명을 입력해주세요."
-              containerStyle={styles.inputContainer}
-            />
-
-            <InputLine
-              value={formatDate(expiryDate)}
-              placeholder="유효기간을 입력해주세요."
-              containerStyle={styles.inputContainer}
-              rightIcon={
-                <TouchableOpacity onPress={showDatePickerHandler}>
-                  <Icon name="calendar-today" size={22} color="#333333" />
-                </TouchableOpacity>
-              }
-              editable={false}
-              onTouchStart={showDatePickerHandler}
-            />
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={expiryDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={handleDateChange}
+          {/* 입력 폼 - 타입 및 박스가 선택된 경우에만 활성화 */}
+          {isTypeBoxSelected ? (
+            <View style={styles.formContainer}>
+              <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+                바코드 번호 입력
+              </Text>
+              <InputLine
+                value={barcode}
+                onChangeText={setBarcode}
+                placeholder="바코드 번호를 입력해주세요."
+                keyboardType="numeric"
+                containerStyle={styles.inputContainer}
               />
-            )}
 
-            {/* 금액형인 경우 금액 입력 필드 추가 */}
-            {gifticonType === 'AMOUNT' && (
-              <>
-                <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
-                  금액 정보 입력
-                </Text>
-                <InputLine
-                  value={amount}
-                  onChangeText={setAmount}
-                  placeholder="금액을 입력해주세요."
-                  keyboardType="numeric"
-                  containerStyle={styles.inputContainer}
-                  rightIcon={<Text variant="body1">원</Text>}
+              <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+                기프티콘 정보 입력
+              </Text>
+              <InputLine
+                value={brand}
+                onChangeText={setBrand}
+                placeholder="브랜드명을 입력해주세요."
+                containerStyle={styles.inputContainer}
+              />
+
+              <InputLine
+                value={productName}
+                onChangeText={setProductName}
+                placeholder="상품명을 입력해주세요."
+                containerStyle={styles.inputContainer}
+              />
+
+              <InputLine
+                value={formatDate(expiryDate)}
+                placeholder="유효기간을 입력해주세요."
+                containerStyle={styles.inputContainer}
+                rightIcon={
+                  <TouchableOpacity onPress={showDatePickerHandler}>
+                    <Icon name="calendar-today" size={22} color="#333333" />
+                  </TouchableOpacity>
+                }
+                editable={false}
+                onTouchStart={showDatePickerHandler}
+              />
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={expiryDate || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
                 />
-              </>
-            )}
-          </View>
+              )}
+
+              {/* 금액형인 경우 금액 입력 필드 추가 */}
+              {gifticonType === 'AMOUNT' && (
+                <>
+                  <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
+                    금액 정보 입력
+                  </Text>
+                  <InputLine
+                    value={amount}
+                    onChangeText={setAmount}
+                    placeholder="금액을 입력해주세요."
+                    keyboardType="numeric"
+                    containerStyle={styles.inputContainer}
+                    rightIcon={<Text variant="body1">원</Text>}
+                  />
+                </>
+              )}
+            </View>
+          ) : (
+            <View style={styles.infoGuideContainer}>
+              <RNEIcon name="info-outline" type="material" size={24} color="#4A90E2" />
+              <Text style={styles.infoGuideText}>
+                기프티콘 유형과 등록 위치를 선택하여 등록을 계속 진행해주세요.
+              </Text>
+            </View>
+          )}
         </ScrollView>
 
         {/* 등록 버튼 */}
@@ -460,6 +518,7 @@ const RegisterDetailScreen = () => {
           variant="primary"
           size="lg"
           style={styles.button}
+          disabled={!isTypeBoxSelected}
         />
       </View>
 
@@ -514,12 +573,68 @@ const RegisterDetailScreen = () => {
         visible={isBoxModalVisible}
         transparent
         animationType="slide"
-        onRequestClose={() => setBoxModalVisible(false)}
+        onRequestClose={() => {
+          // 이미 선택되어 있는 경우에만 모달 닫기 가능
+          if (isTypeBoxSelected) {
+            setBoxModalVisible(false);
+          } else {
+            Alert.alert('알림', '기프티콘 타입과 등록 위치를 선택해주세요.');
+          }
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, styles.boxModalContent]}>
             <Text variant="h4" weight="bold" style={styles.modalTitle}>
-              등록 위치 선택
+              기프티콘 정보 선택
+            </Text>
+
+            {!isTypeLocked && (
+              <>
+                <Text variant="h5" weight="bold" style={styles.modalSubtitle}>
+                  기프티콘 타입
+                </Text>
+
+                {/* 상품형/금액형 선택 버튼 */}
+                <View style={styles.typeButtonsContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      gifticonType === 'PRODUCT' && styles.typeButtonSelected,
+                    ]}
+                    onPress={() => setGifticonType('PRODUCT')}
+                  >
+                    <Text
+                      style={[
+                        styles.typeButtonText,
+                        gifticonType === 'PRODUCT' && styles.typeButtonTextSelected,
+                      ]}
+                    >
+                      상품형
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.typeButton,
+                      gifticonType === 'AMOUNT' && styles.typeButtonSelected,
+                    ]}
+                    onPress={() => setGifticonType('AMOUNT')}
+                  >
+                    <Text
+                      style={[
+                        styles.typeButtonText,
+                        gifticonType === 'AMOUNT' && styles.typeButtonTextSelected,
+                      ]}
+                    >
+                      금액형
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+
+            <Text variant="h5" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
+              등록 위치
             </Text>
 
             <Text variant="h5" weight="bold" style={styles.modalSubtitle}>
@@ -581,12 +696,6 @@ const RegisterDetailScreen = () => {
             </View>
 
             <View style={styles.boxButtonContainer}>
-              <Button
-                title="취소"
-                variant="outline"
-                onPress={() => setBoxModalVisible(false)}
-                style={styles.boxModalButton}
-              />
               <Button
                 title="확인"
                 variant="primary"
@@ -1001,6 +1110,52 @@ const styles = StyleSheet.create({
   },
   emptyImageText: {
     color: '#DDDDDD',
+  },
+  infoGuideContainer: {
+    backgroundColor: '#F0F7FF',
+    borderRadius: 10,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  infoGuideText: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#4A5568',
+    lineHeight: 20,
+  },
+  typeButtonsContainer: {
+    flexDirection: 'row',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  typeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: '#F8F8F8',
+    borderRightWidth: 0.5,
+    borderLeftWidth: 0.5,
+    borderColor: '#E0E0E0',
+  },
+  typeButtonSelected: {
+    backgroundColor: '#4A90E2',
+  },
+  typeButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666666',
+  },
+  typeButtonTextSelected: {
+    color: 'white',
+  },
+  disabledRow: {
+    opacity: 0.8,
   },
 });
 
