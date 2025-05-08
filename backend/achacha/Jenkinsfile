@@ -124,11 +124,10 @@ pipeline {
             echo '[BE] 빌드 성공! ✅'
             script {
                 def message = """
-                            <span style=\"color: #2ecc71;\">✅ <strong>빌드 성공!</strong></span><br/>
-                            <strong>프로젝트</strong>: ${env.JOB_NAME} #${env.BUILD_NUMBER}<br/>
-                            <strong>Branch</strong>: ${env.GIT_BRANCH ?: 'Unknown'}<br/>
-                            <br/>
-                            <a href=\"${env.BUILD_URL}\">Jenkins에서 자세히 보기</a>
+                            ✅ 빌드 성공!
+                            프로젝트: ${env.JOB_NAME} #${env.BUILD_NUMBER}
+                            Branch: ${env.GIT_BRANCH ?: 'Unknown'}
+                            Jenkins에서 자세히 보기: ${env.BUILD_URL}
                             """
 
                 mattermostSend(
@@ -144,11 +143,11 @@ pipeline {
             echo '[BE] 빌드 실패! ❌'
             script {
                 def message = """
-                            <span style=\"color: #e74c3c;\">❌ <strong>빌드 실패!</strong></span><br/>
-                            <strong>프로젝트</strong>: ${env.JOB_NAME} #${env.BUILD_NUMBER}<br/>
-                            <strong>Branch</strong>: ${env.GIT_BRANCH ?: 'Unknown'}<br/>
-                            <br/>
-                            <a href=\"${env.BUILD_URL}\">Jenkins에서 자세히 보기</a><br/>
+                            ❌ 빌드 실패!
+                            프로젝트: ${env.JOB_NAME} #${env.BUILD_NUMBER}
+                            Branch: ${env.GIT_BRANCH ?: 'Unknown'}
+                            Jenkins에서 자세히 보기: ${env.BUILD_URL}
+                            콘솔 로그 확인: ${env.BUILD_URL}console
                             """
 
                 mattermostSend(
