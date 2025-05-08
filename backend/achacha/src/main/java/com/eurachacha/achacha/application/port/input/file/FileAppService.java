@@ -3,7 +3,7 @@
 // import org.springframework.web.multipart.MultipartFile;
 //
 // import com.eurachacha.achacha.application.port.input.file.dto.response.FileResponseDto;
-// import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+// import com.eurachacha.achacha.domain.model.file.enums.FileType;
 //
 // public interface FileAppService {
 //

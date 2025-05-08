@@ -3,8 +3,8 @@ package com.eurachacha.achacha.application.port.output.file;
 import java.util.List;
 import java.util.Optional;
 
-import com.eurachacha.achacha.domain.model.gifticon.File;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+import com.eurachacha.achacha.domain.model.file.File;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 
 public interface FileRepository {
 	File save(File file);

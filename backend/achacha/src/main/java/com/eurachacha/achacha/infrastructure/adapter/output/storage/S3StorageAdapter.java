@@ -13,10 +13,9 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.infrastructure.config.AwsCloudFrontProperties;
 import com.eurachacha.achacha.infrastructure.config.AwsS3Properties;
-import com.eurachacha.achacha.infrastructure.config.CloudFrontConfig;
 import com.eurachacha.achacha.infrastructure.util.CloudFrontSigner;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
@@ -31,6 +30,9 @@ public class S3StorageAdapter implements FileStoragePort {
 	private final CloudFrontSigner cloudFrontSigner;
 	private final AwsS3Properties awsS3Properties;
 	private final AwsCloudFrontProperties cloudFrontProperties;
+
+	// 기본 만료 시간 설정 (5분)
+	private static final long DEFAULT_EXPIRATION_TIME = 300000L;
 
 	@Override
 	public String uploadFile(MultipartFile file, FileType fileType, Integer entityId) {
@@ -55,6 +57,11 @@ public class S3StorageAdapter implements FileStoragePort {
 		} catch (IOException | AmazonS3Exception e) {
 			throw new CustomException(ErrorCode.S3_UPLOAD_ERROR);
 		}
+	}
+
+	@Override
+	public String generateFileUrl(String fileName, FileType fileType) {
+		return generateFileUrl(fileName, fileType, DEFAULT_EXPIRATION_TIME);
 	}
 
 	@Override

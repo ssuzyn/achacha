@@ -8,8 +8,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.eurachacha.achacha.domain.model.gifticon.File;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+import com.eurachacha.achacha.domain.model.file.File;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 

@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.eurachacha.achacha.domain.model.gifticon.File;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+import com.eurachacha.achacha.domain.model.file.File;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 
 @Repository
 public interface FileJpaRepository extends JpaRepository<File, Integer> {
