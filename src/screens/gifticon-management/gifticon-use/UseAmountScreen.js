@@ -32,6 +32,8 @@ const UseAmountScreen = () => {
     name: '스타벅스 | APP전용 e카드 3만원 교환권',
     barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
     barcodeImage: require('../../../assets/images/barcode.png'),
+    originalAmount: 30000,
+    remainingAmount: 8000,
   };
 
   // 화면 로드 시 가로 모드로 설정
@@ -59,6 +61,30 @@ const UseAmountScreen = () => {
   const handleCloseModal = () => {
     setModalVisible(false);
     setAmount('');
+  };
+
+  // 금액 칩 선택 처리
+  const handleChipSelect = value => {
+    if (value === 'all') {
+      // '전액' 선택 시 남은 잔액 전체 설정
+      setAmount(productInfo.remainingAmount.toString());
+    } else {
+      // 기존 금액에 선택한 금액 추가
+      const currentAmount = Number(amount) || 0;
+      const newAmount = currentAmount + value;
+
+      // 잔액보다 크면 잔액으로 제한
+      if (newAmount > productInfo.remainingAmount) {
+        setAmount(productInfo.remainingAmount.toString());
+      } else {
+        setAmount(newAmount.toString());
+      }
+    }
+  };
+
+  // 숫자에 콤마 추가하는 함수
+  const formatAmount = amount => {
+    return amount.toLocaleString() + '원';
   };
 
   // 금액 입력 완료 및 사용완료 처리
@@ -154,19 +180,43 @@ const UseAmountScreen = () => {
               <Text style={styles.wonText}>원</Text>
             </View>
 
-            <View style={styles.modalButtons}>
+            <View style={styles.chipsContainer}>
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(500)}>
+                <Text style={styles.chipText}>+500</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(1000)}>
+                <Text style={styles.chipText}>+1,000</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(5000)}>
+                <Text style={styles.chipText}>+5,000</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect('all')}>
+                <Text style={styles.chipText}>전액</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.remainingAmountText}>
+              잔액: {formatAmount(productInfo.remainingAmount)}
+            </Text>
+
+            <View style={styles.modalButtonContainer}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelModalButton]}
+                style={styles.modalCancelButton}
                 onPress={handleCloseModal}
+                activeOpacity={0.7}
               >
-                <Text style={styles.modalButtonText}>취소</Text>
+                <Text style={styles.modalCancelButtonText}>취소</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.modalButton, styles.confirmModalButton]}
+                style={styles.modalConfirmButton}
                 onPress={handleUseComplete}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.modalButtonText, styles.confirmButtonText]}>완료</Text>
+                <Text style={styles.modalConfirmButtonText}>확인</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -262,15 +312,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
-    width: 300,
+    width: 320,
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 20,
-    elevation: 5,
+    padding: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    elevation: 5,
   },
   modalTitle: {
     fontSize: 18,
@@ -282,46 +332,74 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
     justifyContent: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#DDD',
     paddingBottom: 10,
+    marginBottom: 16,
   },
   amountInput: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'right',
-    width: 150,
+    width: 200,
     marginRight: 5,
   },
   wonText: {
     fontSize: 20,
     color: '#333',
   },
-  modalButtons: {
+  chipsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  chip: {
+    backgroundColor: '#F2F2F2',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginHorizontal: 4,
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  remainingAmountText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+    alignSelf: 'flex-end',
+  },
+  modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  modalButton: {
+  modalCancelButton: {
     flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginHorizontal: 5,
-  },
-  cancelModalButton: {
     backgroundColor: '#F2F2F2',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginRight: 8,
   },
-  confirmModalButton: {
+  modalConfirmButton: {
+    flex: 1,
     backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginLeft: 8,
   },
-  modalButtonText: {
+  modalCancelButtonText: {
     fontSize: 16,
     fontWeight: '500',
     color: '#333',
   },
-  confirmButtonText: {
+  modalConfirmButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
     color: 'white',
   },
 });

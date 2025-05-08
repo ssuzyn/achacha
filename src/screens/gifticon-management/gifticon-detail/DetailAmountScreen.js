@@ -310,6 +310,25 @@ const DetailAmountScreen = () => {
     setAmount('');
   };
 
+  // 금액 칩 선택 처리
+  const handleChipSelect = value => {
+    if (value === 'all') {
+      // '전액' 선택 시 남은 잔액 전체 설정
+      setAmount(gifticonData.gifticonRemainingAmount.toString());
+    } else {
+      // 기존 금액에 선택한 금액 추가
+      const currentAmount = Number(amount) || 0;
+      const newAmount = currentAmount + value;
+
+      // 잔액보다 크면 잔액으로 제한
+      if (newAmount > gifticonData.gifticonRemainingAmount) {
+        setAmount(gifticonData.gifticonRemainingAmount.toString());
+      } else {
+        setAmount(newAmount.toString());
+      }
+    }
+  };
+
   // 사용 취소 기능
   const handleCancel = () => {
     setIsUsing(false);
@@ -838,23 +857,43 @@ const DetailAmountScreen = () => {
               <Text style={styles.wonText}>원</Text>
             </View>
 
+            <View style={styles.chipsContainer}>
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(500)}>
+                <Text style={styles.chipText}>+500</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(1000)}>
+                <Text style={styles.chipText}>+1,000</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(5000)}>
+                <Text style={styles.chipText}>+5,000</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect('all')}>
+                <Text style={styles.chipText}>전액</Text>
+              </TouchableOpacity>
+            </View>
+
             <Text style={styles.remainingAmountText}>
               잔액: {formatAmount(gifticonData?.gifticonRemainingAmount || 0)}
             </Text>
 
-            <View style={styles.modalButtons}>
+            <View style={styles.modalButtonContainer}>
               <TouchableOpacity
-                style={[styles.modalButton, styles.cancelModalButton]}
+                style={styles.cancelButton}
                 onPress={handleCloseModal}
+                activeOpacity={0.7}
               >
-                <Text style={styles.modalButtonText}>취소</Text>
+                <Text style={styles.cancelButtonText}>취소</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={[styles.modalButton, styles.confirmModalButton]}
+                style={styles.confirmButton}
                 onPress={handleConfirmAmount}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.modalButtonText, styles.confirmButtonText]}>완료</Text>
+                <Text style={styles.confirmButtonText}>확인</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1242,16 +1281,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
-    width: 300,
+    width: 320,
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 24,
-    alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
@@ -1260,61 +1295,81 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#333333',
+    textAlign: 'center',
+    color: '#333',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-    paddingBottom: 8,
-    marginBottom: 8,
-    width: '100%',
+    borderBottomColor: '#DDD',
+    paddingBottom: 10,
+    marginBottom: 16,
   },
   amountInput: {
-    flex: 1,
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'right',
-    paddingRight: 8,
+    width: 200,
+    marginRight: 5,
   },
   wonText: {
-    fontSize: 18,
-    color: '#333333',
+    fontSize: 20,
+    color: '#333',
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  chip: {
+    backgroundColor: '#F2F2F2',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginHorizontal: 4,
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
   remainingAmountText: {
     fontSize: 14,
-    color: '#666666',
-    marginBottom: 24,
+    color: '#666',
+    marginBottom: 20,
     alignSelf: 'flex-end',
   },
-  modalButtons: {
+  modalButtonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
   },
-  modalButton: {
+  cancelButton: {
     flex: 1,
-    height: 48,
+    backgroundColor: '#F2F2F2',
     borderRadius: 8,
-    justifyContent: 'center',
+    padding: 15,
     alignItems: 'center',
-    marginHorizontal: 4,
+    marginRight: 8,
   },
-  cancelModalButton: {
-    backgroundColor: '#EEEEEE',
-  },
-  confirmModalButton: {
+  confirmButton: {
+    flex: 1,
     backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginLeft: 8,
   },
-  modalButtonText: {
+  cancelButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333333',
+    fontWeight: '500',
+    color: '#333',
   },
   confirmButtonText: {
-    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'white',
   },
   bottomPadding: {
     height: 60,
