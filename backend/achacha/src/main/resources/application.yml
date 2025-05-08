@@ -8,6 +8,12 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
+      database: achacha
+      auto-index-creation: true
+
   servlet:
     multipart:
       max-file-size: 5MB # 파일 하나 당 최대 용량

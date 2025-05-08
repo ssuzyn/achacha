@@ -39,6 +39,11 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	}
 
 	@Override
+	public boolean existsByBarcode(String barcode) {
+		return gifticonJpaRepository.existsByBarcode(barcode);
+	}
+
+	@Override
 	public Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable) {
 		return gifticonJpaRepository.findUsedGifticons(userId, type, pageable);
 	}

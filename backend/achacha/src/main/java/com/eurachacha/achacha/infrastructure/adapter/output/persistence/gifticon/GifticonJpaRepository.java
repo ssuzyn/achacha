@@ -22,4 +22,5 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 		""")
 	Optional<Gifticon> findGifticonDetailById(@Param("gifticonId") Integer gifticonId);
 
+	boolean existsByBarcode(String barcode);
 }

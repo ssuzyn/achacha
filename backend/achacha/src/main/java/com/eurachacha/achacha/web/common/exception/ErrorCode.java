@@ -16,6 +16,11 @@ public enum ErrorCode {
 	GIFTICON_EXPIRED(HttpStatus.NOT_FOUND, "GIFTICON_003", "기프티콘이 만료되었습니다."),
 	GIFTICON_ALREADY_USED(HttpStatus.NOT_FOUND, "GIFTICON_004", "이미 사용된 기프티콘입니다."),
 	GIFTICON_DELETED(HttpStatus.NOT_FOUND, "GIFTICON_005", "삭제된 기프티콘입니다."),
+	INVALID_AMOUNT_GIFTICON_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_006", "금액형 기프티콘은 금액을 입력해야 합니다."),
+	GIFTICON_BARCODE_DUPLICATE(HttpStatus.CONFLICT, "GIFTICON_007", "이미 등록된 바코드 번호입니다."),
+	
+	// 브랜드 관련 에러 코드
+	BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "BRAND_001", "브랜드 정보를 찾을 수 없습니다,"),
 
 	// AI 서비스 관련 에러 코드
 	AI_SERVICE_CONNECTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 서비스 연결 중 오류가 발생했습니다."),
@@ -45,7 +50,10 @@ public enum ErrorCode {
 	// CloudFront 관련 에러 코드
 	CLOUDFRONT_URL_GENERATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CF_001", "URL 생성 중 오류가 발생했습니다."),
 	CLOUDFRONT_PRIVATE_KEY_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CF_002", "CloudFront 인증 키 처리 중 오류가 발생했습니다."),
-	CLOUDFRONT_SIGNED_URL_EXPIRED(HttpStatus.FORBIDDEN, "CF_003", "URL이 만료되었습니다.");
+	CLOUDFRONT_SIGNED_URL_EXPIRED(HttpStatus.FORBIDDEN, "CF_003", "URL이 만료되었습니다."),
+
+	// ShareBox 관련 에러 코드
+	SHAREBOX_NOT_FOUND(HttpStatus.NOT_FOUND, "SHAREBOX_001", "쉐어박스를 찾을 수 없습니다.");
 
 	// http 상태 코드
 	private final HttpStatus status;
