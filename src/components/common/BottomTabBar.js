@@ -11,6 +11,7 @@ import { Text } from '../ui';
 import HomeScreen from '../../screens/HomeScreen';
 import SettingScreen from '../../screens/SettingScreen';
 import ManageListScreen from '../../screens/gifticon-management/ManageListScreen';
+import BoxMainScreen from '../../screens/gifticon-share-box/BoxMainScreen';
 
 // 임시 스크린
 const MapScreen = () => {
@@ -20,18 +21,6 @@ const MapScreen = () => {
     <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
       <Text variant="body1" style={styles.screenText}>
         기프티콘 MAP 화면
-      </Text>
-    </View>
-  );
-};
-
-const ShareboxScreen = () => {
-  const { theme } = useTheme();
-
-  return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text variant="body1" style={styles.screenText}>
-        쉐어박스 화면
       </Text>
     </View>
   );
@@ -110,7 +99,7 @@ const createWrappedComponent = (Component, screenName) => {
 const WrappedHomeScreen = createWrappedComponent(HomeScreen, 'Home');
 const WrappedGifticonManageScreen = createWrappedComponent(ManageListScreen, 'GifticonManage');
 const WrappedMapScreen = createWrappedComponent(MapScreen, 'Map');
-const WrappedShareboxScreen = createWrappedComponent(ShareboxScreen, 'Sharebox');
+const WrappedShareboxScreen = createWrappedComponent(BoxMainScreen, 'Sharebox');
 const WrappedSettingsScreen = createWrappedComponent(SettingScreen, 'Settings');
 
 const BottomTabBar = () => {
