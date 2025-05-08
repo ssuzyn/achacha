@@ -1,10 +1,11 @@
 package com.eurachacha.achacha.domain.service.gifticon;
 
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 public interface GifticonDomainService {
-	// 기프티콘 유효성 검증
-	void validateGifticon(Gifticon gifticon);
+	// 금액형 기프티콘 유효성 검증
+	void validateGifticonAmount(GifticonType type, Integer amount);
 
 	// 기프티콘 만료 여부 확인
 	boolean isExpired(Gifticon gifticon);
