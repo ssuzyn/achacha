@@ -54,12 +54,6 @@ const RegisterMainScreen = () => {
     navigation.goBack();
   }, [navigation]);
 
-  // 수동 등록 처리
-  const handleManualRegister = useCallback(() => {
-    // 타입 선택 모달 먼저 표시
-    setTypeModalVisible(true);
-  }, []);
-
   // 이미지 선택 모달 표시 전 타입 선택 모달 표시
   const showTypeModal = useCallback(() => {
     setTypeModalVisible(true);
@@ -300,7 +294,7 @@ const RegisterMainScreen = () => {
           </TouchableOpacity>
         </Shadow>
 
-        {/* 수동 등록 버튼 - TouchableOpacity로 간단하게 구현 */}
+        {/* 수동 등록 버튼 - TouchableOpacity로 간단하게 구현
         <TouchableOpacity style={styles.manualButton} onPress={handleManualRegister}>
           <Text variant="h4" weight="semiBold" color="white" style={styles.manualTextMain}>
             수동 등록
@@ -308,7 +302,7 @@ const RegisterMainScreen = () => {
           <Text variant="body2" weight="regular" color="white" style={styles.manualTextSub}>
             등록에 문제가 발생하셨나요?
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View style={styles.divider} />
 
@@ -777,11 +771,11 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     marginBottom: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 5,
   },
   stepsContainer: {
     marginTop: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: 5,
   },
   stepItem: {
     flexDirection: 'row',
