@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     position: 'relative', // D-day 태그의 절대 위치를 위해 필요
   },
   imageContainer: {
-    marginRight: 15,
+    marginRight: 10,
   },
   gifticonImage: {
     width: 60,
@@ -849,8 +849,8 @@ const styles = StyleSheet.create({
   },
   dDayContainer: {
     position: 'absolute',
-    right: 16,
-    paddingHorizontal: 10,
+    right: 15,
+    paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
   },
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(114, 191, 255, 0.15)',
   },
   dDayText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   urgentDDayText: {
