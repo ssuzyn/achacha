@@ -95,14 +95,14 @@ const HomeScreen = () => {
       >
         {/* 환영 메시지 */}
         <View style={styles.welcomeSection}>
-          <Text variant="h2" weight="medium" style={styles.welcomeText}>
+          <Text variant="h3" weight="medium" style={styles.welcomeText}>
             어서오세요!{' '}
-            <Text variant="h2" weight="bold" color="primary" style={styles.welcomeText}>
+            <Text variant="h3" weight="bold" color="primary" style={styles.welcomeText}>
               {username}
             </Text>{' '}
             님,
           </Text>
-          <Text variant="h2" weight="medium" style={styles.subWelcomeText}>
+          <Text variant="h3" weight="medium" style={styles.subWelcomeText}>
             당신을 위한 기프티콘이 기다려요.
           </Text>
         </View>
@@ -161,7 +161,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingTop: 0,
   },
   contentContainer: {
