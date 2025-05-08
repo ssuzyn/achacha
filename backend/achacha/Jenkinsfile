@@ -25,6 +25,8 @@ pipeline {
         AWS_CLOUDFRONT_KEYPAIR_ID = credentials('AWS_CLOUDFRONT_KEYPAIR_ID')
         AWS_CLOUDFRONT_PRIVATE_KEY = credentials('AWS_CLOUDFRONT_PRIVATE_KEY')
 
+        // MongoDB 환경변수
+        MONGODB_URI = credentials('MONGODB_URI')
     }
     stages {
         stage('Clone Repository') {
@@ -95,6 +97,7 @@ pipeline {
                                       -e AWS_SECRET_TOKEN="${AWS_SECRET_TOKEN}" \\
                                       -e AWS_CLOUDFRONT_KEYPAIR_ID="${AWS_CLOUDFRONT_KEYPAIR_ID}" \\
                                       -e AWS_CLOUDFRONT_PRIVATE_KEY="${AWS_CLOUDFRONT_PRIVATE_KEY}" \\
+                                      -e MONGODB_URI="${MONGODB_URI}" \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
                                       ${DOCKER_IMAGE}:latest;
