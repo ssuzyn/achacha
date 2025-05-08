@@ -8,7 +8,7 @@ import GeofencingService from '../services/GeofencingService';
 const MapScreen = () => {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const mapRef = useRef(null);
-  const [geofenceService] = useState(() => new GeofencingService(uniqueBrands));
+  const geofencingServiceRef = useRef();
   const appState = useRef(AppState.currentState);
 
   // 목데이터
@@ -155,30 +155,6 @@ const MapScreen = () => {
     },
   ]);
 
-  useEffect(() => {
-    // 초기 지오펜싱 초기화
-    geofenceService.initGeofencing();
-
-    // 앱 상태 변경 리스너 설정
-    const subscription = AppState.addEventListener('change', nextAppState => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('앱이 포그라운드로 돌아왔습니다 - 지오펜싱 재초기화');
-        geofenceService.initGeofencing();
-      }
-      appState.current = nextAppState;
-    });
-
-    // 컴포넌트 언마운트 시 정리
-    return () => {
-      subscription.remove();
-      geofenceService.cleanup();
-    };
-  }, []);
-
-  useEffect(() => {
-    geofenceService.uniqueBrands = uniqueBrands;
-  }, [uniqueBrands]);
-
   // 기프티콘 목록에서 브랜드 정보 추출(중복 없이)
   const getUniqueBrands = () => {
     const uniqueBrands = gifticons.reduce((acc, gifticon) => {
@@ -196,10 +172,71 @@ const MapScreen = () => {
 
   const uniqueBrands = getUniqueBrands();
 
+  // 첫 렌더링 시 지오펜싱 초기화
+  useEffect(() => {
+    // 최초 렌더링 시 인스턴스 생성
+    if (!geofencingServiceRef.current) {
+      console.log('GeofencingService 인스턴스 생성');
+      geofencingServiceRef.current = new GeofencingService(uniqueBrands);
+    }
+
+    console.log('MapScreen 마운트 - 지오펜싱 초기화 시작');
+
+    const initGeofencing = async () => {
+      console.log('initGeofencing 함수 호출됨');
+      try {
+        await geofencingServiceRef.current.initGeofencing();
+        console.log('지오펜싱 초기화 성공');
+      } catch (error) {
+        console.error('지오펜싱 초기화 중 오류:', error);
+      }
+    };
+
+    initGeofencing();
+
+    // 앱 상태 변경 리스너 설정
+    console.log('앱 상태 변경 리스너 설정');
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      console.log(`앱 상태 변경: ${appState.current} -> ${nextAppState}`);
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('앱이 포그라운드로 돌아왔습니다 - 지오펜싱 재초기화');
+        // 초기화 상태 리셋 후 재초기화
+        geofencingServiceRef.current.resetInitialized();
+        geofencingServiceRef.current.initGeofencing();
+      }
+      appState.current = nextAppState;
+    });
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      console.log('MapScreen 언마운트 - 정리 작업 시작');
+      subscription.remove();
+      if (geofencingServiceRef.current) {
+        geofencingServiceRef.current.cleanup();
+      }
+      console.log('MapScreen 정리 작업 완료');
+    };
+  }, []);
+
+  // uniqueBrands 변경 시 서비스에 전달
+  useEffect(() => {
+    if (geofencingServiceRef.current) {
+      geofencingServiceRef.current.uniqueBrands = uniqueBrands;
+    }
+  }, [uniqueBrands]);
+
   // 선택된 브랜드에 따라 필터링
   const filteredGifticons = selectedBrand
     ? gifticons.filter(item => item.brandId === selectedBrand)
     : gifticons;
+
+  // 매장 검색 결과 처리 콜백
+  const handleStoresFound = storeResults => {
+    console.log('매장 검색 결과 수신:', storeResults.length);
+    if (geofencingServiceRef.current) {
+      geofencingServiceRef.current.setupGeofences(storeResults, selectedBrand);
+    }
+  };
 
   // 기프티콘 사용 처리 함수
   const handleUseGifticon = id => {
@@ -242,6 +279,7 @@ const MapScreen = () => {
           uniqueBrands={uniqueBrands}
           selectedBrand={selectedBrand}
           onSelectBrand={handleSelectBrand}
+          onStoresFound={handleStoresFound}
         />
       </View>
       <TouchableOpacity style={styles.locationButton} onPress={moveToCurrentLocation}>
