@@ -102,7 +102,7 @@ const BoxCreateScreen = () => {
           {/* 이미지 영역 */}
           <View style={styles.imageContainer}>
             <Image
-              source={require('../../assets/images/share-box-icon3.png')}
+              source={require('../../assets/images/share-box.png')}
               style={styles.shareImage}
               resizeMode="contain"
             />
@@ -265,12 +265,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   shareImage: {
-    width: 140,
-    height: 140,
+    width: 100,
+    height: 100,
   },
   textContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 20,
   },
   shareTextContainer: {
     alignItems: 'center',
