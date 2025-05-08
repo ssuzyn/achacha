@@ -9,8 +9,6 @@ import {
   TouchableOpacity,
   StatusBar,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Clipboard,
   Alert,
   Share,
@@ -72,22 +70,21 @@ const BoxCreateScreen = () => {
     setScreenState('share');
   };
 
-  // 코드 복사 함수
-  const handleCopyCode = () => {
-    Clipboard.setString(inviteCode);
-    Alert.alert('알림', '코드가 클립보드에 복사되었습니다.');
-  };
-
   // 카카오톡 공유 함수
   const handleShareKakao = async () => {
     try {
       // 실제 구현에서는 카카오 SDK를 사용하겠지만, 여기서는 일반 공유 기능으로 대체
       await Share.share({
-        message: `쉐어박스 '${boxName}'에 초대합니다! 초대 코드: ${inviteCode}`,
+        message: `기프티콘 관리 서비스 아차차의 쉐어박스 '${boxName}'에 초대합니다! 지금 바로 참여해보세요. 초대 코드: ${inviteCode}`,
       });
     } catch (error) {
       Alert.alert('공유 실패', '공유하는 중 오류가 발생했습니다.');
     }
+  };
+
+  // 코드 복사 함수
+  const handleCopyCode = () => {
+    Clipboard.setString(inviteCode);
   };
 
   // 생성 화면 렌더링
@@ -131,15 +128,15 @@ const BoxCreateScreen = () => {
       </ScrollView>
 
       {/* 생성 버튼 */}
-      <View style={styles.buttonContainer}>
+      <View
+        style={[styles.buttonContainer, { paddingBottom: insets.bottom > 0 ? insets.bottom : 20 }]}
+      >
         <TouchableOpacity
           style={[styles.createButton, !boxName.trim() ? styles.disabledButton : {}]}
           onPress={handleCreate}
           disabled={!boxName.trim()}
         >
-          <Text variant="body1" weight="bold" style={styles.createButtonText}>
-            생성
-          </Text>
+          <Text style={styles.createButtonText}>생성</Text>
         </TouchableOpacity>
       </View>
     </>
@@ -148,12 +145,7 @@ const BoxCreateScreen = () => {
   // 코드 공유 화면 렌더링
   const renderShareScreen = () => (
     <>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
+      <View style={{ flex: 1, justifyContent: 'center' }}>
         <View style={styles.shareContentContainer}>
           {/* 초대 코드 표시 영역 */}
           <View style={styles.codeContainer}>
@@ -163,17 +155,22 @@ const BoxCreateScreen = () => {
           {/* 안내 텍스트 */}
           <View style={styles.shareTextContainer}>
             <Text style={styles.guideText}>
-              쉐어박스를 생성하고{'\n'}친구에게 코드를 공유해보세요.
+              다른 사용자가{'\n'}위의 초대코드를 입력하면{'\n'}쉐어박스에 참여할 수 있어요.
             </Text>
             <Text style={styles.subGuideText}>
-              쉐어박스 메인 페이지 상단에{'\n'}초대코드를 입력하면 친구와 함께 즐길 수 있어요!
+              쉐어박스 메인 페이지 상단에{'\n'}참여 버튼을 눌러 코드를 입력해주세요.
             </Text>
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       {/* 버튼 영역 - 하단에 고정 */}
-      <View style={styles.buttonContainer}>
+      <View
+        style={[
+          styles.buttonContainer,
+          { paddingBottom: insets.bottom > 0 ? insets.bottom : 20, borderTopWidth: 0 },
+        ]}
+      >
         <View style={styles.rowButtonContainer}>
           <TouchableOpacity style={styles.kakaoButton} onPress={handleShareKakao}>
             <Text style={styles.kakaobuttonText}>카카오톡 공유</Text>
@@ -188,11 +185,7 @@ const BoxCreateScreen = () => {
   );
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
       {/* 안전 영역 상단 여백 */}
@@ -210,7 +203,7 @@ const BoxCreateScreen = () => {
       </View>
 
       {screenState === 'create' ? renderCreateScreen() : renderShareScreen()}
-    </KeyboardAvoidingView>
+    </View>
   );
 };
 
@@ -253,9 +246,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   shareContentContainer: {
-    flex: 1,
-    padding: 20,
+    width: '100%',
+    paddingHorizontal: 20,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   imageContainer: {
     marginTop: 40,
@@ -326,6 +320,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: 'bold',
   },
   // 코드 공유 화면 스타일
   codeContainer: {
@@ -337,7 +332,7 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   codeValue: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#000000',
     letterSpacing: 2,

@@ -6,7 +6,6 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Image,
   Modal,
   TextInput,
@@ -128,13 +127,11 @@ const BoxMainScreen = () => {
   // 확인 버튼 핸들러
   const handleConfirmPress = () => {
     if (!inviteCode.trim()) {
-      Alert.alert('안내', '초대코드를 입력해주세요.');
       return;
     }
 
     // TODO: 초대코드 검증 및 참여 로직 구현
     console.log('입력된 초대코드:', inviteCode);
-    Alert.alert('안내', `초대코드 ${inviteCode}로 참여를 시도합니다.`);
     handleCloseModal();
   };
 
@@ -148,7 +145,6 @@ const BoxMainScreen = () => {
   const handleBoxPress = item => {
     // TODO: 쉐어박스 상세 화면으로 이동
     console.log('선택된 쉐어박스:', item.shareBoxName);
-    Alert.alert('안내', `${item.shareBoxName} 쉐어박스를 선택하셨습니다.`);
   };
 
   // 쉐어박스 카드 렌더링
@@ -271,7 +267,7 @@ const BoxMainScreen = () => {
               초대코드 입력하기
             </Text>
             <Text variant="body2" style={styles.modalSubtitle}>
-              초대받은 쉐어박스에 입장하려면{'\n'}공유받은 초대코드를 입력해 주세요.
+              초대받은 쉐어박스에 참여하려면{'\n'}공유받은 초대코드를 입력해 주세요.
             </Text>
 
             <TextInput
