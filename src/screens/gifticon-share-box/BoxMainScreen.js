@@ -173,7 +173,13 @@ const BoxMainScreen = () => {
             {/* 상단 정보 영역 */}
             <View style={styles.boxTopArea}>
               {/* 박스명 */}
-              <Text variant="h3" weight="bold" style={styles.boxTitle}>
+              <Text
+                variant="h3"
+                weight="bold"
+                style={styles.boxTitle}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {item.shareBoxName}
               </Text>
 
@@ -192,14 +198,10 @@ const BoxMainScreen = () => {
               </View>
             </View>
 
-            {/* 중앙 이미지 영역 */}
-            <View style={styles.boxImageArea}>
-              <Image source={iconImage} style={styles.boxImage} resizeMode="contain" />
-            </View>
-
-            {/* 하단 카운트 영역 */}
-            <View style={styles.boxBottomArea}>
-              <View style={[styles.countContainer, { backgroundColor: `${cardColor}30` }]}>
+            {/* 중앙 영역 - 이미지와 카운트를 한 줄에 배치 */}
+            <View style={styles.boxMiddleArea}>
+              {/* 왼쪽에 카운트 표시 */}
+              <View style={[styles.countContainer, { backgroundColor: `${cardColor}20` }]}>
                 <Icon
                   name={MATERIAL_ICONS.box}
                   type="material"
@@ -212,8 +214,13 @@ const BoxMainScreen = () => {
                   weight="semibold"
                   style={[styles.countText, { color: `${cardColor}` }]}
                 >
-                  {item.gifticonCount}개 쉐어 중
+                  {item.gifticonCount}
                 </Text>
+              </View>
+
+              {/* 오른쪽에 이미지 배치 */}
+              <View style={styles.boxImageArea}>
+                <Image source={iconImage} style={styles.boxImage} resizeMode="contain" />
               </View>
             </View>
           </View>
@@ -224,31 +231,35 @@ const BoxMainScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <Text variant="h2" weight="bold" style={styles.headerTitle}>
-          쉐어박스
-        </Text>
-        <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.joinButton} onPress={handleJoinPress} activeOpacity={0.7}>
-            <Text variant="body1" weight="medium" style={styles.joinButtonText}>
-              참여
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.createButton}
-            onPress={handleCreatePress}
-            activeOpacity={0.7}
-          >
-            <Text variant="body1" weight="medium" style={styles.createButtonText}>
-              생성
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* 쉐어박스 목록 */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <Text variant="h2" weight="bold" style={styles.headerTitle}>
+            쉐어박스
+          </Text>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity
+              style={styles.joinButton}
+              onPress={handleJoinPress}
+              activeOpacity={0.7}
+            >
+              <Text variant="body1" weight="medium" style={styles.joinButtonText}>
+                참여
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreatePress}
+              activeOpacity={0.7}
+            >
+              <Text variant="body1" weight="medium" style={styles.createButtonText}>
+                생성
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.boxesContainer}>
           {DUMMY_DATA.data.map((item, index) => renderShareBox(item, index))}
         </View>
@@ -310,7 +321,7 @@ const BoxMainScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 2,
     paddingTop: 0,
   },
   header: {
@@ -318,7 +329,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 0,
-    paddingBottom: 5,
+    paddingBottom: 15,
+    paddingHorizontal: 12,
   },
   headerTitle: {
     fontSize: 26,
@@ -366,13 +378,13 @@ const styles = StyleSheet.create({
   },
   boxCard: {
     width: '100%',
-    height: 180,
     borderRadius: 12,
     padding: 13,
+    paddingBottom: 2,
     overflow: 'visible',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   boxTopArea: {
     width: '100%',
@@ -381,7 +393,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     letterSpacing: -0.3,
     marginBottom: 2,
+    marginLeft: 1,
     color: '#000000',
+    paddingRight: 5,
   },
   roleContainer: {
     flexDirection: 'row',
@@ -395,18 +409,24 @@ const styles = StyleSheet.create({
     color: '#718096',
     fontSize: 13,
     letterSpacing: -0.2,
+    marginBottom: 0,
+  },
+  boxMiddleArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    marginBottom: 0,
   },
   boxImageArea: {
+    marginTop: -10,
     alignItems: 'flex-end',
     justifyContent: 'center',
-    marginVertical: 1,
   },
   boxImage: {
-    width: 70,
-    height: 70,
-  },
-  boxBottomArea: {
-    width: '100%',
+    width: 60,
+    height: 60,
+    marginBottom: 2,
   },
   countContainer: {
     flexDirection: 'row',
@@ -414,6 +434,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
+    marginTop: 7,
     alignSelf: 'flex-start',
   },
   boxCountIconContainer: {
