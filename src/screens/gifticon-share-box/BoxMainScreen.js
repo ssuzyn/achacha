@@ -78,10 +78,10 @@ const BACKGROUND_COLORS = [
 const CARD_COLORS = [
   '#FF9500', // cardOrange
   '#0DBA3F', // cardGreen
-  '#AF52DE', // cardPurple
-  '#007AFF', // cardBlue
+  '#AF4AE1', // cardPurple
+  '#157BEA', // cardBlue
   '#30B0C7', // cardTeal
-  '#FF2DC3', // cardPink
+  '#ED3EBB', // cardPink
 ];
 
 // 아이콘 이름 매핑
@@ -233,18 +233,18 @@ const BoxMainScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* 쉐어박스 목록 */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* 헤더 */}
         <View style={styles.header}>
           <Text variant="h2" weight="bold" style={styles.headerTitle}>
             쉐어박스
           </Text>
+
           <View style={styles.headerButtons}>
             <TouchableOpacity
               style={styles.joinButton}
               onPress={handleJoinPress}
               activeOpacity={0.7}
             >
-              <Text variant="body1" weight="medium" style={styles.joinButtonText}>
+              <Text variant="body2" weight="medium" style={styles.joinButtonText}>
                 참여
               </Text>
             </TouchableOpacity>
@@ -253,7 +253,7 @@ const BoxMainScreen = () => {
               onPress={handleCreatePress}
               activeOpacity={0.7}
             >
-              <Text variant="body1" weight="medium" style={styles.createButtonText}>
+              <Text variant="body2" weight="medium" style={styles.createButtonText}>
                 생성
               </Text>
             </TouchableOpacity>
@@ -330,10 +330,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 0,
     paddingBottom: 15,
-    paddingHorizontal: 12,
+    paddingHorizontal: 2,
   },
   headerTitle: {
-    fontSize: 26,
+    fontSize: 24,
+    marginLeft: 5,
     letterSpacing: -0.5,
   },
   headerButtons: {
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 25,
     paddingVertical: 8,
     borderRadius: 10,
-    marginRight: 8,
+    marginRight: 7,
   },
   joinButtonText: {
     color: '#56AEE9',
