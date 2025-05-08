@@ -15,6 +15,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
+import { useNavigation } from '@react-navigation/native';
 
 // 샘플 데이터
 const DUMMY_DATA = {
@@ -106,6 +107,7 @@ const BoxMainScreen = () => {
   const { theme } = useTheme();
   const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
+  const navigation = useNavigation();
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
@@ -138,8 +140,8 @@ const BoxMainScreen = () => {
 
   // 쉐어박스 생성 버튼 클릭 핸들러
   const handleCreatePress = () => {
-    // TODO: 쉐어박스 생성 기능 구현
-    Alert.alert('안내', '쉐어박스 생성 기능이 준비 중입니다.');
+    // BoxCreateScreen으로 이동
+    navigation.navigate('BoxCreate');
   };
 
   // 쉐어박스 카드 클릭 핸들러
