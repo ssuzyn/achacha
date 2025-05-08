@@ -61,9 +61,6 @@ const BoxCreateScreen = () => {
       return;
     }
 
-    // API 호출로 쉐어박스 생성 로직 구현 (여기서는 랜덤 코드 생성으로 대체)
-    console.log('쉐어박스 생성:', boxName);
-
     // 초대 코드 생성
     const code = generateInviteCode();
     setInviteCode(code);
