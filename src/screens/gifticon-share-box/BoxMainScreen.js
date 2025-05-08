@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
   },
   joinButton: {
     backgroundColor: '#E5F4FE',
-    paddingHorizontal: 30,
+    paddingHorizontal: 25,
     paddingVertical: 8,
     borderRadius: 10,
     marginRight: 8,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   },
   createButton: {
     backgroundColor: '#56AEE9',
-    paddingHorizontal: 30,
+    paddingHorizontal: 25,
     paddingVertical: 8,
     borderRadius: 10,
   },
