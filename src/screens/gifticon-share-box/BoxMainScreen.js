@@ -1,7 +1,16 @@
 // 쉐어박스 메인 스크린
 
-import React from 'react';
-import { StyleSheet, View, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+  Modal,
+  TextInput,
+} from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
@@ -85,11 +94,36 @@ const getShareBoxIcon = count => {
 
 const BoxMainScreen = () => {
   const { theme } = useTheme();
+  const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
-    // TODO: 쉐어박스 참여 기능 구현
-    Alert.alert('안내', '쉐어박스 참여 기능이 준비 중입니다.');
+    setIsJoinModalVisible(true);
+  };
+
+  // 모달 닫기 핸들러
+  const handleCloseModal = () => {
+    setIsJoinModalVisible(false);
+    setInviteCode('');
+  };
+
+  // 취소 버튼 핸들러
+  const handleCancelPress = () => {
+    handleCloseModal();
+  };
+
+  // 확인 버튼 핸들러
+  const handleConfirmPress = () => {
+    if (!inviteCode.trim()) {
+      Alert.alert('안내', '초대코드를 입력해주세요.');
+      return;
+    }
+
+    // TODO: 초대코드 검증 및 참여 로직 구현
+    console.log('입력된 초대코드:', inviteCode);
+    Alert.alert('안내', `초대코드 ${inviteCode}로 참여를 시도합니다.`);
+    handleCloseModal();
   };
 
   // 쉐어박스 생성 버튼 클릭 핸들러
@@ -211,6 +245,56 @@ const BoxMainScreen = () => {
           {DUMMY_DATA.data.map((item, index) => renderShareBox(item, index))}
         </View>
       </ScrollView>
+
+      {/* 초대코드 입력 모달 */}
+      <Modal
+        visible={isJoinModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text variant="h3" weight="bold" style={styles.modalTitle}>
+              초대코드 입력하기
+            </Text>
+            <Text variant="body2" style={styles.modalSubtitle}>
+              초대받은 쉐어박스에 입장하려면{'\n'}공유받은 초대코드를 입력해 주세요.
+            </Text>
+
+            <TextInput
+              style={styles.codeInput}
+              placeholder="초대코드"
+              placeholderTextColor="#A0AEC0"
+              value={inviteCode}
+              onChangeText={setInviteCode}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={handleCancelPress}
+                activeOpacity={0.7}
+              >
+                <Text variant="body1" weight="medium" style={styles.cancelButtonText}>
+                  취소
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.confirmButton}
+                onPress={handleConfirmPress}
+                activeOpacity={0.7}
+              >
+                <Text variant="body1" weight="medium" style={styles.confirmButtonText}>
+                  확인
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -331,6 +415,68 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  // 모달 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    color: '#718096',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  codeInput: {
+    width: '100%',
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    marginBottom: 24,
+    fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#E2E8F0',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginRight: 8,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#4A5568',
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#56AEE9',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginLeft: 8,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    color: 'white',
   },
 });
 
