@@ -796,13 +796,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
-  historyButton: {
-    flex: 1,
-    marginLeft: 4,
-    height: 56,
-    borderRadius: 8,
-    backgroundColor: '#56AEE9',
-  },
   loadingContainer: {
     backgroundColor: '#FFFFFF',
   },
