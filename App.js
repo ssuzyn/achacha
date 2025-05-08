@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, StyleSheet, LogBox } from 'react-native';
+import { View, StyleSheet, LogBox, Text, TextInput } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBarProvider } from './src/context/TabBarContext';
 import { HeaderBarProvider } from './src/context/HeaderBarContext';
@@ -19,6 +19,66 @@ LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
   'Component is not a function',
 ]);
+
+// 텍스트 컴포넌트에 전역 스타일 적용
+const setDefaultFontFamily = () => {
+  // 기본 Text 컴포넌트 오버라이드
+  const defaultTextProps = Object.getOwnPropertyDescriptor(Text, 'render');
+  if (defaultTextProps) {
+    const oldRender = defaultTextProps.value;
+    const newRender = function (...args) {
+      const origin = oldRender.call(this, ...args);
+      return React.cloneElement(origin, {
+        style: [
+          {
+            fontFamily: 'Pretendard-Regular',
+            includeFontPadding: false,
+            textAlignVertical: 'center',
+          },
+          origin.props.style,
+        ],
+      });
+    };
+
+    Object.defineProperty(Text, 'render', {
+      ...defaultTextProps,
+      value: newRender,
+    });
+  }
+
+  // TextInput 컴포넌트 오버라이드
+  const defaultTextInputProps = Object.getOwnPropertyDescriptor(TextInput, 'render');
+  if (defaultTextInputProps) {
+    const oldRender = defaultTextInputProps.value;
+    const newRender = function (...args) {
+      const origin = oldRender.call(this, ...args);
+      return React.cloneElement(origin, {
+        style: [
+          {
+            fontFamily: 'Pretendard-Regular',
+            includeFontPadding: false,
+            textAlignVertical: 'center',
+          },
+          origin.props.style,
+        ],
+      });
+    };
+
+    Object.defineProperty(TextInput, 'render', {
+      ...defaultTextInputProps,
+      value: newRender,
+    });
+  }
+};
+
+// AppWrapper 컴포넌트 - 폰트 설정 초기화
+const AppWrapper = ({ children }) => {
+  useEffect(() => {
+    setDefaultFontFamily();
+  }, []);
+
+  return children;
+};
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -69,22 +129,24 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider theme={theme}>
-        <SafeAreaProvider>
-          <View style={styles.container} onLayout={onLayoutRootView}>
-            <HeaderBarProvider>
-              <TabBarProvider>
-                <NavigationContainer ref={navigationRef}>
-                  <AppNavigator />
-                  <StatusBar style="auto" />
-                </NavigationContainer>
-              </TabBarProvider>
-            </HeaderBarProvider>
-          </View>
-        </SafeAreaProvider>
-      </ThemeProvider>
-    </GestureHandlerRootView>
+    <AppWrapper>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider theme={theme}>
+          <SafeAreaProvider>
+            <View style={styles.container} onLayout={onLayoutRootView}>
+              <HeaderBarProvider>
+                <TabBarProvider>
+                  <NavigationContainer ref={navigationRef}>
+                    <AppNavigator />
+                    <StatusBar style="auto" />
+                  </NavigationContainer>
+                </TabBarProvider>
+              </HeaderBarProvider>
+            </View>
+          </SafeAreaProvider>
+        </ThemeProvider>
+      </GestureHandlerRootView>
+    </AppWrapper>
   );
 }
 

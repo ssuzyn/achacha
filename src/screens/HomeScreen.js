@@ -137,8 +137,12 @@ const HomeScreen = () => {
         <View style={styles.bottomCardSection}>
           <View style={styles.giftMessageCard}>
             <View style={styles.giftMessageTextContainer}>
-              <Text style={styles.giftMessageTitle}>기프티콘 선물해봐요!</Text>
-              <Text style={styles.giftMessageSubtitle}>포장은 저희가 해드릴게요.</Text>
+              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                기프티콘 선물해봐요!
+              </Text>
+              <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
+                포장은 저희가 해드릴게요.
+              </Text>
             </View>
             <View style={styles.giftMessageImageContainer}>
               <Image
@@ -266,14 +270,11 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   giftMessageTitle: {
-    fontSize: 19,
-    fontWeight: 'bold',
-    color: '#000',
     marginBottom: 5,
     letterSpacing: -0.5,
+    color: '#000000',
   },
   giftMessageSubtitle: {
-    fontSize: 15,
     color: '#333',
     letterSpacing: -0.3,
   },

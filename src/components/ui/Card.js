@@ -103,7 +103,7 @@ const RadarCard = ({ text, image, style, ...props }) => {
         style={styles.featureShadowContainer}
       >
         <View style={[styles.radarCard, style]} {...props}>
-          <Text variant="subtitle1" weight="bold" style={styles.radarText}>
+          <Text variant="h5" weight="bold" style={styles.radarText}>
             {text}
           </Text>
           <Image source={image} style={styles.fullRadarImage} />
@@ -232,14 +232,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
     overflow: 'hidden',
     padding: 0,
     position: 'relative',
   },
   radarText: {
     fontSize: 18,
-    fontWeight: '800',
     color: '#333',
     textAlign: 'right',
     position: 'absolute',
@@ -248,6 +246,7 @@ const styles = StyleSheet.create({
     right: 16,
     zIndex: 1,
     lineHeight: 24,
+    letterSpacing: -0.5,
   },
   fullRadarImage: {
     width: '100%',
