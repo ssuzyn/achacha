@@ -505,7 +505,102 @@ const ManageListScreen = () => {
       );
     }
 
-    // 마이박스와 쉐어박스 기프티콘은 스와이프 가능
+    // 금액형 기프티콘은 바코드 조회만 가능하게 (사용완료 스와이프 제거)
+    if (item.gifticonType === 'AMOUNT') {
+      return (
+        <Swipeable
+          key={item.gifticonId}
+          ref={ref => (swipeableRefs.current[item.gifticonId] = ref)}
+          renderLeftActions={null} // 좌측 스와이프(사용완료) 비활성화
+          renderRightActions={(progress, dragX) => renderRightActions(progress, dragX, item)}
+          onSwipeableOpen={direction => {
+            // 다른 열린 swipeable 닫기
+            Object.keys(swipeableRefs.current).forEach(key => {
+              if (key !== String(item.gifticonId) && swipeableRefs.current[key]) {
+                swipeableRefs.current[key].close();
+              }
+            });
+          }}
+          friction={2}
+          rightThreshold={60}
+          overshootRight={false}
+        >
+          <TouchableOpacity
+            style={styles.gifticonItem}
+            onPress={() => {
+              // 터치 시 열려있는 swipeable 닫기
+              if (swipeableRefs.current[item.gifticonId]) {
+                swipeableRefs.current[item.gifticonId].close();
+              }
+              handleGifticonPress(item);
+            }}
+          >
+            <Shadow
+              distance={12}
+              startColor={'rgba(0, 0, 0, 0.008)'}
+              offset={[0, 1]}
+              style={styles.shadowContainer}
+            >
+              <View style={styles.gifticonContent}>
+                {/* 이미지 영역 */}
+                <View style={styles.imageContainer}>
+                  <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                </View>
+
+                {/* 텍스트 정보 영역 */}
+                <View style={styles.textContainer}>
+                  <Text style={styles.brandText}>{item.brandName}</Text>
+                  <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+                    {item.gifticonName}
+                  </Text>
+
+                  {/* 쉐어박스 정보 */}
+                  {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                    <View style={styles.shareBoxInfoContainer}>
+                      <Icon
+                        name="inventory-2"
+                        type="material"
+                        size={12}
+                        color="#888"
+                        containerStyle={styles.shareBoxIcon}
+                      />
+                      <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+                      {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
+                      {isSharedByOther && (
+                        <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
+                      )}
+                    </View>
+                  )}
+                </View>
+
+                {/* 공유 북마크 아이콘 */}
+                {isSharedByOther && (
+                  <View style={styles.bookmarkContainer}>
+                    <Icon name="bookmark" type="material" size={28} color="#278CCC" />
+                  </View>
+                )}
+
+                {/* D-day 태그 */}
+                <View
+                  style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
+                >
+                  <Text
+                    style={[
+                      styles.dDayText,
+                      isUrgent ? styles.urgentDDayText : styles.normalDDayText,
+                    ]}
+                  >
+                    {`D-${daysLeft}`}
+                  </Text>
+                </View>
+              </View>
+            </Shadow>
+          </TouchableOpacity>
+        </Swipeable>
+      );
+    }
+
+    // 상품형 기프티콘은 양쪽 스와이프 모두 가능 (기존과 동일)
     return (
       <Swipeable
         key={item.gifticonId}
@@ -591,7 +686,7 @@ const ManageListScreen = () => {
                     isUrgent ? styles.urgentDDayText : styles.normalDDayText,
                   ]}
                 >
-                  {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
+                  {`D-${daysLeft}`}
                 </Text>
               </View>
             </View>
