@@ -183,29 +183,40 @@ const MapScreen = () => {
     console.log('MapScreen 마운트 - 지오펜싱 초기화 시작');
 
     const initGeofencing = async () => {
-      console.log('initGeofencing 함수 호출됨');
-      try {
-        await geofencingServiceRef.current.initGeofencing();
-        console.log('지오펜싱 초기화 성공');
-      } catch (error) {
-        console.error('지오펜싱 초기화 중 오류:', error);
+      if (geofencingServiceRef.current && !geofencingServiceRef.current.initialized) {
+        console.log('initGeofencing 함수 호출됨');
+        try {
+          await geofencingServiceRef.current.initGeofencing();
+          console.log('지오펜싱 초기화 성공');
+        } catch (error) {
+          console.error('지오펜싱 초기화 중 오류:', error);
+        }
+      } else {
+        console.log('지오펜싱이 이미 초기화되었습니다.');
       }
     };
 
     initGeofencing();
 
-    // 앱 상태 변경 리스너 설정
-    console.log('앱 상태 변경 리스너 설정');
-    const subscription = AppState.addEventListener('change', nextAppState => {
+    // AppState 이벤트 핸들러
+    const handleAppStateChange = async nextAppState => {
       console.log(`앱 상태 변경: ${appState.current} -> ${nextAppState}`);
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextAppState === 'active' &&
+        geofencingServiceRef.current &&
+        !geofencingServiceRef.current.initializing // 초기화 중이 아닐 때만
+      ) {
         console.log('앱이 포그라운드로 돌아왔습니다 - 지오펜싱 재초기화');
-        // 초기화 상태 리셋 후 재초기화
         geofencingServiceRef.current.resetInitialized();
-        geofencingServiceRef.current.initGeofencing();
+        await geofencingServiceRef.current.initGeofencing();
       }
       appState.current = nextAppState;
-    });
+    };
+
+    // 이벤트 리스너 설정
+    console.log('앱 상태 변경 리스너 설정');
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
 
     // 컴포넌트 언마운트 시 정리
     return () => {
