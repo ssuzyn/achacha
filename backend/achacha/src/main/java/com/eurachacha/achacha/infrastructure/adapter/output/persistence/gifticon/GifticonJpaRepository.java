@@ -78,4 +78,6 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 		@Param("fileType") FileType fileType,
 		Pageable pageable
 	);
+
+	boolean existsByBarcode(String barcode);
 }
