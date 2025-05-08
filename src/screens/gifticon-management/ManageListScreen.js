@@ -627,13 +627,6 @@ const ManageListScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-      {/* 헤더 */}
-      <View style={styles.headerSection}>
-        <Text variant="h2" weight="bold" style={styles.headerTitle}>
-          기프티콘 관리
-        </Text>
-      </View>
-
       {/* 카테고리 탭 */}
       <CategoryTabs
         categories={categories}
@@ -741,16 +734,8 @@ const ManageListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     paddingTop: 0,
-  },
-  headerSection: {
-    paddingTop: 0,
-    paddingBottom: 5,
-  },
-  headerTitle: {
-    fontSize: 26,
-    letterSpacing: -0.5,
   },
   filterContainer: {
     flexDirection: 'row',
