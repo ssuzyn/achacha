@@ -35,7 +35,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 	// 기프티콘 조회 권한 여부 확인
 	@Override
-	public boolean validateGifticonAccess(Integer requestUserId, Integer gifticonUserId) {
+	public boolean hasAccess(Integer requestUserId, Integer gifticonUserId) {
 		return Objects.equals(requestUserId, gifticonUserId);
 	}
 
@@ -64,4 +64,5 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
 		}
 	}
+
 }
