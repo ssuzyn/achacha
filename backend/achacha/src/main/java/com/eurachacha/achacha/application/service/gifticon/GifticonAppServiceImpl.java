@@ -12,24 +12,29 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.ai.OcrTrainingDataRepository;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
+import com.eurachacha.achacha.application.port.output.file.FileRepository;
+import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
+import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
 import com.eurachacha.achacha.domain.model.ai.OcrTrainingData;
 import com.eurachacha.achacha.domain.model.brand.Brand;
+import com.eurachacha.achacha.domain.model.gifticon.File;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
+import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
+import com.eurachacha.achacha.domain.service.file.FileDomainService;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 import com.eurachacha.achacha.web.common.exception.CustomException;
@@ -52,10 +57,17 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final AIServicePort aiServicePort;
 	private final BrandRepository brandRepository;
 	private final OcrTrainingDataRepository ocrTrainingDataRepository;
+	private final FileStoragePort fileStoragePort;
+	private final FileRepository fileRepository;
+	private final FileDomainService fileDomainService;
+	private final ShareBoxRepository shareBoxRepository;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
 		log.info("기프티콘 이미지 OCR 처리 시작 - 타입: {}", gifticonType.name());
+
+		// 이미지 파일 검증
+		fileDomainService.validateImageFile(image);
 
 		// 1. OCR 서비스를 통해 텍스트 추출
 		String ocrResult = ocrPort.extractRawOcrResult(image);
@@ -99,13 +111,19 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 	@Transactional
 	@Override
-	public GifticonResponseDto saveGifticon(GifticonSaveRequestDto requestDto, MultipartFile originalImage,
+	public void saveGifticon(GifticonSaveRequestDto requestDto, MultipartFile originalImage,
 		MultipartFile thumbnailImage, MultipartFile barcodeImage) {
 		log.info("기프티콘 저장 시작 - 이름: {}, 타입: {}", requestDto.getGifticonName(), requestDto.getGifticonType());
 
-		// 금액형 기프티콘이면서 금액이 없는 경우 체크
-		if (requestDto.getGifticonType() == GifticonType.AMOUNT && requestDto.getGifticonAmount() == null) {
-			throw new CustomException(ErrorCode.INVALID_AMOUNT_GIFTICON_VALUE);
+		// 이미지 파일 검증
+		fileDomainService.validateImageFile(originalImage);
+		fileDomainService.validateImageFile(thumbnailImage);
+		fileDomainService.validateImageFile(barcodeImage);
+		gifticonDomainService.validateGifticonAmount(requestDto.getGifticonType(), requestDto.getGifticonAmount());
+
+		// 바코드 중복 검사
+		if (gifticonRepository.existsByBarcode(requestDto.getGifticonBarcodeNumber())) {
+			throw new CustomException(ErrorCode.GIFTICON_BARCODE_DUPLICATE);
 		}
 
 		// 타입에 따른 금액 처리
@@ -119,11 +137,17 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// ShareBox 객체 조회, Participants 조회로 참여하고 있는 기프티콘 박스인지 체크해야 함.
 		ShareBox shareBox = null;
-		// if (requestDto.getShareBoxId() != null) {
-		// 	// ShareBox 조회 로직 (필요시 구현)
-		// 	// shareBox = shareBoxRepository.findById(requestDto.getShareBoxId())
-		// 	//     .orElseThrow(() -> new CustomException(ErrorCode.SHAREBOX_NOT_FOUND));
-		// }
+		if (requestDto.getShareBoxId() != null) {
+			shareBox = shareBoxRepository.findById(requestDto.getShareBoxId());
+
+			// 현재 사용자가 해당 공유 박스에 참여 중인지 확인
+			Integer userId = 1; // 인증 구현 시 변경 필요
+			boolean hasParticipation = participationRepository.checkParticipation(userId, shareBox.getId());
+
+			if (!hasParticipation) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
 
 		// 도메인 객체 생성
 		Gifticon newGifticon = Gifticon.builder()
@@ -138,17 +162,17 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.user(null) // 인증 구현 시 현재 사용자 설정
 			.build();
 
-		// 도메인 서비스를 통한 유효성 검증
-		gifticonDomainService.validateGifticon(newGifticon);
-
 		// 저장소를 통한 영속화
 		Gifticon savedGifticon = gifticonRepository.save(newGifticon);
 
-		// 파일 처리 로직 추가 필요
-		// fileService.saveGifticonImages(savedGifticon.getId(),
-		//     requestDto.getOriginalImage(),
-		//     requestDto.getThumbnailImage(),
-		//     requestDto.getBarcodeImage());
+		// 파일 업로드
+		String originalImagePath = fileStoragePort.uploadFile(originalImage, FileType.ORIGINAL, savedGifticon.getId());
+		String thumbnailImagePath = fileStoragePort.uploadFile(thumbnailImage, FileType.THUMBNAIL,
+			savedGifticon.getId());
+		String barcodeImagePath = fileStoragePort.uploadFile(barcodeImage, FileType.BARCODE, savedGifticon.getId());
+
+		// 파일 엔티티 생성 및 저장
+		saveGifticonFiles(savedGifticon.getId(), originalImagePath, thumbnailImagePath, barcodeImagePath);
 
 		// 사용자 수정 메타데이터 저장 - 타입에 따라 다른 메서드 호출
 		if (requestDto.getGifticonType() == GifticonType.AMOUNT) {
@@ -173,9 +197,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		}
 
 		log.info("사용자 수정 메타데이터 저장 완료 (ID: {})", requestDto.getOcrTrainingDataId());
-
-		// 응답 DTO 반환
-		return GifticonResponseDto.from(savedGifticon);
 	}
 
 	@Override
@@ -285,5 +306,37 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		return brandRepository.findByNameEquals(brandName)
 			.map(Brand::getId)
 			.orElse(null);
+	}
+
+	private void saveGifticonFiles(Integer gifticonId, String originalImagePath,
+		String thumbnailImagePath, String barcodeImagePath) {
+		// File 엔티티 생성
+		File originalImageFile = File.builder()
+			.path(originalImagePath)
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.type(FileType.ORIGINAL)
+			.build();
+
+		File thumbnailImageFile = File.builder()
+			.path(thumbnailImagePath)
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.type(FileType.THUMBNAIL)
+			.build();
+
+		File barcodeImageFile = File.builder()
+			.path(barcodeImagePath)
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.type(FileType.BARCODE)
+			.build();
+
+		// 파일 저장
+		fileRepository.save(originalImageFile);
+		fileRepository.save(thumbnailImageFile);
+		fileRepository.save(barcodeImageFile);
+
+		log.info("기프티콘 이미지 파일 저장 완료 (기프티콘 ID: {})", gifticonId);
 	}
 }
