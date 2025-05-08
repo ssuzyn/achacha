@@ -11,11 +11,12 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "X003", "서버 에러가 발생했습니다."),
 
 	// 기프티콘 관련 에러 코드
-	GIFTICON_NOT_FOUND(HttpStatus.NOT_FOUND, "GIFTICON_001", "기프티콘 정보를 찾을 수 없습니다,"),
+	GIFTICON_NOT_FOUND(HttpStatus.NOT_FOUND, "GIFTICON_001", "기프티콘 정보를 찾을 수 없습니다."),
 	UNAUTHORIZED_GIFTICON_ACCESS(HttpStatus.FORBIDDEN, "GIFTICON_002", "해당 기프티콘에 접근 권한이 없습니다."),
 	GIFTICON_EXPIRED(HttpStatus.NOT_FOUND, "GIFTICON_003", "기프티콘이 만료되었습니다."),
 	GIFTICON_ALREADY_USED(HttpStatus.NOT_FOUND, "GIFTICON_004", "이미 사용된 기프티콘입니다."),
 	GIFTICON_DELETED(HttpStatus.NOT_FOUND, "GIFTICON_005", "삭제된 기프티콘입니다."),
+	GIFTICON_AVAILABLE(HttpStatus.BAD_REQUEST, "GIFTICON_006", "사용 가능한 기프티콘입니다."),
 
 	// AI 서비스 관련 에러 코드
 	AI_SERVICE_CONNECTION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AI_001", "AI 서비스 연결 중 오류가 발생했습니다."),
