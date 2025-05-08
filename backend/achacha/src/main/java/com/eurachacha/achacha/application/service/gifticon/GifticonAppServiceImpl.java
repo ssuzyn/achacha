@@ -423,7 +423,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		return AvailableGifticonBarcodeResponseDto.builder()
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
-			.barcodePath(null) // 파일로직 구현 후 수정
+			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
 			.build();
 	}
 
