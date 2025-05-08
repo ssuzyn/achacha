@@ -19,7 +19,7 @@ public enum ErrorCode {
 	INVALID_AMOUNT_GIFTICON_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_006", "금액형 기프티콘은 금액을 입력해야 합니다."),
 	GIFTICON_BARCODE_DUPLICATE(HttpStatus.CONFLICT, "GIFTICON_007", "이미 등록된 바코드 번호입니다."),
 	GIFTICON_AVAILABLE(HttpStatus.BAD_REQUEST, "GIFTICON_008", "사용 가능한 기프티콘입니다."),
-	
+
 	// 브랜드 관련 에러 코드
 	BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "BRAND_001", "브랜드 정보를 찾을 수 없습니다,"),
 
@@ -47,6 +47,7 @@ public enum ErrorCode {
 	FILE_INVALID_MIME_TYPE(HttpStatus.BAD_REQUEST, "FILE_005", "유효하지 않은 파일 MIME 타입입니다."),
 	FILE_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "FILE_006", "파일 내용이 손상되었거나 유효하지 않습니다."),
 	FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_007", "파일 처리 중 오류가 발생했습니다."),
+	FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "FILE_008", "파일을 찾을 수 없습니다."),
 
 	// CloudFront 관련 에러 코드
 	CLOUDFRONT_URL_GENERATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CF_001", "URL 생성 중 오류가 발생했습니다."),
