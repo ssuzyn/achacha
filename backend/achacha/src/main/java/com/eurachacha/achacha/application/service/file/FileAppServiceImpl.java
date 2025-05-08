@@ -10,8 +10,8 @@
 // import com.eurachacha.achacha.application.port.input.file.dto.response.FileResponseDto;
 // import com.eurachacha.achacha.application.port.output.file.FileRepository;
 // import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
-// import com.eurachacha.achacha.domain.model.gifticon.File;
-// import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+// import com.eurachacha.achacha.domain.model.file.File;
+// import com.eurachacha.achacha.domain.model.file.enums.FileType;
 // import com.eurachacha.achacha.domain.service.file.FileDomainService;
 //
 // import jakarta.persistence.EntityNotFoundException;

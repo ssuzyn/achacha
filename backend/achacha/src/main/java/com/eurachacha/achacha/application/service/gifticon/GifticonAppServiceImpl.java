@@ -31,9 +31,9 @@ import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepo
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
 import com.eurachacha.achacha.domain.model.ai.OcrTrainingData;
 import com.eurachacha.achacha.domain.model.brand.Brand;
-import com.eurachacha.achacha.domain.model.gifticon.File;
+import com.eurachacha.achacha.domain.model.file.File;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
