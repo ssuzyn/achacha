@@ -163,7 +163,7 @@ const BoxCreateScreen = () => {
           {/* 안내 텍스트 */}
           <View style={styles.shareTextContainer}>
             <Text style={styles.guideText}>
-              다른 사용자가{'\n'}위의 초대코드를 입력하면{'\n'}쉐어박스에 참여할 수 있어요.
+              위의 초대코드를 입력하면{'\n'}쉐어박스에 참여할 수 있어요.
             </Text>
             <Text style={styles.subGuideText}>
               쉐어박스 메인 페이지 상단에{'\n'}참여 버튼을 눌러 코드를 입력해주세요.
