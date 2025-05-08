@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
@@ -385,6 +386,44 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.originalImagePath(originalImagePath)
 			.gifticonOriginalAmount(amount)
 			.gifticonCreatedAt(findGifticon.getCreatedAt())
+			.build();
+	}
+
+	@Override
+	public AvailableGifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
+
+		/*
+		 * 사용가능 기프티콘 검증 로직
+		 *  1. 삭제 여부 판단
+		 *  2. 사용 여부 판단
+		 *  3. 유효기간 여부 판단
+		 */
+		gifticonDomainService.validateGifticonAvailability(userId, findGifticon);
+
+		// 공유되지 않은 기프티콘인 경우 소유자 판단
+		if (findGifticon.getSharebox() == null) {
+			boolean isOwner = gifticonDomainService.hasAccess(userId, findGifticon.getUser().getId());
+			if (!isOwner) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
+
+		// 공유된 기프티콘인 경우 참여 여부 판단
+		if (findGifticon.getSharebox() != null) {
+			boolean hasParticipation = participationRepository.checkParticipation(userId,
+				findGifticon.getSharebox().getId());
+			if (!hasParticipation) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
+
+		return AvailableGifticonBarcodeResponseDto.builder()
+			.gifticonBarcodeNumber(findGifticon.getBarcode())
+			.barcodePath(null) // 파일로직 구현 후 수정
 			.build();
 	}
 

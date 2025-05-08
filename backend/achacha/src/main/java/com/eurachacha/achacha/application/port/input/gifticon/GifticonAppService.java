@@ -3,10 +3,10 @@ package com.eurachacha.achacha.application.port.input.gifticon;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -28,4 +28,6 @@ public interface GifticonAppService {
 	UsedGifticonsResponseDto getUsedGifticons(GifticonType type, GifticonUsedSortType sort, Integer page, Integer size);
 
 	UsedGifticonDetailResponseDto getUsedGifticonDetail(Integer gifticonId);
+
+	AvailableGifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId);
 }
