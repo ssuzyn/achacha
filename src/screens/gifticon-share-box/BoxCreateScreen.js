@@ -14,6 +14,7 @@ import {
   Share,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
@@ -149,6 +150,12 @@ const BoxCreateScreen = () => {
         <View style={styles.shareContentContainer}>
           {/* 초대 코드 표시 영역 */}
           <View style={styles.codeContainer}>
+            {/* 박스명 표시 버튼 */}
+            <View style={styles.boxInfoButton}>
+              <MaterialIcons name="inventory-2" size={18} color="#56AEE9" style={styles.boxIcon} />
+              <Text style={styles.boxNameText}>{boxName}</Text>
+            </View>
+
             <Text style={styles.codeValue}>{inviteCode}</Text>
           </View>
 
@@ -364,6 +371,30 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
     color: '#462000',
+  },
+  // 박스명 표시 버튼 스타일 (수정)
+  boxInfoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  boxIcon: {
+    marginRight: 4,
+  },
+  boxNameText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#56AEE9',
   },
 });
 
