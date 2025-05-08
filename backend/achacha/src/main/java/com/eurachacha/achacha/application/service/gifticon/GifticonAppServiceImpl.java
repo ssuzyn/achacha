@@ -266,10 +266,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
 			}
 
-			// 사용 여부 검토
+			// 사용 여부 검토 (금액권 기준)
 			boolean used = gifticonDomainService.isUsed(findGifticon);
 			if (!used) {
-				throw new CustomException(ErrorCode.GIFTICON_NOT_FOUND);
+				throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
 			}
 
 			usedAt = findUHistory.getCreatedAt();
