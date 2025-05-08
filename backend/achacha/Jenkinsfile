@@ -124,18 +124,16 @@ pipeline {
             echo '[BE] 빌드 성공! ✅'
             script {
                 def message = """
-                ✅ **빌드 성공!**
-                **프로젝트**: ${env.JOB_NAME}
-                **Branch**: ${env.GIT_BRANCH ?: 'Unknown'}
-                **Commit**: ${env.GIT_COMMIT ?: 'Unknown'}
-
-                [Jenkins에서 자세히 보기](${env.BUILD_URL})
-                """
+                            <span style=\"color: #2ecc71;\">✅ <strong>빌드 성공!</strong></span><br/>
+                            <strong>프로젝트</strong>: ${env.JOB_NAME} #${env.BUILD_NUMBER}<br/>
+                            <strong>Branch</strong>: ${env.GIT_BRANCH ?: 'Unknown'}<br/>
+                            <br/>
+                            <a href=\"${env.BUILD_URL}\">Jenkins에서 자세히 보기</a>
+                            """
 
                 mattermostSend(
                     color: 'good',
                     message: message,
-                    markdown: true
                 )
 
                 updateGitlabCommitStatus(name: 'build', state: 'success')
@@ -146,19 +144,16 @@ pipeline {
             echo '[BE] 빌드 실패! ❌'
             script {
                 def message = """
-                ❌ **빌드 실패!**
-                **프로젝트**: ${env.JOB_NAME}
-                **Branch**: ${env.GIT_BRANCH ?: 'Unknown'}
-                **Commit**: ${env.GIT_COMMIT ?: 'Unknown'}
-
-                [Jenkins에서 자세히 보기](${env.BUILD_URL})
-                [콘솔 로그 확인](${env.BUILD_URL}console)
-                """
+                            <span style=\"color: #e74c3c;\">❌ <strong>빌드 실패!</strong></span><br/>
+                            <strong>프로젝트</strong>: ${env.JOB_NAME} #${env.BUILD_NUMBER}<br/>
+                            <strong>Branch</strong>: ${env.GIT_BRANCH ?: 'Unknown'}<br/>
+                            <br/>
+                            <a href=\"${env.BUILD_URL}\">Jenkins에서 자세히 보기</a><br/>
+                            """
 
                 mattermostSend(
                     color: 'danger',
                     message: message,
-                    markdown: true
                 )
 
                 updateGitlabCommitStatus(name: 'build', state: 'failed')
