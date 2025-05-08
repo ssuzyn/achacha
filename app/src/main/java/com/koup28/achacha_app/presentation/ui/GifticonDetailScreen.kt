@@ -17,6 +17,7 @@ import androidx.wear.compose.material.Vignette
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 
@@ -119,14 +120,24 @@ fun GifticonDetailScreen(
                 )
 
                 // 금액권 타입이고 잔액 정보가 있을 경우 표시
-                if (currentGifticon.gifticonType == "AMOUNT" && currentGifticon.gifticonRemainingAmount != null) {
-                    Spacer(modifier = Modifier.height(4.dp)) // 유효기간과 잔액 사이 간격
-                    Text(
-                        text = "잔액: %,d원".format(currentGifticon.gifticonRemainingAmount),
-                        style = MaterialTheme.typography.body2, // caption1에서 body2로 변경하여 폰트 크기 증가
-                        textAlign = TextAlign.Center,
-                        color = Color.Gray // 약간 흐린 색으로 표시 (선택 사항)
-                    )
+                if (currentGifticon.gifticonType == "AMOUNT") {
+                    currentGifticon.gifticonOriginalAmount?.let {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "원래 금액: %,d원".format(it),
+                            style = MaterialTheme.typography.caption1,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    currentGifticon.gifticonRemainingAmount?.let {
+                        Spacer(modifier = Modifier.height(4.dp)) // 유효기간과 잔액 사이 간격
+                        Text(
+                            text = "잔액: %,d원".format(it),
+                            style = MaterialTheme.typography.body2, // caption1에서 body2로 변경하여 폰트 크기 증가
+                            textAlign = TextAlign.Center,
+                            color = Color.Gray // 약간 흐린 색으로 표시 (선택 사항)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(8.dp)) // 잔액과 바코드 버튼 사이 간격
                 } else {
                     // 금액권이 아니거나 잔액 정보가 없으면 기존 간격 유지

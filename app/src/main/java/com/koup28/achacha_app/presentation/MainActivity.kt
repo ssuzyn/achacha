@@ -357,6 +357,14 @@ class MainActivity : ComponentActivity() {
     val gifticonListError: State<String?> = _gifticonListError
     // --------------------------------------
 
+    // --- 기프티콘 상세 정보 관련 상태 변수 추가 ---
+    private val _isGifticonDetailLoading = mutableStateOf(false)
+    val isGifticonDetailLoading: State<Boolean> = _isGifticonDetailLoading
+
+    private val _gifticonDetailError = mutableStateOf<String?>(null)
+    val gifticonDetailError: State<String?> = _gifticonDetailError
+    // ----------------------------------------
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -436,16 +444,8 @@ class MainActivity : ComponentActivity() {
                             isLoading = isGifticonListLoading.value, // 로딩 상태 전달
                             error = gifticonListError.value, // 오류 상태 전달
                             onGifticonClick = { gifticonId ->
-                                addLog("GifticonList: Clicked on gifticon ID: $gifticonId")
-                                // gifticonList에서 인덱스 찾기로 변경
-                                val clickedIndex = gifticonList.indexOfFirst { it.gifticonId == gifticonId }
-                                if (clickedIndex != -1) {
-                                    _currentGifticonIndex.value = clickedIndex 
-                                    _selectedGifticonId.value = gifticonId 
-                                    _currentScreen.value = ScreenState.GIFTICON_DETAIL
-                                } else {
-                                    addLog("[Error] Clicked gifticon ID not found in list: $gifticonId")
-                                }
+                                addLog("GifticonList: Clicked on gifticon ID: $gifticonId for detail view.")
+                                fetchGifticonDetail(gifticonId) // 상세 정보 가져오기 함수 호출
                             },
                             onBackPress = { 
                                 _gifticonList.clear() // 목록 화면 벗어날 때 리스트 초기화 (선택적)
@@ -760,6 +760,72 @@ class MainActivity : ComponentActivity() {
     }
     // ------------------------------------
 
+    // --- 기프티콘 상세 정보 API 호출 함수 추가 ---
+    private fun fetchGifticonDetail(gifticonId: Int) {
+        if (_isGifticonDetailLoading.value) return // 이미 로딩 중이면 중복 호출 방지
+
+        addLog("[API] Fetching gifticon detail for ID: $gifticonId...")
+        _isGifticonDetailLoading.value = true
+        _gifticonDetailError.value = null
+
+        lifecycleScope.launch {
+            val token = userDataStore.accessTokenFlow.firstOrNull()
+            if (token.isNullOrEmpty()) {
+                _gifticonDetailError.value = "인증 토큰이 없습니다."
+                _isGifticonDetailLoading.value = false
+                addLog("[API] Detail Error: Access Token is missing.")
+                _currentScreen.value = ScreenState.CONNECTING
+                return@launch
+            }
+
+            val authorizationHeader = "Bearer $token"
+
+            try {
+                val response = apiService.getGifticonDetail(authorizationHeader, gifticonId)
+
+                if (response.isSuccessful) {
+                    val detailedGifticon = response.body()
+                    if (detailedGifticon != null) {
+                        // 기존 목록에서 해당 아이템을 찾아 상세 정보로 업데이트
+                        val index = _gifticonList.indexOfFirst { it.gifticonId == gifticonId }
+                        if (index != -1) {
+                            _gifticonList[index] = detailedGifticon
+                            _currentGifticonIndex.value = index
+                            _selectedGifticonId.value = gifticonId
+                            _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                            addLog("[API] Gifticon detail fetched and list updated for ID: $gifticonId")
+                        } else {
+                            _gifticonDetailError.value = "리스트에서 아이템 찾기 실패"
+                            addLog("[API] Error: Could not find gifticon ID $gifticonId in the list after fetching detail.")
+                        }
+                    } else {
+                        _gifticonDetailError.value = "상세 데이터 수신 실패 (null response)"
+                        addLog("[API] Detail Error: Received null response body for ID: $gifticonId")
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    _gifticonDetailError.value = "상세 정보 로딩 실패 (${response.code()})"
+                    addLog("[API] Error fetching gifticon detail for ID $gifticonId: ${response.code()} - $errorBody")
+                    if (response.code() == 401) {
+                        addLog("[API] Detail Unauthorized. Token might be invalid. Clearing token.")
+                        userDataStore.clearAccessToken()
+                        _receivedToken.value = null
+                        _currentScreen.value = ScreenState.CONNECTING
+                    }
+                    // 실패 시 GificonList 화면으로 유지하거나, 에러를 DetailScreen에 전달하는 방법도 고려 가능
+                    // 현재는 별도 화면 전환 없이 GificonListScreen에 머무르며, 해당 화면에서 에러를 표시해야 함
+                    // 또는 _currentScreen.value = ScreenState.GIFTICON_LIST 로 명시적으로 설정
+                }
+            } catch (e: Exception) {
+                _gifticonDetailError.value = "상세 정보 네트워크 오류: ${e.localizedMessage}"
+                addLog("[API] Exception fetching gifticon detail for ID $gifticonId: ${e.message}")
+            } finally {
+                _isGifticonDetailLoading.value = false
+            }
+        }
+    }
+    // ----------------------------------------
+
     // --- 바코드 정보 가져오기 함수 (수정: 인증 헤더 추가) ---
     private fun fetchBarcodeInfo(gifticonId: Int) {
         addLog("[API] Fetching barcode for ID: $gifticonId") 
@@ -808,4 +874,5 @@ class MainActivity : ComponentActivity() {
 }
 
 // --- 임시 데이터 제거 또는 주석 처리 --- 
+// val tempGifticonList = List(5) { ... } 제거 또는 주석 처리
 // val tempGifticonList = List(5) { ... } 제거 또는 주석 처리

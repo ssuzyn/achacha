@@ -36,7 +36,7 @@ data class ApiGifticon(
     val userName: String? = null,
     val shareBoxId: Int? = null,
     val shareBoxName: String? = null,
-    val thumbnailPath: String? = null
+    val gifticonOriginalAmount: Int? = null
 )
 
 @Serializable
