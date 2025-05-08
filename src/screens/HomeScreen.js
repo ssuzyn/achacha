@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   //   marginTop: 10,
   // },
   giftListContainer: {
-    marginBottom: 10,
+    marginBottom: 5,
     paddingHorizontal: 2,
   },
   giftListContent: {
@@ -254,7 +254,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    height: 140,
+    height: 130,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     paddingRight: 10,
     justifyContent: 'flex-end',
     height: '100%',
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
   giftMessageTitle: {
     fontSize: 19,
@@ -281,6 +281,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'flex-end',
     marginTop: -20,
+    marginBottom: -10,
   },
   giftMessageImage: {
     width: 100,
