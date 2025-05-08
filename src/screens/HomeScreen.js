@@ -272,7 +272,6 @@ const styles = StyleSheet.create({
   giftMessageTitle: {
     marginBottom: 5,
     letterSpacing: -0.5,
-    color: '#000000',
   },
   giftMessageSubtitle: {
     color: '#333',

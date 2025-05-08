@@ -37,6 +37,7 @@ const setDefaultFontFamily = () => {
           },
           origin.props.style,
         ],
+        allowFontScaling: false,
       });
     };
 
@@ -61,6 +62,7 @@ const setDefaultFontFamily = () => {
           },
           origin.props.style,
         ],
+        allowFontScaling: false,
       });
     };
 

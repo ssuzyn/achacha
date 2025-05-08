@@ -19,7 +19,7 @@ const MapScreen = () => {
 
   return (
     <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text variant="body1" style={styles.screenText}>
+      <Text variant="body1" weight="medium" style={styles.screenText}>
         기프티콘 MAP 화면
       </Text>
     </View>
@@ -177,6 +177,10 @@ const BottomTabBar = () => {
         component={WrappedHomeScreen}
         options={{
           tabBarLabel: '홈',
+          tabBarLabelStyle: {
+            fontFamily: 'Pretendard-SemiBold',
+            fontSize: LABEL_FONTSIZE,
+          },
         }}
       />
       <Tab.Screen
@@ -184,6 +188,10 @@ const BottomTabBar = () => {
         component={WrappedGifticonManageScreen}
         options={{
           tabBarLabel: '기프티콘 관리',
+          tabBarLabelStyle: {
+            fontFamily: 'Pretendard-SemiBold',
+            fontSize: LABEL_FONTSIZE,
+          },
         }}
       />
       <Tab.Screen
@@ -191,6 +199,10 @@ const BottomTabBar = () => {
         component={WrappedMapScreen}
         options={{
           tabBarLabel: 'MAP',
+          tabBarLabelStyle: {
+            fontFamily: 'Pretendard-SemiBold',
+            fontSize: LABEL_FONTSIZE,
+          },
         }}
       />
       <Tab.Screen
@@ -198,6 +210,10 @@ const BottomTabBar = () => {
         component={WrappedShareboxScreen}
         options={{
           tabBarLabel: '쉐어박스',
+          tabBarLabelStyle: {
+            fontFamily: 'Pretendard-SemiBold',
+            fontSize: LABEL_FONTSIZE,
+          },
         }}
       />
       <Tab.Screen
@@ -205,6 +221,10 @@ const BottomTabBar = () => {
         component={WrappedSettingsScreen}
         options={{
           tabBarLabel: '설정',
+          tabBarLabelStyle: {
+            fontFamily: 'Pretendard-SemiBold',
+            fontSize: LABEL_FONTSIZE,
+          },
         }}
       />
     </Tab.Navigator>
@@ -219,6 +239,7 @@ const styles = StyleSheet.create({
   },
   screenText: {
     fontSize: 16,
+    letterSpacing: -0.3,
   },
   headerContainer: {
     flex: 1,
@@ -256,9 +277,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontWeight: '500',
     textAlign: 'center',
+    fontFamily: 'Pretendard-Medium',
   },
   iconContainer: {
-    marginBottom: -4,
+    marginBottom: -2,
+    padding: 0,
   },
 });
 
