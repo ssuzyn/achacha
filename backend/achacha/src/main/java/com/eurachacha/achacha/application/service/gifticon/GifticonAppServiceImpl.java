@@ -14,7 +14,6 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Avail
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
@@ -323,9 +322,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			throw new CustomException(ErrorCode.GIFTICON_DELETED);
 		}
 
-		GifticonOwnerHistory findOHistory = gifticonOwnerHistoryRepository.getGifticonOwnerHistoryDetail(
+		GifticonOwnerHistory findOwnerHistory = gifticonOwnerHistoryRepository.getGifticonOwnerHistoryDetail(
 			userId, findGifticon.getId());
-		UsageHistory findUHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
 
 		// 사용 타입
 		UsageType usageType = UsageType.SELF_USE;
@@ -334,28 +333,29 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		LocalDateTime usedAt = null;
 
 		// 둘 다 없을 경우 사용하지 않은 기프티콘으로 간주
-		if (findOHistory == null && findUHistory == null) {
+		if (findOwnerHistory == null && findUsageHistory == null) {
 			throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
 		}
 
 		// 타인에게 넘겨준 경우
-		if (findOHistory != null) {
+		if (findOwnerHistory != null) {
 			// 송신자 검토
 			boolean isSendUser = gifticonDomainService.validateGifticonAccess(userId,
-				findOHistory.getFromUser().getId());
+				findOwnerHistory.getFromUser().getId());
 			if (!isSendUser) {
 				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
 			}
 
 			usageType =
-				findOHistory.getTransferType() == TransferType.GIVE_AWAY ? UsageType.GIVE_AWAY : UsageType.PRESENT;
-			usedAt = findOHistory.getCreatedAt();
+				findOwnerHistory.getTransferType() == TransferType.GIVE_AWAY ? UsageType.GIVE_AWAY : UsageType.PRESENT;
+			usedAt = findOwnerHistory.getCreatedAt();
 		}
 
 		// 본인이 사용한 경우
-		if (findUHistory != null) {
+		if (findUsageHistory != null) {
 			// 사용자 검토
-			boolean isUsedUser = gifticonDomainService.validateGifticonAccess(userId, findUHistory.getUser().getId());
+			boolean isUsedUser = gifticonDomainService.validateGifticonAccess(userId,
+				findUsageHistory.getUser().getId());
 			if (!isUsedUser) {
 				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
 			}
@@ -366,7 +366,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
 			}
 
-			usedAt = findUHistory.getCreatedAt();
+			usedAt = findUsageHistory.getCreatedAt();
 		}
 
 		Integer amount = findGifticon.getType() == GifticonType.AMOUNT ? findGifticon.getOriginalAmount() : null;
