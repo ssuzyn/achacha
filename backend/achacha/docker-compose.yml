@@ -13,6 +13,7 @@ services:
       CLOVA_OCR_API_URL: ${CLOVA_OCR_API_URL}
       CLOVA_OCR_SECRET_KEY: ${CLOVA_OCR_SECRET_KEY}
       AI_SERVICE_URL: ${AI_SERVICE_URL} # FastAPI 서비스 내부 URL
+      MONGODB_URI: ${MONGODB_URI} # MongoDB 연결 URI 추가
       AWS_ACCESS_TOKEN: ${AWS_ACCESS_TOKEN}
       AWS_SECRET_TOKEN: ${AWS_SECRET_TOKEN}
       AWS_CLOUDFRONT_KEYPAIR_ID: ${AWS_CLOUDFRONT_KEYPAIR_ID}
@@ -42,6 +43,21 @@ services:
     networks:
       - achacha-network
 
+  mongodb:
+    image: mongo:6.0
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - achacha-mongodb:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: local
+      MONGO_INITDB_ROOT_PASSWORD: local
+      MONGO_INITDB_DATABASE: achacha
+      TZ: Asia/Seoul
+    networks:
+      - achacha-network
+
 networks:
   achacha-network:
     name: achacha-network
@@ -49,3 +65,4 @@ networks:
 
 volumes:
   achacha-mysql:
+  achacha-mongodb: # MongoDB 볼륨 추가

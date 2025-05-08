@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.domain.model.sharebox;
 
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
+import com.eurachacha.achacha.domain.model.user.User;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,5 +33,5 @@ public class Participation extends TimeStampEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
-	private com.eurachacha.achacha.domain.model.user.User user;
+	private User user;
 }

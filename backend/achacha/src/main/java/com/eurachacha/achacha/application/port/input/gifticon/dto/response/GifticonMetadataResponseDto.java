@@ -19,4 +19,5 @@ public class GifticonMetadataResponseDto {
 	private String gifticonName; // 상품명
 	private String gifticonExpiryDate; // 유효기간(YYYY-MM-DD 형식)
 	private Integer gifticonOriginalAmount; // 기프티콘 금액 (금액형인 경우)
+	private String ocrTrainingDataId; // OCR 학습 데이터 ID
 }
