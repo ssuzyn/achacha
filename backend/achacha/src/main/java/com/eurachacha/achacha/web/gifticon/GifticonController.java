@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 import jakarta.validation.Valid;
@@ -36,15 +35,13 @@ public class GifticonController {
 	}
 
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	public ResponseEntity<GifticonResponseDto> saveGifticon(
+	public ResponseEntity<String> saveGifticon(
 		@Valid @RequestPart("gifticon") GifticonSaveRequestDto gifticonSaveRequestDto,
 		@RequestPart("originalImage") MultipartFile originalImage,
 		@RequestPart("thumbnailImage") MultipartFile thumbnailImage,
 		@RequestPart("barcodeImage") MultipartFile barcodeImage) {
 
-		GifticonResponseDto responseDto = gifticonAppService.saveGifticon(gifticonSaveRequestDto, originalImage,
-			thumbnailImage, barcodeImage);
-		return ResponseEntity.ok(responseDto);
+		gifticonAppService.saveGifticon(gifticonSaveRequestDto, originalImage, thumbnailImage, barcodeImage);
+		return ResponseEntity.ok("기프티콘이 성공적으로 등록되었습니다.");
 	}
-
 }
