@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { Shadow } from 'react-native-shadow-2';
 import { Text } from './index';
@@ -61,7 +61,25 @@ const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
 /**
  * FeatureCard 컴포넌트 - HomeScreen의 쉐어박스 카드
  */
-const FeatureCard = ({ title, iconName, count, style, ...props }) => {
+const FeatureCard = ({ title, iconName, count, style, onPress, ...props }) => {
+  // 터치 가능한 View로 래핑
+  const CardContent = () => (
+    <View style={[styles.featureCard, style]} {...props}>
+      <Text variant="body1" weight="semiBold" style={styles.featureTitle}>
+        {title}
+      </Text>
+      {iconName && count && (
+        <View style={styles.shareBoxIcon}>
+          <Icon name={iconName} size={24} color="#888" />
+          <Text variant="caption" style={styles.shareBoxCount}>
+            {count}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+
+  // onPress 속성이 있는 경우 TouchableOpacity로 감싸고, 그렇지 않으면 일반 View 사용
   return (
     // eslint-disable-next-line react-native/no-inline-styles
     <View style={{ width: '48%' }}>
@@ -71,19 +89,17 @@ const FeatureCard = ({ title, iconName, count, style, ...props }) => {
         offset={[0, 1]}
         style={styles.featureShadowContainer}
       >
-        <View style={[styles.featureCard, style]} {...props}>
-          <Text variant="body1" weight="semiBold" style={styles.featureTitle}>
-            {title}
-          </Text>
-          {iconName && count && (
-            <View style={styles.shareBoxIcon}>
-              <Icon name={iconName} size={24} color="#888" />
-              <Text variant="caption" style={styles.shareBoxCount}>
-                {count}
-              </Text>
-            </View>
-          )}
-        </View>
+        {onPress ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={onPress}
+            style={{ width: '100%', height: '100%' }}
+          >
+            <CardContent />
+          </TouchableOpacity>
+        ) : (
+          <CardContent />
+        )}
       </Shadow>
     </View>
   );

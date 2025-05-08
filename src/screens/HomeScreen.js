@@ -4,6 +4,7 @@ import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
 import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
+import NavigationService from '../navigation/NavigationService';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -80,6 +81,11 @@ const HomeScreen = () => {
     );
   };
 
+  // 쉐어박스로 이동하는 함수
+  const handleShareBoxPress = () => {
+    NavigationService.navigate('TabSharebox');
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
@@ -123,6 +129,8 @@ const HomeScreen = () => {
               title={`나누면\n즐거움 두배,\n쉐어박스`}
               iconName="inventory-2"
               count="34개 쉐어 중"
+              onPress={handleShareBoxPress}
+              style={styles.interactiveCard}
             />
 
             {/* 레이더 카드 */}
@@ -270,7 +278,7 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   giftMessageTitle: {
-    marginBottom: 5,
+    marginBottom: 2,
     letterSpacing: -0.5,
   },
   giftMessageSubtitle: {
@@ -294,6 +302,9 @@ const styles = StyleSheet.create({
   giftItemContainer: {
     width: 180,
     marginRight: 10,
+  },
+  interactiveCard: {
+    // Add any necessary styles for the interactive card
   },
 });
 
