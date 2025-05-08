@@ -39,3 +39,15 @@ clova:
 
 ai-service:
   api-url: ${AI_SERVICE_URL}
+
+aws:
+  region: ap-northeast-2
+  credentials:
+    access-key: ${AWS_ACCESS_TOKEN}
+    secret-key: ${AWS_SECRET_TOKEN}
+  s3:
+    bucket: achacha-bucket
+  cloudfront:
+    domain: d23wsj9ifltpil.cloudfront.net
+    keypair-id: ${AWS_CLOUDFRONT_KEYPAIR_ID}
+    private-key: ${AWS_CLOUDFRONT_PRIVATE_KEY}
