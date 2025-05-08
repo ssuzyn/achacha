@@ -131,7 +131,6 @@ const BoxMainScreen = () => {
     }
 
     // TODO: 초대코드 검증 및 참여 로직 구현
-    console.log('입력된 초대코드:', inviteCode);
     handleCloseModal();
   };
 
@@ -144,7 +143,6 @@ const BoxMainScreen = () => {
   // 쉐어박스 카드 클릭 핸들러
   const handleBoxPress = item => {
     // TODO: 쉐어박스 상세 화면으로 이동
-    console.log('선택된 쉐어박스:', item.shareBoxName);
   };
 
   // 쉐어박스 카드 렌더링
