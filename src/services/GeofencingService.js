@@ -6,23 +6,37 @@ class GeofencingService {
   constructor(uniqueBrands) {
     this.uniqueBrands = uniqueBrands;
     this.initialized = false;
+    this.initializing = false; // 초기화 중인지 추적하기 위한 플래그
   }
 
   // 지오펜싱 초기화
   async initGeofencing() {
+    // 이미 초기화 중이거나 초기화 완료된 경우 건너뜀
+    if (this.initializing || this.initialized) {
+      console.log('지오펜싱이 이미 초기화 중이거나 초기화되어 있습니다.');
+      return;
+    }
+
+    this.initializing = true; // 초기화 시작 표시
+    console.log('====== 지오펜싱 초기화 시작 ======');
     try {
       // 이미 초기화되었다면 실행하지 않음
       if (this.initialized) {
+        console.log('이미 초기화됨. 건너뜀.');
         return;
       }
 
+      console.log('백그라운드 위치 권한 확인 중...');
       // 백그라운드 위치 권한 확인
       const hasPermission = await this.checkBackgroundLocationPermission();
+      console.log('백그라운드 위치 권한 확인 결과:', hasPermission);
+
       if (!hasPermission) {
         console.log('위치 권한이 없어 지오펜싱을 초기화할 수 없습니다.');
         return;
       }
 
+      console.log('위치 권한 요청 중...');
       // 위치 권한 요청
       const locationPermission = await Geofencing.requestLocation({
         allowAlways: true, // 백그라운드 위치 권한 요청
@@ -30,6 +44,7 @@ class GeofencingService {
 
       console.log('위치 권한 상태:', locationPermission);
 
+      console.log('지오펜스 진입 이벤트 리스너 설정 중...');
       // 지오펜스 이벤트 리스너 설정
       Geofencing.onEnter(ids => {
         console.log('지오펜스 진입:', ids);
@@ -40,16 +55,19 @@ class GeofencingService {
         }
       });
 
+      console.log('지오펜스 이탈 이벤트 리스너 설정 중...');
       // 지오펜스 이탈 이벤트 리스너
       Geofencing.onExit(ids => {
         console.log('지오펜스 이탈:', ids);
       });
 
       this.initialized = true;
-      console.log('지오펜싱 리스너 설정 완료');
+      console.log('====== 지오펜싱 초기화 완료 ======');
     } catch (error) {
       console.error('지오펜싱 초기화 실패: ', error);
       this.initialized = false; // 초기화 실패 시 플래그 재설정
+    } finally {
+      this.initializing = false; // 초기화 과정 종료 표시
     }
   }
 
@@ -85,24 +103,71 @@ class GeofencingService {
     }
   }
 
+  // 알림 설정 메서드
+  async setupNotifications() {
+    try {
+      // 알림 핸들러 설정
+      Notifications.setNotificationHandler({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      });
+
+      // 알림 채널 설정 (안드로이드)
+      if (Platform.OS === 'android') {
+        await Notifications.setNotificationChannelAsync('default', {
+          name: '기프티콘 알림',
+          importance: Notifications.AndroidImportance.HIGH,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#56AEE9',
+          sound: true,
+        });
+      }
+
+      // 알림 권한 요청
+      const { status } = await Notifications.requestPermissionsAsync();
+      console.log('알림 권한 상태:', status);
+
+      return status === 'granted';
+    } catch (error) {
+      console.log('알림 설정 실패:', error);
+      return false;
+    }
+  }
+
   // 알림 전송 함수
   async sendNotification(brandId, storeName) {
-    const brand = this.uniqueBrands.find(b => b.brandId.toString() === brandId);
+    try {
+      const brand = this.uniqueBrands.find(b => b.brandId.toString() === brandId);
 
-    if (!brand) return;
+      if (!brand) return;
 
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '근처에서 사용 가능한 기프티콘이 있어요!',
-        body: `${brand.brandName} 매장이 근처에 있습니다. 기프티콘을 사용해보세요!`,
-        data: { brandId, storeName },
-      },
-      trigger: null, // 즉시 알림
-    });
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '근처에서 사용 가능한 기프티콘이 있어요!',
+          body: `${brand.brandName} 매장이 근처에 있습니다. 기프티콘을 사용해보세요!`,
+          data: { brandId, storeName },
+        },
+        trigger: null, // 즉시 알림
+      });
+      console.log('알림 전송 완료');
+    } catch (error) {
+      console.log('알림 전송 실패:', error);
+    }
   }
 
   // 지오펜스 설정 함수
   async setupGeofences(brandResults, selectedBrand) {
+    // 초기화 중이면 잠시 대기
+    if (this.initializing) {
+      console.log('지오펜싱 초기화 중입니다. 잠시 대기...');
+      // 최대 3초 대기 (초기화가 완료될 때까지)
+      for (let i = 0; i < 30; i++) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (!this.initializing) break;
+      }
+    }
+
     try {
       if (!this.initialized) {
         console.log('지오펜싱이 초기화되지 않았습니다.');
@@ -144,7 +209,7 @@ class GeofencingService {
               id: geofenceId,
               latitude: parseFloat(store.y),
               longitude: parseFloat(store.x),
-              radius: 200, // 미터 단위
+              radius: 200, // 미터 단위 (50)
               notifyOnEntry: true,
               notifyOnExit: false,
             });
@@ -190,6 +255,7 @@ class GeofencingService {
   // initialized 플래그 리셋
   resetInitialized() {
     this.initialized = false;
+    this.initializing = false;
   }
 }
 
