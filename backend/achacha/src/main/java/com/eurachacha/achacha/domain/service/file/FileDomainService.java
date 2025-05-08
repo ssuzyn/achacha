@@ -2,8 +2,8 @@ package com.eurachacha.achacha.domain.service.file;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.eurachacha.achacha.domain.model.gifticon.File;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+import com.eurachacha.achacha.domain.model.file.File;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 
 public interface FileDomainService {
 

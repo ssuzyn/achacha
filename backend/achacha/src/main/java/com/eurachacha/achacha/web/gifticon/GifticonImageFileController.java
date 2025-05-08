@@ -12,7 +12,7 @@
 //
 // import com.eurachacha.achacha.application.port.input.file.FileAppService;
 // import com.eurachacha.achacha.application.port.input.file.dto.response.FileResponseDto;
-// import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+// import com.eurachacha.achacha.domain.model.file.enums.FileType;
 //
 // import lombok.RequiredArgsConstructor;
 //

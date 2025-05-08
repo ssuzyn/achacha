@@ -1,7 +1,7 @@
-package com.eurachacha.achacha.domain.model.gifticon;
+package com.eurachacha.achacha.domain.model.file;
 
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
-import com.eurachacha.achacha.domain.model.gifticon.enums.FileType;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

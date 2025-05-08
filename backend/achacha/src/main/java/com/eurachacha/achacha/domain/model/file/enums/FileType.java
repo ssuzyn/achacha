@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.domain.model.gifticon.enums;
+package com.eurachacha.achacha.domain.model.file.enums;
 
 import lombok.Getter;
 
