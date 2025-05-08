@@ -49,6 +49,16 @@ const DUMMY_DATA = {
       hostName: '정주은갈치',
       gifticonCount: 7,
     },
+    {
+      shareBoxName: '우리만의 쉐어박스',
+      hostName: '김철수',
+      gifticonCount: 212,
+    },
+    {
+      shareBoxName: '쉐박쉐박',
+      hostName: '김민수',
+      gifticonCount: 1,
+    },
   ],
   hasNextPage: true,
   nextPage: 'MTI1',
