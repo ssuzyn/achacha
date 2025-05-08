@@ -9,8 +9,7 @@ ENV TZ=Asia/Seoul
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # 4. 빌드된 JAR 파일 복사
-ARG JAR_FILE=build/libs/*.jar
-COPY ${JAR_FILE} app.jar
+COPY build/libs/achacha-0.0.1-SNAPSHOT.jar app.jar
 
 # 5. 포트 노출
 #EXPOSE 8080

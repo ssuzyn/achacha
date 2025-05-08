@@ -27,7 +27,10 @@ pipeline {
 
         // MongoDB 환경변수
         MONGODB_URI = credentials('MONGODB_URI')
+        // Mattermost 웹훅 URL
+        MATTERMOST_WEBHOOK_URL = credentials('MATTERMOST_WEBHOOK_URL')
     }
+
     stages {
         stage('Clone Repository') {
             steps {
@@ -119,9 +122,50 @@ pipeline {
         }
         success {
             echo '[BE] 빌드 성공! ✅'
+            script {
+                def message = """
+                :white_check_mark: **빌드 성공!**
+                **프로젝트**: ${env.JOB_NAME}
+                **Branch**: ${env.GIT_BRANCH ?: 'Unknown'}
+                **Commit**: ${env.GIT_COMMIT ?: 'Unknown'}
+
+                [Jenkins에서 자세히 보기](${env.BUILD_URL})
+                """
+
+                mattermostSend(
+                    color: 'good',
+                    message: message,
+                    channel: '백엔드-빌드-알림',
+                    endpoint: env.MATTERMOST_WEBHOOK_URL
+                )
+
+                updateGitlabCommitStatus(name: 'build', state: 'success')
+                addGitLabMRComment(comment: ":white_check_mark: 빌드 성공! [Jenkins에서 자세히 보기](${env.BUILD_URL})")
+            }
         }
         failure {
             echo '[BE] 빌드 실패! ❌'
+            script {
+                def message = """
+                :x: **빌드 실패!**
+                **프로젝트**: ${env.JOB_NAME}
+                **Branch**: ${env.GIT_BRANCH ?: 'Unknown'}
+                **Commit**: ${env.GIT_COMMIT ?: 'Unknown'}
+
+                [Jenkins에서 자세히 보기](${env.BUILD_URL})
+                [콘솔 로그 확인](${env.BUILD_URL}console)
+                """
+
+                mattermostSend(
+                    color: 'danger',
+                    message: message,
+                    channel: '백엔드-빌드-알림',
+                    endpoint: env.MATTERMOST_WEBHOOK_URL
+                )
+
+                updateGitlabCommitStatus(name: 'build', state: 'failed')
+                addGitLabMRComment(comment: ":x: 빌드 실패! [Jenkins에서 자세히 보기](${env.BUILD_URL}) [콘솔 로그 확인](${env.BUILD_URL}console)")
+            }
         }
     }
 }
