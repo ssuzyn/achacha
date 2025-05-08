@@ -2,7 +2,6 @@ package com.eurachacha.achacha.infrastructure.adapter.output.persistence.giftico
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -28,6 +27,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.DateTimeExpression;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -104,12 +104,19 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 
 		QGifticon qGifticon = QGifticon.gifticon;
 		QBrand qBrand = QBrand.brand;
-		QGifticonOwnerHistory qOwnerHistory = QGifticonOwnerHistory.gifticonOwnerHistory;
-		QUsageHistory qUsageHistory = QUsageHistory.usageHistory;
+		QGifticonOwnerHistory qOwner = QGifticonOwnerHistory.gifticonOwnerHistory;
+		QUsageHistory qUsage = QUsageHistory.usageHistory;
 
-		// 사용시간 기준 정렬
-		DateTimeExpression<LocalDateTime> usedAtExpr = createUsedAtExpression(qOwnerHistory, qUsageHistory);
-		StringExpression usageTypeStrExpr = createTransferTypeExpression(qOwnerHistory);
+		// 1) usageHistory 중 MAX(createdAt) aggregation
+		DateTimeExpression<LocalDateTime> maxUsageTime = qUsage.createdAt.max();
+
+		// 2) CASE: 소유권 이력(createdAt) 있으면 그것, 없으면 maxUsageTime
+		DateTimeExpression<LocalDateTime> usedAtExpr = Expressions.cases()
+			.when(qOwner.id.isNotNull()).then(qOwner.createdAt)
+			.otherwise(maxUsageTime);
+
+		// usageType 표현식은 그대로
+		StringExpression usageTypeStrExpr = createTransferTypeExpression(qOwner);
 
 		List<Tuple> tuples = jpaQueryFactory
 			.select(
@@ -124,46 +131,49 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 			)
 			.from(qGifticon)
 			.join(qGifticon.brand, qBrand)
-			.leftJoin(qOwnerHistory)
-			.on(qGifticon.id.eq(qOwnerHistory.gifticon.id)
-				.and(qOwnerHistory.fromUser.id.eq(userId)))
-			.leftJoin(qUsageHistory)
-			.on(qGifticon.id.eq(qUsageHistory.gifticon.id)
-				.and(qUsageHistory.user.id.eq(userId)))
+			.leftJoin(qOwner)
+			.on(qGifticon.id.eq(qOwner.gifticon.id)
+				.and(qOwner.fromUser.id.eq(userId)))
+			.leftJoin(qUsage)
+			.on(qGifticon.id.eq(qUsage.gifticon.id)
+				.and(qUsage.user.id.eq(userId)))
 			.where(
-				createUsedGifticonCondition(userId, qGifticon, qOwnerHistory, qUsageHistory),
+				createUsedGifticonCondition(userId, qGifticon, qOwner, qUsage),
 				qGifticon.isDeleted.eq(false),
 				typeCondition(type, qGifticon)
 			)
-			.groupBy(qGifticon.id, qBrand.id, qOwnerHistory.id, qOwnerHistory.transferType,
-				qOwnerHistory.createdAt, qUsageHistory.createdAt)
+			// 그룹핑에 owner.createdAt과 MAX(createdAt) aggregate를 뺄 수 없으니
+			// owner.id, owner.transferType, owner.createdAt 만 groupBy
+			.groupBy(
+				qGifticon.id,
+				qBrand.id,
+				qOwner.id,
+				qOwner.transferType,
+				qOwner.createdAt
+			)
 			.orderBy(usedAtExpr.desc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize() + 1)
 			.fetch();
 
-		List<UsedGifticonResponseDto> content = new ArrayList<>();
-		for (Tuple tuple : tuples) {
-			String usageTypeStr = tuple.get(usageTypeStrExpr);
-			UsedGifticonResponseDto dto = UsedGifticonResponseDto.builder()
+		// DTO 매핑, Slice 처리 로직은 그대로
+		List<UsedGifticonResponseDto> content = tuples.stream()
+			.map(tuple -> UsedGifticonResponseDto.builder()
 				.gifticonId(tuple.get(qGifticon.id))
 				.gifticonName(tuple.get(qGifticon.name))
 				.gifticonType(tuple.get(qGifticon.type))
 				.gifticonExpiryDate(tuple.get(qGifticon.expiryDate))
 				.brandId(tuple.get(qBrand.id))
 				.brandName(tuple.get(qBrand.name))
-				.usageType(UsageType.valueOf(usageTypeStr))
+				.usageType(UsageType.valueOf(tuple.get(usageTypeStrExpr)))
 				.usedAt(tuple.get(usedAtExpr))
 				.thumbnailPath(null)
-				.build();
-			content.add(dto);
-		}
+				.build()
+			).toList();
 
-		boolean hasNext = false;
-		if (content.size() > pageable.getPageSize()) {
+		boolean hasNext = content.size() > pageable.getPageSize();
+		if (hasNext)
 			content = content.subList(0, pageable.getPageSize());
-			hasNext = true;
-		}
 
 		return new SliceImpl<>(content, pageable, hasNext);
 	}
