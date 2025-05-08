@@ -2,7 +2,6 @@ package com.eurachacha.achacha.domain.service.gifticon;
 
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
-import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 public interface GifticonDomainService {
 	// 금액형 기프티콘 유효성 검증
@@ -12,7 +11,7 @@ public interface GifticonDomainService {
 	boolean isExpired(Gifticon gifticon);
 
 	// 기프티콘 조회 권한 여부 확인
-	boolean validateGifticonAccess(Integer requestUserId, Integer gifticonUserId);
+	boolean hasAccess(Integer requestUserId, Integer gifticonUserId);
 
 	// 기프티콘 삭제 여부 확인
 	boolean isDeleted(Gifticon gifticon);
@@ -22,5 +21,4 @@ public interface GifticonDomainService {
 
 	void validateGifticonAvailability(Integer userId, Gifticon gifticon);
 
-	void checkException(boolean check, ErrorCode errorCode);
 }

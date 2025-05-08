@@ -247,15 +247,19 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// 공유되지 않은 기프티콘인 경우 소유자 판단
 		if (findGifticon.getSharebox() == null) {
-			boolean isOwner = gifticonDomainService.validateGifticonAccess(userId, findGifticon.getUser().getId());
-			gifticonDomainService.checkException(!isOwner, ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			boolean isOwner = gifticonDomainService.hasAccess(userId, findGifticon.getUser().getId());
+			if (!isOwner) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 		}
 
 		// 공유된 기프티콘인 경우 참여 여부 판단
 		if (findGifticon.getSharebox() != null) {
 			boolean hasParticipation = participationRepository.checkParticipation(userId,
 				findGifticon.getSharebox().getId());
-			gifticonDomainService.checkException(!hasParticipation, ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			if (!hasParticipation) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 		}
 
 		// 기프티콘 스코프 결정에 따른 값
@@ -313,7 +317,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// 삭제 여부 검토
 		boolean deleted = gifticonDomainService.isDeleted(findGifticon);
-		gifticonDomainService.checkException(deleted, ErrorCode.GIFTICON_DELETED);
+		if (deleted) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
 
 		GifticonOwnerHistory findOwnerHistory = gifticonOwnerHistoryRepository.getGifticonOwnerHistoryDetail(
 			userId, findGifticon.getId());
@@ -332,9 +338,11 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 타인에게 넘겨준 경우
 		if (findOwnerHistory != null) {
 			// 송신자 검토
-			boolean isSendUser = gifticonDomainService.validateGifticonAccess(userId,
+			boolean isSendUser = gifticonDomainService.hasAccess(userId,
 				findOwnerHistory.getFromUser().getId());
-			gifticonDomainService.checkException(!isSendUser, ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			if (!isSendUser) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 
 			usageType =
 				findOwnerHistory.getTransferType() == TransferType.GIVE_AWAY ? UsageType.GIVE_AWAY : UsageType.PRESENT;
@@ -345,9 +353,11 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 본인이 사용한 경우
 		if (findUsageHistory != null) {
 			// 사용자 검토
-			boolean isUsedUser = gifticonDomainService.validateGifticonAccess(userId,
+			boolean isUsedUser = gifticonDomainService.hasAccess(userId,
 				findUsageHistory.getUser().getId());
-			gifticonDomainService.checkException(!isUsedUser, ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			if (!isUsedUser) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
 
 			// 사용 여부 검토 (금액권 기준)
 			boolean used = gifticonDomainService.isUsed(findGifticon);
