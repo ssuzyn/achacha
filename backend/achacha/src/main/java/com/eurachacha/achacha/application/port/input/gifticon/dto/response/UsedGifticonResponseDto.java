@@ -27,26 +27,4 @@ public class UsedGifticonResponseDto {
 	private UsageType usageType;
 	private LocalDateTime usedAt;
 	private String thumbnailPath;
-
-	public UsedGifticonResponseDto(
-		Integer gifticonId,
-		String gifticonName,
-		GifticonType gifticonType,
-		LocalDate gifticonExpiryDate,
-		Integer brandId,
-		String brandName,
-		String usageTypeStr,  // 문자열로 받음
-		LocalDateTime usedAt,
-		String thumbnailPath
-	) {
-		this.gifticonId = gifticonId;
-		this.gifticonName = gifticonName;
-		this.gifticonType = gifticonType;
-		this.gifticonExpiryDate = gifticonExpiryDate;
-		this.brandId = brandId;
-		this.brandName = brandName;
-		this.usageType = UsageType.valueOf(usageTypeStr);  // 문자열을 ENUM으로 변환
-		this.usedAt = usedAt;
-		this.thumbnailPath = thumbnailPath;
-	}
 }
