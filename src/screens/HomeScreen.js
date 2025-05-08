@@ -82,33 +82,29 @@ const HomeScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* 헤더 */}
-      <View style={styles.headerSection}>
-        <Text variant="h2" weight="bold" style={styles.headerTitle}>
-          홈
-        </Text>
-      </View>
-
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
         {/* 환영 메시지 */}
         <View style={styles.welcomeSection}>
-          <Text variant="h3" weight="medium" style={styles.welcomeText}>
+          <Text variant="h3" weight="bold" style={styles.welcomeText}>
             어서오세요!{' '}
             <Text variant="h3" weight="bold" color="primary" style={styles.welcomeText}>
               {username}
             </Text>{' '}
             님,
           </Text>
-          <Text variant="h3" weight="medium" style={styles.subWelcomeText}>
+          <Text variant="h3" weight="bold" style={styles.subWelcomeText}>
             당신을 위한 기프티콘이 기다려요.
           </Text>
         </View>
 
         {/* 만료 임박 기프티콘 섹션 */}
         <View style={styles.giftListContainer}>
+          {/* <Text variant="h5" weight="medium" style={styles.giftListText}>
+            만료 임박 기프티콘{' '}
+          </Text> */}
           <FlatList
             data={SAMPLE_GIFTICONS}
             renderItem={renderGiftItem}
@@ -161,35 +157,30 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 8,
+    paddingHorizontal: 2,
     paddingTop: 0,
   },
   contentContainer: {
     paddingTop: 0,
     paddingBottom: 30,
   },
-  headerSection: {
-    paddingTop: 0,
-    paddingBottom: 5,
-  },
-  headerTitle: {
-    fontSize: 26,
-    letterSpacing: -0.5,
-  },
   welcomeSection: {
-    alignItems: 'flex-end',
-    marginBottom: 10,
+    paddingHorizontal: 8,
+    alignItems: 'flex-start',
+    marginBottom: 5,
   },
   welcomeText: {
     letterSpacing: -0.3,
   },
-  subWelcomeText: {
-    letterSpacing: -0.3,
-    marginTop: 4,
-  },
+  // giftListText: {
+  //   paddingHorizontal: 8,
+  //   letterSpacing: -0.3,
+  //   marginLeft: 5,
+  //   marginTop: 10,
+  // },
   giftListContainer: {
     marginBottom: 10,
-    paddingHorizontal: 5,
+    paddingHorizontal: 2,
   },
   giftListContent: {
     paddingTop: 10,
