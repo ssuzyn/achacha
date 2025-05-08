@@ -206,7 +206,7 @@ const ManageListScreen = () => {
   ];
 
   // 사용완료 탭 정렬 옵션
-  const usedSortOptions = [{ id: 'recent', title: '최근 사용 순' }];
+  const usedSortOptions = [{ id: 'recent', title: '사용순' }];
 
   // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
   const currentUserId = 78;
@@ -828,8 +828,8 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   gifticonImage: {
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
     borderRadius: 8,
   },
   textContainer: {
