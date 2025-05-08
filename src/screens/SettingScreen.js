@@ -134,7 +134,6 @@ const SettingScreen = () => {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      {/* 설정 헤더 */}
       <View style={styles.headerSection}>
         <Text variant="h2" style={styles.headerTitle}>
           설정
@@ -274,7 +273,7 @@ const SettingScreen = () => {
               워치 연결하기
             </Text>
             <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              워치와의 연동을 진행합니다.
+              스마트폰과 워치 연동 설정
             </Text>
           </View>
           <View style={styles.arrowContainer}>
@@ -331,13 +330,11 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 2,
   },
+  sectionTitle: {
+    marginBottom: 10,
+  },
   firstSection: {
     marginTop: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 16,
   },
   infoItem: {
     flexDirection: 'row',
@@ -348,6 +345,7 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 16,
+    fontWeight: 'semiBold',
   },
   infoValue: {
     fontSize: 16,
@@ -357,7 +355,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: 5,
-    marginBottom: 4,
+    marginBottom: 10,
   },
   notificationInfo: {
     flex: 1,
@@ -381,7 +379,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   footerButtonsWrapper: {
-    marginVertical: 24,
+    marginVertical: 25,
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
@@ -392,9 +390,9 @@ const styles = StyleSheet.create({
   withdrawTouchable: {
     borderColor: '#718096',
     borderWidth: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     width: '30%',
@@ -402,9 +400,9 @@ const styles = StyleSheet.create({
   logoutTouchable: {
     borderColor: '#A7DAF9',
     borderWidth: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
     width: '30%',
@@ -419,7 +417,7 @@ const styles = StyleSheet.create({
   },
   sectionDivider: {
     marginBottom: 20,
-    marginTop: 20,
+    marginTop: 10,
   },
   watchItem: {
     flexDirection: 'row',
@@ -433,7 +431,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   arrowText: {
-    fontSize: 18,
+    marginLeft: -30,
+    fontSize: 20,
     color: '#aaa',
   },
   modalOverlay: {
