@@ -25,6 +25,8 @@ spring:
 springdoc:
   swagger-ui:
     path: /api/swagger-ui.html
+  api-docs:
+    path: /api/v3/api-docs
 
 clova:
   ocr:
