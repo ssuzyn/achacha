@@ -3,18 +3,18 @@ package com.eurachacha.achacha.web.gifticon;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RequestMapping("/api/gifticons")
@@ -34,10 +34,14 @@ public class GifticonController {
 		return ResponseEntity.ok(result);
 	}
 
-	@PostMapping
-	public ResponseEntity<GifticonResponseDto> saveGifticon(@RequestBody GifticonSaveRequestDto requestDto) {
-		GifticonResponseDto responseDto = gifticonAppService.saveGifticon(requestDto);
-		return ResponseEntity.ok(responseDto);
-	}
+	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ResponseEntity<String> saveGifticon(
+		@Valid @RequestPart("gifticon") GifticonSaveRequestDto gifticonSaveRequestDto,
+		@RequestPart("originalImage") MultipartFile originalImage,
+		@RequestPart("thumbnailImage") MultipartFile thumbnailImage,
+		@RequestPart("barcodeImage") MultipartFile barcodeImage) {
 
+		gifticonAppService.saveGifticon(gifticonSaveRequestDto, originalImage, thumbnailImage, barcodeImage);
+		return ResponseEntity.ok("기프티콘이 성공적으로 등록되었습니다.");
+	}
 }

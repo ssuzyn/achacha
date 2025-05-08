@@ -31,6 +31,6 @@ public class BrandPersistenceAdapter implements BrandRepository {
 	@Override
 	public Brand findById(Integer id) {
 		return brandJpaRepository.findById(id)
-			.orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+			.orElseThrow(() -> new CustomException(ErrorCode.BRAND_NOT_FOUND));
 	}
 }
