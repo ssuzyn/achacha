@@ -1,17 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
-import {
-  StyleSheet,
-  Image,
-  Platform,
-  Dimensions,
-  Alert,
-  View,
-  InteractionManager,
-} from 'react-native';
+import { StyleSheet, Image, Platform, Dimensions, View } from 'react-native';
 import { useTabBar } from '../../context/TabBarContext';
 import { Icon, useTheme } from 'react-native-elements';
 import { Badge } from '../ui';
-import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import NavigationService from '../../navigation/NavigationService';
 
@@ -23,7 +14,6 @@ const ICON_SIZE = width > 380 ? 28 : 26;
 const HeaderBar = ({ notificationCount = 3 }) => {
   const { isTabBarVisible } = useTabBar();
   const { theme } = useTheme();
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
 
   // 추가 버튼 클릭 핸들러
@@ -106,7 +96,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
+    paddingTop: 10,
     borderBottomWidth: 0,
     ...Platform.select({
       ios: {
