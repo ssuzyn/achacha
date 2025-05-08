@@ -241,7 +241,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// 둘 다 없을 경우 사용하지 않은 기프티콘으로 간주
 		if (findOHistory == null && findUHistory == null) {
-			throw new CustomException(ErrorCode.GIFTICON_NOT_FOUND);
+			throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
 		}
 
 		// 타인에게 넘겨준 경우
