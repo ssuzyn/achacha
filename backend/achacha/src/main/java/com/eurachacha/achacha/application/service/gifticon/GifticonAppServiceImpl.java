@@ -435,6 +435,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				fileType)
 			.orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
 
-		return fileStoragePort.generateFileUrl(file.getPath(), fileType, 300000L);
+		return fileStoragePort.generateFileUrl(file.getPath(), fileType);
 	}
 }

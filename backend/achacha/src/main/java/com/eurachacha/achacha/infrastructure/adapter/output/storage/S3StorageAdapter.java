@@ -31,6 +31,9 @@ public class S3StorageAdapter implements FileStoragePort {
 	private final AwsS3Properties awsS3Properties;
 	private final AwsCloudFrontProperties cloudFrontProperties;
 
+	// 기본 만료 시간 설정 (5분)
+	private static final long DEFAULT_EXPIRATION_TIME = 300000L;
+
 	@Override
 	public String uploadFile(MultipartFile file, FileType fileType, Integer entityId) {
 		try {
@@ -54,6 +57,11 @@ public class S3StorageAdapter implements FileStoragePort {
 		} catch (IOException | AmazonS3Exception e) {
 			throw new CustomException(ErrorCode.S3_UPLOAD_ERROR);
 		}
+	}
+
+	@Override
+	public String generateFileUrl(String fileName, FileType fileType) {
+		return generateFileUrl(fileName, fileType, DEFAULT_EXPIRATION_TIME);
 	}
 
 	@Override
