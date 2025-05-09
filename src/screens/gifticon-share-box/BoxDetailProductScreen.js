@@ -594,13 +594,7 @@ const BoxDetailProductScreen = () => {
                       marginBottom: 10,
                     }}
                   >
-                    <Text
-                      style={{
-                        color: '#FFFFFF',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
-                      }}
-                    >
+                    <Text variant="body1" weight="semibold" style={{ color: '#FFFFFF' }}>
                       사용완료
                     </Text>
                   </TouchableOpacity>
@@ -616,13 +610,7 @@ const BoxDetailProductScreen = () => {
                       flexDirection: 'row',
                     }}
                   >
-                    <Text
-                      style={{
-                        color: '#278CCC',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
-                      }}
-                    >
+                    <Text variant="body1" weight="semibold" style={{ color: '#278CCC' }}>
                       취소
                     </Text>
                   </TouchableOpacity>
@@ -641,13 +629,7 @@ const BoxDetailProductScreen = () => {
                     flexDirection: 'row',
                   }}
                 >
-                  <Text
-                    style={{
-                      color: '#FFFFFF',
-                      fontSize: 16,
-                      fontWeight: 'semibold',
-                    }}
-                  >
+                  <Text variant="body1" weight="semibold" style={{ color: '#FFFFFF' }}>
                     {calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨'
                       ? '사용완료'
                       : '사용하기'}
@@ -675,12 +657,9 @@ const BoxDetailProductScreen = () => {
                     >
                       <Icon name="inventory-2" type="material" size={22} color="#000000" />
                       <Text
-                        style={{
-                          marginLeft: 8,
-                          color: '#000000',
-                          fontSize: 16,
-                          fontWeight: 'semibold',
-                        }}
+                        variant="body1"
+                        weight="semibold"
+                        style={{ marginLeft: 8, color: '#000000' }}
                       >
                         공유하기
                       </Text>
@@ -700,12 +679,9 @@ const BoxDetailProductScreen = () => {
                     >
                       <Icon name="card-giftcard" type="material" size={22} color="#000000" />
                       <Text
-                        style={{
-                          marginLeft: 8,
-                          color: '#000000',
-                          fontSize: 16,
-                          fontWeight: 'semibold',
-                        }}
+                        variant="body1"
+                        weight="semibold"
+                        style={{ marginLeft: 8, color: '#000000' }}
                       >
                         선물하기
                       </Text>
@@ -716,7 +692,7 @@ const BoxDetailProductScreen = () => {
           )}
         </View>
       </ScrollView>
-      공유 모달
+      {/* 공유 모달 */}
       <Modal
         visible={isShareModalVisible}
         transparent

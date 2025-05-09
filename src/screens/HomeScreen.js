@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View, FlatList, Image } from 'react-native';
+import { StyleSheet, ScrollView, View, FlatList, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
 import { Text } from '../components/ui';
@@ -91,6 +91,11 @@ const HomeScreen = () => {
     NavigationService.navigate('TabMap');
   };
 
+  // 선물 관련 화면으로 이동하는 함수
+  const handleGiftPress = () => {
+    NavigationService.navigate('TabGifticonManage');
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView
@@ -149,23 +154,25 @@ const HomeScreen = () => {
 
         {/* 하단 선물 카드 */}
         <View style={styles.bottomCardSection}>
-          <View style={styles.giftMessageCard}>
-            <View style={styles.giftMessageTextContainer}>
-              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
-                기프티콘 선물해봐요!
-              </Text>
-              <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
-                포장은 저희가 해드릴게요.
-              </Text>
+          <TouchableOpacity onPress={handleGiftPress}>
+            <View style={styles.giftMessageCard}>
+              <View style={styles.giftMessageTextContainer}>
+                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                  기프티콘 선물해봐요!
+                </Text>
+                <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
+                  포장은 저희가 해드릴게요.
+                </Text>
+              </View>
+              <View style={styles.giftMessageImageContainer}>
+                <Image
+                  source={require('../assets/images/home-gift.png')}
+                  style={styles.giftMessageImage}
+                  resizeMode="contain"
+                />
+              </View>
             </View>
-            <View style={styles.giftMessageImageContainer}>
-              <Image
-                source={require('../assets/images/home-gift.png')}
-                style={styles.giftMessageImage}
-                resizeMode="contain"
-              />
-            </View>
-          </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>

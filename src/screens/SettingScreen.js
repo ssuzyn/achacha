@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
     width: '85%',
     borderRadius: 15,
     paddingHorizontal: 20,
-    paddingVertical: 50,
+    paddingVertical: 30,
     elevation: 5,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
   },
   modalContent: {
-    marginBottom: 20,
+    marginBottom: 10,
     alignItems: 'center',
   },
   modalText: {
