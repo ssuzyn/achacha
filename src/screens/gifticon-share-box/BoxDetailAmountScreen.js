@@ -147,6 +147,7 @@ const BoxDetailAmountScreen = () => {
                 userName: '홍길동',
                 amount: 3000,
                 type: 'payment',
+                timestamp: new Date('2025-01-10T14:30:00').getTime(),
               },
               {
                 id: '2',
@@ -155,6 +156,7 @@ const BoxDetailAmountScreen = () => {
                 userName: '김철수',
                 amount: 5000,
                 type: 'payment',
+                timestamp: new Date('2025-01-20T16:45:00').getTime(),
               },
               {
                 id: '3',
@@ -163,8 +165,9 @@ const BoxDetailAmountScreen = () => {
                 userName: '박지민',
                 amount: 2000,
                 type: 'payment',
+                timestamp: new Date('2025-01-25T10:15:00').getTime(),
               },
-            ],
+            ].sort((a, b) => b.timestamp - a.timestamp), // 날짜 내림차순 정렬 (최신순)
           };
         } else {
           // 일반 기프티콘 더미 데이터

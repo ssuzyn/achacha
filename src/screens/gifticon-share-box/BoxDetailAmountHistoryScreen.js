@@ -44,13 +44,14 @@ const BoxDetailAmountHistoryScreen = () => {
     }
 
     // 더미 기프티콘 데이터 초기화
-    setTransactions([
+    const transactionsData = [
       {
         id: '1',
         userName: '홍길동',
         date: '2025.01.10 14:30',
         amount: 3000,
         type: 'payment',
+        timestamp: new Date('2025-01-10T14:30:00').getTime(),
       },
       {
         id: '2',
@@ -58,15 +59,22 @@ const BoxDetailAmountHistoryScreen = () => {
         date: '2025.01.20 16:45',
         amount: 5000,
         type: 'payment',
+        timestamp: new Date('2025-01-20T16:45:00').getTime(),
       },
       {
         id: '3',
-        userName: '이영희',
+        userName: '박지민',
         date: '2025.01.25 10:15',
         amount: 20000,
         type: 'payment',
+        timestamp: new Date('2025-01-25T10:15:00').getTime(),
       },
-    ]);
+    ];
+
+    // 일자별 내림차순(최신순)으로 정렬
+    const sortedTransactions = [...transactionsData].sort((a, b) => b.timestamp - a.timestamp);
+
+    setTransactions(sortedTransactions);
   }, []);
 
   // 더미 기프티콘 데이터
@@ -113,9 +121,13 @@ const BoxDetailAmountHistoryScreen = () => {
       return;
     }
 
-    setTransactions(prev =>
-      prev.map(item => (item.id === transactionId ? { ...item, amount } : item))
-    );
+    setTransactions(prev => {
+      const updatedTransactions = prev.map(item =>
+        item.id === transactionId ? { ...item, amount } : item
+      );
+      // 정렬 유지
+      return [...updatedTransactions].sort((a, b) => b.timestamp - a.timestamp);
+    });
     setEditingId(null);
     setEditValue('');
   };
@@ -130,7 +142,11 @@ const BoxDetailAmountHistoryScreen = () => {
       {
         text: '삭제',
         onPress: () => {
-          setTransactions(prev => prev.filter(item => item.id !== transactionId));
+          setTransactions(prev => {
+            const filteredTransactions = prev.filter(item => item.id !== transactionId);
+            // 정렬 유지 (여기서는 이미 정렬된 상태에서 항목만 제거하므로 재정렬 필요 없음)
+            return filteredTransactions;
+          });
         },
         style: 'destructive',
       },
