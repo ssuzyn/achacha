@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     marginTop: 50,
-    paddingHorizontal: 12,
+    paddingHorizontal: 24,
     justifyContent: 'center',
   },
   centerContainer: {
@@ -173,7 +173,7 @@ const styles = StyleSheet.create({
   permissionsContainer: {
     width: '100%',
     paddingHorizontal: 12,
-    paddingLeft: 15,
+    paddingLeft: 5,
   },
   buttonDisabled: {
     opacity: 0.6,
