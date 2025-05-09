@@ -92,8 +92,8 @@ const BoxSettingScreen = () => {
                 style={styles.input}
                 placeholder="쉐어박스 이름을 입력하세요"
               />
-              <TouchableOpacity style={styles.editButton}>
-                <Text variant="body2" style={styles.editButtonText}>
+              <TouchableOpacity style={styles.confirmButton}>
+                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
                   변경
                 </Text>
               </TouchableOpacity>
@@ -104,7 +104,7 @@ const BoxSettingScreen = () => {
           <View style={styles.section}>
             <View style={styles.rowContainer}>
               <Text variant="body1" weight="medium">
-                멤버 입장
+                멤버 입장 허용
               </Text>
               <TouchableOpacity
                 style={[
@@ -138,8 +138,8 @@ const BoxSettingScreen = () => {
               <Text variant="h3" weight="bold" style={styles.codeText}>
                 {shareBoxCode}
               </Text>
-              <TouchableOpacity style={styles.copyButton} onPress={copyInviteCode}>
-                <Text variant="body2" weight="medium" style={styles.copyButtonText}>
+              <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
+                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
                   복사
                 </Text>
               </TouchableOpacity>
@@ -293,7 +293,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 0,
+  },
+  confirmButton: {
+    backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    padding: 7,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 60,
+  },
+  confirmButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: 'white',
   },
 });
 
