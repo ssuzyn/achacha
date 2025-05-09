@@ -1,7 +1,10 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.history;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonUsageHistoryResponseDto;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 
@@ -21,5 +24,10 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	@Override
 	public UsageHistory getUsageHistoryDetail(Integer userId, Integer gifticonId) {
 		return usageHistoryJpaRepository.findUsageHistoryDetailByUserIdAndGifticonId(userId, gifticonId);
+	}
+
+	@Override
+	public List<GifticonUsageHistoryResponseDto> findUsageHistories(Integer userId, Integer gifticonId) {
+		return usageHistoryJpaRepository.findUsageHistories(userId, gifticonId);
 	}
 }
