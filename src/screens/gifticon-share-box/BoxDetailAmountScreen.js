@@ -128,6 +128,7 @@ const BoxDetailAmountScreen = () => {
             usageType: usageType || 'SELF_USE', // 사용유형
             usageHistoryCreatedAt: usedAt || '2025-01-25T16:45:00', // 사용일시
             usedBy: '박지민', // 사용한 사람 정보 추가
+            userName: '홍길동', // 등록자 정보 추가
             thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
             originalImagePath:
               usageType === 'SELF_USE'
@@ -578,13 +579,15 @@ const BoxDetailAmountScreen = () => {
                   </Text>
                 </View>
 
-                {/* 등록자 정보 표시 */}
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>등록자</Text>
-                  <Text style={styles.infoValue}>{gifticonData.userName}</Text>
-                </View>
+                {/* 등록자 정보 표시 (항상 표시) */}
+                {gifticonData.userName && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>등록자</Text>
+                    <Text style={styles.infoValue}>{gifticonData.userName}</Text>
+                  </View>
+                )}
 
-                {gifticonData.shareBoxName && (
+                {scope === 'SHARE_BOX' && gifticonData.shareBoxName && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>쉐어박스</Text>
                     <Text style={styles.infoValue}>{gifticonData.shareBoxName}</Text>

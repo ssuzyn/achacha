@@ -131,6 +131,7 @@ const BoxDetailProductScreen = () => {
             usageType: usageType || 'SELF_USE', // 사용유형
             usageHistoryCreatedAt: usedAt || '2025-01-15T14:30:00', // 사용일시
             usedBy: '김철수', // 사용한 사람 정보 추가
+            userName: '홍길동', // 등록자 정보 추가
             thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
             originalImagePath:
               usageType === 'SELF_USE' ? require('../../assets/images/dummy-starbucks.png') : null,
@@ -524,14 +525,15 @@ const BoxDetailProductScreen = () => {
                   </Text>
                 </View>
 
-                {/* 마이박스가 아닌 경우에만 등록자 정보 표시 */}
-                {scope !== 'MY_BOX' && scope !== 'USED' && (
+                {/* 등록자 정보 표시 (항상 표시) */}
+                {gifticonData.userName && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>등록자</Text>
                     <Text style={styles.infoValue}>{gifticonData.userName}</Text>
                   </View>
                 )}
 
+                {/* 쉐어박스 정보 (쉐어박스 기프티콘만 표시) */}
                 {scope === 'SHARE_BOX' && gifticonData.shareBoxName && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>쉐어박스</Text>
