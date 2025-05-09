@@ -388,8 +388,10 @@ const DetailAmountScreen = () => {
 
   // 선물하기 기능
   const handleGift = () => {
-    // 선물하기 로직 구현
-    // console.log('기프티콘 선물하기');
+    // 선물하기 화면으로 이동
+    navigation.navigate('PresentScreen', {
+      gifticonId: gifticonData.gifticonId,
+    });
   };
 
   // 사용내역 기능

@@ -294,8 +294,10 @@ const DetailProductScreen = () => {
 
   // 선물하기 기능
   const handleGift = () => {
-    // 선물하기 로직 구현
-    // console.log('기프티콘 선물하기');
+    // 선물하기 화면으로 이동
+    navigation.navigate('PresentScreen', {
+      gifticonId: gifticonData.gifticonId,
+    });
   };
 
   // 기프티콘 삭제 다이얼로그 표시

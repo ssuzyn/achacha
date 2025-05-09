@@ -16,6 +16,7 @@ import DetailAmountScreen from '../screens/gifticon-management/gifticon-detail/D
 import DetailAmountHistoryScreen from '../screens/gifticon-management/gifticon-detail/DetailAmountHistoryScreen';
 import UseProductScreen from '../screens/gifticon-management/gifticon-use/UseProductScreen';
 import UseAmountScreen from '../screens/gifticon-management/gifticon-use/UseAmountScreen';
+import PresentScreen from '../screens/gifticon-management/PresentScreen';
 // 쉐어박스 스크린 추가
 import BoxMainScreen from '../screens/gifticon-share-box/BoxMainScreen';
 import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
@@ -104,6 +105,14 @@ const AppNavigator = () => {
       <Stack.Screen
         name="UseAmountScreen"
         component={UseAmountScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="PresentScreen"
+        component={PresentScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,

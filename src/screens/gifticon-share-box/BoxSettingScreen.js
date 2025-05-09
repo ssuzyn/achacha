@@ -1,7 +1,16 @@
 // 쉐어박스 설정 스크린
 
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, StatusBar, ScrollView, TextInput } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+  ScrollView,
+  TextInput,
+  Image,
+  Alert,
+} from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -48,6 +57,12 @@ const BoxSettingScreen = () => {
   // 초대 코드 복사 핸들러
   const copyInviteCode = () => {
     // 클립보드에 코드 복사 로직 (실제 구현 필요)
+    Alert.alert('알림', '초대 코드가 클립보드에 복사되었습니다.');
+  };
+
+  // 갤러리에 저장 핸들러
+  const handleSaveToGallery = () => {
+    Alert.alert('알림', '갤러리에 이미지가 저장되었습니다.');
   };
 
   // 쉐어박스 나가기 핸들러
@@ -80,6 +95,22 @@ const BoxSettingScreen = () => {
         contentContainerStyle={styles.scrollViewContentContainer}
       >
         <View style={styles.contentContainer}>
+          {/* 기프티콘 이미지 영역 */}
+          <View style={styles.gifticonCardSection}>
+            <View style={styles.gifticonCard}>
+              <Image
+                source={require('../../assets/images/dummy-mc.png')}
+                style={styles.gifticonImage}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* 갤러리에 저장 버튼 */}
+            <TouchableOpacity style={styles.galleryButton} onPress={handleSaveToGallery}>
+              <Text style={styles.galleryButtonText}>갤러리에 저장</Text>
+            </TouchableOpacity>
+          </View>
+
           {/* 쉐어박스 이름 */}
           <View style={styles.section}>
             <Text variant="body1" weight="medium" style={styles.sectionLabel}>
@@ -211,6 +242,40 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 20,
+  },
+  gifticonCardSection: {
+    marginBottom: 24,
+    alignItems: 'center',
+  },
+  gifticonCard: {
+    width: '100%',
+    height: 200,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#72BFFF',
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  gifticonImage: {
+    width: '80%',
+    height: '80%',
+  },
+  galleryButton: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#E5F4FE',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  galleryButtonText: {
+    color: '#278CCC',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   section: {
     marginBottom: 24,
