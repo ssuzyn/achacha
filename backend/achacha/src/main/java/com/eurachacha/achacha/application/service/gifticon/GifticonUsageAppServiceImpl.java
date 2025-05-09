@@ -41,7 +41,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		// 해당 기프티콘 조회
-		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		/*
 		 * 사용가능 기프티콘 검증 로직
