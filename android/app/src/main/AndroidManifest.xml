@@ -57,5 +57,16 @@
         <data android:scheme="com.koup28.achacha_app"/>
       </intent-filter>
     </activity>
+    <activity
+        android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+        android:exported="true"
+       >
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="kakaoc4f44eace8f605213e73d4e08941e6eb" android:host="oauth" />
+        </intent-filter>
+    </activity>
   </application>
 </manifest>

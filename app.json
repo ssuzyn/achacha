@@ -2,6 +2,7 @@
   "expo": {
     "name": "achacha_app",
     "slug": "achacha_app",
+    "scheme": "com.koup28.achacha_app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,7 +35,8 @@
       [
         "@react-native-seoul/kakao-login",
         {
-          "kakaoAppKey": "c4f44eace8f605213e73d4e08941e6eb"
+          "kakaoAppKey": "c4f44eace8f605213e73d4e08941e6eb",
+          "customScheme": "kakaoc4f44eace8f605213e73d4e08941e6eb"
         }
       ],
       [
