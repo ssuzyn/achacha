@@ -130,6 +130,7 @@ const BoxDetailProductScreen = () => {
             scope: scope,
             usageType: usageType || 'SELF_USE', // 사용유형
             usageHistoryCreatedAt: usedAt || '2025-01-15T14:30:00', // 사용일시
+            usedBy: '김철수', // 사용한 사람 정보 추가
             thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
             originalImagePath:
               usageType === 'SELF_USE' ? require('../../assets/images/dummy-starbucks.png') : null,
@@ -545,6 +546,14 @@ const BoxDetailProductScreen = () => {
                     <Text style={styles.infoValue}>
                       {formatDateTime(gifticonData.usageHistoryCreatedAt)}
                     </Text>
+                  </View>
+                )}
+
+                {/* 사용완료된 경우 사용자 정보 표시 추가 */}
+                {isUsed && gifticonData.usedBy && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>사용자</Text>
+                    <Text style={styles.infoValue}>{gifticonData.usedBy}</Text>
                   </View>
                 )}
               </View>

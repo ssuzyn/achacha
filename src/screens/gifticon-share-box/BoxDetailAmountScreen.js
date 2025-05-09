@@ -127,6 +127,7 @@ const BoxDetailAmountScreen = () => {
             scope: scope,
             usageType: usageType || 'SELF_USE', // 사용유형
             usageHistoryCreatedAt: usedAt || '2025-01-25T16:45:00', // 사용일시
+            usedBy: '박지민', // 사용한 사람 정보 추가
             thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
             originalImagePath:
               usageType === 'SELF_USE'
@@ -159,7 +160,7 @@ const BoxDetailAmountScreen = () => {
                 id: '3',
                 date: '2025-01-25',
                 time: '10:15',
-                userName: '이영희',
+                userName: '박지민',
                 amount: 2000,
                 type: 'payment',
               },
@@ -594,6 +595,14 @@ const BoxDetailAmountScreen = () => {
                     <Text style={styles.infoValue}>
                       {formatDateTime(gifticonData.usageHistoryCreatedAt)}
                     </Text>
+                  </View>
+                )}
+
+                {/* 사용완료된 경우 사용자 정보 표시 추가 */}
+                {scope === 'USED' && gifticonData.usedBy && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>사용자</Text>
+                    <Text style={styles.infoValue}>{gifticonData.usedBy}</Text>
                   </View>
                 )}
 
