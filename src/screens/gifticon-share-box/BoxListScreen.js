@@ -392,20 +392,16 @@ const BoxListScreen = () => {
                 </Text>
 
                 {/* 쉐어박스 정보 다시 추가 */}
-                {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                {item.scope === 'SHARE_BOX' && item.userName && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
-                      name="inventory-2"
+                      name="person"
                       type="material"
                       size={12}
-                      color="#888"
+                      color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
-                    <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                    {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                    {isSharedByOther && (
-                      <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                    )}
+                    <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
                   </View>
                 )}
               </View>
@@ -486,20 +482,16 @@ const BoxListScreen = () => {
                   </Text>
 
                   {/* 쉐어박스 정보 */}
-                  {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                  {item.scope === 'SHARE_BOX' && item.userName && (
                     <View style={styles.shareBoxInfoContainer}>
                       <Icon
-                        name="inventory-2"
+                        name="person"
                         type="material"
                         size={12}
                         color="#888"
                         containerStyle={styles.shareBoxIcon}
                       />
-                      <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                      {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                      {isSharedByOther && (
-                        <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                      )}
+                      <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
                     </View>
                   )}
                 </View>
@@ -582,20 +574,16 @@ const BoxListScreen = () => {
                 </Text>
 
                 {/* 쉐어박스 정보 다시 추가 */}
-                {item.scope === 'SHARE_BOX' && item.shareBoxName && (
+                {item.scope === 'SHARE_BOX' && item.userName && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
-                      name="inventory-2"
+                      name="person"
                       type="material"
                       size={12}
-                      color="#888"
+                      color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
-                    <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                    {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                    {isSharedByOther && (
-                      <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                    )}
+                    <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
                   </View>
                 )}
               </View>
@@ -950,11 +938,6 @@ const styles = StyleSheet.create({
   },
   shareBoxIcon: {
     marginRight: 3,
-  },
-  shareBoxText: {
-    fontSize: 12,
-    color: '#888',
-    fontWeight: 'bold',
   },
   sharedByText: {
     fontSize: 12,
