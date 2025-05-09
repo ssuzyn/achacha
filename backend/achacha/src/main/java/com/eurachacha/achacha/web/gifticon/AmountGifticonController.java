@@ -24,6 +24,7 @@ public class AmountGifticonController {
 		@PathVariable Integer gifticonId,
 		@RequestBody AmountGifticonUseRequestDto requestDto
 	) {
-		return ResponseEntity.ok(gifticonUsageAppService.useAmountGifticon(gifticonId, requestDto));
+		gifticonUsageAppService.useAmountGifticon(gifticonId, requestDto);
+		return ResponseEntity.ok("기프티콘이 사용되었습니다.");
 	}
 }
