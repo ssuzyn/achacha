@@ -30,11 +30,11 @@ const GuideFirstScreen = () => {
               <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
                 {currentContent.title}
               </Text>
-              <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
+              <Text variant="h1" weight="semibold" size={24} center style={styles.guideText}>
                 {currentContent.subText1}
               </Text>
               {currentContent.subText2 ? (
-                <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
+                <Text variant="h1" weight="semibold" size={24} center style={styles.guideText}>
                   {currentContent.subText2}
                 </Text>
               ) : null}
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 24,
     paddingVertical: 25,
     justifyContent: 'space-between',
   },
@@ -108,7 +108,8 @@ const styles = StyleSheet.create({
   textContainer: {
     width: '100%',
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 20,
+    marginBottom: 20,
     height: 150,
   },
   guideText: {
@@ -119,7 +120,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     width: '100%',
-    marginTop: 24,
     position: 'absolute',
     bottom: 70,
   },

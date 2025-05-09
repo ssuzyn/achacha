@@ -141,9 +141,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    marginTop: 50,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
   centerContainer: {
     flex: 1,
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 45,
+    marginBottom: 30,
   },
   titleContainer: {
     flexDirection: 'row',
@@ -172,6 +172,8 @@ const styles = StyleSheet.create({
   },
   permissionsContainer: {
     width: '100%',
+    paddingHorizontal: 12,
+    paddingLeft: 15,
   },
   buttonDisabled: {
     opacity: 0.6,

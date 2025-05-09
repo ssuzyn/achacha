@@ -18,9 +18,8 @@ export const guideSteps = [
   },
   // Step 2: 이미지 업로드
   {
-    title: '이미지 업로드만으로',
-    subText1: '똑똑하게',
-    subText2: '브랜드, 상품명, 유효기간까지',
+    title: '이미지 업로드만으로\n똑똑하게',
+    subText1: '브랜드, 상품명, 유효기간까지',
     image: require('../assets/images/giftscan.png'),
     imageStyle: standardImageSize,
   },
@@ -35,13 +34,14 @@ export const guideSteps = [
   // Step 4: 기프티콘 전달
   {
     title: '쓱- 하고 나누면,',
-    subText1: '선물의 행운이 누군가에게',
+    subText1: '선물의 행운이',
+    subText2: '누군가에게로.',
     image: require('../assets/images/gesture.png'),
     imageStyle: largeImageSize,
   },
   // Step 5: 쉐어박스
   {
-    title: '연인도, 가족도, 친구도.',
+    title: '연인도, 가족도, 친구도',
     subText1: '모두 함께 쓰는 쉐어박스',
     image: require('../assets/images/share.png'),
     imageStyle: standardImageSize,
