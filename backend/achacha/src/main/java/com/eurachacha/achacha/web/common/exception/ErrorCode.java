@@ -11,6 +11,14 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "X003", "서버 에러가 발생했습니다."),
 	CONSTANT_CLASS_INSTANTIATION(HttpStatus.INTERNAL_SERVER_ERROR, "X004", "상수 클래스는 인스턴스화할 수 없습니다."),
 
+	// Auth 관련 에러
+	INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_01", "유효하지 않은 토큰입니다."),
+	EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_02", "만료된 토큰입니다."),
+	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH_03", "사용자를 찾을 수 없습니다."),
+	KAKAO_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_04", "카카오 API 호출 중 오류가 발생했습니다."),
+	AUTH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH_05", "토큰 정보가 일치하지 않습니다."),
+
+
 	// 기프티콘 관련 에러 코드
 	GIFTICON_NOT_FOUND(HttpStatus.NOT_FOUND, "GIFTICON_001", "기프티콘 정보를 찾을 수 없습니다."),
 	UNAUTHORIZED_GIFTICON_ACCESS(HttpStatus.FORBIDDEN, "GIFTICON_002", "해당 기프티콘에 접근 권한이 없습니다."),
