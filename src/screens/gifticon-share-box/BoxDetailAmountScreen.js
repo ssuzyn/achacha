@@ -626,12 +626,48 @@ const BoxDetailAmountScreen = () => {
                 <>
                   <TouchableOpacity
                     onPress={handleAmountInput}
-                    style={[styles.modalConfirmButton, { marginBottom: 10 }]}
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      height: 56,
+                      backgroundColor: '#56AEE9',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                      marginBottom: 10,
+                    }}
                   >
-                    <Text style={styles.confirmButtonText}>금액입력</Text>
+                    <Text
+                      style={{
+                        color: '#FFFFFF',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      금액입력
+                    </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={handleCancel} style={styles.modalCancelButton}>
-                    <Text style={styles.cancelButtonText}>취소</Text>
+                  <TouchableOpacity
+                    onPress={handleCancel}
+                    style={{
+                      width: '100%',
+                      borderRadius: 8,
+                      height: 56,
+                      backgroundColor: '#E5F4FE',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      flexDirection: 'row',
+                    }}
+                  >
+                    <Text
+                      style={{
+                        color: '#278CCC',
+                        fontSize: 16,
+                        fontWeight: 'bold',
+                      }}
+                    >
+                      취소
+                    </Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -1272,26 +1308,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     height: 56,
     backgroundColor: '#EEEEEE',
-  },
-  modalConfirmButton: {
-    flex: 1,
-    marginRight: 4,
-    borderRadius: 8,
-    height: 56,
-    backgroundColor: '#56AEE9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  modalCancelButton: {
-    flex: 1,
-    marginLeft: 4,
-    borderRadius: 8,
-    height: 56,
-    backgroundColor: '#E5F4FE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    flexDirection: 'row',
   },
 });
 
