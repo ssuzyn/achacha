@@ -9,9 +9,9 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Share,
   Modal,
   TextInput,
-  // Share,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -382,7 +382,6 @@ const BoxDetailAmountScreen = () => {
   };
 
   // 공유하기 기능
-  /*
   const handleShare = async () => {
     try {
       await Share.share({
@@ -393,15 +392,12 @@ const BoxDetailAmountScreen = () => {
       // 오류 처리
     }
   };
-  */
 
   // 선물하기 기능
-  /*
   const handleGift = () => {
     // 선물하기 로직 구현
     // console.log('기프티콘 선물하기');
   };
-  */
 
   if (isLoading || !gifticonData) {
     // 로딩 중 표시
@@ -628,50 +624,11 @@ const BoxDetailAmountScreen = () => {
               {isUsing ? (
                 // 사용 모드일 때 - 금액입력/취소 버튼을 두 줄로 표시
                 <>
-                  <TouchableOpacity
-                    onPress={handleAmountInput}
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#56AEE9',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                      marginBottom: 10,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#FFFFFF',
-                        fontSize: 16,
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      금액입력
-                    </Text>
+                  <TouchableOpacity onPress={handleAmountInput} style={styles.useButton}>
+                    <Text style={styles.useButtonText}>금액입력</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleCancel}
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#E5F4FE',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#278CCC',
-                        fontSize: 16,
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      취소
-                    </Text>
+                  <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+                    <Text style={styles.cancelButtonText}>취소</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -680,52 +637,47 @@ const BoxDetailAmountScreen = () => {
                   <View style={styles.buttonRow}>
                     <TouchableOpacity
                       onPress={handleUse}
-                      style={{
-                        flex: 1,
-                        marginRight: 4,
-                        borderRadius: 8,
-                        height: 56,
-                        backgroundColor: '#56AEE9',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        flexDirection: 'row',
-                      }}
+                      style={styles.useButton}
                       disabled={isExpired || gifticonData.gifticonRemainingAmount <= 0}
                     >
-                      <Text
-                        style={{
-                          color: '#FFFFFF',
-                          fontSize: 16,
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        사용하기
-                      </Text>
+                      <Text style={styles.useButtonText}>사용하기</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={handleHistory}
-                      style={{
-                        flex: 1,
-                        marginLeft: 4,
-                        borderRadius: 8,
-                        height: 56,
-                        backgroundColor: '#E5F4FE',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        flexDirection: 'row',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: '#278CCC',
-                          fontSize: 16,
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        사용내역
-                      </Text>
+                    <TouchableOpacity onPress={handleHistory} style={styles.historyButton}>
+                      <Text style={styles.historyButtonText}>사용내역</Text>
                     </TouchableOpacity>
                   </View>
+
+                  {scope === 'MY_BOX' && (
+                    // 마이박스일 때만 공유하기/선물하기 버튼 표시
+                    <View style={styles.buttonRow}>
+                      <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
+                        <Icon name="inventory-2" type="material" size={22} color="#000000" />
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            color: '#000000',
+                            fontSize: 16,
+                            fontWeight: 'semibold',
+                          }}
+                        >
+                          공유하기
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={handleGift} style={styles.giftButton}>
+                        <Icon name="card-giftcard" type="material" size={22} color="#000000" />
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            color: '#000000',
+                            fontSize: 16,
+                            fontWeight: 'semibold',
+                          }}
+                        >
+                          선물하기
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </>
               )}
             </View>
@@ -885,25 +837,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContentContainer: {
-    paddingBottom: 32,
+    flexGrow: 1,
+    paddingBottom: 40,
   },
   contentContainer: {
-    padding: 20,
+    padding: 16,
   },
   cardContainer: {
     marginTop: 10,
     marginBottom: 3,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
   },
   gifticonCard: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E6F4FB',
-    overflow: 'hidden',
   },
   imageContainer: {
     alignItems: 'center',
@@ -1018,37 +967,35 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   useButton: {
-    backgroundColor: '#3182CE',
+    flex: 1,
+    marginRight: 4,
     borderRadius: 8,
-    padding: 16,
+    height: 56,
+    backgroundColor: '#56AEE9',
+    justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: 10,
   },
   useButtonText: {
-    color: 'white',
-  },
-  cancelShareButton: {
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#E53E3E',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  cancelShareButtonText: {
-    color: '#E53E3E',
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   historyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(66, 153, 225, 0.1)',
+    flex: 1,
+    marginLeft: 4,
     borderRadius: 8,
+    height: 56,
+    backgroundColor: '#E5F4FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   historyButtonText: {
-    marginLeft: 8,
+    color: '#278CCC',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   transactionSection: {
     marginTop: 5,
@@ -1179,12 +1126,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cancelButton: {
-    flex: 1,
-    backgroundColor: '#F2F2F2',
+    width: '100%',
     borderRadius: 8,
-    padding: 15,
+    height: 56,
+    backgroundColor: '#E5F4FE',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    flexDirection: 'row',
+    marginBottom: 10,
   },
   confirmButton: {
     flex: 1,
@@ -1195,9 +1144,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   cancelButtonText: {
+    color: '#278CCC',
     fontSize: 16,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: 'bold',
   },
   confirmButtonText: {
     fontSize: 16,
@@ -1312,6 +1261,20 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
     marginTop: 5,
+  },
+  shareButton: {
+    flex: 1,
+    marginRight: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#EEEEEE',
+  },
+  giftButton: {
+    flex: 1,
+    marginLeft: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#EEEEEE',
   },
 });
 
