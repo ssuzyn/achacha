@@ -10,4 +10,6 @@ public interface UsageHistoryRepository {
 	UsageHistory getUsageHistoryDetail(Integer userId, Integer gifticonId);
 
 	List<UsageHistory> findUsageHistories(Integer gifticonId);
+
+	UsageHistory findById(Integer usageHistoryId);
 }
