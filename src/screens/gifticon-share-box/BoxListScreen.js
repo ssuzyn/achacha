@@ -488,7 +488,7 @@ const BoxListScreen = () => {
                         name="person"
                         type="material"
                         size={12}
-                        color="#888"
+                        color="#278CCC"
                         containerStyle={styles.shareBoxIcon}
                       />
                       <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
