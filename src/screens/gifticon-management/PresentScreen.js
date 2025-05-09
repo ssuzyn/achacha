@@ -203,7 +203,22 @@ const PresentScreen = () => {
             contentContainerStyle={styles.thumbnailList}
           />
         </View>
-
+        {/* 색상 선택 팔레트 (템플릿 1에서만 표시) */}
+        {selectedTemplateId === 1 && (
+          <View style={styles.colorPaletteContainer}>
+            {template1Variants.map(variant => (
+              <TouchableOpacity
+                key={variant.id}
+                style={[
+                  styles.colorOption,
+                  { backgroundColor: variant.color },
+                  selectedColorVariant === variant.id && styles.selectedColorOption,
+                ]}
+                onPress={() => handleSelectColorVariant(variant.id)}
+              />
+            ))}
+          </View>
+        )}
         {/* 템플릿 카드 영역 - 새로운 레이아웃 */}
         <View style={styles.templateCardSection}>
           <View style={styles.templateCard}>
@@ -253,23 +268,6 @@ const PresentScreen = () => {
             </View>
           </View>
 
-          {/* 색상 선택 팔레트 (템플릿 1에서만 표시) */}
-          {selectedTemplateId === 1 && (
-            <View style={styles.colorPaletteContainer}>
-              {template1Variants.map(variant => (
-                <TouchableOpacity
-                  key={variant.id}
-                  style={[
-                    styles.colorOption,
-                    { backgroundColor: variant.color },
-                    selectedColorVariant === variant.id && styles.selectedColorOption,
-                  ]}
-                  onPress={() => handleSelectColorVariant(variant.id)}
-                />
-              ))}
-            </View>
-          )}
-
           {/* 선물하기 버튼 영역 - 별도로 유지 */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={styles.sendButton} onPress={handleSendGift}>
@@ -313,7 +311,7 @@ const styles = StyleSheet.create({
   },
   thumbnailSection: {
     marginTop: 16,
-    marginBottom: 20,
+    marginBottom: 0,
   },
   thumbnailList: {
     paddingHorizontal: 16,
@@ -337,8 +335,8 @@ const styles = StyleSheet.create({
     height: 55,
   },
   templateCardSection: {
-    paddingHorizontal: 16,
-    marginBottom: 30,
+    paddingHorizontal: 20,
+    marginBottom: 20,
     alignItems: 'center',
   },
   templateCard: {
@@ -364,7 +362,7 @@ const styles = StyleSheet.create({
   // 메시지 입력 카드 스타일
   messageInputCard: {
     width: '80%',
-    marginBottom: 15,
+    marginBottom: 10,
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 10,
@@ -381,8 +379,8 @@ const styles = StyleSheet.create({
     height: 1,
     borderStyle: 'dashed',
     borderWidth: 1,
-    borderColor: '#777',
-    marginBottom: 15,
+    borderColor: '#737373',
+    marginBottom: 10,
   },
   // 기프티콘 카드 스타일
   gifticonCard: {
@@ -403,7 +401,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
     marginTop: 1,
-    marginBottom: 13,
+    marginBottom: 10,
   },
   gifticonImage: {
     width: 120,
@@ -421,17 +419,17 @@ const styles = StyleSheet.create({
   galleryButtonText: {
     color: '#278CCC',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: 'semiBold',
   },
   colorPaletteContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
-    marginBottom: 20,
+    marginTop: 15,
+    marginBottom: -3,
   },
   colorOption: {
-    width: 30,
-    height: 30,
+    width: 25,
+    height: 25,
     borderRadius: 15,
     marginHorizontal: 8,
     borderWidth: 1,
@@ -442,7 +440,8 @@ const styles = StyleSheet.create({
     borderColor: '#56AEE9',
   },
   buttonContainer: {
-    marginTop: 20,
+    marginTop: 10,
+    width: '100%',
   },
   sendButton: {
     height: 56,
@@ -454,7 +453,7 @@ const styles = StyleSheet.create({
   sendButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'semibolc',
   },
 });
 
