@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.auth.AuthAppService;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLoginRequestDto;
+import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTokenRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
@@ -69,9 +70,9 @@ public class AuthAppServiceImpl implements AuthAppService {
 
 	@Override
 	@Transactional
-	public TokenResponseDto refreshToken(String refreshToken) {
+	public TokenResponseDto refreshToken(RefreshTokenRequestDto requestDto) {
 		// 리프레시 토큰 검증 및 새 액세스 토큰 발급
-		Integer userId = jwtTokenProvider.validateRefreshTokenAndGetUserId(refreshToken);
+		Integer userId = jwtTokenProvider.validateRefreshTokenAndGetUserId(requestDto.getRefreshToken());
 
 		// 사용자가 존재하는지 확인
 		User user = userRepository.findById(userId);
@@ -83,7 +84,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 
 		String newAccessToken = jwtTokenProvider.createAccessToken(userId);
 
-		return new TokenResponseDto(newAccessToken, refreshToken, jwtTokenProvider.getAccessTokenExpirySeconds());
+		return new TokenResponseDto(newAccessToken, requestDto.getRefreshToken(), jwtTokenProvider.getAccessTokenExpirySeconds());
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {

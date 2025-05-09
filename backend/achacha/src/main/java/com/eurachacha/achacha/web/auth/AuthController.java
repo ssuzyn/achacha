@@ -2,6 +2,7 @@ package com.eurachacha.achacha.web.auth;
 
 import com.eurachacha.achacha.application.port.input.auth.AuthAppService;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLoginRequestDto;
+import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTokenRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +22,8 @@ public class AuthController {
 	}
 
 	@PostMapping("/refresh")
-	public ResponseEntity<TokenResponseDto> refreshToken(@RequestParam String refreshToken) {
-		TokenResponseDto tokenResponseDto = authAppService.refreshToken(refreshToken);
+	public ResponseEntity<TokenResponseDto> refreshToken(@RequestBody RefreshTokenRequestDto requestDto) {
+		TokenResponseDto tokenResponseDto = authAppService.refreshToken(requestDto);
 		return ResponseEntity.ok(tokenResponseDto);
 	}
 }
