@@ -32,7 +32,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 	@Override
 	@Transactional
-	public String useAmountGifticon(Integer gifticonId, AmountGifticonUseRequestDto requestDto) {
+	public void useAmountGifticon(Integer gifticonId, AmountGifticonUseRequestDto requestDto) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -52,7 +52,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 		// 잔액 검증
 		boolean hasBalance = gifticonUsageDomainService.hasBalance(findGifticon, requestDto.getUsageAmount());
-		if (hasBalance) {
+		if (!hasBalance) {
 			throw new CustomException(ErrorCode.GIFTICON_INSUFFICIENT_BALANCE);
 		}
 
@@ -68,8 +68,6 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 		// 사용 기록 처리
 		usageHistoryRepository.saveUsageHistory(newUsageHistory);
-
-		return "기프티콘이 사용되었습니다.";
 	}
 
 	private void validateGifticonAccess(Gifticon findGifticon, Integer userId) {
