@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Animated,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
@@ -160,8 +161,11 @@ const BoxListScreen = () => {
   const [selectedCategory, setSelectedCategory] = useState(initialTab);
   // 필터 상태
   const [selectedFilter, setSelectedFilter] = useState('all');
-  // 정렬 상태
-  const [sortBy, setSortBy] = useState('recent');
+  // 정렬 상태를 카테고리별로 관리
+  const [sortBy, setSortBy] = useState({
+    available: 'recent',
+    used: 'recent',
+  });
   // 정렬 드롭다운 표시 상태
   const [showSortDropdown, setShowSortDropdown] = useState(false);
   // 필터링된 기프티콘 상태
@@ -205,7 +209,10 @@ const BoxListScreen = () => {
       setSelectedCategory(route.params.initialTab);
       // 사용완료 탭으로 변경 시 정렬 옵션도 변경
       if (route.params.initialTab === 'used') {
-        setSortBy('recent');
+        setSortBy(prev => ({
+          ...prev,
+          used: 'recent',
+        }));
       }
       // 카테고리 변경 시 필터를 항상 '전체'로 초기화
       setSelectedFilter('all');
@@ -217,16 +224,19 @@ const BoxListScreen = () => {
   // 카테고리 변경 시 정렬 옵션 초기화
   useEffect(() => {
     if (selectedCategory === 'used') {
-      setSortBy('recent');
+      setSortBy(prev => ({
+        ...prev,
+        used: 'recent',
+      }));
     }
   }, [selectedCategory]);
 
-  // 카테고리에 따른 기프티콘 필터링
+  // 카테고리에 따른 기프티콘 필터링 (복원)
   useEffect(() => {
     filterGifticons();
   }, [selectedCategory, selectedFilter, sortBy]);
 
-  // 선택된 카테고리에 따라 기프티콘 필터링
+  // 카테고리에 따른 기프티콘 필터링
   const filterGifticons = () => {
     let filtered = [...DUMMY_GIFTICONS];
 
@@ -251,8 +261,11 @@ const BoxListScreen = () => {
       }
     }
 
+    // 현재 선택된 카테고리의 정렬 기준 적용
+    const currentSortBy = sortBy[selectedCategory];
+
     // 정렬 적용
-    if (sortBy === 'recent') {
+    if (currentSortBy === 'recent') {
       if (selectedCategory === 'used') {
         // 사용완료 탭에서는 사용일시 기준 최신순
         filtered.sort((a, b) => new Date(b.usedAt) - new Date(a.usedAt));
@@ -260,7 +273,7 @@ const BoxListScreen = () => {
         // 등록일시 기준 최신순
         filtered.sort((a, b) => new Date(b.gifticonCreatedAt) - new Date(a.gifticonCreatedAt));
       }
-    } else if (sortBy === 'expiry') {
+    } else if (currentSortBy === 'expiry') {
       // D-day 기준 임박순
       filtered.sort((a, b) => {
         const aDaysLeft = calculateDaysLeft(a.gifticonExpiryDate);
@@ -279,7 +292,10 @@ const BoxListScreen = () => {
 
   // 정렬 선택 핸들러
   const handleSelectSort = sortOption => {
-    setSortBy(sortOption);
+    setSortBy(prev => ({
+      ...prev,
+      [selectedCategory]: sortOption,
+    }));
     setShowSortDropdown(false);
   };
 
@@ -289,7 +305,10 @@ const BoxListScreen = () => {
 
     // 사용완료 탭에서는 사용순으로만 정렬
     if (categoryId === 'used') {
-      setSortBy('recent');
+      setSortBy(prev => ({
+        ...prev,
+        used: 'recent',
+      }));
     }
 
     // 필터는 항상 '전체'로 초기화
@@ -803,129 +822,138 @@ const BoxListScreen = () => {
     );
   };
 
+  // 외부 클릭 감지를 위한 이벤트 리스너 설정 (React Native 방식으로 수정)
+  const handleOutsidePress = () => {
+    if (showSortDropdown) {
+      setShowSortDropdown(false);
+    }
+  };
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+    <TouchableWithoutFeedback onPress={handleOutsidePress}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-      {/* 안전 영역 상단 여백 */}
-      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+        {/* 안전 영역 상단 여백 */}
+        <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
-      {/* 헤더 */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <Icon name="chevron-left" type="material" size={30} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text variant="h3" weight="bold" style={styles.title}>
-          {shareBoxName || '쉐어박스'}
-        </Text>
-        <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
-          <Icon name="settings" type="material" size={24} color={theme.colors.grey3} />
-        </TouchableOpacity>
-      </View>
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <Icon name="chevron-left" type="material" size={30} color={theme.colors.text} />
+          </TouchableOpacity>
+          <Text variant="h3" weight="bold" style={styles.title}>
+            {shareBoxName || '쉐어박스'}
+          </Text>
+          <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
+            <Icon name="settings" type="material" size={24} color={theme.colors.grey3} />
+          </TouchableOpacity>
+        </View>
 
-      {/* 카테고리 탭 */}
-      <View style={styles.categoryTabContainer}>
-        <CategoryTabs
-          categories={categories}
-          selectedId={selectedCategory}
-          onSelectCategory={handleSelectCategory}
-        />
-      </View>
-
-      {/* 필터 및 정렬 영역 */}
-      <View style={styles.filterSortContainer}>
-        {/* 필터 탭 */}
-        <View style={styles.filterContainer}>
-          <TabFilter
-            tabs={filterTabs}
-            selectedId={selectedFilter}
-            onSelectTab={handleSelectFilter}
+        {/* 카테고리 탭 */}
+        <View style={styles.categoryTabContainer}>
+          <CategoryTabs
+            categories={categories}
+            selectedId={selectedCategory}
+            onSelectCategory={handleSelectCategory}
           />
         </View>
 
-        {/* 정렬 드롭다운 */}
-        <View style={styles.sortContainer}>
-          <TouchableOpacity style={styles.sortButton} onPress={toggleSortDropdown}>
-            <Text style={styles.sortButtonText}>
-              {(selectedCategory === 'used' ? usedSortOptions : sortOptions).find(
-                option => option.id === sortBy
-              )?.title || '정렬'}
-            </Text>
-            <Icon
-              name={showSortDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-              type="material"
-              size={18}
-              color="#333"
+        {/* 필터 및 정렬 영역 */}
+        <View style={styles.filterSortContainer}>
+          {/* 필터 탭 */}
+          <View style={styles.filterContainer}>
+            <TabFilter
+              tabs={filterTabs}
+              selectedId={selectedFilter}
+              onSelectTab={handleSelectFilter}
             />
-          </TouchableOpacity>
+          </View>
 
-          {/* 정렬 드롭다운 메뉴 */}
-          {showSortDropdown && (
-            <View style={styles.sortDropdown}>
-              {(selectedCategory === 'used' ? usedSortOptions : sortOptions).map(option => (
-                <TouchableOpacity
-                  key={option.id}
-                  style={styles.sortOption}
-                  onPress={() => handleSelectSort(option.id)}
-                >
-                  <Text
-                    style={[
-                      styles.sortOptionText,
-                      sortBy === option.id && styles.sortOptionTextSelected,
-                    ]}
-                  >
-                    {option.title}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-      </View>
-
-      {/* 기프티콘 목록 */}
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollViewContent}
-      >
-        <View style={styles.gifticonList}>
-          {filteredGifticons.length > 0 ? (
-            filteredGifticons.map(item => renderGifticonItem(item))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Icon name="inbox" type="material" size={48} color="#CBD5E0" />
-              <Text style={styles.emptyText}>
-                {selectedCategory === 'available'
-                  ? '사용가능한 기프티콘이 없습니다'
-                  : '사용완료한 기프티콘이 없습니다'}
+          {/* 정렬 드롭다운 */}
+          <View style={styles.sortContainer}>
+            <TouchableOpacity style={styles.sortButton} onPress={toggleSortDropdown}>
+              <Text style={styles.sortButtonText}>
+                {(selectedCategory === 'used' ? usedSortOptions : sortOptions).find(
+                  option => option.id === sortBy[selectedCategory]
+                )?.title || '정렬'}
               </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+              <Icon
+                name={showSortDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                type="material"
+                size={18}
+                color="#333"
+              />
+            </TouchableOpacity>
 
-      {/* 사용 완료 확인 다이얼로그 */}
-      {selectedGifticon && (
-        <AlertDialog
-          isVisible={dialogVisible}
-          title="사용 완료 처리"
-          message={`${selectedGifticon.brandName} - ${selectedGifticon.gifticonName}을(를) 사용 완료 처리하시겠습니까?`}
-          confirmText="확인"
-          cancelText="취소"
-          onConfirm={handleMarkAsUsed}
-          onCancel={() => {
-            setDialogVisible(false);
-            setSelectedGifticon(null);
-          }}
-          onBackdropPress={() => {
-            setDialogVisible(false);
-            setSelectedGifticon(null);
-          }}
-          type="info"
-        />
-      )}
-    </View>
+            {/* 정렬 드롭다운 메뉴 */}
+            {showSortDropdown && (
+              <View style={styles.sortDropdown}>
+                {(selectedCategory === 'used' ? usedSortOptions : sortOptions).map(option => (
+                  <TouchableOpacity
+                    key={option.id}
+                    style={styles.sortOption}
+                    onPress={() => handleSelectSort(option.id)}
+                  >
+                    <Text
+                      style={[
+                        styles.sortOptionText,
+                        sortBy[selectedCategory] === option.id && styles.sortOptionTextSelected,
+                      ]}
+                    >
+                      {option.title}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* 기프티콘 목록 */}
+        <ScrollView
+          style={styles.scrollView}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          <View style={styles.gifticonList}>
+            {filteredGifticons.length > 0 ? (
+              filteredGifticons.map(item => renderGifticonItem(item))
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Icon name="inbox" type="material" size={48} color="#CBD5E0" />
+                <Text style={styles.emptyText}>
+                  {selectedCategory === 'available'
+                    ? '사용가능한 기프티콘이 없습니다'
+                    : '사용완료한 기프티콘이 없습니다'}
+                </Text>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+
+        {/* 사용 완료 확인 다이얼로그 */}
+        {selectedGifticon && (
+          <AlertDialog
+            isVisible={dialogVisible}
+            title="사용 완료 처리"
+            message={`${selectedGifticon.brandName} - ${selectedGifticon.gifticonName}을(를) 사용 완료 처리하시겠습니까?`}
+            confirmText="확인"
+            cancelText="취소"
+            onConfirm={handleMarkAsUsed}
+            onCancel={() => {
+              setDialogVisible(false);
+              setSelectedGifticon(null);
+            }}
+            onBackdropPress={() => {
+              setDialogVisible(false);
+              setSelectedGifticon(null);
+            }}
+            type="info"
+          />
+        )}
+      </View>
+    </TouchableWithoutFeedback>
   );
 };
 
