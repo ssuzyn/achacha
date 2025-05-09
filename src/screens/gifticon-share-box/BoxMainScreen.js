@@ -144,7 +144,7 @@ const BoxMainScreen = () => {
   const handleBoxPress = item => {
     // BoxListScreen으로 이동
     navigation.navigate('BoxList', {
-      shareBoxId: item.shareBoxId || index + 1, // 더미 데이터에는 ID가 없으므로 인덱스+1을 ID로 사용
+      shareBoxId: item.shareBoxId || Math.floor(Math.random() * 1000) + 1, // ID가 없는 경우 임의의 ID 생성
       shareBoxName: item.shareBoxName,
     });
   };
