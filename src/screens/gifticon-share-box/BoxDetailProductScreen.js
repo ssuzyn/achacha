@@ -278,11 +278,11 @@ const BoxDetailProductScreen = () => {
 
   // 사용하기 기능
   const handleUse = () => {
-    if (!isUsing) {
-      // 사용 모드로 전환
-      setIsUsing(true);
-    } else {
-      // 이미 사용 중인 경우 사용 완료 처리
+    // 만료된 경우 바로 사용완료 처리
+    const isExpired = calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨';
+
+    if (isExpired || isUsing) {
+      // 이미 사용 중인 경우 또는 만료된 경우 바로 사용 완료 처리
       // console.log('기프티콘 사용 완료');
 
       // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
@@ -299,6 +299,9 @@ const BoxDetailProductScreen = () => {
           },
         ],
       });
+    } else {
+      // 만료되지 않은 경우 사용 모드로 전환
+      setIsUsing(true);
     }
   };
 
@@ -649,7 +652,9 @@ const BoxDetailProductScreen = () => {
                       fontWeight: 'semibold',
                     }}
                   >
-                    사용하기
+                    {calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨'
+                      ? '사용완료'
+                      : '사용하기'}
                   </Text>
                 </TouchableOpacity>
               )}

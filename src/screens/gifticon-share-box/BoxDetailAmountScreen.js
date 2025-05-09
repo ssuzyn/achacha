@@ -256,8 +256,29 @@ const BoxDetailAmountScreen = () => {
 
   // 사용하기 버튼 클릭
   const handleUse = () => {
-    // 사용 모드로 전환
-    setIsUsing(true);
+    // 만료된 경우 바로 사용완료 처리
+    const isExpired = calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨';
+
+    if (isExpired) {
+      // 만료된 경우 바로 사용완료 처리
+      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
+      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
+
+      // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'Main',
+            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+          },
+        ],
+      });
+    } else {
+      // 만료되지 않은 경우 사용 모드로 전환
+      setIsUsing(true);
+    }
   };
 
   // 금액 입력 모달 표시
