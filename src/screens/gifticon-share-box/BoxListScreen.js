@@ -32,7 +32,7 @@ const DUMMY_GIFTICONS = [
     brandId: 45,
     brandName: '스타벅스',
     scope: 'SHARE_BOX',
-    userId: 78,
+    userId: 78, // 사용자가 공유한 기프티콘
     userName: '홍길동',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
@@ -47,7 +47,7 @@ const DUMMY_GIFTICONS = [
     brandId: 45,
     brandName: '스타벅스',
     scope: 'SHARE_BOX',
-    userId: 78,
+    userId: 78, // 사용자가 공유한 기프티콘
     userName: '홍길동',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
@@ -62,12 +62,42 @@ const DUMMY_GIFTICONS = [
     brandId: 45,
     brandName: '스타벅스',
     scope: 'SHARE_BOX',
-    userId: 78,
-    userName: '홍길동',
+    userId: 90, // 다른 사용자가 공유한 기프티콘
+    userName: '김영희',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
     thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
     gifticonCreatedAt: '2025-01-20T09:15:00',
+  },
+  {
+    gifticonId: 125,
+    gifticonName: '아이스 카페 아메리카노 T',
+    gifticonType: 'PRODUCT',
+    gifticonExpiryDate: '2025-10-15',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'SHARE_BOX',
+    userId: 91, // 다른 사용자가 공유한 기프티콘
+    userName: '이철수',
+    shareBoxId: 90,
+    shareBoxName: '스터디 그룹',
+    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    gifticonCreatedAt: '2025-02-01T08:20:00',
+  },
+  {
+    gifticonId: 126,
+    gifticonName: 'APP전용 e카드 3만원 교환권',
+    gifticonType: 'AMOUNT',
+    gifticonExpiryDate: '2025-05-16',
+    brandId: 45,
+    brandName: '스타벅스',
+    scope: 'SHARE_BOX',
+    userId: 92, // 다른 사용자가 공유한 기프티콘
+    userName: '박지민',
+    shareBoxId: 90,
+    shareBoxName: '스터디 그룹',
+    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    gifticonCreatedAt: '2025-01-10T14:40:00',
   },
   {
     gifticonId: 127,
@@ -397,8 +427,8 @@ const BoxListScreen = () => {
                   {item.gifticonName}
                 </Text>
 
-                {/* 쉐어박스 정보 다시 추가 */}
-                {item.scope === 'SHARE_BOX' && item.userName && (
+                {/* 쉐어박스 정보 */}
+                {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
                       name="person"
@@ -408,6 +438,20 @@ const BoxListScreen = () => {
                       containerStyle={styles.shareBoxIcon}
                     />
                     <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+                  </View>
+                )}
+
+                {/* 사용완료 기프티콘에 사용자 정보 표시 */}
+                {item.scope === 'USED' && item.usedBy && (
+                  <View style={styles.shareBoxInfoContainer}>
+                    <Icon
+                      name="person"
+                      type="material"
+                      size={12}
+                      color="#278CCC"
+                      containerStyle={styles.shareBoxIcon}
+                    />
+                    <Text style={styles.sharedByText}>{item.usedBy}님 사용</Text>
                   </View>
                 )}
               </View>
@@ -488,7 +532,7 @@ const BoxListScreen = () => {
                   </Text>
 
                   {/* 쉐어박스 정보 */}
-                  {item.scope === 'SHARE_BOX' && item.userName && (
+                  {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
                     <View style={styles.shareBoxInfoContainer}>
                       <Icon
                         name="person"
@@ -498,6 +542,20 @@ const BoxListScreen = () => {
                         containerStyle={styles.shareBoxIcon}
                       />
                       <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+                    </View>
+                  )}
+
+                  {/* 사용완료 기프티콘에 사용자 정보 표시 */}
+                  {item.scope === 'USED' && item.usedBy && (
+                    <View style={styles.shareBoxInfoContainer}>
+                      <Icon
+                        name="person"
+                        type="material"
+                        size={12}
+                        color="#278CCC"
+                        containerStyle={styles.shareBoxIcon}
+                      />
+                      <Text style={styles.sharedByText}>{item.usedBy}님 사용</Text>
                     </View>
                   )}
                 </View>
@@ -579,8 +637,8 @@ const BoxListScreen = () => {
                   {item.gifticonName}
                 </Text>
 
-                {/* 쉐어박스 정보 다시 추가 */}
-                {item.scope === 'SHARE_BOX' && item.userName && (
+                {/* 쉐어박스 정보 */}
+                {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
                       name="person"
@@ -590,6 +648,20 @@ const BoxListScreen = () => {
                       containerStyle={styles.shareBoxIcon}
                     />
                     <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+                  </View>
+                )}
+
+                {/* 사용완료 기프티콘에 사용자 정보 표시 */}
+                {item.scope === 'USED' && item.usedBy && (
+                  <View style={styles.shareBoxInfoContainer}>
+                    <Icon
+                      name="person"
+                      type="material"
+                      size={12}
+                      color="#278CCC"
+                      containerStyle={styles.shareBoxIcon}
+                    />
+                    <Text style={styles.sharedByText}>{item.usedBy}님 사용</Text>
                   </View>
                 )}
               </View>
