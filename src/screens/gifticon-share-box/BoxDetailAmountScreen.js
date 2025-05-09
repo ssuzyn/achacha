@@ -371,13 +371,13 @@ const BoxDetailAmountScreen = () => {
   const getUsageTypeText = () => {
     switch (usageType) {
       case 'SELF_USE':
-        return '사용하기';
+        return '사용완료';
       case 'PRESENT':
-        return '선물하기';
+        return '선물완료';
       case 'GIVE_AWAY':
-        return '뿌리기';
+        return '뿌리기 완료';
       default:
-        return '사용하기';
+        return '사용완료';
     }
   };
 
@@ -474,7 +474,7 @@ const BoxDetailAmountScreen = () => {
                   </View>
                 </View>
               ) : (
-                // 이미지 영역
+                // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
                   <Image
                     source={
@@ -482,7 +482,11 @@ const BoxDetailAmountScreen = () => {
                         ? gifticonData.thumbnailPath
                         : gifticonData.originalImagePath || gifticonData.thumbnailPath
                     }
-                    style={[styles.gifticonImage, scope === 'USED' && styles.grayScaleImage]}
+                    style={[
+                      styles.gifticonImage,
+                      scope === 'USED' && styles.grayScaleImage,
+                      scope === 'USED' && usageType === 'SELF_USE' && styles.smallerGifticonImage,
+                    ]}
                     resizeMode="contain"
                   />
 
@@ -498,6 +502,22 @@ const BoxDetailAmountScreen = () => {
                           <Icon name="person-remove" type="material" size={24} color="#718096" />
                         </TouchableOpacity>
                       )}
+                    </View>
+                  )}
+
+                  {/* SELF_USE 유형의 사용완료 기프티콘인 경우만 바코드 표시 */}
+                  {scope === 'USED' && usageType === 'SELF_USE' && (
+                    <View style={styles.usedBarcodeContainer}>
+                      <Image
+                        source={
+                          gifticonData.barcodeImageUrl || require('../../assets/images/barcode.png')
+                        }
+                        style={styles.usedBarcodeImage}
+                        resizeMode="contain"
+                      />
+                      <Text style={styles.usedBarcodeNumberText}>
+                        {gifticonData.barcodeNumber || '8013-7621-1234-5678'}
+                      </Text>
                     </View>
                   )}
 
@@ -655,42 +675,59 @@ const BoxDetailAmountScreen = () => {
                   </TouchableOpacity>
                 </>
               ) : (
-                // 일반 모드일 때
-                /* 자신이 공유한 것이 아닌 경우 사용하기 버튼 표시 */
-                <TouchableOpacity
-                  style={[
-                    styles.useButton,
-                    {
-                      backgroundColor:
-                        isExpired || gifticonData.gifticonRemainingAmount <= 0
-                          ? '#CBD5E0'
-                          : theme.colors.primary,
-                    },
-                  ]}
-                  onPress={handleUse}
-                  disabled={isExpired || gifticonData.gifticonRemainingAmount <= 0}
-                >
-                  <Text variant="body1" weight="bold" style={styles.useButtonText}>
-                    사용하기
-                  </Text>
-                </TouchableOpacity>
+                // 일반 모드일 때 - 상단 버튼 영역 (사용하기/사용내역)
+                <>
+                  <View style={styles.buttonRow}>
+                    <TouchableOpacity
+                      onPress={handleUse}
+                      style={{
+                        flex: 1,
+                        marginRight: 4,
+                        borderRadius: 8,
+                        height: 56,
+                        backgroundColor: '#56AEE9',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                      }}
+                      disabled={isExpired || gifticonData.gifticonRemainingAmount <= 0}
+                    >
+                      <Text
+                        style={{
+                          color: '#FFFFFF',
+                          fontSize: 16,
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        사용하기
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleHistory}
+                      style={{
+                        flex: 1,
+                        marginLeft: 4,
+                        borderRadius: 8,
+                        height: 56,
+                        backgroundColor: '#E5F4FE',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'row',
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: '#278CCC',
+                          fontSize: 16,
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        사용내역
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
               )}
-
-              {/* 사용내역 버튼 */}
-              <TouchableOpacity
-                style={styles.historyButton}
-                onPress={handleHistory}
-                activeOpacity={0.8}
-              >
-                <Icon name="history" type="material" size={16} color={theme.colors.primary} />
-                <Text
-                  variant="body2"
-                  weight="medium"
-                  style={[styles.historyButtonText, { color: theme.colors.primary }]}
-                >
-                  사용내역 보기
-                </Text>
-              </TouchableOpacity>
             </View>
           )}
 
@@ -854,6 +891,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   cardContainer: {
+    marginTop: 10,
+    marginBottom: 3,
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 16,
@@ -862,80 +901,121 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 8,
     padding: 16,
+    borderWidth: 1,
+    borderColor: '#E6F4FB',
+    overflow: 'hidden',
   },
   imageContainer: {
-    width: '100%',
-    height: 400,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    padding: 16,
+    paddingTop: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E6F4FB',
+    height: 300,
+    backgroundColor: '#EEEEEE',
     position: 'relative',
+    paddingBottom: 10,
   },
   gifticonImage: {
-    width: '100%',
-    height: '100%',
+    width: '60%',
+    height: '90%',
+    borderRadius: 8,
   },
   grayScaleImage: {
-    filter: 'grayscale(100%)',
+    opacity: 0.7,
+  },
+  smallerGifticonImage: {
+    height: '50%',
+    marginBottom: 5,
+    marginTop: 20,
   },
   actionIconsContainer: {
     position: 'absolute',
-    top: 16,
-    right: 16,
+    top: 10,
+    right: 10,
     flexDirection: 'row',
+    zIndex: 10,
   },
   actionIconButton: {
-    padding: 4,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F9F9F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   infoContainer: {
     marginTop: 16,
   },
   brandText: {
-    color: '#718096',
-    marginBottom: 4,
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 5,
+    textAlign: 'center',
   },
   nameText: {
-    color: '#4A5568',
-    marginBottom: 12,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   infoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    paddingHorizontal: 8,
   },
   infoLabel: {
-    color: '#718096',
+    width: 80,
+    fontSize: 15,
+    color: '#666',
+    fontWeight: '500',
   },
   infoValue: {
-    color: '#4A5568',
+    flex: 1,
+    fontSize: 15,
+    color: '#333',
   },
   divider: {
     height: 1,
-    backgroundColor: '#E2E8F0',
-    marginVertical: 16,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 12,
   },
   amountInfoRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    paddingHorizontal: 8,
+    marginBottom: 12,
   },
   amountLabel: {
-    color: '#718096',
+    width: 80,
+    fontSize: 16,
+    color: '#555',
+    fontWeight: '500',
   },
   amountValueContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flex: 1,
   },
   amountValue: {
-    color: '#4A5568',
+    fontSize: 16,
+    color: '#333',
+    fontWeight: 'bold',
   },
   remainingAmount: {
-    color: '#2D3748',
+    color: '#278CCC',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
   buttonContainer: {
+    marginTop: 10,
+  },
+  buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
+    marginBottom: 12,
   },
   useButton: {
     backgroundColor: '#3182CE',
@@ -971,14 +1051,25 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   transactionSection: {
-    marginTop: 16,
+    marginTop: 5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   transactionTitle: {
-    color: '#4A5568',
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 12,
   },
   transactionsContainer: {
-    backgroundColor: '#F7FAFC',
+    marginTop: 5,
+    backgroundColor: '#F9F9F9',
     borderRadius: 8,
     padding: 16,
   },
@@ -987,24 +1078,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 10,
   },
   transactionInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   transactionUser: {
-    color: '#4A5568',
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
   },
   transactionDate: {
-    color: '#718096',
+    fontSize: 14,
+    color: '#888',
     marginLeft: 8,
   },
   transactionAmount: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
   },
   amountText: {
-    color: '#4A5568',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   bottomPadding: {
     height: 32,
@@ -1016,86 +1114,94 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
+    width: 320,
     backgroundColor: 'white',
     borderRadius: 12,
-    width: '80%',
-    maxWidth: 400,
-    elevation: 5,
+    padding: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    elevation: 5,
   },
   modalTitle: {
-    flex: 1,
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
     textAlign: 'center',
-    marginRight: 24, // 닫기 버튼 영역만큼 오른쪽 여백 추가
+    color: '#333',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#CBD5E0',
-    borderRadius: 8,
-    marginTop: 16,
-    marginBottom: 8,
-    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDD',
+    paddingBottom: 10,
+    marginBottom: 16,
   },
   amountInput: {
-    flex: 1,
-    fontSize: 18,
+    fontSize: 24,
+    fontWeight: 'bold',
     textAlign: 'right',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    color: '#2D3748',
+    width: 200,
+    marginRight: 5,
   },
   wonText: {
-    fontSize: 18,
-    fontWeight: '500',
-    color: '#2D3748',
-    marginRight: 8,
+    fontSize: 20,
+    color: '#333',
   },
   chipsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 16,
   },
   chip: {
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#CBD5E0',
-    borderRadius: 8,
+    backgroundColor: '#F2F2F2',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginHorizontal: 4,
   },
   chipText: {
-    color: '#4A5568',
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
   },
   remainingAmountText: {
-    textAlign: 'center',
-    marginBottom: 16,
-    color: '#718096',
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+    alignSelf: 'flex-end',
   },
   modalButtonContainer: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
+    justifyContent: 'space-between',
   },
   cancelButton: {
     flex: 1,
-    padding: 16,
+    backgroundColor: '#F2F2F2',
+    borderRadius: 8,
+    padding: 15,
     alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#4A5568',
+    marginRight: 8,
   },
   confirmButton: {
     flex: 1,
-    padding: 16,
+    backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    padding: 15,
     alignItems: 'center',
-    backgroundColor: '#4299E1',
+    marginLeft: 8,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
   },
   confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
     color: 'white',
   },
   loadingContent: {
@@ -1109,50 +1215,58 @@ const styles = StyleSheet.create({
   },
   ddayButtonContainer: {
     position: 'absolute',
-    top: 16,
-    left: 16,
-    padding: 4,
-    borderRadius: 4,
-  },
-  expiredButtonContainer: {
-    backgroundColor: '#ED8936',
-  },
-  urgentDDayContainer: {
-    backgroundColor: '#F56565',
-  },
-  normalDDayContainer: {
-    backgroundColor: '#48BB78',
+    bottom: 15,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(252, 217, 217, 0.8)',
+    paddingHorizontal: 20,
+    paddingVertical: 5,
+    borderRadius: 5,
   },
   ddayButtonText: {
-    color: 'white',
-    fontSize: 12,
+    color: '#D33434',
+    fontSize: 18,
+    fontWeight: 'semibold',
+  },
+  expiredButtonContainer: {
+    backgroundColor: 'rgba(153, 153, 153, 0.8)',
   },
   expiredButtonText: {
-    color: 'white',
-    fontSize: 12,
+    color: '#FFFFFF',
+  },
+  urgentDDayContainer: {
+    backgroundColor: 'rgba(234, 84, 85, 0.2)',
+  },
+  normalDDayContainer: {
+    backgroundColor: 'rgba(114, 191, 255, 0.2)',
   },
   urgentDDayText: {
-    color: 'white',
-    fontSize: 12,
+    color: '#EA5455',
+    fontWeight: 'bold',
   },
   normalDDayText: {
-    color: 'white',
-    fontSize: 12,
+    color: '#72BFFF',
+    fontWeight: 'bold',
   },
   usedOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '100%',
-    height: '100%',
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 20,
   },
   usedText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 28,
     fontWeight: 'bold',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+    overflow: 'hidden',
   },
   barcodeContainer: {
     backgroundColor: '#FFFFFF',
@@ -1181,6 +1295,23 @@ const styles = StyleSheet.create({
   magnifyButton: {
     marginLeft: 12,
     padding: 8,
+  },
+  usedBarcodeContainer: {
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 0,
+    padding: 20,
+    borderRadius: 8,
+  },
+  usedBarcodeImage: {
+    width: '100%',
+    height: 60,
+  },
+  usedBarcodeNumberText: {
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+    marginTop: 5,
   },
 });
 
