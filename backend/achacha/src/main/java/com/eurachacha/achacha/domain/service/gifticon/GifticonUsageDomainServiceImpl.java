@@ -9,7 +9,7 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 
 	@Override
 	public boolean hasBalance(Gifticon gifticon, Integer usageAmount) {
-		return usageAmount < gifticon.getRemainingAmount();
+		return usageAmount <= gifticon.getRemainingAmount();
 	}
 
 }
