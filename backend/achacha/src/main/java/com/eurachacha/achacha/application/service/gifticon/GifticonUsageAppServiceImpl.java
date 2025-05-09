@@ -110,6 +110,30 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 			.build();
 	}
 
+	@Override
+	@Transactional
+	public void updateGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId,
+		AmountGifticonUseRequestDto requestDto) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		// 삭제, 사용 여부 판단
+		gifticonDomainService.validateDeletedAndUsed(findGifticon);
+
+		// 해당 사용 내역 조회
+		UsageHistory findUsageHistory = usageHistoryRepository.findById(usageHistoryId);
+
+		int newAmount = requestDto.getUsageAmount();
+
+		// 잔액 및 사용 내역 업데이트
+		findGifticon.updateRemainingAmount(
+			gifticonUsageDomainService.updateUsageHistory(userId, newAmount, findGifticon, findUsageHistory));
+		findUsageHistory.updateUsageAmount(newAmount);
+	}
+
 	private void validateGifticonAccess(Gifticon findGifticon, Integer userId) {
 		// 공유되지 않은 기프티콘인 경우 소유자 판단
 		if (findGifticon.getSharebox() == null) {

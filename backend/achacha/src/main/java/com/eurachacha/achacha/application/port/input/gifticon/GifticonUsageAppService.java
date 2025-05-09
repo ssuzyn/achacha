@@ -7,4 +7,6 @@ public interface GifticonUsageAppService {
 	void useAmountGifticon(Integer gifticonId, AmountGifticonUseRequestDto requestDto);
 
 	GifticonUsageHistoriesResponseDto getGifticonUsageHistorys(Integer gifticonId);
+
+	void updateGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId, AmountGifticonUseRequestDto requestDto);
 }
