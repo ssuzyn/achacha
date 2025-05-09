@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AvailableGifticonBarcodeResponseDto {
+public class GifticonBarcodeResponseDto {
 	private String gifticonBarcodeNumber;
 	private String barcodePath;
 }

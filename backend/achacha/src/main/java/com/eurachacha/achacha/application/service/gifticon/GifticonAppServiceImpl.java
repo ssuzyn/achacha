@@ -10,10 +10,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
@@ -390,7 +390,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
-	public AvailableGifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
+	public GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -421,7 +421,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			}
 		}
 
-		return AvailableGifticonBarcodeResponseDto.builder()
+		return GifticonBarcodeResponseDto.builder()
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
 			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
 			.build();

@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonBarcodeResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
@@ -42,7 +42,7 @@ public class AvailableGifticonController {
 	}
 
 	@GetMapping("/{gifticonId}/barcode")
-	public ResponseEntity<AvailableGifticonBarcodeResponseDto> getAvailableGifticonBarcode(
+	public ResponseEntity<GifticonBarcodeResponseDto> getAvailableGifticonBarcode(
 		@PathVariable Integer gifticonId
 	) {
 		return ResponseEntity.ok(gifticonAppService.getAvailableGifticonBarcode(gifticonId));

@@ -3,9 +3,9 @@ package com.eurachacha.achacha.application.port.input.gifticon;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
@@ -29,5 +29,5 @@ public interface GifticonAppService {
 
 	UsedGifticonDetailResponseDto getUsedGifticonDetail(Integer gifticonId);
 
-	AvailableGifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId);
+	GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId);
 }
