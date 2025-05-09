@@ -627,7 +627,7 @@ const DetailProductScreen = () => {
                     style={{
                       color: '#FFFFFF',
                       fontSize: 16,
-                      fontWeight: 'bold',
+                      fontWeight: 'semibold',
                     }}
                   >
                     사용하기

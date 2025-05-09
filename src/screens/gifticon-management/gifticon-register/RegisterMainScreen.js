@@ -236,10 +236,10 @@ const RegisterMainScreen = () => {
                 <Text variant="h2" weight="bold" style={styles.uploadTitleMargin}>
                   기프티콘 업로드
                 </Text>
-                <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
+                <Text variant="h5" weight="regular" color="#737373" style={styles.textCenter}>
                   지금 바로 갤러리에 저장된
                 </Text>
-                <Text variant="h5" weight="regular" color="#718096" style={styles.textCenter}>
+                <Text variant="h5" weight="regular" color="#737373" style={styles.textCenter}>
                   기프티콘을 업로드 해보세요.
                 </Text>
               </View>
@@ -265,7 +265,7 @@ const RegisterMainScreen = () => {
             등록하신 기프티콘은
           </Text>
           <Text variant="h2" weight="bold">
-            다음과 같은 절차를 통해 관리돼요.
+            다음과 같은 절차로 관리돼요.
           </Text>
         </View>
 
@@ -552,34 +552,34 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 2,
   },
-  manualButton: {
-    backgroundColor: '#BBC1D0',
-    borderRadius: 10,
-    height: 65,
-    marginBottom: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-  },
-  manualTextMain: {
-    marginBottom: 0,
-  },
-  manualTextSub: {
-    opacity: 0.8,
-  },
+  // manualButton: {
+  //   backgroundColor: '#BBC1D0',
+  //   borderRadius: 10,
+  //   height: 65,
+  //   marginBottom: 15,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   width: '100%',
+  // },
+  // manualTextMain: {
+  //   marginBottom: 0,
+  // },
+  // manualTextSub: {
+  //   opacity: 0.8,
+  // },
   divider: {
     height: 1,
     backgroundColor: '#EEEEEE',
-    marginTop: 10,
-    marginBottom: 20,
+    marginTop: 5,
+    marginBottom: 25,
   },
   infoSection: {
-    marginBottom: 20,
-    paddingHorizontal: 5,
+    marginBottom: 15,
+    paddingHorizontal: 10,
   },
   stepsContainer: {
-    marginTop: 8,
-    paddingHorizontal: 5,
+    marginTop: 10,
+    paddingHorizontal: 10,
   },
   stepItem: {
     flexDirection: 'row',

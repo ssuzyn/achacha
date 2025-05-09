@@ -711,7 +711,7 @@ const DetailAmountScreen = () => {
                       style={{
                         color: '#FFFFFF',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       금액입력
@@ -733,7 +733,7 @@ const DetailAmountScreen = () => {
                       style={{
                         color: '#278CCC',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       취소
@@ -761,7 +761,7 @@ const DetailAmountScreen = () => {
                         style={{
                           color: '#FFFFFF',
                           fontSize: 16,
-                          fontWeight: 'bold',
+                          fontWeight: 'semibold',
                         }}
                       >
                         사용하기
@@ -784,7 +784,7 @@ const DetailAmountScreen = () => {
                         style={{
                           color: '#278CCC',
                           fontSize: 16,
-                          fontWeight: 'bold',
+                          fontWeight: 'semibold',
                         }}
                       >
                         사용내역

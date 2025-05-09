@@ -8,7 +8,6 @@ import {
   StatusBar,
   ScrollView,
   TextInput,
-  Image,
   Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
@@ -60,11 +59,6 @@ const BoxSettingScreen = () => {
     Alert.alert('알림', '초대 코드가 클립보드에 복사되었습니다.');
   };
 
-  // 갤러리에 저장 핸들러
-  const handleSaveToGallery = () => {
-    Alert.alert('알림', '갤러리에 이미지가 저장되었습니다.');
-  };
-
   // 쉐어박스 나가기 핸들러
   const leaveShareBox = () => {
     // 쉐어박스 나가기 로직 (실제 구현 필요)
@@ -95,22 +89,6 @@ const BoxSettingScreen = () => {
         contentContainerStyle={styles.scrollViewContentContainer}
       >
         <View style={styles.contentContainer}>
-          {/* 기프티콘 이미지 영역 */}
-          <View style={styles.gifticonCardSection}>
-            <View style={styles.gifticonCard}>
-              <Image
-                source={require('../../assets/images/dummy-mc.png')}
-                style={styles.gifticonImage}
-                resizeMode="contain"
-              />
-            </View>
-
-            {/* 갤러리에 저장 버튼 */}
-            <TouchableOpacity style={styles.galleryButton} onPress={handleSaveToGallery}>
-              <Text style={styles.galleryButtonText}>갤러리에 저장</Text>
-            </TouchableOpacity>
-          </View>
-
           {/* 쉐어박스 이름 */}
           <View style={styles.section}>
             <Text variant="body1" weight="medium" style={styles.sectionLabel}>
@@ -197,7 +175,7 @@ const BoxSettingScreen = () => {
 
           {/* 쉐어박스 나가기 버튼 */}
           <TouchableOpacity style={styles.leaveButton} onPress={leaveShareBox}>
-            <Text variant="body1" weight="bold" style={styles.leaveButtonText}>
+            <Text variant="body1" weight="semibold" style={styles.leaveButtonText}>
               쉐어박스 나가기
             </Text>
           </TouchableOpacity>

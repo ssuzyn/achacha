@@ -659,7 +659,7 @@ const BoxDetailAmountScreen = () => {
                       style={{
                         color: '#FFFFFF',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       금액입력
@@ -681,7 +681,7 @@ const BoxDetailAmountScreen = () => {
                       style={{
                         color: '#278CCC',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       취소
@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create({
   useButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'semibold',
   },
   historyButton: {
     flex: 1,
@@ -1053,7 +1053,7 @@ const styles = StyleSheet.create({
   historyButtonText: {
     color: '#278CCC',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: 'semibold',
   },
   transactionSection: {
     marginTop: 5,

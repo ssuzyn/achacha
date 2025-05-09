@@ -26,7 +26,7 @@ export const AlertDialog = ({
     const typeToColorMap = {
       info: theme.colors.secondary,
       success: theme.colors.success,
-      warning: theme.colors.warning,
+      warning: theme.colors.error,
       error: theme.colors.error,
     };
 

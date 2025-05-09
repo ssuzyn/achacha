@@ -34,9 +34,9 @@ const theme = {
     grey5: '#737373',
     greyOutline: '#718096', // border 색상과 동일
     // 기본 색상
-    success: '#0DBA3F',
-    warning: '#FF9500',
-    error: '#EF4040',
+    success: '#56AEE9',
+    warning: '#EA5455',
+    error: '#EA5455',
     disabled: '#cccccc',
   },
   // 폰트 설정 추가

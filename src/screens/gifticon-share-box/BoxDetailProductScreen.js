@@ -586,7 +586,7 @@ const BoxDetailProductScreen = () => {
                       style={{
                         color: '#FFFFFF',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       사용완료
@@ -608,7 +608,7 @@ const BoxDetailProductScreen = () => {
                       style={{
                         color: '#278CCC',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       취소
@@ -633,7 +633,7 @@ const BoxDetailProductScreen = () => {
                     style={{
                       color: '#FFFFFF',
                       fontSize: 16,
-                      fontWeight: 'bold',
+                      fontWeight: 'semibold',
                     }}
                   >
                     사용하기
