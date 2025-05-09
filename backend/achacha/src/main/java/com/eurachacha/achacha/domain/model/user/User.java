@@ -31,7 +31,7 @@ public class User extends TimeStampEntity {
 
 	private String providerUserId;
 
-	private String nickname;
+	private String name;
 
 	@Builder.Default
 	private Boolean isDeleted = false;
@@ -44,7 +44,7 @@ public class User extends TimeStampEntity {
 		this.isDeleted = true;
 	}
 
-	public void updateNickname(String nickname) {
-		this.nickname = nickname;
+	public void updateName(String name) {
+		this.name = name;
 	}
 }

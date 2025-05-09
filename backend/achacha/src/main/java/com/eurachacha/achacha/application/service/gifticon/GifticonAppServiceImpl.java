@@ -276,7 +276,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.brandName(findGifticon.getBrand().getName())
 			.scope(scope)
 			.userId(findGifticon.getUser().getId())
-			.userName(findGifticon.getUser().getNickname())
+			.userName(findGifticon.getUser().getName())
 			.shareBoxId(shareBoxId)
 			.shareBoxName(shareBoxName)
 			.thumbnailPath(null) // 파일로직 구현 후 수정

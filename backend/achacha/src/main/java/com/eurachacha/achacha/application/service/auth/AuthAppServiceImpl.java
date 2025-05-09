@@ -2,6 +2,7 @@ package com.eurachacha.achacha.application.service.auth;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import com.eurachacha.achacha.application.port.input.auth.AuthAppService;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLoginRequestDto;
@@ -20,7 +21,6 @@ import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -49,8 +49,8 @@ public class AuthAppServiceImpl implements AuthAppService {
 			.orElseGet(() -> createKakaoUser(kakaoUserInfo));
 
 		// 닉네임이 변경되었으면 업데이트
-		if (!user.getNickname().equals(kakaoUserInfo.getNickname())) {
-			user.updateNickname(kakaoUserInfo.getNickname());
+		if (!user.getName().equals(kakaoUserInfo.getNickname())) {
+			user.updateName(kakaoUserInfo.getNickname());
 		}
 
 		// FCM 토큰 저장
@@ -84,14 +84,15 @@ public class AuthAppServiceImpl implements AuthAppService {
 
 		String newAccessToken = jwtTokenProvider.createAccessToken(userId);
 
-		return new TokenResponseDto(newAccessToken, requestDto.getRefreshToken(), jwtTokenProvider.getAccessTokenExpirySeconds());
+		return new TokenResponseDto(newAccessToken, requestDto.getRefreshToken(),
+			jwtTokenProvider.getAccessTokenExpirySeconds());
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {
 		User newUser = User.builder()
 			.provider(KAKAO_PROVIDER)
 			.providerUserId(kakaoUserInfo.getId())
-			.nickname(kakaoUserInfo.getNickname())
+			.name(kakaoUserInfo.getNickname())
 			.isDeleted(false)
 			.build();
 
