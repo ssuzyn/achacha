@@ -244,7 +244,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 *  2. 사용 여부 판단
 		 *  3. 유효기간 여부 판단
 		 */
-		gifticonDomainService.validateGifticonAvailability(userId, findGifticon);
+		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
 		// 공유되지 않은 기프티콘인 경우 소유자 판단
 		if (findGifticon.getSharebox() == null) {
@@ -402,7 +402,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 *  2. 사용 여부 판단
 		 *  3. 유효기간 여부 판단
 		 */
-		gifticonDomainService.validateGifticonAvailability(userId, findGifticon);
+		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
 		// 공유되지 않은 기프티콘인 경우 소유자 판단
 		if (findGifticon.getSharebox() == null) {
@@ -424,6 +424,29 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		return GifticonBarcodeResponseDto.builder()
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
 			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
+			.build();
+	}
+
+	@Override
+	public GifticonBarcodeResponseDto getUsedGifticonBarcode(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
+
+		// 삭제, 사용 여부 검토
+		gifticonDomainService.validateGifticonBarcodeUsage(findGifticon);
+
+		// 해당 기프티콘에 대한 사용 내역 조회
+		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		if (findUsageHistory == null) {
+			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
+		}
+
+		return GifticonBarcodeResponseDto.builder()
+			.gifticonBarcodeNumber(findGifticon.getBarcode())
+			.barcodePath(null)
 			.build();
 	}
 

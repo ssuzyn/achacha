@@ -30,4 +30,6 @@ public interface GifticonAppService {
 	UsedGifticonDetailResponseDto getUsedGifticonDetail(Integer gifticonId);
 
 	GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId);
+
+	GifticonBarcodeResponseDto getUsedGifticonBarcode(Integer gifticonId);
 }
