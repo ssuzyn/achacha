@@ -154,7 +154,10 @@ const BoxSettingScreen = () => {
             {members.map(member => (
               <View key={member.id} style={styles.memberItem}>
                 <Text variant="body1">{member.name}</Text>
-                <Text variant="body2" style={styles.memberRole}>
+                <Text
+                  variant="body2"
+                  style={[styles.memberRole, member.role === '방장' && styles.managerRole]}
+                >
                   {member.role}
                 </Text>
               </View>
@@ -163,7 +166,7 @@ const BoxSettingScreen = () => {
 
           {/* 쉐어박스 나가기 버튼 */}
           <TouchableOpacity style={styles.leaveButton} onPress={leaveShareBox}>
-            <Text variant="body1" weight="medium" style={styles.leaveButtonText}>
+            <Text variant="body1" weight="bold" style={styles.leaveButtonText}>
               쉐어박스 나가기
             </Text>
           </TouchableOpacity>
@@ -260,17 +263,6 @@ const styles = StyleSheet.create({
   codeText: {
     fontSize: 20,
   },
-  copyButton: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#EEEEEE',
-  },
-  copyButtonText: {
-    color: '#007AFF',
-  },
   memberItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -280,14 +272,24 @@ const styles = StyleSheet.create({
     borderBottomColor: '#EEEEEE',
   },
   memberRole: {
-    color: '#666666',
+    color: '#737373',
+  },
+  managerRole: {
+    color: '#56AEE9',
+    fontWeight: 'bold',
   },
   leaveButton: {
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 0,
+    borderWidth: 1,
+    borderColor: '#EA5455',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignSelf: 'center',
   },
   leaveButtonText: {
-    color: '#FF3B30',
+    color: '#EA5455',
   },
   rowContainer: {
     flexDirection: 'row',
@@ -296,7 +298,7 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   confirmButton: {
-    backgroundColor: '#56AEE9',
+    backgroundColor: 'rgba(114, 191, 255, 0.15)',
     borderRadius: 8,
     padding: 7,
     alignItems: 'center',
@@ -306,7 +308,7 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     fontSize: 15,
     fontWeight: '500',
-    color: 'white',
+    color: '#56AEE9',
   },
 });
 
