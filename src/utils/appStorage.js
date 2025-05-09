@@ -9,7 +9,6 @@ const HAS_LAUNCHED_KEY = 'hasLaunchedBefore';
 export const checkIsFirstLaunch = async () => {
   try {
     const hasLaunched = await AsyncStorage.getItem(HAS_LAUNCHED_KEY);
-    console.log('AsyncStorage 값 확인:', hasLaunched);
     return hasLaunched === null;
   } catch (error) {
     console.error('AsyncStorage 읽기 오류 (checkIsFirstLaunch):', error);
@@ -23,8 +22,7 @@ export const checkIsFirstLaunch = async () => {
 export const markAppAsLaunched = async () => {
   try {
     await AsyncStorage.setItem(HAS_LAUNCHED_KEY, 'true');
-    console.log('첫 실행 플래그 저장됨 (appStorage)');
   } catch (error) {
-    console.error('AsyncStorage 쓰기 오류 (markAppAsLaunched):', error);
+    //
   }
 };

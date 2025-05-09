@@ -332,7 +332,6 @@ const BoxListScreen = () => {
     if (!selectedGifticon) return;
 
     // 여기서 API 호출로 상태 변경 (예시)
-    // console.log(`기프티콘 ID ${selectedGifticon.gifticonId} 사용 완료 처리됨`);
 
     // 상태 업데이트 및 화면 갱신 (임시 구현)
     const updatedGifticons = filteredGifticons.filter(

@@ -90,12 +90,9 @@ const UseAmountScreen = () => {
   // 금액 입력 완료 및 사용완료 처리
   const handleUseComplete = () => {
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      // console.log('유효한 금액을 입력해주세요');
       // 알림 처리 (예: 토스트 메시지)
       return;
     }
-
-    // console.log(`사용 금액: ${amount}원 사용 완료`);
 
     // 사용완료 처리 로직 - API 호출 등
 

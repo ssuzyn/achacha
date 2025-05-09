@@ -25,7 +25,6 @@ export const useGuideSteps = () => {
           })
         );
       } catch (error) {
-        console.error('네비게이션 오류 (useGuideSteps):', error);
         // Fallback navigation
         navigation.dispatch(
           CommonActions.reset({
