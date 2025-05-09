@@ -25,6 +25,7 @@ import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
+import com.eurachacha.achacha.application.port.output.history.BarcodeHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
@@ -39,6 +40,7 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
+import com.eurachacha.achacha.domain.model.history.BarcodeHistory;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
@@ -68,6 +70,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final BrandRepository brandRepository;
 	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
 	private final UsageHistoryRepository usageHistoryRepository;
+	private final BarcodeHistoryRepository barcodeHistoryRepository;
 	private final OcrTrainingDataRepository ocrTrainingDataRepository;
 	private final FileStoragePort fileStoragePort;
 	private final FileRepository fileRepository;
@@ -234,7 +237,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	@Override
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
-		Integer userId = 3; // 유저 로직 추가 시 변경 필요
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
@@ -246,6 +249,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 */
 		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
+		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
 		// 기프티콘 스코프 결정에 따른 값
@@ -375,6 +379,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
+	@Transactional
 	public GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
@@ -389,7 +394,17 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 */
 		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
+		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
+
+		// 바코드 조회 내역 생성
+		BarcodeHistory newBarcodeHistory = BarcodeHistory.builder()
+			.user(null) // 유저 로직 추가 시 변경 필요
+			.gifticon(findGifticon)
+			.build();
+
+		// 바코드 조회 내역 저장
+		barcodeHistoryRepository.saveBarcodeHistory(newBarcodeHistory);
 
 		return GifticonBarcodeResponseDto.builder()
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
@@ -406,8 +421,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
 		// 삭제, 사용 여부 검토
-		gifticonDomainService.validateGifticonBarcodeUsage(findGifticon);
+		gifticonDomainService.validateUsedGifticonBarcode(findGifticon);
 
+		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
 		// 해당 기프티콘에 대한 사용 내역 조회

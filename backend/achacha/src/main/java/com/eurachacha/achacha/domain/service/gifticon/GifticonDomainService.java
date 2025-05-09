@@ -21,6 +21,6 @@ public interface GifticonDomainService {
 
 	void validateGifticonAvailability(Gifticon gifticon);
 
-	void validateGifticonBarcodeUsage(Gifticon gifticon);
+	void validateUsedGifticonBarcode(Gifticon gifticon);
 
 }
