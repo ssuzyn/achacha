@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonUsageHistoryResponseDto;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 
@@ -27,7 +26,7 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	}
 
 	@Override
-	public List<GifticonUsageHistoryResponseDto> findUsageHistories(Integer userId, Integer gifticonId) {
-		return usageHistoryJpaRepository.findUsageHistories(userId, gifticonId);
+	public List<UsageHistory> findUsageHistories(Integer gifticonId) {
+		return usageHistoryJpaRepository.findAllByGifticonIdOrderByCreatedAtDesc(gifticonId);
 	}
 }
