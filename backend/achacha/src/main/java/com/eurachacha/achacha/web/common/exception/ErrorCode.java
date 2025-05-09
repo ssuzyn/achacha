@@ -17,7 +17,7 @@ public enum ErrorCode {
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH_03", "사용자를 찾을 수 없습니다."),
 	KAKAO_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_04", "카카오 API 호출 중 오류가 발생했습니다."),
 	AUTH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH_05", "토큰 정보가 일치하지 않습니다."),
-
+	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_06", "유효하지 않은 리프레시 토큰입니다."),
 
 	// 기프티콘 관련 에러 코드
 	GIFTICON_NOT_FOUND(HttpStatus.NOT_FOUND, "GIFTICON_001", "기프티콘 정보를 찾을 수 없습니다."),

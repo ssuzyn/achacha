@@ -33,4 +33,8 @@ public class RefreshToken {
 
 	@Column(length = 255)
 	private String value;
+
+	public void updateTokenValue(String newTokenValue) {
+		this.value = newTokenValue;
+	}
 }
