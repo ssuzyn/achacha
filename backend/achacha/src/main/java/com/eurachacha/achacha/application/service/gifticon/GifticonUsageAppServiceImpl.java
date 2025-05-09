@@ -77,7 +77,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 	@Override
 	public GifticonUsageHistoriesResponseDto getGifticonUsageHistorys(Integer gifticonId) {
 
-		Integer userId = 2; // 유저 로직 추가 시 변경 필요
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
@@ -87,16 +87,26 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		// 조회 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
-		List<GifticonUsageHistoryResponseDto> findUsageHistories = usageHistoryRepository.findUsageHistories(userId,
-			gifticonId);
+		// 사용 내역 조회
+		List<UsageHistory> findUsageHistories = usageHistoryRepository.findUsageHistories(gifticonId);
+
+		// entity -> dto로 변환
+		List<GifticonUsageHistoryResponseDto> usageHistoryResponseDtos = findUsageHistories.stream()
+			.map(history -> GifticonUsageHistoryResponseDto.builder()
+				.usageHistoryId(history.getId())
+				.usageAmount(history.getUsageAmount())
+				.usageHistoryCreatedAt(history.getCreatedAt())
+				.userId(history.getUser().getId())
+				.userName(history.getUser().getName())
+				.build())
+			.toList();
 
 		return GifticonUsageHistoriesResponseDto.builder()
 			.gifticonId(findGifticon.getId())
 			.gifticonName(findGifticon.getName())
-			.gifticonType(findGifticon.getType())
 			.gifticonOriginalAmount(findGifticon.getOriginalAmount())
 			.gifticonRemainingAmount(findGifticon.getRemainingAmount())
-			.usageHistory(findUsageHistories)
+			.usageHistory(usageHistoryResponseDtos)
 			.build();
 	}
 
