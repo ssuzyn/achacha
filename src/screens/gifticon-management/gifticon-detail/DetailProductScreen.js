@@ -146,7 +146,7 @@ const DetailProductScreen = () => {
             gifticonId: id,
             gifticonName: '아이스 카페 아메리카노 T',
             gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-01-31',
+            gifticonExpiryDate: '2025-12-31',
             brandId: 45,
             brandName: '스타벅스',
             scope: scope, // 파라미터에서 받은 scope 사용
