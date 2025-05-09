@@ -14,7 +14,10 @@ import com.eurachacha.achacha.infrastructure.security.JwtTokenProvider;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class AuthAppServiceImpl implements AuthAppService {
 	private final UserRepository userRepository;
 	private final AuthServicePort authServicePort;
@@ -22,14 +25,6 @@ public class AuthAppServiceImpl implements AuthAppService {
 
 	// 카카오 제공자 상수
 	private static final String KAKAO_PROVIDER = "KAKAO";
-
-	public AuthAppServiceImpl(UserRepository userRepository,
-		AuthServicePort authServicePort,
-		JwtTokenProvider jwtTokenProvider) {
-		this.userRepository = userRepository;
-		this.authServicePort = authServicePort;
-		this.jwtTokenProvider = jwtTokenProvider;
-	}
 
 	@Override
 	@Transactional

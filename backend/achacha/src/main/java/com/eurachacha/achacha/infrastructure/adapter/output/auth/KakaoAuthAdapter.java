@@ -14,15 +14,14 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class KakaoAuthAdapter implements AuthServicePort {
 
 	private final RestTemplate restTemplate;
 	private static final String KAKAO_API_URL = "https://kapi.kakao.com";
-
-	public KakaoAuthAdapter(RestTemplate restTemplate) {
-		this.restTemplate = restTemplate;
-	}
 
 	@Override
 	public KakaoUserInfoDto validateKakaoToken(String kakaoAccessToken) {
