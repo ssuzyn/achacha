@@ -6,5 +6,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class KakaoLoginRequestDto {
-	private String kakaoAccessToken;  // 카카오에서 발급한 액세스 토큰
+	private String kakaoAccessToken;
+	private String fcmToken;
 }

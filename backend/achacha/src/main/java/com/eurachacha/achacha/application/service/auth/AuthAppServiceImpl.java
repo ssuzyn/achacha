@@ -8,8 +8,10 @@ import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLogin
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
 import com.eurachacha.achacha.application.port.output.auth.dto.KakaoUserInfoDto;
+import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
+import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.infrastructure.security.JwtTokenProvider;
@@ -17,12 +19,14 @@ import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
 public class AuthAppServiceImpl implements AuthAppService {
 	private final UserRepository userRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final FcmTokenRepository fcmTokenRepository;
 	private final AuthServicePort authServicePort;
 	private final JwtTokenProvider jwtTokenProvider;
 
@@ -48,10 +52,16 @@ public class AuthAppServiceImpl implements AuthAppService {
 			user.updateNickname(kakaoUserInfo.getNickname());
 		}
 
+		// FCM 토큰이 있으면 저장 또는 업데이트
+		if (StringUtils.hasText(requestDto.getFcmToken())) {
+			saveOrUpdateFcmToken(user, requestDto.getFcmToken());
+		}
+
 		// JWT 토큰 발급
 		String accessToken = jwtTokenProvider.createAccessToken(user.getId());
 		String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
+		// 리프레시 토큰 저장 또는 업데이트
 		saveOrUpdateRefreshToken(user, refreshToken);
 
 		return new TokenResponseDto(accessToken, refreshToken, jwtTokenProvider.getAccessTokenExpirySeconds());
@@ -64,16 +74,15 @@ public class AuthAppServiceImpl implements AuthAppService {
 		Integer userId = jwtTokenProvider.validateRefreshTokenAndGetUserId(refreshToken);
 
 		// 사용자가 존재하는지 확인
-		userRepository.findById(userId);
+		User user = userRepository.findById(userId);
 
-		// DB에 저장된 리프레시 토큰과 일치하는지 확인 - 이 부분이 추가되었습니다!
+		// DB에 저장된 리프레시 토큰과 일치하는지 확인
 		RefreshToken storedToken = refreshTokenRepository.findByUserId(userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.INVALID_REFRESH_TOKEN));
 
 		if (!storedToken.getValue().equals(refreshToken)) {
 			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
-
 
 		String newAccessToken = jwtTokenProvider.createAccessToken(userId);
 
@@ -104,6 +113,23 @@ public class AuthAppServiceImpl implements AuthAppService {
 						.value(tokenValue)
 						.build();
 					refreshTokenRepository.save(refreshToken);
+				}
+			);
+	}
+
+	// FCM 토큰 저장 또는 업데이트 메서드
+	private void saveOrUpdateFcmToken(User user, String tokenValue) {
+		fcmTokenRepository.findByUserId(user.getId())
+			.ifPresentOrElse(
+				// 기존 토큰이 있으면 업데이트
+				existingToken -> existingToken.updateTokenValue(tokenValue),
+				// 없으면 새로 생성
+				() -> {
+					FcmToken fcmToken = FcmToken.builder()
+						.user(user)
+						.value(tokenValue)
+						.build();
+					fcmTokenRepository.save(fcmToken);
 				}
 			);
 	}
