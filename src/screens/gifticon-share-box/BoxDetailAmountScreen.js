@@ -332,7 +332,10 @@ const BoxDetailAmountScreen = () => {
   const handleHistory = () => {
     // 사용내역 조회 로직
     // console.log('사용내역 조회');
-    navigation.navigate('DetailAmountHistoryScreen', { id: gifticonData.gifticonId });
+    navigation.navigate('BoxDetailAmountHistoryScreen', {
+      id: gifticonData.gifticonId,
+      scope: scope,
+    });
   };
 
   // 공유 취소 다이얼로그 표시
