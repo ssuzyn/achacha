@@ -1,44 +1,191 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import PermissionScreen from '../screens/PermissionScreen';
-import HomeScreen from '../screens/HomeScreen';
-import LoginScreen from '../screens/LoginScreen';
 import SplashScreenComponent from '../screens/SplashScreen';
-import GuideFirstScreen from '../screens/GuideFirstScreen';
+import BottomTabBar from '../components/common/BottomTabBar';
+
+// 일반 import로 변경
+import PermissionScreen from '../screens/PermissionScreen';
+import LoginScreen from '../screens/LoginScreen';
+import GuideFirstScreen from '../screens/GuideScreen';
+import NotificationScreen from '../screens/NotificationScreen';
+import RegisterMainScreen from '../screens/gifticon-management/gifticon-register/RegisterMainScreen';
+import RegisterDetailScreen from '../screens/gifticon-management/gifticon-register/RegisterDetailScreen';
+import ManageListScreen from '../screens/gifticon-management/ManageListScreen';
+import DetailProductScreen from '../screens/gifticon-management/gifticon-detail/DetailProductScreen';
+import DetailAmountScreen from '../screens/gifticon-management/gifticon-detail/DetailAmountScreen';
+import DetailAmountHistoryScreen from '../screens/gifticon-management/gifticon-detail/DetailAmountHistoryScreen';
+import UseProductScreen from '../screens/gifticon-management/gifticon-use/UseProductScreen';
+import UseAmountScreen from '../screens/gifticon-management/gifticon-use/UseAmountScreen';
+import PresentScreen from '../screens/gifticon-management/PresentScreen';
+// 쉐어박스 스크린 추가
+import BoxMainScreen from '../screens/gifticon-share-box/BoxMainScreen';
+import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
+import BoxListScreen from '../screens/gifticon-share-box/BoxListScreen';
+import BoxDetailProductScreen from '../screens/gifticon-share-box/BoxDetailProductScreen';
+import BoxDetailAmountScreen from '../screens/gifticon-share-box/BoxDetailAmountScreen';
+import BoxDetailAmountHistoryScreen from '../screens/gifticon-share-box/BoxDetailAmountHistoryScreen';
+import BoxSettingScreen from '../screens/gifticon-share-box/BoxSettingScreen';
 
 const Stack = createNativeStackNavigator();
 
-// --- 앱 시작 시 권한 확인 로직은 SplashScreenComponent 내부 로직 또는 다른 상태 관리 로직으로 대체됨 ---
-
 const AppNavigator = () => {
   return (
-    <Stack.Navigator 
-      initialRouteName="Splash"
-      screenOptions={{ headerShown: false }}
-    >
-      <Stack.Screen 
-        name="Splash" 
-        component={SplashScreenComponent} 
+    <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
+      {/* 로그인 및 온보딩 화면 (탭바 없음) */}
+      <Stack.Screen name="Splash" component={SplashScreenComponent} />
+      <Stack.Screen name="GuideFirst" component={GuideFirstScreen} />
+      <Stack.Screen name="Permission" component={PermissionScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+
+      {/* 기타 화면 */}
+      <Stack.Screen
+        name="Notification"
+        component={NotificationScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
       />
       <Stack.Screen
-        name="GuideFirst"
-        component={GuideFirstScreen}
+        name="Register"
+        component={RegisterMainScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
       />
       <Stack.Screen
-        name="Permission"
-        component={PermissionScreen}
+        name="RegisterDetail"
+        component={RegisterDetailScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
       />
       <Stack.Screen
-        name="Login"
-        component={LoginScreen}
+        name="List"
+        component={ManageListScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
       />
       <Stack.Screen
-        name="Home"
-        component={HomeScreen}
+        name="DetailProduct"
+        component={DetailProductScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
       />
-      {/* 다른 스크린들을 여기에 추가할 수 있습니다 */}
+      <Stack.Screen
+        name="DetailAmount"
+        component={DetailAmountScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="DetailAmountHistoryScreen"
+        component={DetailAmountHistoryScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="UseProductScreen"
+        component={UseProductScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="UseAmountScreen"
+        component={UseAmountScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="PresentScreen"
+        component={PresentScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+
+      {/* 쉐어박스 관련 화면 */}
+      <Stack.Screen
+        name="BoxMain"
+        component={BoxMainScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxCreate"
+        component={BoxCreateScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxList"
+        component={BoxListScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxDetailProduct"
+        component={BoxDetailProductScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxDetailAmount"
+        component={BoxDetailAmountScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxDetailAmountHistoryScreen"
+        component={BoxDetailAmountHistoryScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxSetting"
+        component={BoxSettingScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+
+      {/* 메인 탭바 화면 */}
+      <Stack.Screen name="Main" component={MainNavigator} />
     </Stack.Navigator>
   );
 };
 
-export default AppNavigator; 
+// 메인 네비게이터 (탭바가 있는 화면들)
+const MainNavigator = () => {
+  return <BottomTabBar />;
+};
+
+export default AppNavigator;
