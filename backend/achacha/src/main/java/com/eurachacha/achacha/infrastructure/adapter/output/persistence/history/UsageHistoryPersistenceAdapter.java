@@ -35,6 +35,6 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	@Override
 	public UsageHistory findById(Integer usageHistoryId) {
 		return usageHistoryJpaRepository.findById(usageHistoryId)
-			.orElseThrow(() -> new CustomException(ErrorCode.NO_USAGE_HISTORY));
+			.orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY));
 	}
 }
