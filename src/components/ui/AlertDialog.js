@@ -24,7 +24,7 @@ export const AlertDialog = ({
   // 타입에 따른 버튼 색상 매핑
   const getButtonColor = () => {
     const typeToColorMap = {
-      info: theme.colors.secondary,
+      info: theme.colors.primary,
       success: theme.colors.success,
       warning: theme.colors.error,
       error: theme.colors.error,
