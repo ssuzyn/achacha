@@ -378,10 +378,8 @@ const BoxDetailProductScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
-
       {/* 안전 영역 상단 여백 */}
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
-
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
@@ -392,7 +390,6 @@ const BoxDetailProductScreen = () => {
         </Text>
         <View style={styles.rightPlaceholder} />
       </View>
-
       <ScrollView
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -700,8 +697,7 @@ const BoxDetailProductScreen = () => {
           )}
         </View>
       </ScrollView>
-
-      {/* 공유 모달 */}
+      공유 모달
       <Modal
         visible={isShareModalVisible}
         transparent
@@ -751,12 +747,12 @@ const BoxDetailProductScreen = () => {
 
             <View style={styles.boxButtonContainer}>
               <TouchableOpacity style={styles.cancelShareButton} onPress={handleCloseShareModal}>
-                <Text variant="body1" weight="bold" style={styles.cancelShareButtonText}>
+                <Text variant="body1" weight="semibold" style={styles.cancelShareButtonText}>
                   취소
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.confirmShareButton} onPress={handleShareConfirm}>
-                <Text variant="body1" weight="bold" style={styles.confirmShareButtonText}>
+                <Text variant="body1" weight="semibold" style={styles.confirmShareButtonText}>
                   공유
                 </Text>
               </TouchableOpacity>
@@ -764,7 +760,6 @@ const BoxDetailProductScreen = () => {
           </View>
         </View>
       </Modal>
-
       {/* 알림 다이얼로그 */}
       <AlertDialog
         isVisible={alertVisible}

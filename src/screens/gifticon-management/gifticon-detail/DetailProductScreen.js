@@ -705,16 +705,16 @@ const DetailProductScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, styles.boxModalContent]}>
             <Text variant="h4" weight="bold" style={styles.modalTitle}>
-              기프티콘 정보 선택
+              쉐어박스 선택
             </Text>
 
-            <Text variant="h5" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
+            {/* <Text variant="h5" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
               등록 위치
-            </Text>
+            </Text> */}
 
-            <Text variant="h5" weight="bold" style={styles.modalSubtitle}>
+            {/* <Text variant="h5" weight="bold" style={styles.modalSubtitle}>
               공유 위치
-            </Text>
+            </Text> */}
 
             {/* 쉐어박스 선택 */}
             <View style={styles.boxSection}>
@@ -745,12 +745,12 @@ const DetailProductScreen = () => {
 
             <View style={styles.boxButtonContainer}>
               <TouchableOpacity style={styles.cancelShareButton} onPress={handleCloseShareModal}>
-                <Text variant="body1" weight="bold" style={styles.cancelShareButtonText}>
+                <Text variant="body1" weight="semibold" style={styles.cancelShareButtonText}>
                   취소
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.confirmShareButton} onPress={handleShareConfirm}>
-                <Text variant="body1" weight="bold" style={styles.confirmShareButtonText}>
+                <Text variant="body1" weight="semibold" style={styles.confirmShareButtonText}>
                   공유
                 </Text>
               </TouchableOpacity>
@@ -816,7 +816,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardContainer: {
-    marginTop: 5,
     marginBottom: 2,
   },
   gifticonCard: {

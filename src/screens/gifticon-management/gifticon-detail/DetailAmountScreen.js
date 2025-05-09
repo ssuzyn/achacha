@@ -978,19 +978,19 @@ const DetailAmountScreen = () => {
         animationType="slide"
         onRequestClose={handleCloseShareModal}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.shareModalContent, styles.boxModalContent]}>
+        <View style={styles.shareModalOverlay}>
+          <View style={[styles.modalContent, styles.boxModalContent]}>
             <Text variant="h4" weight="bold" style={styles.modalTitle}>
               기프티콘 정보 선택
             </Text>
 
-            <Text variant="h5" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
+            {/* <Text variant="h5" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
               등록 위치
             </Text>
 
             <Text variant="h5" weight="bold" style={styles.modalSubtitle}>
               공유 위치
-            </Text>
+            </Text> */}
 
             {/* 쉐어박스 선택 */}
             <View style={styles.boxSection}>
@@ -1021,12 +1021,12 @@ const DetailAmountScreen = () => {
 
             <View style={styles.boxButtonContainer}>
               <TouchableOpacity style={styles.cancelShareButton} onPress={handleCloseShareModal}>
-                <Text variant="body1" weight="bold" style={styles.cancelShareButtonText}>
+                <Text variant="body1" weight="semibold" style={styles.cancelShareButtonText}>
                   취소
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.confirmShareButton} onPress={handleShareConfirm}>
-                <Text variant="body1" weight="bold" style={styles.confirmShareButtonText}>
+                <Text variant="body1" weight="semibold" style={styles.confirmShareButtonText}>
                   공유
                 </Text>
               </TouchableOpacity>
@@ -1075,7 +1075,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardContainer: {
-    marginTop: 10,
+    marginTop: 2,
     marginBottom: 3,
   },
   gifticonCard: {
@@ -1409,6 +1409,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  modalContent: {
+    backgroundColor: 'white',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 20,
+  },
   modalTitle: {
     textAlign: 'center',
     marginBottom: 20,
@@ -1507,11 +1513,10 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   // 공유 모달 관련 스타일
-  shareModalContent: {
-    backgroundColor: 'white',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
+  shareModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
   },
   boxModalContent: {
     maxHeight: '70%',

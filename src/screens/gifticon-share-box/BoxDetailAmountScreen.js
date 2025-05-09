@@ -901,7 +901,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardContainer: {
-    marginTop: 10,
+    marginTop: 2,
     marginBottom: 3,
   },
   gifticonCard: {

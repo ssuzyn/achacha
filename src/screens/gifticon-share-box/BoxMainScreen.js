@@ -21,7 +21,7 @@ const DUMMY_DATA = {
   data: [
     {
       shareBoxName: '우리 가족',
-      hostName: '박쭈',
+      hostName: 'jjjjjuuuuu',
       gifticonCount: 0,
     },
     {
@@ -291,6 +291,7 @@ const BoxMainScreen = () => {
               onChangeText={setInviteCode}
               autoCapitalize="none"
               autoCorrect={false}
+              fontFamily="Pretendard-Regular"
             />
 
             <View style={styles.buttonContainer}>
@@ -338,6 +339,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginLeft: 5,
     letterSpacing: -0.5,
+    fontFamily: 'Pretendard-Bold',
   },
   headerButtons: {
     flexDirection: 'row',
@@ -351,6 +353,7 @@ const styles = StyleSheet.create({
   },
   joinButtonText: {
     color: '#56AEE9',
+    fontFamily: 'Pretendard-Medium',
   },
   createButton: {
     backgroundColor: '#56AEE9',
@@ -360,6 +363,7 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     color: '#FFFFFF',
+    fontFamily: 'Pretendard-Medium',
   },
   scrollContent: {
     paddingTop: 10,
@@ -399,6 +403,7 @@ const styles = StyleSheet.create({
     marginLeft: 1,
     color: '#000000',
     paddingRight: 5,
+    fontFamily: 'Pretendard-Bold',
   },
   roleContainer: {
     flexDirection: 'row',
@@ -412,7 +417,8 @@ const styles = StyleSheet.create({
     color: '#718096',
     fontSize: 13,
     letterSpacing: -0.2,
-    marginBottom: 0,
+    marginBottom: 2,
+    fontFamily: 'Pretendard-regular',
   },
   boxMiddleArea: {
     flexDirection: 'row',
@@ -447,6 +453,7 @@ const styles = StyleSheet.create({
   countText: {
     fontSize: 12,
     fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
   },
   // 모달 스타일
   modalOverlay: {
@@ -466,12 +473,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: 'Pretendard-Bold',
   },
   modalSubtitle: {
     color: '#718096',
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
+    fontFamily: 'Pretendard-Regular',
   },
   codeInput: {
     width: '100%',
@@ -482,6 +491,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 24,
     fontSize: 16,
+    fontFamily: 'Pretendard-Regular',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -498,6 +508,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#4A5568',
+    fontFamily: 'Pretendard-Medium',
   },
   confirmButton: {
     flex: 1,
@@ -509,6 +520,7 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     color: 'white',
+    fontFamily: 'Pretendard-Medium',
   },
 });
 
