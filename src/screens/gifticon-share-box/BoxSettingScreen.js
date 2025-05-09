@@ -3,20 +3,18 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, StatusBar, ScrollView, TextInput } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Button } from '../../components/ui';
+import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const navigation = useNavigation();
   const route = useRoute();
 
-  // 쉐어박스 ID와 이름 가져오기
-  const shareBoxId = route.params?.shareBoxId || 0;
+  // 쉐어박스 이름 가져오기
   const [shareBoxName, setShareBoxName] = useState(
     route.params?.shareBoxName || '오라차차 대성이네'
   );
@@ -104,29 +102,31 @@ const BoxSettingScreen = () => {
 
           {/* 멤버 입장 */}
           <View style={styles.section}>
-            <Text variant="body1" weight="medium" style={styles.sectionTitle}>
-              멤버 입장
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.switchContainer,
-                {
-                  backgroundColor: memberEntryEnabled ? '#C9EAFC' : 'white',
-                  borderColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
-                },
-              ]}
-              onPress={toggleMemberEntry}
-            >
-              <View
+            <View style={styles.rowContainer}>
+              <Text variant="body1" weight="medium">
+                멤버 입장
+              </Text>
+              <TouchableOpacity
                 style={[
-                  styles.switchThumb,
+                  styles.switchContainer,
                   {
-                    backgroundColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
-                    transform: [{ translateX: memberEntryEnabled ? 22 : 2 }],
+                    backgroundColor: memberEntryEnabled ? '#C9EAFC' : 'white',
+                    borderColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
                   },
                 ]}
-              />
-            </TouchableOpacity>
+                onPress={toggleMemberEntry}
+              >
+                <View
+                  style={[
+                    styles.switchThumb,
+                    {
+                      backgroundColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
+                      transform: [{ translateX: memberEntryEnabled ? 22 : 2 }],
+                    },
+                  ]}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* 쉐어박스 초대 코드 */}
@@ -134,7 +134,7 @@ const BoxSettingScreen = () => {
             <Text variant="body1" weight="medium" style={styles.sectionTitle}>
               쉐어박스 초대 코드
             </Text>
-            <View style={styles.codeContainer}>
+            <View style={[styles.codeContainer, { backgroundColor: '#F0F9FF' }]}>
               <Text variant="h3" weight="bold" style={styles.codeText}>
                 {shareBoxCode}
               </Text>
@@ -254,7 +254,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#F6F6F6',
     padding: 16,
     borderRadius: 8,
   },
@@ -289,6 +288,12 @@ const styles = StyleSheet.create({
   },
   leaveButtonText: {
     color: '#FF3B30',
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
   },
 });
 
