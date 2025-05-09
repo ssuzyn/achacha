@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   icon: {
-    color: '#666666', // $textSecondary 색상값
+    color: '#737373', // $textSecondary 색상값
     marginRight: ICON_MARGIN_RIGHT,
   },
   permissionTitle: {

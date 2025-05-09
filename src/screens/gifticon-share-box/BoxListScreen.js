@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#888',
+    color: '#737373',
   },
   gifticonItem: {
     width: '100%',

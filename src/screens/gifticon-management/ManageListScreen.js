@@ -467,7 +467,7 @@ const ManageListScreen = () => {
                       name="inventory-2"
                       type="material"
                       size={12}
-                      color="#888"
+                      color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
                     <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
@@ -561,7 +561,7 @@ const ManageListScreen = () => {
                         name="inventory-2"
                         type="material"
                         size={12}
-                        color="#888"
+                        color="#278CCC"
                         containerStyle={styles.shareBoxIcon}
                       />
                       <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
@@ -657,7 +657,7 @@ const ManageListScreen = () => {
                       name="inventory-2"
                       type="material"
                       size={12}
-                      color="#888"
+                      color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
                     <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
@@ -972,11 +972,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#888',
+    color: '#737373',
   },
   sharedByText: {
     fontSize: 12,
-    color: '#888',
+    color: '#737373',
     fontWeight: 'bold',
     fontStyle: 'normal',
   },

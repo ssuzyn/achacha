@@ -70,7 +70,7 @@ const FeatureCard = ({ title, iconName, count, style, onPress, ...props }) => {
       </Text>
       {iconName && count && (
         <View style={styles.shareBoxIcon}>
-          <Icon name={iconName} size={24} color="#888" />
+          <Icon name={iconName} size={24} color="#737373" />
           <Text variant="caption" style={styles.shareBoxCount}>
             {count}
           </Text>

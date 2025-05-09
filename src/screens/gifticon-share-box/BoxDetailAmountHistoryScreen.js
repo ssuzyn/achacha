@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
   },
   transactionDate: {
     fontSize: 14,
-    color: '#888',
+    color: '#737373',
     marginTop: 4,
   },
   amountText: {

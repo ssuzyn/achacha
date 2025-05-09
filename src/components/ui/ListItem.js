@@ -1,7 +1,6 @@
-import React, { useState, memo } from 'react';
+import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { ListItem as RNEListItem, Icon, ButtonGroup, CheckBox, Input } from 'react-native-elements';
-import { Shadow } from 'react-native-shadow-2';
 import useTheme from '../../hooks/useTheme';
 import Text from './Text';
 
@@ -451,7 +450,7 @@ const styles = StyleSheet.create({
   },
   notificationTime: {
     fontSize: 12,
-    color: '#888888',
+    color: '#737373',
     marginRight: 5,
   },
 });
