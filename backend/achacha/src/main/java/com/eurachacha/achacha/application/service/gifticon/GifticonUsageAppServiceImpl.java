@@ -1,10 +1,14 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonUsageAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.AmountGifticonUseRequestDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonUsageHistoriesResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonUsageHistoryResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
@@ -68,6 +72,32 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 		// 사용 기록 처리
 		usageHistoryRepository.saveUsageHistory(newUsageHistory);
+	}
+
+	@Override
+	public GifticonUsageHistoriesResponseDto getGifticonUsageHistorys(Integer gifticonId) {
+
+		Integer userId = 2; // 유저 로직 추가 시 변경 필요
+
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		// 삭제 여부 판단
+		gifticonDomainService.isDeleted(findGifticon);
+
+		// 조회 권한 검증
+		validateGifticonAccess(findGifticon, userId);
+
+		List<GifticonUsageHistoryResponseDto> findUsageHistories = usageHistoryRepository.findUsageHistories(userId,
+			gifticonId);
+
+		return GifticonUsageHistoriesResponseDto.builder()
+			.gifticonId(findGifticon.getId())
+			.gifticonName(findGifticon.getName())
+			.gifticonType(findGifticon.getType())
+			.gifticonOriginalAmount(findGifticon.getOriginalAmount())
+			.gifticonRemainingAmount(findGifticon.getRemainingAmount())
+			.usageHistory(findUsageHistories)
+			.build();
 	}
 
 	private void validateGifticonAccess(Gifticon findGifticon, Integer userId) {
