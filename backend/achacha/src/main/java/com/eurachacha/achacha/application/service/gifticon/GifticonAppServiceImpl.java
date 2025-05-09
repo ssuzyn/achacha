@@ -13,6 +13,7 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.request.Giftic
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
@@ -243,24 +244,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 *  2. 사용 여부 판단
 		 *  3. 유효기간 여부 판단
 		 */
-		gifticonDomainService.validateGifticonAvailability(userId, findGifticon);
+		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
-		// 공유되지 않은 기프티콘인 경우 소유자 판단
-		if (findGifticon.getSharebox() == null) {
-			boolean isOwner = gifticonDomainService.hasAccess(userId, findGifticon.getUser().getId());
-			if (!isOwner) {
-				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-			}
-		}
-
-		// 공유된 기프티콘인 경우 참여 여부 판단
-		if (findGifticon.getSharebox() != null) {
-			boolean hasParticipation = participationRepository.checkParticipation(userId,
-				findGifticon.getSharebox().getId());
-			if (!hasParticipation) {
-				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-			}
-		}
+		validateGifticonAccess(findGifticon, userId);
 
 		// 기프티콘 스코프 결정에 따른 값
 		String scope = findGifticon.getSharebox() == null ? "MY_BOX" : "SHARE_BOX";
@@ -388,6 +374,54 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.build();
 	}
 
+	@Override
+	public GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
+
+		/*
+		 * 사용가능 기프티콘 검증 로직
+		 *  1. 삭제 여부 판단
+		 *  2. 사용 여부 판단
+		 *  3. 유효기간 여부 판단
+		 */
+		gifticonDomainService.validateGifticonAvailability(findGifticon);
+
+		validateGifticonAccess(findGifticon, userId);
+
+		return GifticonBarcodeResponseDto.builder()
+			.gifticonBarcodeNumber(findGifticon.getBarcode())
+			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
+			.build();
+	}
+
+	@Override
+	public GifticonBarcodeResponseDto getUsedGifticonBarcode(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
+
+		// 삭제, 사용 여부 검토
+		gifticonDomainService.validateGifticonBarcodeUsage(findGifticon);
+
+		validateGifticonAccess(findGifticon, userId);
+
+		// 해당 기프티콘에 대한 사용 내역 조회
+		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		if (findUsageHistory == null) {
+			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
+		}
+
+		return GifticonBarcodeResponseDto.builder()
+			.gifticonBarcodeNumber(findGifticon.getBarcode())
+			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
+			.build();
+	}
+
 	private Integer findBrandId(String brandName) {
 		if (brandName == null || brandName.trim().isEmpty()) {
 			return null;
@@ -436,5 +470,24 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
 
 		return fileStoragePort.generateFileUrl(file.getPath(), fileType);
+	}
+
+	private void validateGifticonAccess(Gifticon findGifticon, Integer userId) {
+		// 공유되지 않은 기프티콘인 경우 소유자 판단
+		if (findGifticon.getSharebox() == null) {
+			boolean isOwner = gifticonDomainService.hasAccess(userId, findGifticon.getUser().getId());
+			if (!isOwner) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
+
+		// 공유된 기프티콘인 경우 참여 여부 판단
+		if (findGifticon.getSharebox() != null) {
+			boolean hasParticipation = participationRepository.checkParticipation(userId,
+				findGifticon.getSharebox().getId());
+			if (!hasParticipation) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
 	}
 }
