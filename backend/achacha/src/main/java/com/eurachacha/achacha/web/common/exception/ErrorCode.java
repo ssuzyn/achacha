@@ -62,7 +62,12 @@ public enum ErrorCode {
 
 	// ShareBox 관련 에러 코드
 	SHAREBOX_NOT_FOUND(HttpStatus.NOT_FOUND, "SHAREBOX_001", "쉐어박스를 찾을 수 없습니다."),
-	INVITE_CODE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SHAREBOX_002", "쉐어박스 생성에 실패했습니다.");
+	INVITE_CODE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SHAREBOX_002", "쉐어박스 생성에 실패했습니다."),
+	INVALID_INVITE_CODE(HttpStatus.BAD_REQUEST, "SHAREBOX_003", "유효하지 않은 초대 코드입니다."),
+	SHAREBOX_PARTICIPATION_DISABLED(HttpStatus.FORBIDDEN, "SHAREBOX_004", "참여가 비활성화된 쉐어박스입니다."),
+	ALREADY_PARTICIPATING_SHAREBOX(HttpStatus.CONFLICT, "SHAREBOX_005", "이미 참여 중인 쉐어박스입니다."),
+	SHAREBOX_MAX_PARTICIPANTS_REACHED(HttpStatus.FORBIDDEN, "SHAREBOX_006", "최대 참여자 수(10명)에 도달했습니다."),
+	INVALID_SHAREBOX_NAME(HttpStatus.BAD_REQUEST, "SHAREBOX_007", "유효하지 않은 쉐어박스 이름입니다.");
 
 	// http 상태 코드
 	private final HttpStatus status;

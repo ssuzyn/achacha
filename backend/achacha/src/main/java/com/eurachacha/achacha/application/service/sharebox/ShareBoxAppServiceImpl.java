@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
@@ -15,6 +16,7 @@ import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.user.User;
+import com.eurachacha.achacha.domain.service.sharebox.ShareBoxDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -26,11 +28,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Transactional(readOnly = true)
 public class ShareBoxAppServiceImpl implements ShareBoxAppService {
-
-	private static final String ALLOWED_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	private static final int INVITE_CODE_LENGTH = 10;
 	private static final int MAX_ATTEMPTS = 3;
 
+	private final ShareBoxDomainService shareBoxDomainService;
 	private final ShareBoxRepository shareBoxRepository;
 	private final UserRepository userRepository;
 	private final ParticipationRepository participationRepository;
@@ -39,6 +39,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	@Override
 	public ShareBoxCreateResponseDto createShareBox(ShareBoxCreateRequestDto requestDto) {
 		log.info("쉐어박스 생성 시작 - 이름: {}", requestDto.getShareBoxName());
+
+		// 쉐어박스 이름 유효성 검증 - 도메인 서비스 활용
+		shareBoxDomainService.validateShareBoxName(requestDto.getShareBoxName());
 
 		// 현재 사용자 조회 (인증 구현 시 변경 필요)
 		Integer userId = 1; // 인증 구현 시 변경 필요
@@ -68,19 +71,61 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 			.build();
 	}
 
+	@Transactional
+	@Override
+	public void joinShareBox(Integer shareBoxId, ShareBoxJoinRequestDto requestDto) {
+		log.info("쉐어박스 참여 시작 - 쉐어박스 ID: {}, 초대 코드: {}", shareBoxId, requestDto.getShareBoxInviteCode());
+
+		// 현재 사용자 조회 (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+		User user = userRepository.findById(userId);
+
+		// 쉐어박스 조회
+		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
+
+		// 초대 코드 검증
+		shareBoxDomainService.validateInviteCode(shareBox, requestDto.getShareBoxInviteCode());
+
+		// 참여 가능 여부 검증
+		shareBoxDomainService.validateParticipationAllowed(shareBox);
+
+		// 이미 참여 중인지 확인
+		if (participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.ALREADY_PARTICIPATING_SHAREBOX);
+		}
+
+		// 최대 참여자 수 확인
+		int currentParticipants = participationRepository.countByShareboxId(shareBoxId);
+		shareBoxDomainService.validateParticipantCount(currentParticipants);
+
+		// 참여 정보 저장
+		Participation participation = Participation.builder()
+			.user(user)
+			.sharebox(shareBox)
+			.build();
+
+		participationRepository.save(participation);
+
+		log.info("쉐어박스 참여 완료 - 사용자 ID: {}, 쉐어박스 ID: {}", userId, shareBoxId);
+	}
+
 	// 고유한 초대 코드 생성 메서드
 	private String generateUniqueInviteCode() {
 		SecureRandom random = new SecureRandom();
 		String inviteCode;
 		int attempts = 0;
 
+		// 도메인 서비스에서 정의한 규칙 활용
+		String allowedCharacters = shareBoxDomainService.getAllowedCharacters();
+		int codeLength = shareBoxDomainService.getRecommendedInviteCodeLength();
+
 		do {
 			if (attempts >= MAX_ATTEMPTS) {
 				throw new CustomException(ErrorCode.INVITE_CODE_GENERATION_FAILED);
 			}
 
-			inviteCode = random.ints(INVITE_CODE_LENGTH, 0, ALLOWED_CHARACTERS.length())
-				.mapToObj(i -> String.valueOf(ALLOWED_CHARACTERS.charAt(i)))
+			inviteCode = random.ints(codeLength, 0, allowedCharacters.length())
+				.mapToObj(i -> String.valueOf(allowedCharacters.charAt(i)))
 				.collect(Collectors.joining());
 
 			attempts++;

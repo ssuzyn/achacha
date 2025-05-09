@@ -23,4 +23,8 @@ public class ParticipationPersistenceAdapter implements ParticipationRepository 
 		return participationJpaRepository.save(participation);
 	}
 
+	@Override
+	public int countByShareboxId(Integer shareBoxId) {
+		return participationJpaRepository.countByShareboxId(shareBoxId);
+	}
 }

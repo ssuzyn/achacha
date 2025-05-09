@@ -9,4 +9,5 @@ import com.eurachacha.achacha.domain.model.sharebox.Participation;
 public interface ParticipationJpaRepository extends JpaRepository<Participation, Integer> {
 	boolean existsByUserIdAndShareboxId(Integer userId, Integer shareBoxId);
 
+	int countByShareboxId(Integer shareBoxId);
 }
