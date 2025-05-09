@@ -29,7 +29,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 	private static final String ALLOWED_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	private static final int INVITE_CODE_LENGTH = 10;
-	private static final int MAX_ATTEMPTS = 10;
+	private static final int MAX_ATTEMPTS = 3;
 
 	private final ShareBoxRepository shareBoxRepository;
 	private final UserRepository userRepository;
@@ -58,7 +58,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		// 저장소를 통한 영속화
 		ShareBox savedShareBox = shareBoxRepository.save(shareBox);
 
-		// 쉐어박스 생성자를 참여자로 추가 (이 부분이 추가됨)
+		// 쉐어박스 생성자를 참여자로 추가
 		saveParticipation(user, savedShareBox);
 
 		log.info("쉐어박스 생성 완료 (ID: {}, 초대 코드: {})", savedShareBox.getId(), savedShareBox.getInviteCode());
