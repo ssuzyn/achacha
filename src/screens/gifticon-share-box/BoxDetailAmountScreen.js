@@ -624,10 +624,13 @@ const BoxDetailAmountScreen = () => {
               {isUsing ? (
                 // 사용 모드일 때 - 금액입력/취소 버튼을 두 줄로 표시
                 <>
-                  <TouchableOpacity onPress={handleAmountInput} style={styles.useButton}>
-                    <Text style={styles.useButtonText}>금액입력</Text>
+                  <TouchableOpacity
+                    onPress={handleAmountInput}
+                    style={[styles.modalConfirmButton, { marginBottom: 10 }]}
+                  >
+                    <Text style={styles.confirmButtonText}>금액입력</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+                  <TouchableOpacity onPress={handleCancel} style={styles.modalCancelButton}>
                     <Text style={styles.cancelButtonText}>취소</Text>
                   </TouchableOpacity>
                 </>
@@ -897,6 +900,7 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     marginTop: 16,
+    padding: 16,
   },
   brandText: {
     fontSize: 16,
@@ -1016,22 +1020,17 @@ const styles = StyleSheet.create({
   },
   transactionsContainer: {
     marginTop: 5,
-    backgroundColor: '#F9F9F9',
-    borderRadius: 8,
-    padding: 16,
   },
   transactionItem: {
+    backgroundColor: '#F9F9F9',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    padding: 10,
   },
   transactionInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
     flex: 1,
   },
   transactionUser: {
@@ -1042,7 +1041,7 @@ const styles = StyleSheet.create({
   transactionDate: {
     fontSize: 14,
     color: '#888',
-    marginLeft: 8,
+    marginTop: 4,
   },
   transactionAmount: {
     alignItems: 'flex-end',
@@ -1052,13 +1051,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   bottomPadding: {
-    height: 32,
+    height: 60,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContainer: {
     width: 320,
@@ -1126,14 +1125,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cancelButton: {
-    width: '100%',
+    flex: 1,
+    backgroundColor: '#F2F2F2',
     borderRadius: 8,
-    height: 56,
-    backgroundColor: '#E5F4FE',
-    justifyContent: 'center',
+    padding: 15,
     alignItems: 'center',
-    flexDirection: 'row',
-    marginBottom: 10,
+    marginRight: 8,
   },
   confirmButton: {
     flex: 1,
@@ -1144,9 +1141,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   cancelButtonText: {
-    color: '#278CCC',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '500',
+    color: '#278CCC',
   },
   confirmButtonText: {
     fontSize: 16,
@@ -1275,6 +1272,26 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     height: 56,
     backgroundColor: '#EEEEEE',
+  },
+  modalConfirmButton: {
+    flex: 1,
+    marginRight: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#56AEE9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  modalCancelButton: {
+    flex: 1,
+    marginLeft: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#E5F4FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
 });
 

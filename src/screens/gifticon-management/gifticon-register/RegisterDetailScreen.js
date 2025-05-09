@@ -633,7 +633,7 @@ const RegisterDetailScreen = () => {
               </>
             )}
 
-            <Text variant="h5" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
+            <Text variant="h4" weight="bold" style={[styles.modalSubtitle, styles.sectionTitle]}>
               등록 위치
             </Text>
 
@@ -1015,7 +1015,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   boxSection: {
-    marginBottom: 20,
+    marginBottom: 10,
   },
   boxRow: {
     marginBottom: 12,
