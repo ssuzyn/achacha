@@ -86,4 +86,12 @@ public class Gifticon extends TimeStampEntity {
 			this.isUsed = true;
 		}
 	}
+
+	public void updateRemainingAmount(Integer amount) {
+		this.remainingAmount = amount;
+
+		if (this.remainingAmount == 0) {
+			this.isUsed = true;
+		}
+	}
 }
