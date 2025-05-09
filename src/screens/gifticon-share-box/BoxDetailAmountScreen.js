@@ -176,7 +176,7 @@ const BoxDetailAmountScreen = () => {
             gifticonId: id || 124,
             gifticonName: 'APP전용 e카드 3만원 교환권',
             gifticonType: 'AMOUNT',
-            gifticonExpiryDate: '2025-06-15',
+            gifticonExpiryDate: '2025-01-31',
             brandId: 46,
             brandName: '스타벅스',
             scope: scope,
@@ -229,11 +229,17 @@ const BoxDetailAmountScreen = () => {
   // D-day 계산 함수
   const calculateDaysLeft = expiryDate => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // 현재 날짜의 시간을 00:00:00으로 설정
     const expiry = new Date(expiryDate);
+    expiry.setHours(0, 0, 0, 0); // 만료 날짜의 시간을 00:00:00으로 설정
+
     const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
     if (diffDays < 0) {
       return '만료됨';
+    } else if (diffDays === 0) {
+      return 'D-day';
     }
     return diffDays;
   };
@@ -530,24 +536,28 @@ const BoxDetailAmountScreen = () => {
                     <View
                       style={[
                         styles.ddayButtonContainer,
-                        typeof dDay === 'string'
+                        typeof dDay === 'string' && dDay === '만료됨'
                           ? styles.expiredButtonContainer
-                          : dDay <= 7
+                          : dDay <= 7 && dDay !== 'D-day'
                             ? styles.urgentDDayContainer
-                            : styles.normalDDayContainer,
+                            : dDay === 'D-day'
+                              ? styles.urgentDDayContainer
+                              : styles.normalDDayContainer,
                       ]}
                     >
                       <Text
                         style={[
                           styles.ddayButtonText,
-                          typeof dDay === 'string'
+                          typeof dDay === 'string' && dDay === '만료됨'
                             ? styles.expiredButtonText
-                            : dDay <= 7
+                            : dDay <= 7 && dDay !== 'D-day'
                               ? styles.urgentDDayText
-                              : styles.normalDDayText,
+                              : dDay === 'D-day'
+                                ? styles.urgentDDayText
+                                : styles.normalDDayText,
                         ]}
                       >
-                        {typeof dDay === 'string' ? dDay : `D-${dDay}`}
+                        {typeof dDay === 'string' ? dDay : dDay === 'D-day' ? 'D-day' : `D-${dDay}`}
                       </Text>
                     </View>
                   )}
@@ -692,20 +702,41 @@ const BoxDetailAmountScreen = () => {
                 // 일반 모드일 때 - 상단 버튼 영역 (사용하기/사용내역)
                 <>
                   <View style={styles.buttonRow}>
-                    <TouchableOpacity
-                      onPress={handleUse}
-                      style={styles.useButton}
-                      disabled={isExpired || gifticonData.gifticonRemainingAmount <= 0}
-                    >
-                      <Text style={styles.useButtonText}>사용하기</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleHistory} style={styles.historyButton}>
-                      <Text style={styles.historyButtonText}>사용내역</Text>
-                    </TouchableOpacity>
+                    {isExpired ? (
+                      // 만료된 기프티콘은 사용완료 버튼만 표시
+                      <TouchableOpacity
+                        onPress={handleUse}
+                        style={{
+                          width: '100%',
+                          borderRadius: 8,
+                          height: 56,
+                          backgroundColor: '#56AEE9',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                        }}
+                      >
+                        <Text style={styles.useButtonText}>사용완료</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      // 만료되지 않은 경우 사용하기 + 사용내역 버튼 표시
+                      <>
+                        <TouchableOpacity
+                          onPress={handleUse}
+                          style={styles.useButton}
+                          disabled={gifticonData.gifticonRemainingAmount <= 0}
+                        >
+                          <Text style={styles.useButtonText}>사용하기</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleHistory} style={styles.historyButton}>
+                          <Text style={styles.historyButtonText}>사용내역</Text>
+                        </TouchableOpacity>
+                      </>
+                    )}
                   </View>
 
-                  {scope === 'MY_BOX' && (
-                    // 마이박스일 때만 공유하기/선물하기 버튼 표시
+                  {scope === 'MY_BOX' && !isExpired && (
+                    // 마이박스이고 만료되지 않은 경우만 공유하기/선물하기 버튼 표시
                     <View style={styles.buttonRow}>
                       <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
                         <Icon name="inventory-2" type="material" size={22} color="#000000" />
@@ -1231,7 +1262,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(153, 153, 153, 0.8)',
   },
   expiredButtonText: {
-    color: '#FFFFFF',
+    color: '#737373',
   },
   urgentDDayContainer: {
     backgroundColor: 'rgba(234, 84, 85, 0.2)',

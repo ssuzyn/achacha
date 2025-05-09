@@ -146,7 +146,7 @@ const DetailProductScreen = () => {
             gifticonId: id,
             gifticonName: '아이스 카페 아메리카노 T',
             gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-05-10',
+            gifticonExpiryDate: '2025-01-31',
             brandId: 45,
             brandName: '스타벅스',
             scope: scope, // 파라미터에서 받은 scope 사용
@@ -197,11 +197,17 @@ const DetailProductScreen = () => {
   // D-day 계산 함수
   const calculateDaysLeft = expiryDate => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // 현재 날짜의 시간을 00:00:00으로 설정
     const expiry = new Date(expiryDate);
+    expiry.setHours(0, 0, 0, 0); // 만료 날짜의 시간을 00:00:00으로 설정
+
     const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
     if (diffDays < 0) {
       return '만료됨';
+    } else if (diffDays === 0) {
+      return 'D-day';
     }
     return diffDays;
   };
@@ -484,26 +490,36 @@ const DetailProductScreen = () => {
                     <View
                       style={[
                         styles.ddayButtonContainer,
-                        typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                        typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string' &&
+                        calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨'
                           ? styles.expiredButtonContainer
-                          : calculateDaysLeft(gifticonData.gifticonExpiryDate) <= 7
+                          : calculateDaysLeft(gifticonData.gifticonExpiryDate) <= 7 &&
+                              calculateDaysLeft(gifticonData.gifticonExpiryDate) !== 'D-day'
                             ? styles.urgentDDayContainer
-                            : styles.normalDDayContainer,
+                            : calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'D-day'
+                              ? styles.urgentDDayContainer
+                              : styles.normalDDayContainer,
                       ]}
                     >
                       <Text
                         style={[
                           styles.ddayButtonText,
-                          typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
+                          typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string' &&
+                          calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨'
                             ? styles.expiredButtonText
-                            : calculateDaysLeft(gifticonData.gifticonExpiryDate) <= 7
+                            : calculateDaysLeft(gifticonData.gifticonExpiryDate) <= 7 &&
+                                calculateDaysLeft(gifticonData.gifticonExpiryDate) !== 'D-day'
                               ? styles.urgentDDayText
-                              : styles.normalDDayText,
+                              : calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'D-day'
+                                ? styles.urgentDDayText
+                                : styles.normalDDayText,
                         ]}
                       >
                         {typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string'
                           ? calculateDaysLeft(gifticonData.gifticonExpiryDate)
-                          : `D-${calculateDaysLeft(gifticonData.gifticonExpiryDate)}`}
+                          : calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'D-day'
+                            ? 'D-day'
+                            : `D-${calculateDaysLeft(gifticonData.gifticonExpiryDate)}`}
                       </Text>
                     </View>
                   )}
@@ -560,7 +576,33 @@ const DetailProductScreen = () => {
           {!isUsed && (
             <View style={styles.buttonContainer}>
               {/* 사용하기/사용완료 버튼 */}
-              {isUsing ? (
+              {!isUsing ? (
+                // 일반 모드일 때
+                <TouchableOpacity
+                  onPress={handleUse}
+                  style={{
+                    width: '100%',
+                    borderRadius: 8,
+                    height: 56,
+                    backgroundColor: '#56AEE9',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    flexDirection: 'row',
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: '#FFFFFF',
+                      fontSize: 16,
+                      fontWeight: 'semibold',
+                    }}
+                  >
+                    {calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨'
+                      ? '사용완료'
+                      : '사용하기'}
+                  </Text>
+                </TouchableOpacity>
+              ) : (
                 // 사용 모드일 때 - 사용완료 버튼 + 취소 버튼
                 <>
                   <TouchableOpacity
@@ -580,7 +622,7 @@ const DetailProductScreen = () => {
                       style={{
                         color: '#FFFFFF',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       사용완료
@@ -602,94 +644,72 @@ const DetailProductScreen = () => {
                       style={{
                         color: '#278CCC',
                         fontSize: 16,
-                        fontWeight: 'bold',
+                        fontWeight: 'semibold',
                       }}
                     >
                       취소
                     </Text>
                   </TouchableOpacity>
                 </>
-              ) : (
-                // 일반 모드일 때
-                <TouchableOpacity
-                  onPress={handleUse}
-                  style={{
-                    width: '100%',
-                    borderRadius: 8,
-                    height: 56,
-                    backgroundColor: '#56AEE9',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <Text
-                    style={{
-                      color: '#FFFFFF',
-                      fontSize: 16,
-                      fontWeight: 'semibold',
-                    }}
-                  >
-                    사용하기
-                  </Text>
-                </TouchableOpacity>
               )}
 
-              {!isUsing && scope === 'MY_BOX' && (
-                // 마이박스일 때만 공유하기, 선물하기 버튼 표시
-                <View style={[styles.buttonRow, { marginTop: 10 }]}>
-                  <TouchableOpacity
-                    onPress={handleShare}
-                    style={{
-                      flex: 1,
-                      marginRight: 4,
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#EEEEEE',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                    }}
-                  >
-                    <Icon name="inventory-2" type="material" size={22} color="#000000" />
-                    <Text
+              {!isUsing &&
+                scope === 'MY_BOX' &&
+                calculateDaysLeft(gifticonData.gifticonExpiryDate) !== '만료됨' && (
+                  // 만료되지 않은 마이박스 기프티콘에만 공유하기, 선물하기 버튼 표시
+                  <View style={[styles.buttonRow, { marginTop: 10 }]}>
+                    <TouchableOpacity
+                      onPress={handleShare}
                       style={{
-                        marginLeft: 8,
-                        color: '#000000',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
+                        flex: 1,
+                        marginRight: 4,
+                        borderRadius: 8,
+                        height: 56,
+                        backgroundColor: '#EEEEEE',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'row',
                       }}
                     >
-                      공유하기
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleGift}
-                    style={{
-                      flex: 1,
-                      marginLeft: 4,
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#EEEEEE',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                    }}
-                  >
-                    <Icon name="card-giftcard" type="material" size={22} color="#000000" />
-                    <Text
+                      <Icon name="inventory-2" type="material" size={22} color="#000000" />
+                      <Text
+                        style={{
+                          marginLeft: 8,
+                          color: '#000000',
+                          fontSize: 16,
+                          fontWeight: 'semibold',
+                        }}
+                      >
+                        공유하기
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleGift}
                       style={{
-                        marginLeft: 8,
-                        color: '#000000',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
+                        flex: 1,
+                        marginLeft: 4,
+                        borderRadius: 8,
+                        height: 56,
+                        backgroundColor: '#EEEEEE',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: 'row',
                       }}
                     >
-                      선물하기
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
+                      <Icon name="card-giftcard" type="material" size={22} color="#000000" />
+                      <Text
+                        style={{
+                          marginLeft: 8,
+                          color: '#000000',
+                          fontSize: 16,
+                          fontWeight: 'semibold',
+                        }}
+                      >
+                        선물하기
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
             </View>
           )}
         </View>
@@ -989,7 +1009,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(153, 153, 153, 0.8)',
   },
   expiredButtonText: {
-    color: '#FFFFFF',
+    color: '#737373',
   },
   urgentDDayContainer: {
     backgroundColor: 'rgba(234, 84, 85, 0.2)',

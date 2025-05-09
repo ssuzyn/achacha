@@ -41,7 +41,7 @@ const DUMMY_GIFTICONS = [
     gifticonId: 123,
     gifticonName: '아이스 카페 아메리카노 T',
     gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-12-31',
+    gifticonExpiryDate: '2025-01-31',
     brandId: 45,
     brandName: '스타벅스',
     scope: 'MY_BOX',
@@ -71,7 +71,7 @@ const DUMMY_GIFTICONS = [
     gifticonId: 125,
     gifticonName: 'APP전용 e카드 3만원 교환권',
     gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-06-15',
+    gifticonExpiryDate: '2025-09-12',
     brandId: 45,
     brandName: '스타벅스',
     scope: 'SHARE_BOX',
@@ -153,7 +153,7 @@ const DUMMY_GIFTICONS = [
     gifticonId: 131,
     gifticonName: '아이스 카페 아메리카노 T',
     gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-07-20',
+    gifticonExpiryDate: '2025-01-31',
     brandId: 45,
     brandName: '스타벅스',
     scope: 'SHARE_BOX',
@@ -311,10 +311,19 @@ const ManageListScreen = () => {
   // 날짜 차이 계산 함수
   const calculateDaysLeft = expiryDate => {
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // 현재 날짜의 시간을 00:00:00으로 설정
     const expiry = new Date(expiryDate);
+    expiry.setHours(0, 0, 0, 0); // 만료 날짜의 시간을 00:00:00으로 설정
+
     const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
+
+    if (diffDays < 0) {
+      return '만료됨';
+    } else if (diffDays === 0) {
+      return 'D-day';
+    }
+    return diffDays;
   };
 
   // 날짜 포맷 함수
@@ -430,11 +439,13 @@ const ManageListScreen = () => {
   // 기프티콘 아이템 렌더링
   const renderGifticonItem = item => {
     const daysLeft = item.scope === 'USED' ? null : calculateDaysLeft(item.gifticonExpiryDate);
-    const isUrgent = daysLeft !== null && daysLeft <= 7; // 7일 이하면 긴급(빨간색)
+    const isUrgent = daysLeft !== null && typeof daysLeft === 'number' && daysLeft <= 7; // 7일 이하면 긴급(빨간색)
+    const isDDay = daysLeft !== null && daysLeft === 'D-day'; // D-day인 경우
+    const isExpired = daysLeft !== null && daysLeft === '만료됨'; // 만료된 경우
     const isSharedByOther = item.scope === 'SHARE_BOX' && item.userId !== currentUserId;
 
-    // 사용 완료된 기프티콘은 스와이프 불가능
-    if (item.scope === 'USED') {
+    // 만료된 기프티콘은 Swipeable 기능 비활성화
+    if (isExpired) {
       return (
         <TouchableOpacity
           key={item.gifticonId}
@@ -447,10 +458,13 @@ const ManageListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={styles.gifticonContent}>
-              {/* 이미지 영역 */}
+            <View style={[styles.gifticonContent, { opacity: 0.7 }]}>
+              {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
-                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                <Image
+                  source={item.thumbnailPath}
+                  style={[styles.gifticonImage, { opacity: 0.7 }]}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -460,7 +474,7 @@ const ManageListScreen = () => {
                   {item.gifticonName}
                 </Text>
 
-                {/* 쉐어박스 정보 다시 추가 */}
+                {/* 쉐어박스 정보 */}
                 {item.scope === 'SHARE_BOX' && item.shareBoxName && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
@@ -479,25 +493,16 @@ const ManageListScreen = () => {
                 )}
               </View>
 
-              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
+              {/* 공유 북마크 아이콘 */}
               {isSharedByOther && (
                 <View style={styles.bookmarkContainer}>
                   <Icon name="bookmark" type="material" size={28} color="#278CCC" />
                 </View>
               )}
 
-              {/* D-day 또는 사용일자 태그 */}
-              <View
-                style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
-              >
-                <Text
-                  style={[
-                    styles.dDayText,
-                    isUrgent ? styles.urgentDDayText : styles.normalDDayText,
-                  ]}
-                >
-                  {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
-                </Text>
+              {/* 만료 태그 */}
+              <View style={[styles.dDayContainer, styles.expiredDDay]}>
+                <Text style={[styles.dDayText, styles.expiredDDayText]}>{daysLeft}</Text>
               </View>
             </View>
           </Shadow>
@@ -582,15 +587,30 @@ const ManageListScreen = () => {
 
                 {/* D-day 태그 */}
                 <View
-                  style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
+                  style={[
+                    styles.dDayContainer,
+                    isExpired
+                      ? styles.expiredDDay
+                      : isUrgent || isDDay
+                        ? styles.urgentDDay
+                        : styles.normalDDay,
+                  ]}
                 >
                   <Text
                     style={[
                       styles.dDayText,
-                      isUrgent ? styles.urgentDDayText : styles.normalDDayText,
+                      isExpired
+                        ? styles.expiredDDayText
+                        : isUrgent || isDDay
+                          ? styles.urgentDDayText
+                          : styles.normalDDayText,
                     ]}
                   >
-                    {`D-${daysLeft}`}
+                    {item.scope === 'USED'
+                      ? formatDate(item.usedAt)
+                      : typeof daysLeft === 'string'
+                        ? daysLeft
+                        : `D-${daysLeft}`}
                   </Text>
                 </View>
               </View>
@@ -678,15 +698,30 @@ const ManageListScreen = () => {
 
               {/* D-day 또는 사용일자 태그 */}
               <View
-                style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
+                style={[
+                  styles.dDayContainer,
+                  isExpired
+                    ? styles.expiredDDay
+                    : isUrgent || isDDay
+                      ? styles.urgentDDay
+                      : styles.normalDDay,
+                ]}
               >
                 <Text
                   style={[
                     styles.dDayText,
-                    isUrgent ? styles.urgentDDayText : styles.normalDDayText,
+                    isExpired
+                      ? styles.expiredDDayText
+                      : isUrgent || isDDay
+                        ? styles.urgentDDayText
+                        : styles.normalDDayText,
                   ]}
                 >
-                  {`D-${daysLeft}`}
+                  {item.scope === 'USED'
+                    ? formatDate(item.usedAt)
+                    : typeof daysLeft === 'string'
+                      ? daysLeft
+                      : `D-${daysLeft}`}
                 </Text>
               </View>
             </View>
@@ -1032,6 +1067,13 @@ const styles = StyleSheet.create({
     top: -2,
     left: 12,
     zIndex: 10,
+  },
+  expiredDDay: {
+    backgroundColor: 'rgba(153, 153, 153, 0.15)',
+  },
+  expiredDDayText: {
+    color: '#737373',
+    fontWeight: 'bold',
   },
 });
 
