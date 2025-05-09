@@ -264,11 +264,11 @@ const BoxDetailAmountScreen = () => {
       // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
       // 예: await api.updateGifticonStatus(gifticonId, 'USED');
 
-      // BoxListScreen으로 이동하면서 사용완료 탭으로 설정
+      // BoxListScreen으로 이동하면서 사용가능 탭으로 설정
       navigation.navigate('BoxList', {
         shareBoxId: gifticonData.shareBoxId,
         shareBoxName: gifticonData.shareBoxName,
-        initialTab: 'used', // 사용완료 탭으로 이동
+        initialTab: 'available', // 사용가능 탭으로 이동
         refresh: true,
       });
     } else {
@@ -310,7 +310,7 @@ const BoxDetailAmountScreen = () => {
     // 사용 모드 종료
     setIsUsing(false);
 
-    // BoxListScreen으로 이동하면서 사용완료 탭으로 설정
+    // BoxListScreen으로 이동하면서 사용가능 탭으로 설정
     navigation.navigate('BoxDetailAmountHistoryScreen', {
       id: gifticonId,
       usedAmount: amount,
@@ -319,7 +319,7 @@ const BoxDetailAmountScreen = () => {
         navigation.navigate('BoxList', {
           shareBoxId: gifticonData.shareBoxId,
           shareBoxName: gifticonData.shareBoxName,
-          initialTab: 'used',
+          initialTab: 'available',
           refresh: true,
         });
       },
