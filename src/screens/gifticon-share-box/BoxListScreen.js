@@ -182,7 +182,6 @@ const BoxListScreen = () => {
     }
 
     // shareBoxId로 데이터 불러오기 (실제 구현 시)
-    console.log(`Loading data for shareBoxId: ${shareBoxId}, user: ${currentUserId}`);
   }, [route.params?.initialTab, shareBoxId, currentUserId]);
 
   // 카테고리 변경 시 정렬 옵션 초기화
@@ -270,6 +269,14 @@ const BoxListScreen = () => {
   // 필터 선택 핸들러
   const handleSelectFilter = filterId => {
     setSelectedFilter(filterId);
+  };
+
+  // 설정 화면으로 이동하는 핸들러 추가
+  const handleSettingsPress = () => {
+    navigation.navigate('BoxSetting', {
+      shareBoxId,
+      shareBoxName,
+    });
   };
 
   // 뒤로가기 핸들러
@@ -664,14 +671,6 @@ const BoxListScreen = () => {
         </RectButton>
       </Animated.View>
     );
-  };
-
-  // 설정 화면으로 이동하는 핸들러 추가
-  const handleSettingsPress = () => {
-    navigation.navigate('BoxSetting', {
-      shareBoxId,
-      shareBoxName,
-    });
   };
 
   return (

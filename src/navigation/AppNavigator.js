@@ -22,6 +22,7 @@ import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
 import BoxListScreen from '../screens/gifticon-share-box/BoxListScreen';
 import BoxDetailProductScreen from '../screens/gifticon-share-box/BoxDetailProductScreen';
 import BoxDetailAmountScreen from '../screens/gifticon-share-box/BoxDetailAmountScreen';
+import BoxSettingScreen from '../screens/gifticon-share-box/BoxSettingScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -144,6 +145,14 @@ const AppNavigator = () => {
       <Stack.Screen
         name="BoxDetailAmount"
         component={BoxDetailAmountScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxSetting"
+        component={BoxSettingScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,
