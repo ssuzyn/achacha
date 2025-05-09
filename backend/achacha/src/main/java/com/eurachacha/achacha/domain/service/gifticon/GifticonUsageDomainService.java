@@ -17,4 +17,6 @@ public interface GifticonUsageDomainService {
 		Gifticon findGifticon);
 
 	int updateUsageHistory(Integer userId, Integer newAmount, Gifticon findGifticon, UsageHistory findUsageHistory);
+
+	void validateSufficientBalance(int remainingAmount, int requiredAmount);
 }

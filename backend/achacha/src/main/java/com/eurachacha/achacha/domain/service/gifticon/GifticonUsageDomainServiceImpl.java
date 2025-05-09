@@ -40,25 +40,19 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	@Override // 기프티콘 잔액 계산 (잔액이 부족한 경우 예외 발생)
 	public int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon) {
-		int findUsageHistoryUsageAmount = findUsageHistory.getUsageAmount(); //이전 사용 금액
-		int amountDifference = 0; // 변경 금액 차이
-		int findGifticonRemainingAmount = findGifticon.getRemainingAmount(); // 현재 잔액
+		int currentUsageAmount = findUsageHistory.getUsageAmount(); //이전 사용 금액
+		int currentRemainingAmount = findGifticon.getRemainingAmount(); // 현재 잔액
 
-		// 금액 증가 시 잔액 확인
-		if (newAmount > findUsageHistoryUsageAmount) {
-			amountDifference = newAmount - findUsageHistoryUsageAmount; // 늘어난 차이
-
-			if (findGifticonRemainingAmount < amountDifference) { // 늘어난 차이보다 잔액이 부족한 경우
-				throw new CustomException(ErrorCode.GIFTICON_INSUFFICIENT_BALANCE);
-			}
-
-			findGifticonRemainingAmount -= amountDifference;
-
-		} else if (newAmount < findUsageHistoryUsageAmount) { // 금액 감소 시 잔액 반환
-			amountDifference = findUsageHistoryUsageAmount - newAmount;
-			findGifticonRemainingAmount += amountDifference;
+		// 금액 증가 케이스 (추가 차감)
+		if (newAmount > currentUsageAmount) {
+			int additionalAmount = newAmount - currentUsageAmount;
+			validateSufficientBalance(currentRemainingAmount, additionalAmount);
+			return currentRemainingAmount - additionalAmount;
 		}
-		return findGifticonRemainingAmount;
+
+		// 금액 감소 케이스 (환불)
+		int refundAmount = currentUsageAmount - newAmount;
+		return currentRemainingAmount + refundAmount;
 	}
 
 	@Override
@@ -75,5 +69,11 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 
 		// 잔액 계산
 		return getFindGifticonRemainingAmount(newAmount, findUsageHistory, findGifticon);
+	}
+
+	public void validateSufficientBalance(int remainingAmount, int requiredAmount) {
+		if (remainingAmount < requiredAmount) {
+			throw new CustomException(ErrorCode.GIFTICON_INSUFFICIENT_BALANCE);
+		}
 	}
 }
