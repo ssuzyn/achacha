@@ -277,10 +277,10 @@ const BoxListScreen = () => {
     navigation.goBack();
   };
 
-  // 날짜 포맷 함수 - YYYY.MM.DD 형식
+  // 날짜 포맷 함수 - YY.MM.DD 형식
   const formatDate = dateString => {
     const date = new Date(dateString);
-    const year = date.getFullYear();
+    const year = String(date.getFullYear()).slice(2); // 4자리 년도에서 뒤의 2자리만 사용
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}.${month}.${day}`;
@@ -691,7 +691,7 @@ const BoxListScreen = () => {
           <Icon name="chevron-left" type="material" size={30} color={theme.colors.text} />
         </TouchableOpacity>
         <Text variant="h2" weight="bold" style={styles.title}>
-          {shareBoxName || '쉐어박스'} {shareBoxId > 0 ? `#${shareBoxId}` : ''}
+          {shareBoxName || '쉐어박스'}
         </Text>
       </View>
 
