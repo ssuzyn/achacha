@@ -666,6 +666,14 @@ const BoxListScreen = () => {
     );
   };
 
+  // 설정 화면으로 이동하는 핸들러 추가
+  const handleSettingsPress = () => {
+    navigation.navigate('BoxSetting', {
+      shareBoxId,
+      shareBoxName,
+    });
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -678,9 +686,12 @@ const BoxListScreen = () => {
         <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
           <Icon name="chevron-left" type="material" size={30} color={theme.colors.text} />
         </TouchableOpacity>
-        <Text variant="h2" weight="bold" style={styles.title}>
+        <Text variant="h3" weight="bold" style={styles.title}>
           {shareBoxName || '쉐어박스'}
         </Text>
+        <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
+          <Icon name="settings" type="material" size={24} color={theme.colors.grey3} />
+        </TouchableOpacity>
       </View>
 
       {/* 카테고리 탭 */}
@@ -808,19 +819,24 @@ const styles = StyleSheet.create({
   title: {
     flex: 1,
     textAlign: 'center',
-    marginRight: 38, // 뒤로가기 버튼과 균형을 맞추기 위한 마진
+  },
+  settingsButton: {
+    width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   categoryTabContainer: {
     paddingHorizontal: 16,
-    marginTop: 8,
-    marginBottom: 16,
+    marginTop: 1,
+    marginBottom: 1,
   },
   filterSortContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 1,
   },
   filterContainer: {
     flex: 1,
@@ -869,7 +885,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   sortOptionTextSelected: {
-    color: '#3498DB',
+    color: '#56AEE9',
     fontWeight: 'bold',
   },
   scrollView: {
@@ -928,7 +944,7 @@ const styles = StyleSheet.create({
   nameText: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 2,
+    marginBottom: 0,
     paddingRight: 80, // D-day 태그를 위한 여백 확보
   },
   shareBoxInfoContainer: {

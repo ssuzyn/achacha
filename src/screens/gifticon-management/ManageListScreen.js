@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   sortOptionTextSelected: {
-    color: '#3498DB',
+    color: '#56AEE9',
     fontWeight: 'bold',
   },
   scrollView: {
@@ -934,7 +934,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 2,
+    marginBottom: 1,
   },
   nameText: {
     fontSize: 14,
@@ -976,7 +976,7 @@ const styles = StyleSheet.create({
   },
   sharedByText: {
     fontSize: 12,
-    color: '#278CCC',
+    color: '#888',
     fontWeight: 'bold',
     fontStyle: 'normal',
   },
@@ -990,7 +990,7 @@ const styles = StyleSheet.create({
   },
   shareBoxText: {
     fontSize: 12,
-    color: '#888',
+    color: '#278CCC',
     fontWeight: 'bold',
   },
   // 스와이프 액션 관련 스타일
