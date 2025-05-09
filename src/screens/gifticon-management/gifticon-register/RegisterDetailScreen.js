@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 56,
     borderRadius: 8,
-    marginBottom: 20,
+    marginBottom: 0,
   },
   // 모달 관련 스타일
   modalOverlay: {
@@ -1052,6 +1052,7 @@ const styles = StyleSheet.create({
   boxModalButton: {
     flex: 1,
     marginHorizontal: 5,
+    height: 50,
   },
   // 이미지 편집기 관련 스타일
   editorContainer: {
