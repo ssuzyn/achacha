@@ -6,25 +6,21 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ErrorResponse {
-	private String code;
+	private String errorCode;
 
 	private String message;
 
-	private String path;
-
-	public static ErrorResponse of(ErrorCode errorCode, String message, String path) {
+	public static ErrorResponse of(ErrorCode errorCode, String message) {
 		return ErrorResponse.builder()
-			.code(errorCode.getCode())
+			.errorCode(errorCode.getCode())
 			.message(message)
-			.path(path)
 			.build();
 	}
 
-	public static ErrorResponse of(ErrorCode errorCode, String path) {
+	public static ErrorResponse of(ErrorCode errorCode) {
 		return ErrorResponse.builder()
-			.code(errorCode.getCode())
+			.errorCode(errorCode.getCode())
 			.message(errorCode.getDefaultMessage())
-			.path(path)
 			.build();
 	}
 }

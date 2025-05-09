@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.history;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
@@ -21,5 +23,10 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	@Override
 	public UsageHistory getUsageHistoryDetail(Integer userId, Integer gifticonId) {
 		return usageHistoryJpaRepository.findUsageHistoryDetailByUserIdAndGifticonId(userId, gifticonId);
+	}
+
+	@Override
+	public List<UsageHistory> findUsageHistories(Integer gifticonId) {
+		return usageHistoryJpaRepository.findAllByGifticonIdOrderByCreatedAtDesc(gifticonId);
 	}
 }
