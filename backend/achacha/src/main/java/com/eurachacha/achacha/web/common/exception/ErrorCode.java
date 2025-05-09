@@ -11,6 +11,9 @@ public enum ErrorCode {
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "X003", "서버 에러가 발생했습니다."),
 	CONSTANT_CLASS_INSTANTIATION(HttpStatus.INTERNAL_SERVER_ERROR, "X004", "상수 클래스는 인스턴스화할 수 없습니다."),
 
+	// 유저 관련 에러 코드
+	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "해당 유저를 찾을 수 없습니다."),
+
 	// 기프티콘 관련 에러 코드
 	GIFTICON_NOT_FOUND(HttpStatus.NOT_FOUND, "GIFTICON_001", "기프티콘 정보를 찾을 수 없습니다."),
 	UNAUTHORIZED_GIFTICON_ACCESS(HttpStatus.FORBIDDEN, "GIFTICON_002", "해당 기프티콘에 접근 권한이 없습니다."),
@@ -57,7 +60,8 @@ public enum ErrorCode {
 	CLOUDFRONT_SIGNED_URL_EXPIRED(HttpStatus.FORBIDDEN, "CF_003", "URL이 만료되었습니다."),
 
 	// ShareBox 관련 에러 코드
-	SHAREBOX_NOT_FOUND(HttpStatus.NOT_FOUND, "SHAREBOX_001", "쉐어박스를 찾을 수 없습니다.");
+	SHAREBOX_NOT_FOUND(HttpStatus.NOT_FOUND, "SHAREBOX_001", "쉐어박스를 찾을 수 없습니다."),
+	INVITE_CODE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SHAREBOX_002", "쉐어박스 생성에 실패했습니다.");
 
 	// http 상태 코드
 	private final HttpStatus status;
