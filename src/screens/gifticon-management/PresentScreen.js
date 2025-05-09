@@ -207,49 +207,49 @@ const PresentScreen = () => {
         {/* 템플릿 카드 영역 - 새로운 레이아웃 */}
         <View style={styles.templateCardSection}>
           <View style={styles.templateCard}>
-            {/* 템플릿 배경 이미지 */}
+            {/* 템플릿 이미지 */}
             <Image
               source={getSelectedTemplateImage()}
-              style={styles.templateBackgroundImage}
-              resizeMode="cover"
+              style={styles.templateImage}
+              resizeMode="contain"
             />
 
-            {/* 상단 여백 */}
-            <View style={styles.topPadding} />
-
-            {/* 메시지 입력 영역 - 흰색 카드 */}
-            <View style={styles.messageInputCard}>
-              <TextInput
-                style={styles.messageInput}
-                placeholder="텍스트를 입력하세요."
-                placeholderTextColor="#767676"
-                multiline
-                value={message}
-                onChangeText={setMessage}
-                maxLength={100}
-              />
-            </View>
-
-            {/* 점선 구분선 */}
-            <View style={styles.dashedLine} />
-
-            {/* 기프티콘 이미지 영역 - 흰색 카드 */}
-            <View style={styles.gifticonCard}>
-              {/* 기프티콘 이미지 영역 */}
-              <View style={styles.gifticonImageContainer}>
-                {gifticonData && (
-                  <Image
-                    source={gifticonData.thumbnailPath}
-                    style={styles.gifticonImage}
-                    resizeMode="contain"
-                  />
-                )}
+            {/* 사용자 입력 영역 */}
+            <View style={styles.contentOverlay}>
+              {/* 메시지 입력 영역 - 흰색 카드 */}
+              <View style={styles.messageInputCard}>
+                <TextInput
+                  style={styles.messageInput}
+                  placeholder="텍스트를 입력하세요."
+                  placeholderTextColor="#767676"
+                  multiline
+                  value={message}
+                  onChangeText={setMessage}
+                  maxLength={100}
+                />
               </View>
 
-              {/* 갤러리에 저장 버튼 */}
-              <TouchableOpacity style={styles.galleryButton} onPress={handleSaveToGallery}>
-                <Text style={styles.galleryButtonText}>갤러리에 저장</Text>
-              </TouchableOpacity>
+              {/* 점선 구분선 */}
+              <View style={styles.dashedLine} />
+
+              {/* 기프티콘 이미지 영역 - 흰색 카드 */}
+              <View style={styles.gifticonCard}>
+                {/* 기프티콘 이미지 영역 */}
+                <View style={styles.gifticonImageContainer}>
+                  {gifticonData && (
+                    <Image
+                      source={gifticonData.thumbnailPath}
+                      style={styles.gifticonImage}
+                      resizeMode="contain"
+                    />
+                  )}
+                </View>
+
+                {/* 갤러리에 저장 버튼 */}
+                <TouchableOpacity style={styles.galleryButton} onPress={handleSaveToGallery}>
+                  <Text style={styles.galleryButtonText}>갤러리에 저장</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -319,15 +319,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   thumbnailItem: {
-    width: 100,
-    height: 100,
+    width: 65,
+    height: 65,
     marginRight: 10,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E6E6E6',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
   },
   selectedThumbnailItem: {
     borderColor: '#56AEE9',
@@ -335,32 +334,36 @@ const styles = StyleSheet.create({
   },
   thumbnailImage: {
     width: '100%',
-    height: 80,
+    height: 55,
   },
   templateCardSection: {
     paddingHorizontal: 16,
     marginBottom: 30,
+    alignItems: 'center',
   },
   templateCard: {
-    position: 'relative',
     width: '100%',
-    borderRadius: 8,
-    overflow: 'hidden',
-    backgroundColor: '#FFFFFF',
-    aspectRatio: 0.66, // 더 긴 세로 비율
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    position: 'relative',
   },
-  templateBackgroundImage: {
+  templateImage: {
+    width: '100%',
+    height: undefined,
+    aspectRatio: 0.66, // 템플릿 이미지 원본 비율 유지
+    resizeMode: 'contain',
+  },
+  contentOverlay: {
     position: 'absolute',
     width: '100%',
     height: '100%',
-  },
-  // 상단 여백
-  topPadding: {
-    height: '25%', // 상단 30% 공간을 비움
+    paddingTop: '45%', // 상단 여백
+    justifyContent: 'flex-start',
+    alignItems: 'center',
   },
   // 메시지 입력 카드 스타일
   messageInputCard: {
-    marginHorizontal: 20,
+    width: '80%',
     marginBottom: 15,
     backgroundColor: 'white',
     borderRadius: 8,
@@ -374,31 +377,33 @@ const styles = StyleSheet.create({
   },
   // 점선 구분선 스타일
   dashedLine: {
+    width: '80%',
     height: 1,
     borderStyle: 'dashed',
     borderWidth: 1,
     borderColor: '#777',
-    marginHorizontal: 20,
     marginBottom: 15,
   },
   // 기프티콘 카드 스타일
   gifticonCard: {
-    marginHorizontal: 20,
+    width: '80%',
+    height: '50%',
     backgroundColor: 'white',
     borderRadius: 8,
-    padding: 15,
+    padding: 10,
     alignItems: 'center',
   },
   gifticonImageContainer: {
-    width: '80%',
+    width: 100,
     height: 100,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#72BFFF',
     borderRadius: 8,
-    padding: 0,
-    marginBottom: 15,
+    padding: 10,
+    marginTop: 1,
+    marginBottom: 13,
   },
   gifticonImage: {
     width: 120,
@@ -406,7 +411,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   galleryButton: {
-    width: '100%',
+    width: '80%',
     height: 40,
     backgroundColor: '#E5F4FE',
     borderRadius: 8,
