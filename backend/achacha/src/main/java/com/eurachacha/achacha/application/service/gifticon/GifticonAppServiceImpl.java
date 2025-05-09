@@ -463,7 +463,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		return GifticonBarcodeResponseDto.builder()
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
-			.barcodePath(null)
+			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
 			.build();
 	}
 
