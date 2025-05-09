@@ -21,7 +21,9 @@ import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthAppServiceImpl implements AuthAppService {
@@ -44,23 +46,32 @@ public class AuthAppServiceImpl implements AuthAppService {
 			throw new CustomException(ErrorCode.INVALID_TOKEN);
 		}
 
+		log.debug("카카오 사용자 정보 조회 성공: id={}, nickname={}", kakaoUserInfo.getId(), kakaoUserInfo.getNickname());
+
 		// 카카오 ID로 사용자 조회 또는 생성
 		User user = userRepository.findByProviderAndProviderUserId(KAKAO_PROVIDER, kakaoUserInfo.getId())
-			.orElseGet(() -> createKakaoUser(kakaoUserInfo));
+			.orElseGet(() -> {
+				log.info("신규 카카오 사용자 생성: id={}", kakaoUserInfo.getId());
+				return createKakaoUser(kakaoUserInfo);
+			});
 
 		// 닉네임이 변경되었으면 업데이트
 		if (!user.getName().equals(kakaoUserInfo.getNickname())) {
+			log.info("사용자 닉네임 업데이트: userId={}, 이전={}, 이후={}",
+				user.getId(), user.getName(), kakaoUserInfo.getNickname());
 			user.updateName(kakaoUserInfo.getNickname());
 		}
 
 		// FCM 토큰 저장
 		if (StringUtils.hasText(requestDto.getFcmToken())) {
+			log.debug("FCM 토큰 저장: userId={}", user.getId());
 			saveFcmToken(user, requestDto.getFcmToken());
 		}
 
 		// JWT 토큰 발급
 		String accessToken = jwtTokenProvider.createAccessToken(user.getId());
 		String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+		log.debug("JWT 토큰 발급 완료: userId={}", user.getId());
 
 		// 리프레시 토큰 저장
 		saveRefreshToken(user, refreshToken);
