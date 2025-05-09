@@ -6,14 +6,13 @@ import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResp
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 	private final AuthAppService authAppService;
-
-	public AuthController(AuthAppService authAppService) {
-		this.authAppService = authAppService;
-	}
 
 	@PostMapping("/kakao")
 	public ResponseEntity<TokenResponseDto> kakaoLogin(@RequestBody KakaoLoginRequestDto requestDto) {
