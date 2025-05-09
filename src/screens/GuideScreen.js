@@ -1,14 +1,71 @@
-import React from 'react';
-import { Image, Dimensions, StatusBar, StyleSheet, View, SafeAreaView } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  Image,
+  Dimensions,
+  StatusBar,
+  StyleSheet,
+  View,
+  SafeAreaView,
+  FlatList,
+} from 'react-native';
 import { Button, Text } from '../components/ui';
 import { useGuideSteps } from '../hooks/useGuideSteps';
 import { useTheme } from 'react-native-elements';
+import { guideSteps } from '../constants/guideContent';
 
 const { width } = Dimensions.get('window');
 
 const GuideFirstScreen = () => {
-  const { currentStep, currentContent, isLastStep, handleNext, totalSteps } = useGuideSteps();
+  const { handleStart } = useGuideSteps();
   const { theme } = useTheme();
+  const flatListRef = useRef(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [hasViewedAll, setHasViewedAll] = useState(false);
+
+  const onViewableItemsChanged = useRef(({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      const newIndex = viewableItems[0].index;
+      setCurrentStep(newIndex);
+
+      // 마지막 아이템을 확인했는지 체크
+      if (newIndex === guideSteps.length - 1) {
+        setHasViewedAll(true);
+      }
+    }
+  }).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50,
+  }).current;
+
+  // 각 가이드 아이템 렌더링
+  const renderItem = ({ item }) => (
+    <View style={styles.slideContainer}>
+      <View style={styles.imageWrapper}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={item.image}
+            style={[styles.contentImage, item.imageStyle]}
+            resizeMode="contain"
+          />
+        </View>
+      </View>
+
+      <View style={styles.textContainer}>
+        <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
+          {item.title}
+        </Text>
+        <Text variant="h1" weight="semibold" size={24} center style={styles.guideText}>
+          {item.subText1}
+        </Text>
+        {item.subText2 ? (
+          <Text variant="h1" weight="semibold" size={24} center style={styles.guideText}>
+            {item.subText2}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -16,37 +73,24 @@ const GuideFirstScreen = () => {
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           <View style={styles.mainContainer}>
-            <View style={styles.imageWrapper}>
-              <View style={styles.imageContainer}>
-                <Image
-                  source={currentContent.image}
-                  style={[styles.contentImage, currentContent.imageStyle]}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
-
-            <View style={styles.textContainer}>
-              <Text variant="h1" weight="bold" size={24} center style={styles.guideText}>
-                {currentContent.title}
-              </Text>
-              <Text variant="h1" weight="semibold" size={24} center style={styles.guideText}>
-                {currentContent.subText1}
-              </Text>
-              {currentContent.subText2 ? (
-                <Text variant="h1" weight="semibold" size={24} center style={styles.guideText}>
-                  {currentContent.subText2}
-                </Text>
-              ) : null}
-            </View>
+            <FlatList
+              ref={flatListRef}
+              data={guideSteps}
+              renderItem={renderItem}
+              keyExtractor={(_, index) => index.toString()}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              onViewableItemsChanged={onViewableItemsChanged}
+              viewabilityConfig={viewabilityConfig}
+            />
 
             <View style={styles.indicatorContainer}>
-              {[...Array(totalSteps)].map((_, index) => (
+              {guideSteps.map((_, index) => (
                 <View
                   key={index}
                   style={[
                     styles.indicator,
-                    // eslint-disable-next-line react-native/no-inline-styles
                     {
                       backgroundColor: index === currentStep ? theme.colors.primary : '#e0e0e0',
                     },
@@ -57,11 +101,12 @@ const GuideFirstScreen = () => {
           </View>
 
           <Button
-            title={isLastStep ? '시작하기' : '다음'}
-            onPress={handleNext}
+            title="시작하기"
+            onPress={handleStart}
             variant="primary"
             size="lg"
-            style={styles.button}
+            isDisabled={!hasViewedAll}
+            style={[styles.button, !hasViewedAll && styles.buttonDisabled]}
           />
         </View>
       </SafeAreaView>
@@ -79,7 +124,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 25,
+    paddingVertical: 8,
     justifyContent: 'space-between',
   },
   mainContainer: {
@@ -87,14 +132,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    paddingTop: 0,
+  },
+  slideContainer: {
+    width: width - 48, // paddingHorizontal 24 * 2
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   imageWrapper: {
     width: '100%',
     alignItems: 'center',
     height: width * 0.9,
     justifyContent: 'center',
-    marginTop: 0,
   },
   imageContainer: {
     width: '100%',
@@ -134,6 +182,9 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 8,
     marginBottom: 20,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
 
