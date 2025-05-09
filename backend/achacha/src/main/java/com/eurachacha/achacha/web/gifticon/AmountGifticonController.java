@@ -2,6 +2,7 @@ package com.eurachacha.achacha.web.gifticon;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,5 +36,15 @@ public class AmountGifticonController {
 		@PathVariable Integer gifticonId
 	) {
 		return ResponseEntity.ok(gifticonUsageAppService.getGifticonUsageHistorys(gifticonId));
+	}
+
+	@PatchMapping("/{gifticonId}/usage-history/{usageHistoryId}")
+	public ResponseEntity<String> updateUsageHistory(
+		@PathVariable Integer gifticonId,
+		@PathVariable Integer usageHistoryId,
+		@RequestBody AmountGifticonUseRequestDto requestDto
+	) {
+		gifticonUsageAppService.updateGifticonUsageHistory(gifticonId, usageHistoryId, requestDto);
+		return ResponseEntity.ok("기프티콘 사용금액이 변경되었습니다.");
 	}
 }
