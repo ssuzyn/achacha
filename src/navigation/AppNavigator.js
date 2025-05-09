@@ -19,6 +19,9 @@ import UseAmountScreen from '../screens/gifticon-management/gifticon-use/UseAmou
 // 쉐어박스 스크린 추가
 import BoxMainScreen from '../screens/gifticon-share-box/BoxMainScreen';
 import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
+import BoxListScreen from '../screens/gifticon-share-box/BoxListScreen';
+import BoxDetailProductScreen from '../screens/gifticon-share-box/BoxDetailProductScreen';
+import BoxDetailAmountScreen from '../screens/gifticon-share-box/BoxDetailAmountScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -117,6 +120,30 @@ const AppNavigator = () => {
       <Stack.Screen
         name="BoxCreate"
         component={BoxCreateScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxList"
+        component={BoxListScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxDetailProduct"
+        component={BoxDetailProductScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="BoxDetailAmount"
+        component={BoxDetailAmountScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,
