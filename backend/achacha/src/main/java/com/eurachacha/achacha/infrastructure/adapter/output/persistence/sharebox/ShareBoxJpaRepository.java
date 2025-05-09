@@ -7,4 +7,6 @@ import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 
 @Repository
 public interface ShareBoxJpaRepository extends JpaRepository<ShareBox, Integer> {
+	boolean existsByInviteCode(String inviteCode);
+
 }

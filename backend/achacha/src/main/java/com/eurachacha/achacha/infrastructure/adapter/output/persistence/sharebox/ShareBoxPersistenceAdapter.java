@@ -16,6 +16,16 @@ public class ShareBoxPersistenceAdapter implements ShareBoxRepository {
 	private final ShareBoxJpaRepository shareBoxJpaRepository;
 
 	@Override
+	public ShareBox save(ShareBox shareBox) {
+		return shareBoxJpaRepository.save(shareBox);
+	}
+
+	@Override
+	public boolean existsByInviteCode(String inviteCode) {
+		return shareBoxJpaRepository.existsByInviteCode(inviteCode);
+	}
+
+	@Override
 	public ShareBox findById(Integer id) {
 		return shareBoxJpaRepository.findById(id)
 			.orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
