@@ -234,7 +234,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	@Override
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
-		Integer userId = 3; // 유저 로직 추가 시 변경 필요
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
@@ -246,6 +246,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 */
 		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
+		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
 		// 기프티콘 스코프 결정에 따른 값
@@ -389,6 +390,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 */
 		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
+		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
 		return GifticonBarcodeResponseDto.builder()
@@ -406,8 +408,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
 		// 삭제, 사용 여부 검토
-		gifticonDomainService.validateGifticonBarcodeUsage(findGifticon);
+		gifticonDomainService.validateUsedGifticonBarcode(findGifticon);
 
+		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
 		// 해당 기프티콘에 대한 사용 내역 조회

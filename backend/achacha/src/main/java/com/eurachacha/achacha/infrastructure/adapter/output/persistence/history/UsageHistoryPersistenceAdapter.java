@@ -14,6 +14,11 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	private final UsageHistoryJpaRepository usageHistoryJpaRepository;
 
 	@Override
+	public UsageHistory saveUsageHistory(UsageHistory usageHistory) {
+		return usageHistoryJpaRepository.save(usageHistory);
+	}
+
+	@Override
 	public UsageHistory getUsageHistoryDetail(Integer userId, Integer gifticonId) {
 		return usageHistoryJpaRepository.findUsageHistoryDetailByUserIdAndGifticonId(userId, gifticonId);
 	}
