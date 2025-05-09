@@ -216,6 +216,230 @@ const ManageListScreen = () => {
   // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
   const currentUserId = 78;
 
+  // 스타일 정의를 여기로 이동
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 2,
+      paddingTop: 0,
+    },
+    filterContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 0,
+    },
+    tabFilterContainer: {
+      flex: 1,
+    },
+    sortContainer: {
+      position: 'relative',
+      zIndex: 1,
+    },
+    sortButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+    },
+    sortButtonText: {
+      fontSize: 14,
+      marginRight: 5,
+      color: '#333',
+      fontFamily: theme.fonts.fontWeight.regular,
+    },
+    sortDropdown: {
+      position: 'absolute',
+      top: 40,
+      right: 0,
+      backgroundColor: 'white',
+      borderWidth: 1,
+      borderColor: '#E0E0E0',
+      borderRadius: 8,
+      width: 160,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    sortOption: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F0F0F0',
+    },
+    sortOptionText: {
+      fontSize: 14,
+      color: '#333',
+      fontFamily: theme.fonts.fontWeight.regular,
+    },
+    sortOptionTextSelected: {
+      color: '#56AEE9',
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+    scrollView: {
+      flex: 1,
+      marginTop: 5,
+    },
+    scrollViewContent: {
+      paddingTop: 0,
+      paddingBottom: 30,
+    },
+    gifticonList: {
+      paddingVertical: 1,
+    },
+    shadowContainer: {
+      width: '100%',
+      borderRadius: 12,
+      marginBottom: 10,
+    },
+    gifticonItem: {
+      width: '100%',
+    },
+    gifticonContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 8,
+      // paddingBottom: 5,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      position: 'relative', // D-day 태그의 절대 위치를 위해 필요
+    },
+    imageContainer: {
+      marginRight: 10,
+    },
+    gifticonImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 8,
+    },
+    textContainer: {
+      flex: 1,
+    },
+    brandText: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 1,
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+    nameText: {
+      fontSize: 14,
+      color: '#666',
+      marginBottom: 2,
+      paddingRight: 80, // D-day 태그를 위한 여백 확보
+      fontFamily: theme.fonts.fontWeight.regular,
+    },
+    dDayContainer: {
+      position: 'absolute',
+      right: 15,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      borderRadius: 6,
+    },
+    urgentDDay: {
+      backgroundColor: 'rgba(234, 84, 85, 0.15)',
+    },
+    normalDDay: {
+      backgroundColor: 'rgba(114, 191, 255, 0.15)',
+    },
+    dDayText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+    urgentDDayText: {
+      color: '#EA5455',
+    },
+    normalDDayText: {
+      color: '#72BFFF',
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 30,
+    },
+    emptyText: {
+      fontSize: 16,
+      color: '#737373',
+      fontFamily: theme.fonts.fontWeight.regular,
+    },
+    sharedByText: {
+      fontSize: 12,
+      color: '#737373',
+      fontWeight: 'bold',
+      fontStyle: 'normal',
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+    shareBoxInfoContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 0,
+    },
+    shareBoxIcon: {
+      marginRight: 3,
+    },
+    shareBoxText: {
+      fontSize: 12,
+      color: '#278CCC',
+      fontWeight: 'bold',
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+    // 스와이프 액션 관련 스타일
+    leftAction: {
+      width: 100, // 1/3 정도 보이도록 너비 조정
+      backgroundColor: '#4CAF50', // 초록색 계열
+      justifyContent: 'center',
+      marginBottom: 10,
+      borderTopLeftRadius: 12,
+      borderBottomLeftRadius: 12,
+    },
+    rightAction: {
+      width: '100', // 1/3 정도 보이도록 너비 조정
+      backgroundColor: '#278CCC', // 파란색 계열
+      justifyContent: 'center',
+      marginBottom: 10,
+      borderTopRightRadius: 12,
+      borderBottomRightRadius: 12,
+    },
+    actionButton: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    actionIconContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      width: 80,
+    },
+    actionText: {
+      color: 'white',
+      fontSize: 12,
+      fontWeight: 'bold',
+      marginTop: 4,
+      fontFamily: theme.fonts.fontWeight.semiBold,
+    },
+    // 북마크 컨테이너 스타일 추가
+    bookmarkContainer: {
+      position: 'absolute',
+      top: -2,
+      left: 12,
+      zIndex: 10,
+    },
+    expiredDDay: {
+      backgroundColor: 'rgba(153, 153, 153, 0.15)',
+    },
+    expiredDDayText: {
+      color: '#737373',
+      fontWeight: 'bold',
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+  });
+
   // 파라미터에서 initialTab이 변경되면 selectedCategory 업데이트
   useEffect(() => {
     if (route.params?.initialTab) {
@@ -890,218 +1114,5 @@ const ManageListScreen = () => {
     </TouchableWithoutFeedback>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 2,
-    paddingTop: 0,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 0,
-  },
-  tabFilterContainer: {
-    flex: 1,
-  },
-  sortContainer: {
-    position: 'relative',
-    zIndex: 1,
-  },
-  sortButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  sortButtonText: {
-    fontSize: 14,
-    marginRight: 5,
-    color: '#333',
-  },
-  sortDropdown: {
-    position: 'absolute',
-    top: 40,
-    right: 0,
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    width: 160,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sortOption: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  sortOptionText: {
-    fontSize: 14,
-    color: '#333',
-  },
-  sortOptionTextSelected: {
-    color: '#56AEE9',
-    fontWeight: 'bold',
-  },
-  scrollView: {
-    flex: 1,
-    marginTop: 5,
-  },
-  scrollViewContent: {
-    paddingTop: 0,
-    paddingBottom: 30,
-  },
-  gifticonList: {
-    paddingVertical: 1,
-  },
-  shadowContainer: {
-    width: '100%',
-    borderRadius: 12,
-    marginBottom: 10,
-  },
-  gifticonItem: {
-    width: '100%',
-  },
-  gifticonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    // paddingBottom: 5,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    position: 'relative', // D-day 태그의 절대 위치를 위해 필요
-  },
-  imageContainer: {
-    marginRight: 10,
-  },
-  gifticonImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  brandText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 1,
-  },
-  nameText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
-    paddingRight: 80, // D-day 태그를 위한 여백 확보
-  },
-  dDayContainer: {
-    position: 'absolute',
-    right: 15,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  urgentDDay: {
-    backgroundColor: 'rgba(234, 84, 85, 0.15)',
-  },
-  normalDDay: {
-    backgroundColor: 'rgba(114, 191, 255, 0.15)',
-  },
-  dDayText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  urgentDDayText: {
-    color: '#EA5455',
-  },
-  normalDDayText: {
-    color: '#72BFFF',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 30,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#737373',
-  },
-  sharedByText: {
-    fontSize: 12,
-    color: '#737373',
-    fontWeight: 'bold',
-    fontStyle: 'normal',
-  },
-  shareBoxInfoContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 0,
-  },
-  shareBoxIcon: {
-    marginRight: 3,
-  },
-  shareBoxText: {
-    fontSize: 12,
-    color: '#278CCC',
-    fontWeight: 'bold',
-  },
-  // 스와이프 액션 관련 스타일
-  leftAction: {
-    width: 100, // 1/3 정도 보이도록 너비 조정
-    backgroundColor: '#4CAF50', // 초록색 계열
-    justifyContent: 'center',
-    marginBottom: 10,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-  },
-  rightAction: {
-    width: '100', // 1/3 정도 보이도록 너비 조정
-    backgroundColor: '#278CCC', // 파란색 계열
-    justifyContent: 'center',
-    marginBottom: 10,
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-  },
-  actionButton: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionIconContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 80,
-  },
-  actionText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginTop: 4,
-  },
-  // 북마크 컨테이너 스타일 추가
-  bookmarkContainer: {
-    position: 'absolute',
-    top: -2,
-    left: 12,
-    zIndex: 10,
-  },
-  expiredDDay: {
-    backgroundColor: 'rgba(153, 153, 153, 0.15)',
-  },
-  expiredDDayText: {
-    color: '#737373',
-    fontWeight: 'bold',
-  },
-});
 
 export default ManageListScreen;

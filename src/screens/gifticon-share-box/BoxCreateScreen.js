@@ -32,6 +32,200 @@ const BoxCreateScreen = () => {
   // 화면 상태 (create: 생성 화면, share: 코드 공유 화면)
   const [screenState, setScreenState] = useState('create');
 
+  // 스타일 정의를 여기로 이동
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    header: {
+      height: 60,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#EEEEEE',
+    },
+    backButtonContainer: {
+      width: 44,
+      height: 44,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerTitle: {
+      textAlign: 'center',
+      flex: 1,
+    },
+    rightPlaceholder: {
+      width: 44,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    contentContainer: {
+      flex: 1,
+      padding: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    shareContentContainer: {
+      width: '100%',
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    imageContainer: {
+      marginTop: 40,
+      marginBottom: 30,
+      alignItems: 'center',
+    },
+    shareImage: {
+      width: 100,
+      height: 100,
+    },
+    textContainer: {
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    shareTextContainer: {
+      alignItems: 'center',
+      marginVertical: 30,
+    },
+    guideText: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#333333',
+      textAlign: 'center',
+      marginBottom: 12,
+      lineHeight: 28,
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+    subGuideText: {
+      fontSize: 15,
+      color: '#718096',
+      textAlign: 'center',
+      lineHeight: 22,
+      fontFamily: theme.fonts.fontWeight.regular,
+    },
+    inputContainer: {
+      width: '100%',
+      marginBottom: 40,
+    },
+    input: {
+      width: '100%',
+      height: 48,
+      borderWidth: 1,
+      borderColor: '#E2E8F0',
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      fontSize: 16,
+      backgroundColor: '#FFFFFF',
+      fontFamily: theme.fonts.fontWeight.regular,
+    },
+    buttonContainer: {
+      padding: 20,
+      backgroundColor: '#FFFFFF',
+      borderTopWidth: 1,
+      borderTopColor: '#F0F0F0',
+    },
+    rowButtonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    createButton: {
+      height: 56,
+      borderRadius: 10,
+      backgroundColor: '#56AEE9',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    disabledButton: {
+      backgroundColor: '#A0AEC0',
+      opacity: 0.6,
+    },
+    createButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: 'semibold',
+      fontFamily: theme.fonts.fontWeight.semiBold,
+    },
+    // 코드 공유 화면 스타일
+    codeContainer: {
+      width: '100%',
+      backgroundColor: '#F0F9FF',
+      borderRadius: 15,
+      padding: 20,
+      alignItems: 'center',
+      marginTop: 30,
+    },
+    codeValue: {
+      fontSize: 30,
+      fontWeight: 'bold',
+      color: '#000000',
+      letterSpacing: 2,
+      padding: 10,
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+    copyButton: {
+      flex: 1,
+      height: 56,
+      borderRadius: 10,
+      backgroundColor: '#56AEE9',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: 8,
+    },
+    kakaoButton: {
+      flex: 1,
+      height: 56,
+      borderRadius: 10,
+      backgroundColor: '#FEE500',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 8,
+    },
+    buttonText: {
+      fontWeight: 'semiBold',
+      fontSize: 16,
+      color: '#FFFFFF',
+      fontFamily: theme.fonts.fontWeight.semiBold,
+    },
+    kakaobuttonText: {
+      fontWeight: 'regular',
+      fontSize: 16,
+      color: '#462000',
+      fontFamily: theme.fonts.fontWeight.semiBold,
+    },
+    // 박스명 표시 버튼 스타일 (수정)
+    boxInfoButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 6,
+      paddingHorizontal: 15,
+      marginBottom: 20,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    boxIcon: {
+      marginRight: 4,
+    },
+    boxNameText: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#56AEE9',
+      fontFamily: theme.fonts.fontWeight.bold,
+    },
+  });
+
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
     if (screenState === 'share') {
@@ -211,190 +405,5 @@ const BoxCreateScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    height: 60,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  backButtonContainer: {
-    width: 44,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    textAlign: 'center',
-    flex: 1,
-  },
-  rightPlaceholder: {
-    width: 44,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  contentContainer: {
-    flex: 1,
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  shareContentContainer: {
-    width: '100%',
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  imageContainer: {
-    marginTop: 40,
-    marginBottom: 30,
-    alignItems: 'center',
-  },
-  shareImage: {
-    width: 100,
-    height: 100,
-  },
-  textContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  shareTextContainer: {
-    alignItems: 'center',
-    marginVertical: 30,
-  },
-  guideText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333333',
-    textAlign: 'center',
-    marginBottom: 12,
-    lineHeight: 28,
-  },
-  subGuideText: {
-    fontSize: 15,
-    color: '#718096',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  inputContainer: {
-    width: '100%',
-    marginBottom: 40,
-  },
-  input: {
-    width: '100%',
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    backgroundColor: '#FFFFFF',
-  },
-  buttonContainer: {
-    padding: 20,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-  },
-  rowButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  createButton: {
-    height: 56,
-    borderRadius: 10,
-    backgroundColor: '#56AEE9',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  disabledButton: {
-    backgroundColor: '#A0AEC0',
-    opacity: 0.6,
-  },
-  createButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  // 코드 공유 화면 스타일
-  codeContainer: {
-    width: '100%',
-    backgroundColor: '#F0F9FF',
-    borderRadius: 15,
-    padding: 20,
-    alignItems: 'center',
-    marginTop: 30,
-  },
-  codeValue: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#000000',
-    letterSpacing: 2,
-    padding: 10,
-  },
-  copyButton: {
-    flex: 1,
-    height: 56,
-    borderRadius: 10,
-    backgroundColor: '#56AEE9',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  kakaoButton: {
-    flex: 1,
-    height: 56,
-    borderRadius: 10,
-    backgroundColor: '#FEE500',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  buttonText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#FFFFFF',
-  },
-  kakaobuttonText: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#462000',
-  },
-  // 박스명 표시 버튼 스타일 (수정)
-  boxInfoButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 15,
-    marginBottom: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  boxIcon: {
-    marginRight: 4,
-  },
-  boxNameText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#56AEE9',
-  },
-});
 
 export default BoxCreateScreen;

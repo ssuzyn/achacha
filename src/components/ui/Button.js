@@ -37,6 +37,7 @@ export const Button = ({
     styles[`${variant}Text`],
     styles[`${size}Text`],
     isDisabled && styles.disabledText,
+    { fontFamily: theme.fonts.fontWeight.semiBold },
     textStyle,
   ];
 

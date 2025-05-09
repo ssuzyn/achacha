@@ -60,7 +60,6 @@ export const buttonUtils = {
       },
       // 텍스트 스타일
       text: {
-        fontWeight: '600',
         textAlign: 'center',
       },
       // 변형 스타일
