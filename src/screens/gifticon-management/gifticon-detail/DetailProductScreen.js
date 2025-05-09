@@ -8,14 +8,13 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Share,
   Modal,
   Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Button } from '../../../components/ui';
+import { Text } from '../../../components/ui';
 import AlertDialog from '../../../components/ui/AlertDialog';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
@@ -248,11 +247,11 @@ const DetailProductScreen = () => {
     setShareModalVisible(false);
   };
 
-  // 박스명 가져오기
-  const getShareBoxName = id => {
-    const box = shareBoxes.find(item => item.id === id);
-    return box ? box.name : '';
-  };
+  // // 박스명 가져오기
+  // const getShareBoxName = id => {
+  //   const box = shareBoxes.find(item => item.id === id);
+  //   return box ? box.name : '';
+  // };
 
   // 사용하기 기능
   const handleUse = () => {
