@@ -874,8 +874,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 25,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
     justifyContent: 'space-between',
   },
   contentContainer: {
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
   },
   imageContainerWrapper: {
     alignItems: 'center',
-    marginVertical: 20,
+    marginVertical: 15,
   },
   imageContainer: {
     width: 180,
