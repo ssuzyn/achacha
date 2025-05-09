@@ -52,17 +52,17 @@ public class AuthAppServiceImpl implements AuthAppService {
 			user.updateNickname(kakaoUserInfo.getNickname());
 		}
 
-		// FCM 토큰이 있으면 저장 또는 업데이트
+		// FCM 토큰 저장
 		if (StringUtils.hasText(requestDto.getFcmToken())) {
-			saveOrUpdateFcmToken(user, requestDto.getFcmToken());
+			saveFcmToken(user, requestDto.getFcmToken());
 		}
 
 		// JWT 토큰 발급
 		String accessToken = jwtTokenProvider.createAccessToken(user.getId());
 		String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-		// 리프레시 토큰 저장 또는 업데이트
-		saveOrUpdateRefreshToken(user, refreshToken);
+		// 리프레시 토큰 저장
+		saveRefreshToken(user, refreshToken);
 
 		return new TokenResponseDto(accessToken, refreshToken, jwtTokenProvider.getAccessTokenExpirySeconds());
 	}
@@ -76,11 +76,8 @@ public class AuthAppServiceImpl implements AuthAppService {
 		// 사용자가 존재하는지 확인
 		User user = userRepository.findById(userId);
 
-		// DB에 저장된 리프레시 토큰과 일치하는지 확인
-		RefreshToken storedToken = refreshTokenRepository.findByUserId(userId)
-			.orElseThrow(() -> new CustomException(ErrorCode.INVALID_REFRESH_TOKEN));
-
-		if (!storedToken.getValue().equals(refreshToken)) {
+		// 사용자의 리프레시 토큰이 존재하는지만 확인
+		if (!refreshTokenRepository.existsByUserId(userId)) {
 			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
@@ -100,37 +97,29 @@ public class AuthAppServiceImpl implements AuthAppService {
 		return userRepository.save(newUser);
 	}
 
-	// RefreshToken 저장 또는 업데이트 메서드
-	private void saveOrUpdateRefreshToken(User user, String tokenValue) {
-		refreshTokenRepository.findByUserId(user.getId())
-			.ifPresentOrElse(
-				// 기존 토큰이 있으면 업데이트
-				existingToken -> existingToken.updateTokenValue(tokenValue),
-				// 없으면 새로 생성
-				() -> {
-					RefreshToken refreshToken = RefreshToken.builder()
-						.user(user)
-						.value(tokenValue)
-						.build();
-					refreshTokenRepository.save(refreshToken);
-				}
-			);
+	// RefreshToken 저장 메서드
+	private void saveRefreshToken(User user, String tokenValue) {
+		RefreshToken refreshToken = RefreshToken.builder()
+			.user(user)
+			.value(tokenValue)
+			.build();
+		refreshTokenRepository.save(refreshToken);
 	}
 
-	// FCM 토큰 저장 또는 업데이트 메서드
-	private void saveOrUpdateFcmToken(User user, String tokenValue) {
-		fcmTokenRepository.findByUserId(user.getId())
-			.ifPresentOrElse(
-				// 기존 토큰이 있으면 업데이트
-				existingToken -> existingToken.updateTokenValue(tokenValue),
-				// 없으면 새로 생성
-				() -> {
-					FcmToken fcmToken = FcmToken.builder()
-						.user(user)
-						.value(tokenValue)
-						.build();
-					fcmTokenRepository.save(fcmToken);
-				}
-			);
+	// FCM 토큰 저장 메서드
+	private void saveFcmToken(User user, String tokenValue) {
+		FcmToken fcmToken = FcmToken.builder()
+			.user(user)
+			.value(tokenValue)
+			.build();
+		fcmTokenRepository.save(fcmToken);
 	}
+
+	// @Override
+	// @Transactional
+	// public void logout(Integer userId, String refreshToken) {
+	// 	// 리프레시 + FCM 토큰 삭제 필요
+	// 	refreshTokenRepository.deleteByValue(refreshToken);
+	//
+	// }
 }
