@@ -133,7 +133,7 @@ const HomeScreen = () => {
             <Card.FeatureCard
               title={`나누면\n즐거움 두배,\n쉐어박스`}
               iconName="inventory-2"
-              count="34개 쉐어 중"
+              imageSource={require('../assets/images/share-box.png')}
               onPress={handleShareBoxPress}
               style={styles.interactiveCard}
             />
@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   //   marginTop: 10,
   // },
   giftListContainer: {
-    marginBottom: 5,
+    marginBottom: 3,
     paddingHorizontal: 2,
   },
   giftListContent: {
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   middleCardSection: {
-    marginBottom: 10,
+    marginBottom: 5,
     paddingHorizontal: 5,
   },
   middleCardRow: {

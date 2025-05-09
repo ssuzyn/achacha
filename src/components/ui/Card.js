@@ -61,7 +61,7 @@ const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
 /**
  * FeatureCard 컴포넌트 - HomeScreen의 쉐어박스 카드
  */
-const FeatureCard = ({ title, iconName, count, style, onPress, ...props }) => {
+const FeatureCard = ({ title, iconName, count, imageSource, style, onPress, ...props }) => {
   // 터치 가능한 View로 래핑
   const CardContent = () => (
     <View style={[styles.featureCard, style]} {...props}>
@@ -75,6 +75,9 @@ const FeatureCard = ({ title, iconName, count, style, onPress, ...props }) => {
             {count}
           </Text>
         </View>
+      )}
+      {imageSource && (
+        <Image source={imageSource} style={styles.featureImage} resizeMode="contain" />
       )}
     </View>
   );
@@ -244,6 +247,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+    left: 3,
     marginBottom: 10,
     lineHeight: 24,
   },
@@ -258,6 +262,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginLeft: 6,
+  },
+  featureImage: {
+    width: '90%',
+    height: 70,
+    position: 'absolute',
+    bottom: 14,
+    right: -5,
   },
   // RadarCard 스타일
   radarCard: {
