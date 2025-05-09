@@ -9,7 +9,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Share,
   Modal,
   TextInput,
   Alert,
@@ -154,6 +153,7 @@ const DetailAmountScreen = () => {
                 userName: '홍길동',
                 amount: 3000,
                 type: 'payment',
+                timestamp: new Date('2025-01-10T14:30:00').getTime(),
               },
               {
                 id: '2',
@@ -162,16 +162,18 @@ const DetailAmountScreen = () => {
                 userName: '김철수',
                 amount: 5000,
                 type: 'payment',
+                timestamp: new Date('2025-01-20T16:45:00').getTime(),
               },
               {
                 id: '3',
                 date: '2025-01-25',
                 time: '10:15',
-                userName: '이영희',
+                userName: '박지민',
                 amount: 2000,
                 type: 'payment',
+                timestamp: new Date('2025-01-25T10:15:00').getTime(),
               },
-            ],
+            ].sort((a, b) => b.timestamp - a.timestamp), // 날짜 내림차순 정렬 (최신순)
           };
         } else {
           // 일반 기프티콘 더미 데이터
@@ -649,6 +651,14 @@ const DetailAmountScreen = () => {
                         {formatDateTime(gifticonData.usageHistoryCreatedAt)}
                       </Text>
                     </View>
+
+                    {/* 사용자 정보 표시 추가
+                    {gifticonData.usedBy && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>사용자</Text>
+                        <Text style={styles.infoValue}>{gifticonData.usedBy}</Text>
+                      </View>
+                    )} */}
                   </>
                 )}
 
@@ -1383,7 +1393,8 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContainer: {
     width: 320,
@@ -1502,10 +1513,6 @@ const styles = StyleSheet.create({
   },
   boxModalContent: {
     maxHeight: '70%',
-  },
-  modalTitle: {
-    textAlign: 'center',
-    marginBottom: 20,
   },
   modalSubtitle: {
     marginBottom: 12,
