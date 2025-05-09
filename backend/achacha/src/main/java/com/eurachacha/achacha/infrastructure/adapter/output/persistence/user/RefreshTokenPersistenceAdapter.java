@@ -16,8 +16,8 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepository {
 	private final RefreshTokenJpaRepository refreshTokenJpaRepository;
 
 	@Override
-	public Optional<RefreshToken> findByUserId(Integer userId) {
-		return refreshTokenJpaRepository.findByUserId(userId);
+	public boolean existsByUserId(Integer userId) {
+		return refreshTokenJpaRepository.existsByUserId(userId);
 	}
 
 	@Override
