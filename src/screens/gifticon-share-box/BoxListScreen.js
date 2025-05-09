@@ -14,6 +14,7 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
 import { Text } from '../../components/ui';
+import AlertDialog from '../../components/ui/AlertDialog';
 import CategoryTabs from '../../components/common/CategoryTabs';
 import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
@@ -30,7 +31,7 @@ const DUMMY_GIFTICONS = [
     gifticonExpiryDate: '2025-09-31',
     brandId: 45,
     brandName: '스타벅스',
-    scope: 'AVAILABLE',
+    scope: 'SHARE_BOX',
     userId: 78,
     userName: '홍길동',
     shareBoxId: 90,
@@ -45,7 +46,7 @@ const DUMMY_GIFTICONS = [
     gifticonExpiryDate: '2025-12-31',
     brandId: 45,
     brandName: '스타벅스',
-    scope: 'AVAILABLE',
+    scope: 'SHARE_BOX',
     userId: 78,
     userName: '홍길동',
     shareBoxId: 90,
@@ -60,7 +61,7 @@ const DUMMY_GIFTICONS = [
     gifticonExpiryDate: '2025-11-20',
     brandId: 45,
     brandName: '스타벅스',
-    scope: 'AVAILABLE',
+    scope: 'SHARE_BOX',
     userId: 78,
     userName: '홍길동',
     shareBoxId: 90,
@@ -136,6 +137,10 @@ const BoxListScreen = () => {
   // 필터링된 기프티콘 상태
   const [filteredGifticons, setFilteredGifticons] = useState([]);
 
+  // AlertDialog 상태 관리
+  const [dialogVisible, setDialogVisible] = useState(false);
+  const [selectedGifticon, setSelectedGifticon] = useState(null);
+
   // 스와이프 레퍼런스 저장
   const swipeableRefs = useRef({});
 
@@ -199,7 +204,7 @@ const BoxListScreen = () => {
     // 카테고리 필터링
     switch (selectedCategory) {
       case 'available':
-        filtered = filtered.filter(item => item.scope === 'AVAILABLE');
+        filtered = filtered.filter(item => item.scope === 'SHARE_BOX');
         break;
       case 'used':
         filtered = filtered.filter(item => item.scope === 'USED');
@@ -307,6 +312,30 @@ const BoxListScreen = () => {
         gifticonName: item.gifticonName,
       });
     }
+  };
+
+  // 사용 완료 다이얼로그 표시
+  const showUseCompleteDialog = item => {
+    setSelectedGifticon(item);
+    setDialogVisible(true);
+  };
+
+  // 사용 완료 처리
+  const handleMarkAsUsed = () => {
+    if (!selectedGifticon) return;
+
+    // 여기서 API 호출로 상태 변경 (예시)
+    // console.log(`기프티콘 ID ${selectedGifticon.gifticonId} 사용 완료 처리됨`);
+
+    // 상태 업데이트 및 화면 갱신 (임시 구현)
+    const updatedGifticons = filteredGifticons.filter(
+      gifticon => gifticon.gifticonId !== selectedGifticon.gifticonId
+    );
+    setFilteredGifticons(updatedGifticons);
+
+    // 다이얼로그 닫기
+    setDialogVisible(false);
+    setSelectedGifticon(null);
   };
 
   // 기프티콘 클릭 핸들러
@@ -614,10 +643,10 @@ const BoxListScreen = () => {
 
     return (
       <Animated.View style={[styles.leftAction, { opacity }]}>
-        <RectButton style={styles.actionButton} onPress={() => handleGifticonPress(item)}>
+        <RectButton style={styles.actionButton} onPress={() => showUseCompleteDialog(item)}>
           <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
-            <Icon name="visibility" type="material" color="#FFFFFF" size={24} />
-            <Text style={styles.actionText}>상세보기</Text>
+            <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
+            <Text style={styles.actionText}>사용 완료</Text>
           </Animated.View>
         </RectButton>
       </Animated.View>
@@ -688,34 +717,33 @@ const BoxListScreen = () => {
 
         {/* 정렬 드롭다운 */}
         <View style={styles.sortContainer}>
-          <TouchableOpacity onPress={toggleSortDropdown} style={styles.sortButton}>
-            <Text variant="body2" style={styles.sortButtonText}>
+          <TouchableOpacity style={styles.sortButton} onPress={toggleSortDropdown}>
+            <Text style={styles.sortButtonText}>
               {(selectedCategory === 'used' ? usedSortOptions : sortOptions).find(
                 option => option.id === sortBy
               )?.title || '정렬'}
             </Text>
             <Icon
-              name={showSortDropdown ? 'arrow-drop-up' : 'arrow-drop-down'}
+              name={showSortDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
               type="material"
-              size={24}
-              color="#4A5568"
+              size={18}
+              color="#333"
             />
           </TouchableOpacity>
 
-          {/* 정렬 드롭다운 */}
+          {/* 정렬 드롭다운 메뉴 */}
           {showSortDropdown && (
             <View style={styles.sortDropdown}>
               {(selectedCategory === 'used' ? usedSortOptions : sortOptions).map(option => (
                 <TouchableOpacity
                   key={option.id}
-                  style={[styles.sortOption, sortBy === option.id && styles.selectedSortOption]}
+                  style={styles.sortOption}
                   onPress={() => handleSelectSort(option.id)}
                 >
                   <Text
-                    variant="body2"
                     style={[
                       styles.sortOptionText,
-                      sortBy === option.id && styles.selectedSortOptionText,
+                      sortBy === option.id && styles.sortOptionTextSelected,
                     ]}
                   >
                     {option.title}
@@ -728,20 +756,47 @@ const BoxListScreen = () => {
       </View>
 
       {/* 기프티콘 목록 */}
-      <ScrollView contentContainerStyle={styles.listContainer} showsVerticalScrollIndicator={false}>
-        {filteredGifticons.length > 0 ? (
-          filteredGifticons.map(item => renderGifticonItem(item))
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Icon name="inbox" type="material" size={48} color="#CBD5E0" />
-            <Text variant="h4" weight="medium" style={styles.emptyText}>
-              {selectedCategory === 'available'
-                ? '사용가능한 기프티콘이 없습니다'
-                : '사용완료한 기프티콘이 없습니다'}
-            </Text>
-          </View>
-        )}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollViewContent}
+      >
+        <View style={styles.gifticonList}>
+          {filteredGifticons.length > 0 ? (
+            filteredGifticons.map(item => renderGifticonItem(item))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Icon name="inbox" type="material" size={48} color="#CBD5E0" />
+              <Text style={styles.emptyText}>
+                {selectedCategory === 'available'
+                  ? '사용가능한 기프티콘이 없습니다'
+                  : '사용완료한 기프티콘이 없습니다'}
+              </Text>
+            </View>
+          )}
+        </View>
       </ScrollView>
+
+      {/* 사용 완료 확인 다이얼로그 */}
+      {selectedGifticon && (
+        <AlertDialog
+          isVisible={dialogVisible}
+          title="사용 완료 처리"
+          message={`${selectedGifticon.brandName} - ${selectedGifticon.gifticonName}을(를) 사용 완료 처리하시겠습니까?`}
+          confirmText="확인"
+          cancelText="취소"
+          onConfirm={handleMarkAsUsed}
+          onCancel={() => {
+            setDialogVisible(false);
+            setSelectedGifticon(null);
+          }}
+          onBackdropPress={() => {
+            setDialogVisible(false);
+            setSelectedGifticon(null);
+          }}
+          type="info"
+        />
+      )}
     </View>
   );
 };
@@ -749,6 +804,8 @@ const BoxListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    paddingHorizontal: 2,
+    paddingTop: 0,
   },
   header: {
     flexDirection: 'row',
@@ -782,108 +839,86 @@ const styles = StyleSheet.create({
   },
   sortContainer: {
     position: 'relative',
-    zIndex: 10,
+    zIndex: 1,
   },
   sortButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   sortButtonText: {
-    color: '#4A5568',
-    marginRight: 2,
+    fontSize: 14,
+    marginRight: 5,
+    color: '#333',
   },
   sortDropdown: {
     position: 'absolute',
-    top: '100%',
+    top: 40,
     right: 0,
-    width: 120,
     backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     borderRadius: 8,
-    elevation: 4,
+    width: 160,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    padding: 4,
+    elevation: 3,
   },
   sortOption: {
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 4,
-  },
-  selectedSortOption: {
-    backgroundColor: '#EBF8FF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
   },
   sortOptionText: {
-    color: '#4A5568',
+    fontSize: 14,
+    color: '#333',
   },
-  selectedSortOptionText: {
-    color: '#2B6CB0',
-    fontWeight: '500',
+  sortOptionTextSelected: {
+    color: '#3498DB',
+    fontWeight: 'bold',
   },
-  listContainer: {
+  scrollView: {
+    flex: 1,
+    marginTop: 5,
+  },
+  scrollViewContent: {
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 30,
+  },
+  gifticonList: {
+    paddingVertical: 1,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 60,
-    paddingBottom: 20,
+    padding: 30,
   },
   emptyText: {
-    color: '#718096',
-    marginTop: 12,
+    fontSize: 16,
+    color: '#888',
   },
   gifticonItem: {
-    marginBottom: 16,
+    width: '100%',
   },
   shadowContainer: {
     width: '100%',
     borderRadius: 12,
+    marginBottom: 10,
   },
   imageContainer: {
-    width: 100,
-    height: 100,
+    marginRight: 10,
   },
   gifticonImage: {
-    width: '100%',
-    height: '100%',
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-  },
-  leftAction: {
-    width: 100,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    marginBottom: 16,
-    borderTopLeftRadius: 12,
-    borderBottomLeftRadius: 12,
-  },
-  rightAction: {
-    width: 100,
-    backgroundColor: '#278CCC',
-    justifyContent: 'center',
-    marginBottom: 16,
-    borderTopRightRadius: 12,
-    borderBottomRightRadius: 12,
-  },
-  actionButton: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionIconContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
-  },
-  actionText: {
-    color: 'white',
-    fontSize: 12,
-    marginTop: 4,
+    width: 60,
+    height: 60,
+    borderRadius: 8,
   },
   gifticonContent: {
     flexDirection: 'row',
@@ -895,8 +930,6 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
-    padding: 12,
-    justifyContent: 'space-between',
   },
   brandText: {
     fontSize: 16,
@@ -908,7 +941,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 2,
-    paddingRight: 80,
+    paddingRight: 80, // D-day 태그를 위한 여백 확보
   },
   shareBoxInfoContainer: {
     flexDirection: 'row',
@@ -951,6 +984,39 @@ const styles = StyleSheet.create({
   },
   normalDDayText: {
     color: '#72BFFF',
+  },
+  // 스와이프 액션 관련 스타일
+  leftAction: {
+    width: 100, // 1/3 정도 보이도록 너비 조정
+    backgroundColor: '#4CAF50', // 초록색 계열
+    justifyContent: 'center',
+    marginBottom: 10,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+  rightAction: {
+    width: '100', // 1/3 정도 보이도록 너비 조정
+    backgroundColor: '#278CCC', // 파란색 계열
+    justifyContent: 'center',
+    marginBottom: 10,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
+  },
+  actionButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionIconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+  },
+  actionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginTop: 4,
   },
   bookmarkContainer: {
     position: 'absolute',
