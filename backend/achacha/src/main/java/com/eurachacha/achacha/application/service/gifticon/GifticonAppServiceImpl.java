@@ -379,6 +379,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	}
 
 	@Override
+	@Transactional
 	public GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
