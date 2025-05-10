@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.application.service.auth;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,9 +12,15 @@ import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResp
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
 import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
+import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
+import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
+import com.eurachacha.achacha.domain.model.notification.NotificationType;
+import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
+import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
 import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
@@ -29,6 +37,8 @@ public class AuthAppServiceImpl implements AuthAppService {
 	private final UserRepository userRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final FcmTokenRepository fcmTokenRepository;
+	private final NotificationTypeRepository notificationTypeRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
 	private final AuthServicePort authServicePort;
 	private final TokenServicePort tokenServicePort;
 
@@ -51,7 +61,10 @@ public class AuthAppServiceImpl implements AuthAppService {
 		User user = userRepository.findByProviderAndProviderUserId(KAKAO_PROVIDER, kakaoUserInfo.getId())
 			.orElseGet(() -> {
 				log.info("신규 카카오 사용자 생성: id={}", kakaoUserInfo.getId());
-				return createKakaoUser(kakaoUserInfo);
+				User newUser = createKakaoUser(kakaoUserInfo);
+				// 신규 사용자에 대한 알림 설정 초기화 호출
+				initializeNotificationSettings(newUser);
+				return newUser;
 			});
 
 		// 닉네임이 변경되었으면 업데이트
@@ -123,6 +136,43 @@ public class AuthAppServiceImpl implements AuthAppService {
 			.value(tokenValue)
 			.build();
 		fcmTokenRepository.save(fcmToken);
+	}
+
+	/**
+	 * 신규 사용자에 대한 알림 설정을 초기화합니다.
+	 * 모든 알림 타입에 대해 기본값으로 isEnabled = false로 설정합니다.
+	 * EXPIRY_DATE 타입의 경우 expirationCycle을 ONE_WEEK으로 설정합니다.
+	 *
+	 * @param user 신규 생성된 사용자
+	 */
+	private void initializeNotificationSettings(User user) {
+		log.info("사용자 알림 설정 초기화: userId={}", user.getId());
+
+		// 모든 알림 타입 조회
+		List<NotificationType> notificationTypes = notificationTypeRepository.findAll();
+
+		// 각 알림 타입별로 기본 설정 생성 (isEnabled = false)
+		for (NotificationType notificationType : notificationTypes) {
+			NotificationSetting setting = NotificationSetting.builder()
+				.user(user)
+				.notificationType(notificationType)
+				.isEnabled(false) // 기본값으로 비활성화
+				.expirationCycle(null) // 기본값은 null
+				.build();
+
+			// EXPIRY_DATE 타입의 경우 기본 만료 주기를 ONE_WEEK으로 설정
+			if (notificationType.getCode() == NotificationTypeCode.EXPIRY_DATE) {
+				setting.updateExpirationCycle(ExpirationCycle.ONE_WEEK);
+			}
+
+			notificationSettingRepository.save(setting);
+			log.debug("알림 설정 생성: userId={}, notificationType={}, expirationCycle={}",
+				user.getId(),
+				notificationType.getCode(),
+				setting.getExpirationCycle());
+		}
+
+		log.info("사용자 알림 설정 초기화 완료: userId={}, 생성된 설정 수={}", user.getId(), notificationTypes.size());
 	}
 
 	// @Override
