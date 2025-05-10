@@ -13,12 +13,12 @@ import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
 
 const { width, height } = Dimensions.get('window');
-const GiveawayButtonImg = require('../../assets/GiveawayButtonImg.png');
-const emoji1 = require('../../assets/emoji1.png');
-const emoji2 = require('../../assets/emoji2.png');
-const emoji3 = require('../../assets/emoji3.png');
-const emoji4 = require('../../assets/emoji4.png');
-const emoji5 = require('../../assets/emoji5.png');
+const giveAwayButtonImg = require('../assets/images/giveaway-button.png');
+const emoji1 = require('../assets/images/emoji1.png');
+const emoji2 = require('../assets/images/emoji2.png');
+const emoji3 = require('../assets/images/emoji3.png');
+const emoji4 = require('../assets/images/emoji4.png');
+const emoji5 = require('../assets/images/emoji5.png');
 
 const dummyUsers = [
   { id: 1, name: '안*진', emoji: emoji1, distance: '5m' },
@@ -208,7 +208,6 @@ const GiveAwayScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#f1f7ff" barStyle="dark-content" />
-
       <View style={styles.svgContainer}>
         <Svg width={width * 2} height={height * 2} style={styles.svgImage}>
           {radiusArray.map((radius, index) => (
@@ -260,7 +259,7 @@ const GiveAwayScreen = () => {
         {/* 기프티콘 선택 후 중앙에 표시될 버튼 */}
         {centerButtonVisible && (
           <View style={styles.centerButtonContainer}>
-            <Image source={GiveawayButtonImg} style={styles.centerButtonImage} />
+            <Image source={giveAwayButtonImg} style={styles.centerButtonImage} />
           </View>
         )}
       </View>
@@ -268,7 +267,7 @@ const GiveAwayScreen = () => {
       {/* 뿌리기 기프티콘 목록 버튼 */}
       {buttonVisible && (
         <TouchableOpacity style={styles.giveawayButton} onPress={handleButtonClick}>
-          <Image source={GiveawayButtonImg} style={styles.buttonImage} />
+          <Image source={giveAwayButtonImg} style={styles.buttonImage} />
         </TouchableOpacity>
       )}
 
