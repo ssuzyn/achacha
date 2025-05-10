@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 20,
     backgroundColor: 'rgba(218, 240, 254, 0.8)',
-    width: '95%',
+    width: '90%',
     borderRadius: 10,
   },
   flatListContent: {
