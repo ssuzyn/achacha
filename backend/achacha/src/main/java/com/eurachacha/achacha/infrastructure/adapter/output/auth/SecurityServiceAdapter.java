@@ -1,12 +1,12 @@
-package com.eurachacha.achacha.application.service.auth;
+package com.eurachacha.achacha.infrastructure.adapter.output.auth;
 
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-import com.eurachacha.achacha.application.port.input.auth.SecurityService;
+import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.web.common.exception.CustomException;
@@ -17,9 +17,9 @@ import lombok.RequiredArgsConstructor;
 /**
  * 현재 인증된 사용자의 정보를 제공하는 서비스
  */
-@Service
+@Component
 @RequiredArgsConstructor
-public class SecurityServiceImpl implements SecurityService {
+public class SecurityServiceAdapter implements SecurityServicePort {
 	private final UserRepository userRepository;
 
 	/**

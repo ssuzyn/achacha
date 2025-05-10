@@ -1,8 +1,8 @@
-package com.eurachacha.achacha.application.port.input.auth;
+package com.eurachacha.achacha.application.port.output.auth;
 
 import com.eurachacha.achacha.domain.model.user.User;
 
-public interface SecurityService {
+public interface SecurityServicePort {
 	boolean isLoggedIn();
 
 	User getLoggedInUser();
