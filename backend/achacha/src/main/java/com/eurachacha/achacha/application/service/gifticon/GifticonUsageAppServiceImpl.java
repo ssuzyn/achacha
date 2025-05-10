@@ -121,7 +121,8 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		gifticonDomainService.validateDeletedAndUsed(findGifticon);
 
 		// 해당 사용 내역 조회
-		UsageHistory findUsageHistory = usageHistoryRepository.findById(usageHistoryId);
+		UsageHistory findUsageHistory = usageHistoryRepository.findByIdAndGifticonIdAndUserId(usageHistoryId,
+			gifticonId, userId);
 
 		int newAmount = requestDto.getUsageAmount();
 
@@ -129,6 +130,31 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		findGifticon.updateRemainingAmount(
 			gifticonUsageDomainService.updateUsageHistory(userId, newAmount, findGifticon, findUsageHistory));
 		findUsageHistory.updateUsageAmount(newAmount);
+	}
+
+	@Override
+	@Transactional
+	public void deleteGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		// 삭제, 사용 여부 판단
+		gifticonDomainService.validateDeletedAndUsed(findGifticon);
+
+		// 기프티콘 타입검증
+		gifticonUsageDomainService.validateAmountGifticonType(findGifticon);
+
+		// 해당 사용 내역 조회
+		UsageHistory findUsageHistory = usageHistoryRepository.findByIdAndGifticonIdAndUserId(usageHistoryId,
+			gifticonId, userId);
+
+		// 삭제
+		usageHistoryRepository.delete(findUsageHistory);
+		// 잔액 복구
+		findGifticon.updateRemainingAmount(findGifticon.getRemainingAmount() + findUsageHistory.getUsageAmount());
 	}
 
 	private void validateGifticonAccess(Gifticon findGifticon, Integer userId) {

@@ -25,13 +25,6 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 		}
 	}
 
-	@Override // 사용자 유효성 검증 (기존 사용자와 동일한지 확인)
-	public void validateUsageUser(Integer userId, Integer usageUserId) {
-		if (!usageUserId.equals(userId)) {
-			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
-		}
-	}
-
 	@Override // 기프티콘 잔액 계산 (잔액이 부족한 경우 예외 발생)
 	public int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon) {
@@ -67,9 +60,6 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 		UsageHistory findUsageHistory) {
 		// 기프티콘 타입 확인
 		validateAmountGifticonType(findGifticon);
-
-		// 수정하려는 사용자가 기존 사용자와 동일한지 확인
-		validateUsageUser(userId, findUsageHistory.getUser().getId());
 
 		// 변경 금액이 유효한지 확인
 		validateAmount(newAmount);

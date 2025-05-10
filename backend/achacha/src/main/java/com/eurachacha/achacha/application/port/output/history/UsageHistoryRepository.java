@@ -11,5 +11,7 @@ public interface UsageHistoryRepository {
 
 	List<UsageHistory> findUsageHistories(Integer gifticonId);
 
-	UsageHistory findById(Integer usageHistoryId);
+	UsageHistory findByIdAndGifticonIdAndUserId(Integer usageHistoryId, Integer gifticonId, Integer userId);
+
+	void delete(UsageHistory usageHistory);
 }

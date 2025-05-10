@@ -9,8 +9,6 @@ public interface GifticonUsageDomainService {
 
 	void validateAmountGifticonType(Gifticon gifticon);
 
-	void validateUsageUser(Integer userId, Integer usageUserId);
-
 	int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon);
 
