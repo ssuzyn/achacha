@@ -6,5 +6,6 @@ import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResp
 
 public interface AuthAppService {
 	TokenResponseDto loginWithKakao(KakaoLoginRequestDto requestDto);
+
 	TokenResponseDto refreshToken(RefreshTokenRequestDto requestDto);
 }
