@@ -27,8 +27,12 @@ pipeline {
 
         // MongoDB 환경변수
         MONGODB_URI = credentials('MONGODB_URI')
+
         // Mattermost 웹훅 URL
         MATTERMOST_WEBHOOK_URL = credentials('MATTERMOST_WEBHOOK_URL')
+
+        // JWT secret 값
+        JWT_SECRET = credentials('JWT_SECRET')
     }
 
     stages {
@@ -101,6 +105,7 @@ pipeline {
                                       -e AWS_CLOUDFRONT_KEYPAIR_ID="${AWS_CLOUDFRONT_KEYPAIR_ID}" \\
                                       -e AWS_CLOUDFRONT_PRIVATE_KEY="${AWS_CLOUDFRONT_PRIVATE_KEY}" \\
                                       -e MONGODB_URI="${MONGODB_URI}" \\
+                                      -e JWT_SECRET="${JWT_SECRET}" \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
                                       ${DOCKER_IMAGE}:latest;

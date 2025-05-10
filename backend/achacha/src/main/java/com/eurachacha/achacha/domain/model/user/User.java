@@ -43,4 +43,8 @@ public class User extends TimeStampEntity {
 	public void delete() {
 		this.isDeleted = true;
 	}
+
+	public void updateName(String name) {
+		this.name = name;
+	}
 }

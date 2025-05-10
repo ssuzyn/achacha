@@ -5,10 +5,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.eurachacha.achacha.domain.model.user.User;
+import com.eurachacha.achacha.domain.model.user.FcmToken;
 
 @Repository
-public interface UserJpaRepository extends JpaRepository<User, Integer> {
-	Optional<User> findByProviderAndProviderUserId(String provider, String providerUserId);
+public interface FcmTokenJpaRepository extends JpaRepository<FcmToken, Integer> {
 
+	Optional<FcmToken> findByUserId(Integer userId);
 }
