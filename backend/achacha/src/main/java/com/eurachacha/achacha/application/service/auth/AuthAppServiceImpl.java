@@ -8,6 +8,7 @@ import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLogin
 import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTokenRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
+import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
@@ -15,7 +16,6 @@ import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
-import com.eurachacha.achacha.infrastructure.security.JwtTokenProvider;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -30,7 +30,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final FcmTokenRepository fcmTokenRepository;
 	private final AuthServicePort authServicePort;
-	private final JwtTokenProvider jwtTokenProvider;
+	private final TokenServicePort tokenServicePort;
 
 	// 카카오 제공자 상수
 	private static final String KAKAO_PROVIDER = "KAKAO";
@@ -68,21 +68,21 @@ public class AuthAppServiceImpl implements AuthAppService {
 		// }
 
 		// JWT 토큰 발급
-		String accessToken = jwtTokenProvider.createAccessToken(user.getId());
-		String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+		String accessToken = tokenServicePort.createAccessToken(user.getId());
+		String refreshToken = tokenServicePort.createRefreshToken(user.getId());
 		log.debug("JWT 토큰 발급 완료: userId={}", user.getId());
 
 		// 리프레시 토큰 저장
 		saveRefreshToken(user, refreshToken);
 
-		return new TokenResponseDto(accessToken, refreshToken, jwtTokenProvider.getAccessTokenExpirySeconds());
+		return new TokenResponseDto(accessToken, refreshToken, tokenServicePort.getAccessTokenExpirySeconds());
 	}
 
 	@Override
 	@Transactional
 	public TokenResponseDto refreshToken(RefreshTokenRequestDto requestDto) {
 		// 리프레시 토큰 검증 및 새 액세스 토큰 발급
-		Integer userId = jwtTokenProvider.validateRefreshTokenAndGetUserId(requestDto.getRefreshToken());
+		Integer userId = tokenServicePort.validateRefreshTokenAndGetUserId(requestDto.getRefreshToken());
 
 		// 사용자가 존재하는지 확인
 		User user = userRepository.findById(userId);
@@ -92,10 +92,10 @@ public class AuthAppServiceImpl implements AuthAppService {
 			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
-		String newAccessToken = jwtTokenProvider.createAccessToken(userId);
+		String newAccessToken = tokenServicePort.createAccessToken(userId);
 
 		return new TokenResponseDto(newAccessToken, requestDto.getRefreshToken(),
-			jwtTokenProvider.getAccessTokenExpirySeconds());
+			tokenServicePort.getAccessTokenExpirySeconds());
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {

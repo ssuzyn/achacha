@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.infrastructure.security;
+package com.eurachacha.achacha.infrastructure.adapter.output.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -7,6 +7,7 @@ import javax.crypto.SecretKey;
 
 import org.springframework.stereotype.Component;
 
+import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
 import com.eurachacha.achacha.infrastructure.config.JwtProperties;
 
 import io.jsonwebtoken.Jwts;
@@ -15,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class JwtTokenProvider {
+public class JwtTokenServiceAdapter implements TokenServicePort {
 
 	private final JwtProperties jwtProperties;
 	private SecretKey key;
@@ -27,11 +28,13 @@ public class JwtTokenProvider {
 		}
 	}
 
+	@Override
 	public String createAccessToken(Integer userId) {
 		initializeKey();
 		return createToken(userId, jwtProperties.getAccessTokenExpirySeconds());
 	}
 
+	@Override
 	public String createRefreshToken(Integer userId) {
 		initializeKey();
 		return createToken(userId, jwtProperties.getRefreshTokenExpirySeconds());
@@ -49,6 +52,7 @@ public class JwtTokenProvider {
 			.compact();
 	}
 
+	@Override
 	public Integer validateRefreshTokenAndGetUserId(String refreshToken) {
 		initializeKey();
 		return Integer.parseInt(
@@ -61,6 +65,7 @@ public class JwtTokenProvider {
 		);
 	}
 
+	@Override
 	public Integer validateAccessTokenAndGetUserId(String accessToken) {
 		initializeKey();
 		return Integer.parseInt(
@@ -73,6 +78,7 @@ public class JwtTokenProvider {
 		);
 	}
 
+	@Override
 	public long getAccessTokenExpirySeconds() {
 		return jwtProperties.getAccessTokenExpirySeconds();
 	}

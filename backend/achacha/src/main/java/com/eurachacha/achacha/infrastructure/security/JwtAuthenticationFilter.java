@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.eurachacha.achacha.infrastructure.adapter.output.auth.JwtTokenServiceAdapter;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
@@ -24,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	private final JwtTokenProvider jwtTokenProvider;
+	private final JwtTokenServiceAdapter jwtTokenServiceAdapter;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -35,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 			if (StringUtils.hasText(jwt)) {
 				// 토큰에서 사용자 ID 추출
-				Integer userId = jwtTokenProvider.validateAccessTokenAndGetUserId(jwt);
+				Integer userId = jwtTokenServiceAdapter.validateAccessTokenAndGetUserId(jwt);
 
 				// SecurityContext에 인증 정보 설정
 				UserDetails userDetails = createUserDetails(userId);
