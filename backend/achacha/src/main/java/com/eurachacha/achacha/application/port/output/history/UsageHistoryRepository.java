@@ -9,7 +9,7 @@ public interface UsageHistoryRepository {
 
 	UsageHistory getUsageHistoryDetail(Integer userId, Integer gifticonId);
 
-	List<UsageHistory> findUsageHistories(Integer gifticonId);
+	List<UsageHistory> findAmountGifticonUsageHistories(Integer gifticonId);
 
 	UsageHistory findByIdAndGifticonIdAndUserId(Integer usageHistoryId, Integer gifticonId, Integer userId);
 
