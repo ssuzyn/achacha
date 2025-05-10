@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
 
 const { width } = Dimensions.get('window');
-const StarbucksImg = require('../../assets/starbucks.png');
+const StarbucksImg = require('../assets/images/starbucks.png');
 
 const GifticonConfirmModal = ({ visible, selectedGifticon, onCancel, onConfirm }) => {
   return (
