@@ -1,5 +1,8 @@
 package com.eurachacha.achacha.application.service.auth;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -10,9 +13,15 @@ import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResp
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
 import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
+import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
+import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
+import com.eurachacha.achacha.domain.model.notification.NotificationType;
+import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
+import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
 import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
@@ -25,10 +34,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthAppServiceImpl implements AuthAppService {
 	private final UserRepository userRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final FcmTokenRepository fcmTokenRepository;
+	private final NotificationTypeRepository notificationTypeRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
 	private final AuthServicePort authServicePort;
 	private final TokenServicePort tokenServicePort;
 
@@ -51,7 +63,10 @@ public class AuthAppServiceImpl implements AuthAppService {
 		User user = userRepository.findByProviderAndProviderUserId(KAKAO_PROVIDER, kakaoUserInfo.getId())
 			.orElseGet(() -> {
 				log.info("신규 카카오 사용자 생성: id={}", kakaoUserInfo.getId());
-				return createKakaoUser(kakaoUserInfo);
+				User newUser = createKakaoUser(kakaoUserInfo);
+				// 신규 사용자에 대한 알림 설정 초기화 호출
+				initializeNotificationSettings(newUser);
+				return newUser;
 			});
 
 		// 닉네임이 변경되었으면 업데이트
@@ -123,6 +138,58 @@ public class AuthAppServiceImpl implements AuthAppService {
 			.value(tokenValue)
 			.build();
 		fcmTokenRepository.save(fcmToken);
+	}
+
+	/**
+	 * 신규 사용자에 대한 알림 설정을 초기화합니다.
+	 * 모든 알림 타입에 대해 기본값으로 isEnabled = false로 설정합니다.
+	 * EXPIRY_DATE 타입의 경우 expirationCycle을 ONE_WEEK으로 설정합니다.
+	 *
+	 * @param user 신규 생성된 사용자
+	 */
+	private void initializeNotificationSettings(User user) {
+		log.info("사용자 알림 설정 초기화 시작: userId={}", user.getId());
+
+		// 모든 알림 타입 조회
+		List<NotificationType> notificationTypes = notificationTypeRepository.findAll();
+
+		if (notificationTypes.isEmpty()) {
+			log.warn("알림 타입이 존재하지 않습니다. 알림 설정을 초기화할 수 없습니다.");
+			return;
+		}
+
+		// 사용자별 알림 설정 생성
+		List<NotificationSetting> settings = createUserNotificationSettings(user, notificationTypes);
+
+		// 알림 설정 저장
+		notificationSettingRepository.saveAll(settings);
+
+		log.info("사용자 알림 설정 초기화 완료: userId={}, 생성된 설정 수={}", user.getId(), settings.size());
+	}
+
+	/**
+	 * 사용자별 알림 설정 목록을 생성합니다.
+	 */
+	private List<NotificationSetting> createUserNotificationSettings(User user,
+		List<NotificationType> notificationTypes) {
+		return notificationTypes.stream()
+			.map(notificationType -> NotificationSetting.builder()
+				.user(user)
+				.notificationType(notificationType)
+				.isEnabled(false)
+				.expirationCycle(determineExpirationCycle(notificationType))
+				.build())
+			.collect(Collectors.toList());
+	}
+
+	/**
+	 * 알림 타입에 따른 만료 주기를 결정합니다.
+	 * EXPIRY_DATE 타입의 경우 ONE_WEEK으로, 그 외에는 null로 설정합니다.
+	 */
+	private ExpirationCycle determineExpirationCycle(NotificationType notificationType) {
+		return notificationType.getCode() == NotificationTypeCode.EXPIRY_DATE
+			? ExpirationCycle.ONE_WEEK
+			: null;
 	}
 
 	// @Override
