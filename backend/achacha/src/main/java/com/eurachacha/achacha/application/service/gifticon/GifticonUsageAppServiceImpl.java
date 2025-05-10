@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonUsageAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.AmountGifticonUseRequestDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonUsageHistoriesResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonUsageHistoryResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoriesResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoryResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
@@ -72,7 +72,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 	}
 
 	@Override
-	public GifticonUsageHistoriesResponseDto getGifticonUsageHistorys(Integer gifticonId) {
+	public AmountGifticonUsageHistoriesResponseDto getAmountGifticonUsageHistorys(Integer gifticonId) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -81,15 +81,18 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		// 삭제 여부 판단
 		gifticonDomainService.isDeleted(findGifticon);
 
+		// 타입 검증
+		gifticonUsageDomainService.validateAmountGifticonType(findGifticon);
+
 		// 조회 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
 		// 사용 내역 조회
-		List<UsageHistory> findUsageHistories = usageHistoryRepository.findUsageHistories(gifticonId);
+		List<UsageHistory> findUsageHistories = usageHistoryRepository.findAmountGifticonUsageHistories(gifticonId);
 
 		// entity -> dto로 변환
-		List<GifticonUsageHistoryResponseDto> usageHistoryResponseDtos = findUsageHistories.stream()
-			.map(history -> GifticonUsageHistoryResponseDto.builder()
+		List<AmountGifticonUsageHistoryResponseDto> usageHistoryResponseDtos = findUsageHistories.stream()
+			.map(history -> AmountGifticonUsageHistoryResponseDto.builder()
 				.usageHistoryId(history.getId())
 				.usageAmount(history.getUsageAmount())
 				.usageHistoryCreatedAt(history.getCreatedAt())
@@ -98,7 +101,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 				.build())
 			.toList();
 
-		return GifticonUsageHistoriesResponseDto.builder()
+		return AmountGifticonUsageHistoriesResponseDto.builder()
 			.gifticonId(findGifticon.getId())
 			.gifticonName(findGifticon.getName())
 			.gifticonOriginalAmount(findGifticon.getOriginalAmount())

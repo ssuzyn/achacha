@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonUsageAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.AmountGifticonUseRequestDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonUsageHistoriesResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoriesResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +34,10 @@ public class AmountGifticonController {
 	}
 
 	@GetMapping("/{gifticonId}/usage-history")
-	public ResponseEntity<GifticonUsageHistoriesResponseDto> getUsageHistory(
+	public ResponseEntity<AmountGifticonUsageHistoriesResponseDto> getUsageHistory(
 		@PathVariable Integer gifticonId
 	) {
-		return ResponseEntity.ok(gifticonUsageAppService.getGifticonUsageHistorys(gifticonId));
+		return ResponseEntity.ok(gifticonUsageAppService.getAmountGifticonUsageHistorys(gifticonId));
 	}
 
 	@PatchMapping("/{gifticonId}/usage-history/{usageHistoryId}")
