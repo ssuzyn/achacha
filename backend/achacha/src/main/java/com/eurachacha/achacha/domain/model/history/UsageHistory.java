@@ -42,4 +42,7 @@ public class UsageHistory extends TimeStampEntity {
 
 	private Integer usageAmount;
 
+	public void updateUsageAmount(Integer amount) {
+		this.usageAmount = amount;
+	}
 }
