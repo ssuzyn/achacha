@@ -26,6 +26,7 @@ public enum ErrorCode {
 	GIFTICON_NO_USAGE_HISTORY(HttpStatus.NOT_FOUND, "GIFTICON_009", "해당 기프티콘에 대한 사용내역이 없습니다."),
 	GIFTICON_INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "GIFTICON_010", "기프티콘 잔액이 부족합니다."),
 	INVALID_GIFTICON_TYPE(HttpStatus.BAD_REQUEST, "GIFTICON_011", "기프티콘 타입이 올바르지 않습니다."),
+	INVALID_AMOUNT_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_012", "금액이 유효하지 않습니다."),
 
 	// 브랜드 관련 에러 코드
 	BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "BRAND_001", "브랜드 정보를 찾을 수 없습니다,"),
