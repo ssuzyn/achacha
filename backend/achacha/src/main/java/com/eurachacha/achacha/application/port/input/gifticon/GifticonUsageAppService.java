@@ -11,4 +11,6 @@ public interface GifticonUsageAppService {
 	void updateGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId, AmountGifticonUseRequestDto requestDto);
 
 	void deleteGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId);
+
+	void useProductGifticon(Integer gifticonId);
 }
