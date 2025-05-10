@@ -20,13 +20,12 @@ public enum ErrorCode {
 	GIFTICON_EXPIRED(HttpStatus.NOT_FOUND, "GIFTICON_003", "기프티콘이 만료되었습니다."),
 	GIFTICON_ALREADY_USED(HttpStatus.NOT_FOUND, "GIFTICON_004", "이미 사용된 기프티콘입니다."),
 	GIFTICON_DELETED(HttpStatus.NOT_FOUND, "GIFTICON_005", "삭제된 기프티콘입니다."),
-	INVALID_AMOUNT_GIFTICON_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_006", "금액형 기프티콘이 아닙니다."),
+	INVALID_AMOUNT_GIFTICON_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_006", "금액형 기프티콘은 금액을 입력해야 합니다."),
 	GIFTICON_BARCODE_DUPLICATE(HttpStatus.CONFLICT, "GIFTICON_007", "이미 등록된 바코드 번호입니다."),
 	GIFTICON_AVAILABLE(HttpStatus.BAD_REQUEST, "GIFTICON_008", "사용 가능한 기프티콘입니다."),
 	GIFTICON_NO_USAGE_HISTORY(HttpStatus.NOT_FOUND, "GIFTICON_009", "해당 기프티콘에 대한 사용내역이 없습니다."),
 	GIFTICON_INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "GIFTICON_010", "기프티콘 잔액이 부족합니다."),
 	INVALID_GIFTICON_TYPE(HttpStatus.BAD_REQUEST, "GIFTICON_011", "기프티콘 타입이 올바르지 않습니다."),
-	INVALID_AMOUNT_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_012", "금액이 유효하지 않습니다."),
 
 	// 브랜드 관련 에러 코드
 	BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "BRAND_001", "브랜드 정보를 찾을 수 없습니다,"),
