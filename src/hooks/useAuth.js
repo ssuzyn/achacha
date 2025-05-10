@@ -7,6 +7,7 @@ import apiClient from '../api/apiClient'; // 백엔드 통신용으로 설정한
 import { API_CONFIG } from '../config/apiConfig'; // 추가: API 설정 import
 // 실제 소셜 로그인 SDK import (예시)
 // import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * 소셜 로그인 관련 로직을 관리하는 커스텀 훅.
@@ -28,66 +29,33 @@ export const useAuth = () => {
     setError(null);
     try {
       console.log('[ACHACHA_DEBUG] Calling kakaoLogin() from @react-native-seoul/kakao-login');
-      const kakaoApiToken = await kakaoLogin(); // 카카오 SDK 로그인 시도
+      const kakaoAccessToken = await kakaoLogin(); // 카카오 SDK 로그인 시도
+      console.log('[ACHACHA_DEBUG] kakaoAccessToken:', kakaoAccessToken);
 
-      // --- 카카오 SDK 응답 확인 로직 추가 ---
-      console.log('[ACHACHA_DEBUG] Kakao SDK Response (kakaoApiToken):', JSON.stringify(kakaoApiToken, null, 2));
-      Alert.alert(
-        '카카오 SDK 응답',
-        `액세스 토큰: ${kakaoApiToken && kakaoApiToken.accessToken ? '받아옴' : '못 받아옴'}\n리프레시 토큰: ${kakaoApiToken && kakaoApiToken.refreshToken ? '받아옴' : '못 받아옴'}\nID 토큰: ${kakaoApiToken && kakaoApiToken.idToken ? '받아옴' : '못 받아옴'}\n\n전체 응답:\n${JSON.stringify(kakaoApiToken, null, 2)}`
-      );
-      // -------------------------------------
+      // 2. 백엔드에 토큰 전달
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.KAKAO_LOGIN, {
+        kakaoAccessToken,
+      });
 
-      // ▼▼▼ 백엔드 API 호출 부분 (테스트를 위해 잠시 주석 처리) ▼▼▼
-      /*
-      if (kakaoApiToken && kakaoApiToken.accessToken) {
-        const response = await apiClient.post(API_CONFIG.ENDPOINTS.KAKAO_LOGIN, {
-          kakaoToken: kakaoApiToken.accessToken,
-        });
+      // 3. 자체 토큰 저장 (예: AsyncStorage, SecureStore 등)
+      const { accessToken, refreshToken, expiresIn } = response.data;
+      await AsyncStorage.setItem('accessToken', accessToken);
+      await AsyncStorage.setItem('refreshToken', refreshToken);
 
-        const { jwtToken, userData } = response.data;
+      // 저장 확인용 로그
+      const storedAccessToken = await AsyncStorage.getItem('accessToken');
+      const storedRefreshToken = await AsyncStorage.getItem('refreshToken');
+      console.log('[ACHACHA_DEBUG] AsyncStorage accessToken:', storedAccessToken);
+      console.log('[ACHACHA_DEBUG] AsyncStorage refreshToken:', storedRefreshToken);
 
-        // TODO: JWT 저장
-        setUser(userData);
-        setAuthState('success');
-        console.log('Backend JWT:', jwtToken);
-        Alert.alert('로그인 성공', `환영합니다, ${userData.name || '사용자'}님!`);
-        // navigation.navigate('Home');
-      } else {
-        // 이 부분은 카카오 토큰 자체를 못 받았을 때의 처리였으나, Alert 위에서 이미 확인함
-        // Alert.alert('카카오 로그인 실패', '카카오로부터 유효한 토큰을 받지 못했습니다.');
-        // setAuthState('error');
-      }
-      */
-      // ▲▲▲ 백엔드 API 호출 부분 (테스트를 위해 잠시 주석 처리) ▲▲▲
-
-      // 임시: 카카오 토큰 받았으면 일단 성공으로 간주 (백엔드 연동 전 테스트)
-      if (kakaoApiToken && kakaoApiToken.accessToken) {
-        console.log('[ACHACHA_DEBUG] Kakao token received successfully (before backend integration). Token:', JSON.stringify(kakaoApiToken, null, 2));
-        Alert.alert("카카오 인증 성공", "카카오로부터 액세스 토큰을 받았습니다. (백엔드 연동 전)");
-        setAuthState('success'); // 실제로는 백엔드 성공 후 변경
-      } else {
-         console.warn('[ACHACHA_DEBUG] Kakao login failed: No valid token received from kakaoLogin(). Response:', JSON.stringify(kakaoApiToken, null, 2));
-         Alert.alert('카카오 로그인 실패', '카카오로부터 유효한 토큰을 받지 못했습니다. (kakaoApiToken 또는 accessToken 없음)');
-         setAuthState('error');
-      }
-
-    } catch (err) {
-      console.error('[ACHACHA_DEBUG] signInWithKakao Error (Raw Error Object):', JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
-      if (err.code === 'E_USER_CANCELLED') {
-        console.log('[ACHACHA_DEBUG] Kakao login cancelled by user.');
-        Alert.alert('로그인 취소', '카카오 로그인이 사용자에 의해 취소되었습니다.');
-      } else if (err.code === 'E_KAKAO_LOGIN_FAILED' || err.message?.includes('Kakao')) {
-         console.error('[ACHACHA_DEBUG] Kakao login explicitly failed. Message:', err.message, 'Code:', err.code);
-         Alert.alert('카카오 로그인 실패', err.message || '카카오 서버에서 오류가 발생했습니다.');
-      } else {
-        console.error('[ACHACHA_DEBUG] Unknown login error. Message:', err.message, 'Code:', err.code);
-        Alert.alert('로그인 오류', err.message || '알 수 없는 오류가 발생했습니다.');
-      }
-      setError(err);
+      setAuthState('success');
+      // 이후 네비게이션 등 추가
+    } catch (error) {
+      console.error('[ACHACHA_DEBUG] Kakao login error:', error);
       setAuthState('error');
+      // 에러 처리
     }
-  }, [navigation]);
+  }, []);
 
   // 구글 로그인 처리 함수
   const signInWithGoogle = useCallback(async () => {

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG } from '../config/apiConfig'; // 방금 생성한 설정 파일 import
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -14,21 +15,22 @@ const apiClient = axios.create({
 
 // (옵션) 요청 인터셉터: 모든 요청에 공통 로직을 추가할 때 유용합니다.
 // 예를 들어, 모든 요청 헤더에 인증 토큰(JWT)을 자동으로 추가할 수 있습니다.
-/*
 apiClient.interceptors.request.use(
   async (config) => {
-    // 예시: AsyncStorage 또는 SecureStore에서 토큰을 가져옵니다.
-    // const userToken = await AsyncStorage.getItem('userToken'); 
-    // if (userToken) {
-    //   config.headers.Authorization = `Bearer ${userToken}`;
-    // }
+    try {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
+    } catch (e) {
+      // 토큰 읽기 실패 시 아무것도 하지 않음
+    }
     return config;
   },
   (error) => {
     return Promise.reject(error);
   }
 );
-*/
 
 // (옵션) 응답 인터셉터: 모든 응답에 공통 로직을 추가할 때 유용합니다.
 // 예를 들어, 특정 API 에러 코드(예: 401 Unauthorized)를 감지하여 자동으로 로그아웃 처리 등을 할 수 있습니다.

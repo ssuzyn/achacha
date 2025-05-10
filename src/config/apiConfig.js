@@ -8,7 +8,7 @@ export const API_CONFIG = {
   BASE_URL: PRODUCTION_BASE_URL,
   ENDPOINTS: {
     // 인증 관련 (useAuth.js에서 사용하는 엔드포인트)
-    KAKAO_LOGIN: '/api/login', // 기존 코드에서 사용 중인 경로
+    KAKAO_LOGIN: '/api/auth/kakao', // ← 실제 백엔드 경로로 수정
 
     // 필요에 따라 다른 엔드포인트들을 여기에 추가합니다.
     // 예: GOOGLE_LOGIN: '/auth/google',
