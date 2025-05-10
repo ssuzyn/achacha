@@ -20,6 +20,9 @@ public enum ErrorCode {
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "유효하지 않은 리프레시 토큰입니다."),
 	NOT_AUTHENTICATED_USER(HttpStatus.UNAUTHORIZED, "AUTH_007", "인증 되지 않은 사용자입니다."),
 
+	// FCM 토큰 관련 에러 코드
+	FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_001", "FCM 토큰을 찾을 수 없습니다."),
+
 	// 기프티콘 관련 에러 코드
 	GIFTICON_NOT_FOUND(HttpStatus.NOT_FOUND, "GIFTICON_001", "기프티콘 정보를 찾을 수 없습니다."),
 	UNAUTHORIZED_GIFTICON_ACCESS(HttpStatus.FORBIDDEN, "GIFTICON_002", "해당 기프티콘에 접근 권한이 없습니다."),
