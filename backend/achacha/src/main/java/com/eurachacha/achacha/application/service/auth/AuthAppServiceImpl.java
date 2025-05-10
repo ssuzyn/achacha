@@ -87,14 +87,12 @@ public class AuthAppServiceImpl implements AuthAppService {
 		// 사용자가 존재하는지 확인
 		User user = userRepository.findById(userId);
 
-		// 사용자의 리프레시 토큰이 존재하는지만 확인
-		if (!refreshTokenRepository.existsByUserId(userId)) {
-			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
-		}
+		// 사용자의 리프레시 토큰 조회
+		RefreshToken refreshToken = refreshTokenRepository.findByUserIdAndValue(userId, requestDto.getRefreshToken());
 
 		String newAccessToken = tokenServicePort.createAccessToken(userId);
 
-		return new TokenResponseDto(newAccessToken, requestDto.getRefreshToken(),
+		return new TokenResponseDto(newAccessToken, refreshToken.getValue(),
 			tokenServicePort.getAccessTokenExpirySeconds());
 	}
 
