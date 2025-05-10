@@ -10,7 +10,7 @@ import {
 const { width } = Dimensions.get('window');
 import { calculateDday } from '../utils/dateUtils';
 
-const StarbucksImg = require('../../assets/starbucks.png');
+const StarbucksImg = require('../assets/images/starbucks.png');
 
 const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
   const renderGifticonItem = ({ item }) => {
