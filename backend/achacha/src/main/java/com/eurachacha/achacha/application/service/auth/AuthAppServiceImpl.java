@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.application.service.auth;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AuthAppServiceImpl implements AuthAppService {
 	private final UserRepository userRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
@@ -146,33 +148,40 @@ public class AuthAppServiceImpl implements AuthAppService {
 	 * @param user 신규 생성된 사용자
 	 */
 	private void initializeNotificationSettings(User user) {
-		log.info("사용자 알림 설정 초기화: userId={}", user.getId());
+		log.info("사용자 알림 설정 초기화 시작: userId={}", user.getId());
 
 		// 모든 알림 타입 조회
 		List<NotificationType> notificationTypes = notificationTypeRepository.findAll();
 
-		// 각 알림 타입별로 기본 설정 생성 (isEnabled = false)
-		for (NotificationType notificationType : notificationTypes) {
-			NotificationSetting setting = NotificationSetting.builder()
-				.user(user)
-				.notificationType(notificationType)
-				.isEnabled(false) // 기본값으로 비활성화
-				.expirationCycle(null) // 기본값은 null
-				.build();
-
-			// EXPIRY_DATE 타입의 경우 기본 만료 주기를 ONE_WEEK으로 설정
-			if (notificationType.getCode() == NotificationTypeCode.EXPIRY_DATE) {
-				setting.updateExpirationCycle(ExpirationCycle.ONE_WEEK);
-			}
-
-			notificationSettingRepository.save(setting);
-			log.debug("알림 설정 생성: userId={}, notificationType={}, expirationCycle={}",
-				user.getId(),
-				notificationType.getCode(),
-				setting.getExpirationCycle());
+		if (notificationTypes.isEmpty()) {
+			log.warn("알림 타입이 존재하지 않습니다. 알림 설정을 초기화할 수 없습니다.");
+			return;
 		}
 
-		log.info("사용자 알림 설정 초기화 완료: userId={}, 생성된 설정 수={}", user.getId(), notificationTypes.size());
+		// 각 알림 타입별로 기본 설정 생성
+		List<NotificationSetting> settings = notificationTypes.stream()
+			.map(notificationType -> {
+				NotificationSetting setting = NotificationSetting.builder()
+					.user(user)
+					.notificationType(notificationType)
+					.isEnabled(false)
+					.expirationCycle(
+						notificationType.getCode() == NotificationTypeCode.EXPIRY_DATE ? ExpirationCycle.ONE_WEEK :
+							null)
+					.build();
+
+				if (log.isDebugEnabled()) {
+					log.debug("알림 설정 생성: userId={}, notificationType={}, expirationCycle={}",
+						user.getId(), notificationType.getCode(), setting.getExpirationCycle());
+				}
+
+				return setting;
+			})
+			.collect(Collectors.toList());
+
+		notificationSettingRepository.saveAll(settings);
+
+		log.info("사용자 알림 설정 초기화 완료: userId={}, 생성된 설정 수={}", user.getId(), settings.size());
 	}
 
 	// @Override
