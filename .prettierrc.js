@@ -8,5 +8,7 @@ bracketSpacing: true,
 arrowParens: 'avoid',
 endOfLine: 'auto',
 jsxSingleQuote: false,
-bracketSameLine: false
-}; 
+bracketSameLine: false,
+useTabs: false,
+embeddedLanguageFormatting: 'auto',
+};

@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
 // axios 등 HTTP 클라이언트 라이브러리
@@ -52,7 +51,7 @@ export const useAuth = () => {
       console.log('[ACHACHA_DEBUG] AsyncStorage refreshToken:', storedRefreshToken);
 
       setAuthState('success');
-      navigation.replace('Home'); // 로그인 성공 시 HomeScreen으로 이동
+      navigation.replace('Main'); // 로그인 성공 시 HomeScreen으로 이동
     } catch (error) {
       console.error('[ACHACHA_DEBUG] Kakao login error:', error);
       setAuthState('error');
@@ -68,7 +67,6 @@ export const useAuth = () => {
 
   // 구글 로그인 처리 함수
   const signInWithGoogle = useCallback(async () => {
-    console.log('[useAuth] Attempting Google Login...');
     setAuthState('loading'); // 로딩 상태 시작 (옵션)
     try {
       // --- 실제 구글 로그인 로직 구현 ---
@@ -79,19 +77,16 @@ export const useAuth = () => {
       // ---------------------------------
 
       // 현재는 임시 로직
-      alert('구글 로그인이 구현되지 않았습니다.');
       setAuthState('success'); // 성공 상태 (옵션)
-      navigation.navigate('Home'); // 홈으로 이동
-
+      navigation.navigate('Main'); // 홈으로 이동
     } catch (error) {
       console.error('[useAuth] Google Login Error:', error);
       setAuthState('error'); // 에러 상태 (옵션)
       // 구글 로그인은 사용자가 취소한 경우 특정 에러 코드를 반환할 수 있음
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // 사용자가 로그인 흐름을 취소함
-        console.log('[useAuth] Google Sign in cancelled');
       } else {
-        Alert.alert('구글 로그인 오류', error.message || '로그인 중 오류가 발생했습니다.');
+        //
       }
     }
   }, [navigation]); // navigation 의존성 추가
@@ -109,6 +104,6 @@ export const useAuth = () => {
 // 실제 구글 로그인 사용 시 필요할 수 있는 에러 코드 (참고용)
 // import { statusCodes } from '@react-native-google-signin/google-signin';
 const statusCodes = {
-    SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
-    // ... 다른 상태 코드들
-}; 
+  SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
+  // ... 다른 상태 코드들
+};
