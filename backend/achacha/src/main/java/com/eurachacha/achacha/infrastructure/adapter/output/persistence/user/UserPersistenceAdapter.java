@@ -25,7 +25,7 @@ public class UserPersistenceAdapter implements UserRepository {
 	@Override
 	public User findById(Integer id) {
 		return userJpaRepository.findById(id)
-			.orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+			.orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 	}
 
 	@Override
