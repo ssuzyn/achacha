@@ -42,7 +42,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 		KakaoUserInfoDto kakaoUserInfo = authServicePort.validateKakaoToken(requestDto.getKakaoAccessToken());
 
 		if (kakaoUserInfo == null) {
-			throw new CustomException(ErrorCode.INVALID_TOKEN);
+			throw new CustomException(ErrorCode.INVALID_ACCESS_TOKEN);
 		}
 
 		log.debug("카카오 사용자 정보 조회 성공: id={}, nickname={}", kakaoUserInfo.getId(), kakaoUserInfo.getNickname());

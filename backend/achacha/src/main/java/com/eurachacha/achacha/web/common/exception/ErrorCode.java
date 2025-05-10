@@ -12,7 +12,7 @@ public enum ErrorCode {
 	CONSTANT_CLASS_INSTANTIATION(HttpStatus.INTERNAL_SERVER_ERROR, "X004", "상수 클래스는 인스턴스화할 수 없습니다."),
 
 	// Auth 관련 에러
-	INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_001", "유효하지 않은 토큰입니다."),
+	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_001", "유효하지 않은 토큰입니다."),
 	EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_002", "만료된 토큰입니다."),
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH_003", "사용자를 찾을 수 없습니다."),
 	KAKAO_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_004", "카카오 API 호출 중 오류가 발생했습니다."),

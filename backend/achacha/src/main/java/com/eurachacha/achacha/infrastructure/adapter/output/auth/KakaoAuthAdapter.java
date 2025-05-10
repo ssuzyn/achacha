@@ -1,11 +1,5 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.auth;
 
-import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
-import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoApiResponse;
-import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
-import com.eurachacha.achacha.web.common.exception.CustomException;
-import com.eurachacha.achacha.web.common.exception.ErrorCode;
-
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,6 +8,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+
+import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
+import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoApiResponse;
+import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -59,7 +59,7 @@ public class KakaoAuthAdapter implements AuthServicePort {
 
 		} catch (HttpClientErrorException e) {
 			if (e.getStatusCode().is4xxClientError()) {
-				throw new CustomException(ErrorCode.INVALID_TOKEN);
+				throw new CustomException(ErrorCode.INVALID_ACCESS_TOKEN);
 			}
 			throw new CustomException(ErrorCode.KAKAO_API_ERROR);
 		} catch (RestClientException e) {
