@@ -2,7 +2,6 @@ package com.eurachacha.achacha.application.service.auth;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import com.eurachacha.achacha.application.port.input.auth.AuthAppService;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLoginRequestDto;
@@ -63,10 +62,10 @@ public class AuthAppServiceImpl implements AuthAppService {
 		}
 
 		// FCM 토큰 저장
-		if (StringUtils.hasText(requestDto.getFcmToken())) {
-			log.debug("FCM 토큰 저장: userId={}", user.getId());
-			saveFcmToken(user, requestDto.getFcmToken());
-		}
+		// if (StringUtils.hasText(requestDto.getFcmToken())) {
+		// 	log.debug("FCM 토큰 저장: userId={}", user.getId());
+		// 	saveFcmToken(user, requestDto.getFcmToken());
+		// }
 
 		// JWT 토큰 발급
 		String accessToken = jwtTokenProvider.createAccessToken(user.getId());
