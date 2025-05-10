@@ -54,8 +54,8 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
-		// 잔액 검증
-		gifticonUsageDomainService.validateSaveHistory(findGifticon, requestDto.getUsageAmount());
+		// 타입, 잔액, 사용금액 검증
+		gifticonUsageDomainService.validateUseAmountGifticon(findGifticon, requestDto.getUsageAmount());
 
 		// 사용 처리
 		findGifticon.use(requestDto.getUsageAmount());

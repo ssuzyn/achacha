@@ -14,7 +14,7 @@ public interface GifticonUsageDomainService {
 	int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon);
 
-	void validateSaveHistory(Gifticon gifticon, Integer usageAmount);
+	void validateUseAmountGifticon(Gifticon gifticon, Integer usageAmount);
 
 	int updateUsageHistory(Integer userId, Integer newAmount, Gifticon findGifticon, UsageHistory findUsageHistory);
 

@@ -51,10 +51,13 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	}
 
 	@Override
-	public void validateSaveHistory(Gifticon gifticon, Integer usageAmount) {
+	public void validateUseAmountGifticon(Gifticon gifticon, Integer usageAmount) {
+		// 타입 검증
+		validateAmountGifticonType(gifticon);
+
 		// 잔액 검증
 		validateBalance(gifticon, usageAmount);
-		
+
 		// 사용 금액 검증
 		validateAmount(usageAmount);
 	}
