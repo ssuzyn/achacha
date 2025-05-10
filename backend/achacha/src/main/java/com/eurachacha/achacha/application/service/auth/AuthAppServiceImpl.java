@@ -158,30 +158,38 @@ public class AuthAppServiceImpl implements AuthAppService {
 			return;
 		}
 
-		// 각 알림 타입별로 기본 설정 생성
-		List<NotificationSetting> settings = notificationTypes.stream()
-			.map(notificationType -> {
-				NotificationSetting setting = NotificationSetting.builder()
-					.user(user)
-					.notificationType(notificationType)
-					.isEnabled(false)
-					.expirationCycle(
-						notificationType.getCode() == NotificationTypeCode.EXPIRY_DATE ? ExpirationCycle.ONE_WEEK :
-							null)
-					.build();
+		// 사용자별 알림 설정 생성
+		List<NotificationSetting> settings = createUserNotificationSettings(user, notificationTypes);
 
-				if (log.isDebugEnabled()) {
-					log.debug("알림 설정 생성: userId={}, notificationType={}, expirationCycle={}",
-						user.getId(), notificationType.getCode(), setting.getExpirationCycle());
-				}
-
-				return setting;
-			})
-			.collect(Collectors.toList());
-
+		// 알림 설정 저장
 		notificationSettingRepository.saveAll(settings);
 
 		log.info("사용자 알림 설정 초기화 완료: userId={}, 생성된 설정 수={}", user.getId(), settings.size());
+	}
+
+	/**
+	 * 사용자별 알림 설정 목록을 생성합니다.
+	 */
+	private List<NotificationSetting> createUserNotificationSettings(User user,
+		List<NotificationType> notificationTypes) {
+		return notificationTypes.stream()
+			.map(notificationType -> NotificationSetting.builder()
+				.user(user)
+				.notificationType(notificationType)
+				.isEnabled(false)
+				.expirationCycle(determineExpirationCycle(notificationType))
+				.build())
+			.collect(Collectors.toList());
+	}
+
+	/**
+	 * 알림 타입에 따른 만료 주기를 결정합니다.
+	 * EXPIRY_DATE 타입의 경우 ONE_WEEK으로, 그 외에는 null로 설정합니다.
+	 */
+	private ExpirationCycle determineExpirationCycle(NotificationType notificationType) {
+		return notificationType.getCode() == NotificationTypeCode.EXPIRY_DATE
+			? ExpirationCycle.ONE_WEEK
+			: null;
 	}
 
 	// @Override
