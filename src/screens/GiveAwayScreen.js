@@ -11,6 +11,8 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
+import HeaderBar from '../components/common/HeaderBar';
+import BottomTabBar from '../components/common/BottomTabBar';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../assets/images/giveaway-button.png');
@@ -208,6 +210,7 @@ const GiveAwayScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#f1f7ff" barStyle="dark-content" />
+      <HeaderBar />
       <View style={styles.svgContainer}>
         <Svg width={width * 2} height={height * 2} style={styles.svgImage}>
           {radiusArray.map((radius, index) => (
@@ -288,6 +291,7 @@ const GiveAwayScreen = () => {
         onCancel={handleCancel}
         onConfirm={handleConfirm}
       />
+      <BottomTabBar />
     </View>
   );
 };
