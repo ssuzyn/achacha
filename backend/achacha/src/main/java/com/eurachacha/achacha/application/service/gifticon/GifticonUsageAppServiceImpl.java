@@ -55,10 +55,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		validateGifticonAccess(findGifticon, userId);
 
 		// 잔액 검증
-		boolean hasBalance = gifticonUsageDomainService.hasBalance(findGifticon, requestDto.getUsageAmount());
-		if (!hasBalance) {
-			throw new CustomException(ErrorCode.GIFTICON_INSUFFICIENT_BALANCE);
-		}
+		gifticonUsageDomainService.validateSaveHistory(findGifticon, requestDto.getUsageAmount());
 
 		// 사용 처리
 		findGifticon.use(requestDto.getUsageAmount());
