@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GifticonUsageHistoriesResponseDto {
+public class AmountGifticonUsageHistoriesResponseDto {
 	private Integer gifticonId;
 	private String gifticonName;
 	private Integer gifticonOriginalAmount;
 	private Integer gifticonRemainingAmount;
-	private List<GifticonUsageHistoryResponseDto> usageHistory;
+	private List<AmountGifticonUsageHistoryResponseDto> usageHistory;
 }

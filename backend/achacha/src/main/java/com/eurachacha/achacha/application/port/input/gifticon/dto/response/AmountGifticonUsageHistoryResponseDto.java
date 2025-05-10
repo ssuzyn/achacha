@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GifticonUsageHistoryResponseDto {
+public class AmountGifticonUsageHistoryResponseDto {
 	private Integer usageHistoryId;
 	private Integer usageAmount;
 	private LocalDateTime usageHistoryCreatedAt;
