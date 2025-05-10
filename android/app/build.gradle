@@ -80,6 +80,14 @@ def enableProguardInReleaseBuilds = (findProperty('android.enableProguardInRelea
  */
 def jscFlavor = 'org.webkit:android-jsc:+'
 
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
 android {
     ndkVersion rootProject.ext.ndkVersion
 
@@ -93,6 +101,10 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
+        buildConfigField "String", "KAKAO_APP_KEY", "\"${localProperties.getProperty('KAKAO_APP_KEY')}\""
+        manifestPlaceholders = [kakaoAppKey: localProperties.getProperty('KAKAO_APP_KEY')]
+        resValue "string", "kakao_app_key", localProperties.getProperty('KAKAO_APP_KEY', '')
+        resValue "string", "kakao_native_app_key", localProperties.getProperty('KAKAO_APP_KEY', '')
     }
     signingConfigs {
         debug {

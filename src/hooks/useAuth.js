@@ -52,7 +52,7 @@ export const useAuth = () => {
       console.log('[ACHACHA_DEBUG] AsyncStorage refreshToken:', storedRefreshToken);
 
       setAuthState('success');
-      // 이후 네비게이션 등 추가
+      navigation.replace('Home'); // 로그인 성공 시 HomeScreen으로 이동
     } catch (error) {
       console.error('[ACHACHA_DEBUG] Kakao login error:', error);
       setAuthState('error');
@@ -64,7 +64,7 @@ export const useAuth = () => {
       }
       Alert.alert('로그인 실패', errorMessage);
     }
-  }, []);
+  }, [navigation]);
 
   // 구글 로그인 처리 함수
   const signInWithGoogle = useCallback(async () => {

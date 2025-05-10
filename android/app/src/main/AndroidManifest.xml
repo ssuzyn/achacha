@@ -33,7 +33,7 @@
     android:supportsRtl="true"
     android:usesCleartextTraffic="true"
     tools:replace="android:allowBackup">
-    <meta-data android:name="com.kakao.sdk.AppKey" android:value="c4f44eace8f605213e73d4e08941e6eb" />
+    <meta-data android:name="com.kakao.sdk.AppKey" android:value="${kakaoAppKey}" />
     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>

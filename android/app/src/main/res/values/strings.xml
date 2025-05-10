@@ -1,6 +1,5 @@
 <resources>
   <string name="app_name">achacha_app</string>
-  <string name="kakao_app_key">c4f44eace8f605213e73d4e08941e6eb</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
 </resources>
