@@ -14,9 +14,11 @@ public interface GifticonUsageDomainService {
 
 	void validateUseAmountGifticon(Gifticon gifticon, Integer usageAmount);
 
-	int updateUsageHistory(Integer userId, Integer newAmount, Gifticon findGifticon, UsageHistory findUsageHistory);
+	int updateUsageHistory(Integer newAmount, Gifticon findGifticon, UsageHistory findUsageHistory);
 
 	void validateSufficientBalance(int remainingAmount, int requiredAmount);
 
 	void validateAmount(Integer newAmount);
+
+	void validateProductGifticonType(Gifticon gifticon);
 }

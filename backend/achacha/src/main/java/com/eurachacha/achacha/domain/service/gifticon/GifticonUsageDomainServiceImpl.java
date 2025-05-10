@@ -56,7 +56,7 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	}
 
 	@Override
-	public int updateUsageHistory(Integer userId, Integer newAmount, Gifticon findGifticon,
+	public int updateUsageHistory(Integer newAmount, Gifticon findGifticon,
 		UsageHistory findUsageHistory) {
 		// 기프티콘 타입 확인
 		validateAmountGifticonType(findGifticon);
@@ -72,6 +72,13 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	public void validateAmount(Integer newAmount) {
 		if (newAmount <= 0) {
 			throw new CustomException(ErrorCode.INVALID_AMOUNT_VALUE);
+		}
+	}
+
+	@Override
+	public void validateProductGifticonType(Gifticon gifticon) {
+		if (gifticon.getType() != GifticonType.PRODUCT) {
+			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
 		}
 	}
 
