@@ -19,14 +19,7 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	@Override // 금액형 타입 검증
 	public void validateAmountGifticonType(Gifticon gifticon) {
 		if (gifticon.getType() != GifticonType.AMOUNT) {
-			throw new CustomException(ErrorCode.INVALID_AMOUNT_GIFTICON_VALUE);
-		}
-	}
-
-	@Override // 금액 유효성 검증 (0 이하)
-	public void validateAmount(Integer newAmount) {
-		if (newAmount <= 0) {
-			throw new CustomException(ErrorCode.INVALID_AMOUNT_VALUE);
+			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
 		}
 	}
 
@@ -63,9 +56,6 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 
 		// 수정하려는 사용자가 기존 사용자와 동일한지 확인
 		validateUsageUser(userId, findUsageHistory.getUser().getId());
-
-		// 변경 금액이 유효한지 확인
-		validateAmount(newAmount);
 
 		// 잔액 계산
 		return getFindGifticonRemainingAmount(newAmount, findUsageHistory, findGifticon);

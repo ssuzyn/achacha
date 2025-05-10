@@ -8,9 +8,7 @@ public interface GifticonUsageDomainService {
 	boolean hasBalance(Gifticon gifticon, Integer usageAmount);
 
 	void validateAmountGifticonType(Gifticon gifticon);
-
-	void validateAmount(Integer newAmount);
-
+	
 	void validateUsageUser(Integer userId, Integer usageUserId);
 
 	int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
