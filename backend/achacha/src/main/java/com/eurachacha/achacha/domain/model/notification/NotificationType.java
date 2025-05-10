@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.domain.model.notification;
 
+import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
 
 import jakarta.persistence.Column;
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 @Getter
-public class NotificationType {
+public class NotificationType extends TimeStampEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
