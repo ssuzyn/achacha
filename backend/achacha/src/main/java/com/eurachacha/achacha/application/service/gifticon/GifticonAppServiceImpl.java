@@ -421,7 +421,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		// 삭제, 사용 여부 검토
-		gifticonDomainService.validateUsedGifticonBarcode(findGifticon);
+		gifticonDomainService.validateGifticonIsUsed(findGifticon);
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);

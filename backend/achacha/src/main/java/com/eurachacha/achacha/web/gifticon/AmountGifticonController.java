@@ -37,7 +37,7 @@ public class AmountGifticonController {
 	public ResponseEntity<AmountGifticonUsageHistoriesResponseDto> getUsageHistory(
 		@PathVariable Integer gifticonId
 	) {
-		return ResponseEntity.ok(gifticonUsageAppService.getAmountGifticonUsageHistorys(gifticonId));
+		return ResponseEntity.ok(gifticonUsageAppService.getAmountGifticonUsageHistories(gifticonId));
 	}
 
 	@PatchMapping("/{gifticonId}/usage-history/{usageHistoryId}")
