@@ -8,6 +8,7 @@ import { API_CONFIG } from '../config/apiConfig'; // 추가: API 설정 import
 // 실제 소셜 로그인 SDK import (예시)
 // import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AUTH_ERROR_MESSAGES } from '../constants/authErrors';
 
 /**
  * 소셜 로그인 관련 로직을 관리하는 커스텀 훅.
@@ -29,7 +30,9 @@ export const useAuth = () => {
     setError(null);
     try {
       console.log('[ACHACHA_DEBUG] Calling kakaoLogin() from @react-native-seoul/kakao-login');
-      const kakaoAccessToken = await kakaoLogin(); // 카카오 SDK 로그인 시도
+      const kakaoResult = await kakaoLogin(); // 카카오 SDK 로그인 시도
+      // 실제 토큰 문자열만 추출 (accessToken, token, 또는 문자열)
+      const kakaoAccessToken = kakaoResult?.accessToken || kakaoResult?.token || (typeof kakaoResult === 'string' ? kakaoResult : '');
       console.log('[ACHACHA_DEBUG] kakaoAccessToken:', kakaoAccessToken);
 
       // 2. 백엔드에 토큰 전달
@@ -53,7 +56,13 @@ export const useAuth = () => {
     } catch (error) {
       console.error('[ACHACHA_DEBUG] Kakao login error:', error);
       setAuthState('error');
-      // 에러 처리
+      // 에러 메시지 매핑 및 Alert
+      let errorMessage = '로그인 중 알 수 없는 오류가 발생했습니다.';
+      if (error.response && error.response.data && error.response.data.errorCode) {
+        const code = error.response.data.errorCode;
+        errorMessage = AUTH_ERROR_MESSAGES[code] || error.response.data.message || errorMessage;
+      }
+      Alert.alert('로그인 실패', errorMessage);
     }
   }, []);
 
