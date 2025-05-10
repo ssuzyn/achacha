@@ -77,4 +77,13 @@ public class Gifticon extends TimeStampEntity {
 	public void delete() {
 		this.isDeleted = true;
 	}
+
+	// 금액권 사용 메서드
+	public void use(Integer amount) {
+		this.remainingAmount = this.remainingAmount - amount;
+
+		if (this.remainingAmount == 0) {
+			this.isUsed = true;
+		}
+	}
 }

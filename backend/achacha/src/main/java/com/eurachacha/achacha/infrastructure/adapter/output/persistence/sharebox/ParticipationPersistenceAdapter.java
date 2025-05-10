@@ -3,6 +3,7 @@ package com.eurachacha.achacha.infrastructure.adapter.output.persistence.sharebo
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
+import com.eurachacha.achacha.domain.model.sharebox.Participation;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,4 +18,13 @@ public class ParticipationPersistenceAdapter implements ParticipationRepository 
 		return participationJpaRepository.existsByUserIdAndShareboxId(userId, shareBoxId);
 	}
 
+	@Override
+	public Participation save(Participation participation) {
+		return participationJpaRepository.save(participation);
+	}
+
+	@Override
+	public int countByShareboxId(Integer shareBoxId) {
+		return participationJpaRepository.countByShareboxId(shareBoxId);
+	}
 }

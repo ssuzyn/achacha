@@ -47,4 +47,10 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	public Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable) {
 		return gifticonJpaRepository.findUsedGifticons(userId, type, pageable);
 	}
+
+	@Override
+	public Gifticon findById(Integer gifticonId) {
+		return gifticonJpaRepository.findById(gifticonId)
+			.orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
+	}
 }

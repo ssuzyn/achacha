@@ -21,4 +21,5 @@ public interface GifticonRepository {
 
 	Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable);
 
+	Gifticon findById(Integer gifticonId);
 }

@@ -25,7 +25,7 @@ public class GlobalExceptionHandler {
 		ErrorCode errorCode = ex.getErrorCode();
 
 		return ResponseEntity.status(errorCode.getStatus())
-			.body(ErrorResponse.of(errorCode, request.getRequestURI()));
+			.body(ErrorResponse.of(errorCode));
 	}
 
 	/**
@@ -33,8 +33,7 @@ public class GlobalExceptionHandler {
 	 * */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(
-		MethodArgumentNotValidException ex,
-		HttpServletRequest request
+		MethodArgumentNotValidException ex
 	) {
 		// FieldError를 전부 모아서, 각각 "필드명: 에러메시지" 형태로 변환한 뒤
 		// 쉼표(혹은 세미콜론 등)로 구분하여 하나의 문자열로 합칩니다.
@@ -44,19 +43,19 @@ public class GlobalExceptionHandler {
 				fieldError.getDefaultMessage()))
 			.collect(Collectors.joining("; "));
 
-		logger.error("유효성 검증 실패: {}, 요청 URI: {}", errorMessage, request.getRequestURI(), ex);
+		logger.error("유효성 검증 실패: {}", errorMessage, ex);
 
 		// ErrorCode를 고정으로 사용
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-			.body(ErrorResponse.of(ErrorCode.INVALID_PARAMETER, errorMessage, request.getRequestURI()));
+			.body(ErrorResponse.of(ErrorCode.INVALID_PARAMETER, errorMessage));
 	}
 
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ErrorResponse> handleException(Exception ex, HttpServletRequest request) {
-		logger.error("서버 내부 오류 발생: {}, 요청 URI: {}", ex.getMessage(), request.getRequestURI(), ex);
+	public ResponseEntity<ErrorResponse> handleException(Exception ex) {
+		logger.error("서버 내부 오류 발생: {}", ex.getMessage(), ex);
 
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-			.body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR, request.getRequestURI()));
+			.body(ErrorResponse.of(ErrorCode.INTERNAL_SERVER_ERROR));
 	}
 }
 

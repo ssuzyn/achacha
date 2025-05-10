@@ -13,6 +13,7 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.request.Giftic
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
@@ -24,6 +25,7 @@ import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
+import com.eurachacha.achacha.application.port.output.history.BarcodeHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
@@ -38,6 +40,7 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
+import com.eurachacha.achacha.domain.model.history.BarcodeHistory;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
@@ -67,6 +70,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final BrandRepository brandRepository;
 	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
 	private final UsageHistoryRepository usageHistoryRepository;
+	private final BarcodeHistoryRepository barcodeHistoryRepository;
 	private final OcrTrainingDataRepository ocrTrainingDataRepository;
 	private final FileStoragePort fileStoragePort;
 	private final FileRepository fileRepository;
@@ -233,7 +237,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	@Override
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
 
-		Integer userId = 3; // 유저 로직 추가 시 변경 필요
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
@@ -243,24 +247,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 *  2. 사용 여부 판단
 		 *  3. 유효기간 여부 판단
 		 */
-		gifticonDomainService.validateGifticonAvailability(userId, findGifticon);
+		gifticonDomainService.validateGifticonAvailability(findGifticon);
 
-		// 공유되지 않은 기프티콘인 경우 소유자 판단
-		if (findGifticon.getSharebox() == null) {
-			boolean isOwner = gifticonDomainService.hasAccess(userId, findGifticon.getUser().getId());
-			if (!isOwner) {
-				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-			}
-		}
-
-		// 공유된 기프티콘인 경우 참여 여부 판단
-		if (findGifticon.getSharebox() != null) {
-			boolean hasParticipation = participationRepository.checkParticipation(userId,
-				findGifticon.getSharebox().getId());
-			if (!hasParticipation) {
-				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-			}
-		}
+		// 사용 권한 검증
+		validateGifticonAccess(findGifticon, userId);
 
 		// 기프티콘 스코프 결정에 따른 값
 		String scope = findGifticon.getSharebox() == null ? "MY_BOX" : "SHARE_BOX";
@@ -388,6 +378,66 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.build();
 	}
 
+	@Override
+	@Transactional
+	public GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		/*
+		 * 사용가능 기프티콘 검증 로직
+		 *  1. 삭제 여부 판단
+		 *  2. 사용 여부 판단
+		 *  3. 유효기간 여부 판단
+		 */
+		gifticonDomainService.validateGifticonAvailability(findGifticon);
+
+		// 사용 권한 검증
+		validateGifticonAccess(findGifticon, userId);
+
+		// 바코드 조회 내역 생성
+		BarcodeHistory newBarcodeHistory = BarcodeHistory.builder()
+			.user(null) // 유저 로직 추가 시 변경 필요
+			.gifticon(findGifticon)
+			.build();
+
+		// 바코드 조회 내역 저장
+		barcodeHistoryRepository.saveBarcodeHistory(newBarcodeHistory);
+
+		return GifticonBarcodeResponseDto.builder()
+			.gifticonBarcodeNumber(findGifticon.getBarcode())
+			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
+			.build();
+	}
+
+	@Override
+	public GifticonBarcodeResponseDto getUsedGifticonBarcode(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		// 삭제, 사용 여부 검토
+		gifticonDomainService.validateUsedGifticonBarcode(findGifticon);
+
+		// 사용 권한 검증
+		validateGifticonAccess(findGifticon, userId);
+
+		// 해당 기프티콘에 대한 사용 내역 조회
+		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		if (findUsageHistory == null) {
+			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
+		}
+
+		return GifticonBarcodeResponseDto.builder()
+			.gifticonBarcodeNumber(findGifticon.getBarcode())
+			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
+			.build();
+	}
+
 	private Integer findBrandId(String brandName) {
 		if (brandName == null || brandName.trim().isEmpty()) {
 			return null;
@@ -436,5 +486,24 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.orElseThrow(() -> new CustomException(ErrorCode.FILE_NOT_FOUND));
 
 		return fileStoragePort.generateFileUrl(file.getPath(), fileType);
+	}
+
+	private void validateGifticonAccess(Gifticon findGifticon, Integer userId) {
+		// 공유되지 않은 기프티콘인 경우 소유자 판단
+		if (findGifticon.getSharebox() == null) {
+			boolean isOwner = gifticonDomainService.hasAccess(userId, findGifticon.getUser().getId());
+			if (!isOwner) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
+
+		// 공유된 기프티콘인 경우 참여 여부 판단
+		if (findGifticon.getSharebox() != null) {
+			boolean hasParticipation = participationRepository.checkParticipation(userId,
+				findGifticon.getSharebox().getId());
+			if (!hasParticipation) {
+				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+			}
+		}
 	}
 }

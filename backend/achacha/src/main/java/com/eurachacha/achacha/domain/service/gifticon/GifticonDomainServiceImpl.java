@@ -50,7 +50,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateGifticonAvailability(Integer userId, Gifticon gifticon) {
+	public void validateGifticonAvailability(Gifticon gifticon) {
 
 		if (isDeleted(gifticon)) {
 			throw new CustomException(ErrorCode.GIFTICON_DELETED);
@@ -65,4 +65,15 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		}
 	}
 
+	@Override
+	public void validateUsedGifticonBarcode(Gifticon gifticon) {
+
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		if (!isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
+		}
+	}
 }

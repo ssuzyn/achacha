@@ -29,6 +29,8 @@ public enum ErrorCode {
 	INVALID_AMOUNT_GIFTICON_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_006", "금액형 기프티콘은 금액을 입력해야 합니다."),
 	GIFTICON_BARCODE_DUPLICATE(HttpStatus.CONFLICT, "GIFTICON_007", "이미 등록된 바코드 번호입니다."),
 	GIFTICON_AVAILABLE(HttpStatus.BAD_REQUEST, "GIFTICON_008", "사용 가능한 기프티콘입니다."),
+	GIFTICON_NO_USAGE_HISTORY(HttpStatus.NOT_FOUND, "GIFTICON_009", "해당 기프티콘에 대한 사용내역이 없습니다."),
+	GIFTICON_INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "GIFTICON_010", "기프티콘 잔액이 부족합니다."),
 
 	// 브랜드 관련 에러 코드
 	BRAND_NOT_FOUND(HttpStatus.NOT_FOUND, "BRAND_001", "브랜드 정보를 찾을 수 없습니다,"),
@@ -65,7 +67,13 @@ public enum ErrorCode {
 	CLOUDFRONT_SIGNED_URL_EXPIRED(HttpStatus.FORBIDDEN, "CF_003", "URL이 만료되었습니다."),
 
 	// ShareBox 관련 에러 코드
-	SHAREBOX_NOT_FOUND(HttpStatus.NOT_FOUND, "SHAREBOX_001", "쉐어박스를 찾을 수 없습니다.");
+	SHAREBOX_NOT_FOUND(HttpStatus.NOT_FOUND, "SHAREBOX_001", "쉐어박스를 찾을 수 없습니다."),
+	INVITE_CODE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SHAREBOX_002", "쉐어박스 생성에 실패했습니다."),
+	INVALID_INVITE_CODE(HttpStatus.BAD_REQUEST, "SHAREBOX_003", "유효하지 않은 초대 코드입니다."),
+	SHAREBOX_PARTICIPATION_DISABLED(HttpStatus.FORBIDDEN, "SHAREBOX_004", "참여가 비활성화된 쉐어박스입니다."),
+	ALREADY_PARTICIPATING_SHAREBOX(HttpStatus.CONFLICT, "SHAREBOX_005", "이미 참여 중인 쉐어박스입니다."),
+	SHAREBOX_MAX_PARTICIPANTS_REACHED(HttpStatus.FORBIDDEN, "SHAREBOX_006", "최대 참여자 수(10명)에 도달했습니다."),
+	INVALID_SHAREBOX_NAME(HttpStatus.BAD_REQUEST, "SHAREBOX_007", "유효하지 않은 쉐어박스 이름입니다.");
 
 	// http 상태 코드
 	private final HttpStatus status;
