@@ -17,13 +17,15 @@ const GiveawayButtonImg = require('../../assets/GiveawayButtonImg.png');
 const emoji1 = require('../../assets/emoji1.png');
 const emoji2 = require('../../assets/emoji2.png');
 const emoji3 = require('../../assets/emoji3.png');
+const emoji4 = require('../../assets/emoji4.png');
+const emoji5 = require('../../assets/emoji5.png');
 
 const dummyUsers = [
   { id: 1, name: '안*진', emoji: emoji1, distance: '5m' },
   { id: 2, name: 'Gw*ter', emoji: emoji2, distance: '10m' },
-  { id: 3, name: '스타*명', emoji: emoji2, distance: '15m' },
-  { id: 4, name: '정*은', emoji: emoji3, distance: '8m' },
-  { id: 5, name: '류*문', emoji: emoji3, distance: '12m' },
+  { id: 3, name: '스타*명', emoji: emoji3, distance: '15m' },
+  { id: 4, name: '정*은', emoji: emoji4, distance: '8m' },
+  { id: 5, name: '류*문', emoji: emoji5, distance: '12m' },
 ];
 
 const dummyGifticons = {
@@ -109,6 +111,7 @@ const GiveAwayScreen = () => {
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [selectedGifticon, setSelectedGifticon] = useState(null);
   const [buttonVisible, setButtonVisible] = useState(true);
+  const [centerButtonVisible, setCenterButtonVisible] = useState(false);
   const userPositionsRef = useRef([]);
 
   // 원의 중심 좌표
@@ -186,17 +189,12 @@ const GiveAwayScreen = () => {
     setListVisible(false);
   };
 
-  // 목록 닫기 버튼 선택 시
-  const handleGifticonListCancel = () => {
-    setListVisible(false);
-    setButtonVisible(true);
-  };
-
   // 선택 확인 모달에서 '확인' 버튼 핸들러
   const handleConfirm = () => {
     setConfirmModalVisible(false);
     setListVisible(false);
     setButtonVisible(false);
+    setCenterButtonVisible(true);
   };
 
   // 선택 확인 모달에서 '취소' 버튼 핸들러
@@ -259,6 +257,12 @@ const GiveAwayScreen = () => {
             </View>
           );
         })}
+        {/* 기프티콘 선택 후 중앙에 표시될 버튼 */}
+        {centerButtonVisible && (
+          <View style={styles.centerButtonContainer}>
+            <Image source={GiveawayButtonImg} style={styles.centerButtonImage} />
+          </View>
+        )}
       </View>
 
       {/* 뿌리기 기프티콘 목록 버튼 */}
@@ -352,6 +356,20 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  centerButtonContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  centerButtonImage: {
+    width: 60,
+    height: 70,
   },
 });
 
