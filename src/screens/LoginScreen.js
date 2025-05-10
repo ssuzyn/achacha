@@ -1,137 +1,188 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, View, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { Text, Divider } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from 'react-native-elements';
+import Svg, { Path } from 'react-native-svg';
 
-
-// --- 로고 이미지 경로 (실제 프로젝트 경로에 맞게 수정) ---
-const GOOGLE_LOGO_URL = '../../assets/google_logo.png'; // 파일명 수정 (log -> logo)
-const KAKAO_LOGO_URL = '../../assets/kakao-talk_logo.png';   // 파일명 수정
-// -----------------------------------------------------
+const GoogleIcon = () => (
+  <Svg width="20" height="20" viewBox="0 0 48 48">
+    <Path
+      fill="#EA4335"
+      d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+    />
+    <Path
+      fill="#4285F4"
+      d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+    />
+    <Path
+      fill="#FBBC05"
+      d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+    />
+    <Path
+      fill="#34A853"
+      d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+    />
+  </Svg>
+);
 
 const LoginScreen = () => {
   const { authState, signInWithKakao, signInWithGoogle } = useAuth();
+  const { theme } = useTheme();
 
   const isLoading = authState === 'loading';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* 로고 영역 */}
-        <View style={styles.logoContainer}>
-        
-          <Image source={require(GOOGLE_LOGO_URL)} style={styles.googleLogo} resizeMode="contain" />
-          <Image source={require(KAKAO_LOGO_URL)} style={styles.kakaoLogo} resizeMode="contain" />
-         
-        </View>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.content}>
+          <View style={styles.mainContainer}>
+            {/* 로고 영역
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../assets/images/splash-icon.png')}
+                style={styles.logo}
+                resizeMode="contain"
+              />
+            </View> */}
 
-        {/* 텍스트 영역 */}
-        <Text style={styles.title}>소셜 계정으로 간편하게 로그인</Text>
+            {/* 텍스트 영역 */}
+            <View style={styles.textContainer}>
+              <View style={styles.mainTextContainer}>
+                <Text variant="h1" weight="bold" center color="primary" style={styles.brandText}>
+                  아차차
+                </Text>
+                <Text variant="h1" weight="bold" center style={styles.mainText}>
+                  {' 하나로 쉽고 편하게'}
+                </Text>
+              </View>
+              <Text variant="h4" weight="semibold" center style={styles.subText}>
+                기프티콘 관리부터 나눔까지,
+              </Text>
+              <Text variant="h4" weight="semibold" center style={styles.subText}>
+                지금 바로 시작해보세요!
+              </Text>
+            </View>
 
-        {/* 버튼 영역 */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.kakaoButton, isLoading && styles.buttonDisabled]}
-            onPress={signInWithKakao}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#191919" />
-            ) : (
-              <Text style={[styles.buttonText, styles.kakaoButtonText]}>카카오톡 로그인</Text>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.googleButton, isLoading && styles.buttonDisabled]}
-            onPress={signInWithGoogle}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={[styles.buttonText, styles.googleButtonText]}>Google 로그인</Text>
-            )}
-          </TouchableOpacity>
+            {/* 구분선 */}
+            <Divider style={styles.divider} />
+
+            {/* 버튼 영역 */}
+            <View style={styles.buttonContainer}>
+              {/* 카카오톡 로그인 버튼 */}
+              <TouchableOpacity
+                onPress={signInWithKakao}
+                disabled={isLoading}
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.colors.loginYellow },
+                  isLoading && styles.disabledButton,
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={styles.buttonContentContainer}>
+                  <Image
+                    source={require('../assets/images/login-kakaotalk.png')}
+                    style={styles.buttonIcon}
+                    resizeMode="contain"
+                  />
+                  <Text variant="button" weight="bold" size={18} color={theme.colors.textBrown}>
+                    카카오톡 로그인
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              {/* 구글 로그인 버튼 */}
+              <TouchableOpacity
+                onPress={signInWithGoogle}
+                disabled={isLoading}
+                style={[
+                  styles.button,
+                  // eslint-disable-next-line react-native/no-inline-styles
+                  { backgroundColor: 'white', borderWidth: 1, borderColor: '#ddd' },
+                  isLoading && styles.disabledButton,
+                ]}
+                activeOpacity={0.7}
+              >
+                <View style={styles.buttonContentContainer}>
+                  <View style={styles.googleIconContainer}>
+                    <GoogleIcon />
+                  </View>
+                  <Text variant="button" weight="bold" size={18} color="#5F6368">
+                    Google 로그인
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   container: {
     flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 25,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 40, // 하단 여백 추가
   },
-  logoContainer: {
-    flexDirection: 'column', // 세로 배치로 변경
+  mainContainer: {
+    alignItems: 'center',
+  },
+  textContainer: {
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  mainTextContainer: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40, // 텍스트와의 간격 조정 (기존 60)
-    // 이미지와 유사하게 배치하려면 flexDirection: 'column' 또는 각 로고 위치 조정 필요
+    flexWrap: 'wrap',
+    marginBottom: 10,
   },
-  googleLogo: { // 구글 로고 스타일 추가
-    width: 140, 
-    height: 140, 
-    marginBottom: 0, // 아래 로고와의 간격
-    transform: [{ translateX: -80 }, { translateY: 50 }] // 왼쪽으로 80만큼 이동 아래로 50만큼 이동
+  subText: {
+    marginBottom: 3,
   },
-  kakaoLogo: {
-    width: 170, 
-    height: 170,
-    marginBottom: 0,
-    transform: [{ translateX: 80 }] // 오른쪽으로 80만큼 이동
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 10, // 두 줄 사이 간격
+  divider: {
+    width: '40%',
+    marginBottom: 40,
+    marginTop: 20,
   },
   buttonContainer: {
-    width: '90%', // 버튼 너비 컨테이너
-    marginTop: 60, // 텍스트와의 간격
+    width: '100%',
+    marginTop: 0,
   },
   button: {
-    paddingVertical: 15,
+    width: '100%',
+    height: 56,
     borderRadius: 8,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15, // 버튼 간 간격
-    flexDirection: 'row', // 아이콘과 텍스트 가로 배치 위해
-    justifyContent: 'center', // 내부 요소 중앙 정렬
+    marginBottom: 16,
   },
-  kakaoButton: {
-    backgroundColor: '#FEE500', // 카카오 표준 노란색
+  buttonContentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  googleButton: {
-    backgroundColor: '#EA4335', // 구글 표준 빨간색 (이미지 참고)
-    // 표준 가이드라인은 흰색 배경에 로고 사용 권장
-    // backgroundColor: '#FFFFFF',
-    // borderWidth: 1,
-    // borderColor: '#DDDDDD',
+  buttonIcon: {
+    width: 25,
+    height: 25,
+    marginRight: 15,
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8, // 아이콘과 텍스트 간격 (아이콘 추가 시)
+  googleIconContainer: {
+    marginRight: 15,
   },
-  kakaoButtonText: {
-    color: '#191919', // 카카오 텍스트 색상
-  },
-  googleButtonText: {
-    color: '#FFFFFF', // 빨간 배경일 때 흰색 텍스트
-    // color: '#5F6368', // 흰색 배경일 때 회색 텍스트
-  },
-  buttonDisabled: {
+  disabledButton: {
     opacity: 0.6,
   },
 });
 
-export default LoginScreen; 
+export default LoginScreen;

@@ -1,0 +1,404 @@
+/* eslint-disable react-native/no-inline-styles */
+// 금액형 사용 스크린
+
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  Image,
+  StatusBar,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+} from 'react-native';
+import { Icon } from 'react-native-elements';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import Orientation from 'react-native-orientation-locker';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Text } from '../../../components/ui';
+
+const UseAmountScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [amount, setAmount] = useState('');
+  const insets = useSafeAreaInsets();
+
+  // route.params에서 정보 가져오기
+  const { barcodeNumber } = route.params || {};
+
+  // 기본 상품 정보
+  const productInfo = {
+    name: '스타벅스 | APP전용 e카드 3만원 교환권',
+    barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
+    barcodeImage: require('../../../assets/images/barcode.png'),
+    originalAmount: 30000,
+    remainingAmount: 8000,
+  };
+
+  // 화면 로드 시 가로 모드로 설정
+  useEffect(() => {
+    // 가로 모드로 고정
+    Orientation.lockToLandscape();
+
+    // 컴포넌트 언마운트 시 원래 모드로 복귀
+    return () => {
+      Orientation.lockToPortrait();
+    };
+  }, []);
+
+  // 뒤로가기
+  const handleGoBack = () => {
+    navigation.goBack();
+  };
+
+  // 금액 입력 모달 표시
+  const handleShowModal = () => {
+    setModalVisible(true);
+  };
+
+  // 모달 취소
+  const handleCloseModal = () => {
+    setModalVisible(false);
+    setAmount('');
+  };
+
+  // 금액 칩 선택 처리
+  const handleChipSelect = value => {
+    if (value === 'all') {
+      // '전액' 선택 시 남은 잔액 전체 설정
+      setAmount(productInfo.remainingAmount.toString());
+    } else {
+      // 기존 금액에 선택한 금액 추가
+      const currentAmount = Number(amount) || 0;
+      const newAmount = currentAmount + value;
+
+      // 잔액보다 크면 잔액으로 제한
+      if (newAmount > productInfo.remainingAmount) {
+        setAmount(productInfo.remainingAmount.toString());
+      } else {
+        setAmount(newAmount.toString());
+      }
+    }
+  };
+
+  // 숫자에 콤마 추가하는 함수
+  const formatAmount = amount => {
+    return amount.toLocaleString() + '원';
+  };
+
+  // 금액 입력 완료 및 사용완료 처리
+  const handleUseComplete = () => {
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
+      // 알림 처리 (예: 토스트 메시지)
+      return;
+    }
+
+    // 사용완료 처리 로직 - API 호출 등
+
+    // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+    // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+    navigation.reset({
+      index: 0,
+      routes: [
+        {
+          name: 'Main',
+          params: { screen: 'TabGifticonManage', initialTab: 'used' },
+        },
+      ],
+    });
+  };
+
+  // 취소 처리
+  const handleCancel = () => {
+    navigation.goBack();
+  };
+
+  return (
+    <View style={[styles.container, { backgroundColor: 'white' }]}>
+      <StatusBar hidden />
+
+      {/* 좌측 Safe Area */}
+      <View style={{ width: insets.left, height: '100%' }} />
+
+      <View style={styles.mainContent}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+            <Icon name="arrow-back-ios" type="material" size={22} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>{productInfo.name}</Text>
+        </View>
+
+        <View style={styles.content}>
+          <View style={styles.barcodeSection}>
+            <Image
+              source={productInfo.barcodeImage}
+              style={styles.barcodeImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.barcodeNumber}>{productInfo.barcodeNumber}</Text>
+          </View>
+
+          <View style={styles.actionSection}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleShowModal}>
+              <Text style={styles.actionButtonText}>금액 입력</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+              <Text style={styles.cancelButtonText}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* 우측 Safe Area */}
+      <View style={{ width: insets.right, height: '100%' }} />
+
+      {/* 금액 입력 모달 */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>사용 금액 입력</Text>
+
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.amountInput}
+                placeholder="0"
+                keyboardType="number-pad"
+                value={amount}
+                onChangeText={setAmount}
+                maxLength={10}
+              />
+              <Text style={styles.wonText}>원</Text>
+            </View>
+
+            <View style={styles.chipsContainer}>
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(500)}>
+                <Text style={styles.chipText}>+500</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(1000)}>
+                <Text style={styles.chipText}>+1,000</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect(5000)}>
+                <Text style={styles.chipText}>+5,000</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.chip} onPress={() => handleChipSelect('all')}>
+                <Text style={styles.chipText}>전액</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.remainingAmountText}>
+              잔액: {formatAmount(productInfo.remainingAmount)}
+            </Text>
+
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={handleCloseModal}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalCancelButtonText}>취소</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalConfirmButton}
+                onPress={handleUseComplete}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalConfirmButtonText}>확인</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'row', // 가로 모드에서 좌우 안전 영역을 위해 row로 변경
+  },
+  mainContent: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
+    color: '#333',
+  },
+  content: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    justifyContent: 'flex-start',
+  },
+  barcodeSection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 20,
+  },
+  barcodeImage: {
+    width: '100%',
+    height: 150,
+    marginBottom: 10,
+  },
+  barcodeNumber: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#000',
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  actionSection: {
+    width: 150,
+    justifyContent: 'center',
+  },
+  actionButton: {
+    backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 16,
+    width: '100%',
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    backgroundColor: '#EEEEEE',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    width: '100%',
+  },
+  cancelButtonText: {
+    color: '#278CCC',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  // 모달 스타일
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: 320,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#333',
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDD',
+    paddingBottom: 10,
+    marginBottom: 16,
+  },
+  amountInput: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'right',
+    width: 200,
+    marginRight: 5,
+  },
+  wonText: {
+    fontSize: 20,
+    color: '#333',
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  chip: {
+    backgroundColor: '#F2F2F2',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginHorizontal: 4,
+  },
+  chipText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  remainingAmountText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+    alignSelf: 'flex-end',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#F2F2F2',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  modalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    padding: 15,
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+  },
+  modalConfirmButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: 'white',
+  },
+});
+
+export default UseAmountScreen;
