@@ -1,17 +1,15 @@
 package com.eurachacha.achacha.infrastructure.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 import lombok.Getter;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 
-@Component
 @ConfigurationProperties(prefix = "jwt")
+@RequiredArgsConstructor
 @Getter
-@Setter
 public class JwtProperties {
-	private String secret;
-	private long accessTokenExpirySeconds;
-	private long refreshTokenExpirySeconds;
+	private final String secret;
+	private final long accessTokenExpirySeconds;
+	private final long refreshTokenExpirySeconds;
 }
