@@ -33,8 +33,13 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	}
 
 	@Override
-	public UsageHistory findById(Integer usageHistoryId) {
-		return usageHistoryJpaRepository.findById(usageHistoryId)
+	public UsageHistory findByIdAndGifticonIdAndUserId(Integer usageHistoryId, Integer gifticonId, Integer userId) {
+		return usageHistoryJpaRepository.findByIdAndGifticonIdAndUserId(usageHistoryId, gifticonId, userId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY));
+	}
+
+	@Override
+	public void deleteById(Integer usageHistoryId) {
+		usageHistoryJpaRepository.deleteById(usageHistoryId);
 	}
 }
