@@ -152,7 +152,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 			gifticonId, userId);
 
 		// 삭제
-		usageHistoryRepository.deleteById(usageHistoryId);
+		usageHistoryRepository.delete(findUsageHistory);
 		// 잔액 복구
 		findGifticon.updateRemainingAmount(findGifticon.getRemainingAmount() + findUsageHistory.getUsageAmount());
 	}

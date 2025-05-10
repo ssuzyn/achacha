@@ -39,7 +39,7 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	}
 
 	@Override
-	public void deleteById(Integer usageHistoryId) {
-		usageHistoryJpaRepository.deleteById(usageHistoryId);
+	public void delete(UsageHistory usageHistory) {
+		usageHistoryJpaRepository.delete(usageHistory);
 	}
 }
