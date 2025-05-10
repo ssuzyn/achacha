@@ -47,4 +47,12 @@ public class NotificationSetting extends TimeStampEntity {
 	@Column(name = "expiration_cycle", nullable = true)
 	private ExpirationCycle expirationCycle;
 
+	public void updateIsEnabled(Boolean isEnabled) {
+		this.isEnabled = isEnabled;
+	}
+
+	public void updateExpirationCycle(ExpirationCycle expirationCycle) {
+		this.expirationCycle = expirationCycle;
+	}
+
 }
