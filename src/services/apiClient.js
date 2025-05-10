@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_CONFIG } from '../config/apiConfig'; // 방금 생성한 설정 파일 import
+import { API_CONFIG } from '../constants/config'; // 설정 파일 import 경로 변경
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Axios 인스턴스 생성

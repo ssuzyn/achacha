@@ -1,8 +1,7 @@
-// src/config/apiConfig.js
+// src/constants/config.js
 
 // TODO: 실제 운영 API 기본 URL을 확인해주세요.
 const PRODUCTION_BASE_URL = 'https://k12d205.p.ssafy.io/'; // 실제 운영 서버
-
 
 export const API_CONFIG = {
   BASE_URL: PRODUCTION_BASE_URL,

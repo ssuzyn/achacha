@@ -3,8 +3,8 @@ import { Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
 // axios 등 HTTP 클라이언트 라이브러리
-import apiClient from '../api/apiClient'; // 백엔드 통신용으로 설정한 클라이언트
-import { API_CONFIG } from '../config/apiConfig'; // 추가: API 설정 import
+import apiClient from '../services/apiClient'; // 백엔드 통신용으로 설정한 클라이언트
+import { API_CONFIG } from '../constants/config'; // 추가: API 설정 import
 // 실제 소셜 로그인 SDK import (예시)
 // import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
