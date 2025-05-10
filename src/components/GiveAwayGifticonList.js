@@ -37,7 +37,7 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
     <View style={styles.listContainer}>
       <View style={styles.listHeader}>
         <Text style={styles.listTitle}>나의 기프티콘</Text>
-        <Text style={styles.listSubtitle}>*기간 임박순으로 표시됩니다.</Text>
+        <Text style={styles.listSubtitle}>*임박순으로 표시 / 상품형만 가능</Text>
       </View>
       {gifticons && gifticons.length > 0 ? (
         <FlatList
