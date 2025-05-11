@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.application.service.auth;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -11,10 +12,12 @@ import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLogin
 import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTokenRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
+import com.eurachacha.achacha.application.port.output.auth.BleTokenServicePort;
 import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
+import com.eurachacha.achacha.application.port.output.user.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
@@ -22,6 +25,7 @@ import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
 import com.eurachacha.achacha.domain.model.notification.NotificationType;
 import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
+import com.eurachacha.achacha.domain.model.user.BleToken;
 import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
@@ -43,6 +47,8 @@ public class AuthAppServiceImpl implements AuthAppService {
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final AuthServicePort authServicePort;
 	private final TokenServicePort tokenServicePort;
+	private final BleTokenRepository bleTokenRepository;
+	private final BleTokenServicePort bleTokenServicePort;
 
 	// 카카오 제공자 상수
 	private static final String KAKAO_PROVIDER = "KAKAO";
@@ -90,7 +96,10 @@ public class AuthAppServiceImpl implements AuthAppService {
 		// 리프레시 토큰 저장
 		saveRefreshToken(user, refreshToken);
 
-		return new TokenResponseDto(accessToken, refreshToken, tokenServicePort.getAccessTokenExpirySeconds());
+		BleToken bleToken = getBleToken(user);
+
+		return new TokenResponseDto(accessToken, refreshToken, tokenServicePort.getAccessTokenExpirySeconds(),
+			bleToken.getToken(), bleToken.getExpiresAt());
 	}
 
 	@Override
@@ -107,8 +116,10 @@ public class AuthAppServiceImpl implements AuthAppService {
 
 		String newAccessToken = tokenServicePort.createAccessToken(userId);
 
+		BleToken bleToken = getBleToken(user);
+
 		return new TokenResponseDto(newAccessToken, refreshToken.getValue(),
-			tokenServicePort.getAccessTokenExpirySeconds());
+			tokenServicePort.getAccessTokenExpirySeconds(), bleToken.getToken(), bleToken.getExpiresAt());
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {
@@ -199,4 +210,31 @@ public class AuthAppServiceImpl implements AuthAppService {
 	// 	refreshTokenRepository.deleteByValue(refreshToken);
 	//
 	// }
+
+	private BleToken getBleToken(User user) {
+		// BLE 토큰 확인
+		BleToken bleToken = bleTokenRepository.findByUserId(user.getId())
+			.orElseGet(() -> { // 최초 로그인 시 토큰 발급
+				log.info("BLE 토큰 생성: userId={}", user.getId());
+				BleToken newBleToken = BleToken.builder()
+					.user(user)
+					.token(bleTokenServicePort.generateUniqueToken())
+					.expiresAt(LocalDateTime.now().plusDays(7))
+					.build();
+
+				bleTokenRepository.save(newBleToken);
+				return newBleToken;
+			});
+
+		// 만료 여부 확인
+		checkExpiresAt(user, bleToken);
+		return bleToken;
+	}
+
+	private void checkExpiresAt(User user, BleToken bleToken) {
+		if (!bleToken.isExpired()) {
+			log.info("BLE 토큰 재발급: userId={}", user.getId());
+			bleToken.updateToken(bleTokenServicePort.generateUniqueToken(), LocalDateTime.now().plusDays(7));
+		}
+	}
 }
