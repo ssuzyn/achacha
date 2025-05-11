@@ -6,6 +6,8 @@ import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
 
 public interface NotificationSettingRepository {
 
+	List<NotificationSetting> findAllByUserId(Integer userId);
+
 	NotificationSetting save(NotificationSetting notificationSetting);
 
 	List<NotificationSetting> saveAll(List<NotificationSetting> notificationSettings);
