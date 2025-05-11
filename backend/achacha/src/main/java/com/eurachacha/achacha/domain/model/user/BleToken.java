@@ -37,15 +37,15 @@ public class BleToken extends TimeStampEntity {
 	private String token;
 
 	@Column(nullable = false)
-	private LocalDateTime expiresAt;
+	private LocalDateTime expiryAt;
 
 	// 유효기간 만료 여부
 	public boolean isExpired() {
-		return !LocalDateTime.now().isBefore(expiresAt);
+		return !LocalDateTime.now().isBefore(expiryAt);
 	}
 
 	public void updateToken(String token, LocalDateTime expiresAt) {
 		this.token = token;
-		this.expiresAt = expiresAt;
+		this.expiryAt = expiresAt;
 	}
 }

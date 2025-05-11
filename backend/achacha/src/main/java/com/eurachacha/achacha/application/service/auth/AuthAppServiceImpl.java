@@ -99,7 +99,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 		BleToken bleToken = getBleToken(user);
 
 		return new TokenResponseDto(accessToken, refreshToken, tokenServicePort.getAccessTokenExpirySeconds(),
-			bleToken.getToken(), bleToken.getExpiresAt());
+			bleToken.getToken(), bleToken.getExpiryAt());
 	}
 
 	@Override
@@ -119,7 +119,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 		BleToken bleToken = getBleToken(user);
 
 		return new TokenResponseDto(newAccessToken, refreshToken.getValue(),
-			tokenServicePort.getAccessTokenExpirySeconds(), bleToken.getToken(), bleToken.getExpiresAt());
+			tokenServicePort.getAccessTokenExpirySeconds(), bleToken.getToken(), bleToken.getExpiryAt());
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {
@@ -219,7 +219,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 				BleToken newBleToken = BleToken.builder()
 					.user(user)
 					.token(bleTokenServicePort.generateUniqueToken())
-					.expiresAt(LocalDateTime.now().plusDays(7))
+					.expiryAt(LocalDateTime.now().plusDays(7))
 					.build();
 
 				bleTokenRepository.save(newBleToken);
