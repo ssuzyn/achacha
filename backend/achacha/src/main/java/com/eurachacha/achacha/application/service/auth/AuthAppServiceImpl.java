@@ -12,11 +12,9 @@ import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTok
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
 import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
-import com.eurachacha.achacha.application.port.output.auth.dto.response.BleTokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
-import com.eurachacha.achacha.application.port.output.user.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
@@ -24,11 +22,9 @@ import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
 import com.eurachacha.achacha.domain.model.notification.NotificationType;
 import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
-import com.eurachacha.achacha.domain.model.user.BleToken;
 import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
-import com.eurachacha.achacha.domain.service.auth.BleTokenDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -47,8 +43,6 @@ public class AuthAppServiceImpl implements AuthAppService {
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final AuthServicePort authServicePort;
 	private final TokenServicePort tokenServicePort;
-	private final BleTokenRepository bleTokenRepository;
-	private final BleTokenDomainService bleTokenDomainService;
 
 	// 카카오 제공자 상수
 	private static final String KAKAO_PROVIDER = "KAKAO";
@@ -115,47 +109,6 @@ public class AuthAppServiceImpl implements AuthAppService {
 
 		return new TokenResponseDto(newAccessToken, refreshToken.getValue(),
 			tokenServicePort.getAccessTokenExpirySeconds());
-	}
-
-	@Override
-	@Transactional
-	public BleTokenResponseDto generateBleToken(String tokenValue) {
-
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
-
-		// if (tokenValue != null && !tokenValue.isBlank()) {
-		bleTokenRepository.deleteByUserIdAndValue(userId, tokenValue);
-		// }
-
-		// 중복되지 않는 새 토큰 생성
-		String newTokenValue;
-		boolean isDuplicate;
-		int attempts = 0;
-
-		do {
-			// 최대 시도 횟수 초과 시 로그 기록
-			if (attempts++ > 3) {
-				log.warn("{}번 째 토큰 생성 시도", attempts);
-			}
-
-			// 새 토큰 생성
-			newTokenValue = bleTokenDomainService.generateToken();
-
-			// 중복 검사
-			isDuplicate = bleTokenRepository.existsByValue(newTokenValue);
-		} while (isDuplicate);
-
-		// 새 토큰 저장
-		BleToken bleToken = BleToken.builder()
-			.user(userRepository.findById(userId))
-			.value(newTokenValue)
-			.build();
-
-		bleTokenRepository.save(bleToken);
-
-		return BleTokenResponseDto.builder()
-			.bleToken(newTokenValue)
-			.build();
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {
