@@ -1,6 +1,6 @@
 // 기프티콘 등록 상세 스크린
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -21,7 +21,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon as RNEIcon } from 'react-native-elements';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-import { CropView } from 'react-native-image-crop-tools';
+import ImagePicker from 'react-native-image-crop-picker';
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
@@ -38,12 +38,10 @@ const RegisterDetailScreen = () => {
   const [currentImageUri, setCurrentImageUri] = useState(null);
   const [originalImageUri, setOriginalImageUri] = useState(null); // 원본 이미지 URI 저장
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
-  const [isImageEditorVisible, setImageEditorVisible] = useState(false);
   const [isOriginalImageVisible, setOriginalImageVisible] = useState(false); // 원본 이미지 팝업 표시 여부
-  const [aspectRatio, setAspectRatio] = useState(null);
-  const [keepAspectRatio, setKeepAspectRatio] = useState(false);
-  const [croppedImageResult, setCroppedImageResult] = useState(null);
-  const cropViewRef = useRef(null);
+
+  // 이미지 처리 상태 관리
+  const processingRef = useRef(false); // 처리 중 상태 관리
 
   // 이전 화면에서 전달받은 기프티콘 타입 및 등록 위치 정보
   const [gifticonType, setGifticonType] = useState('PRODUCT'); // 'PRODUCT' 또는 'AMOUNT'
@@ -65,11 +63,28 @@ const RegisterDetailScreen = () => {
   const [isTypeBoxSelected, setIsTypeBoxSelected] = useState(false);
   const [isTypeLocked, setIsTypeLocked] = useState(false); // 유형 선택 잠금 상태
 
+  // 이미지 URI 상태를 메모이제이션하여 렌더링 최적화
+  const imageSource = useCallback(uri => {
+    if (!uri) return null;
+    // 캐시 문제 해결을 위해 타임스탬프 추가
+    return { uri: `${uri}?timestamp=${Date.now()}` };
+  }, []);
+
   // 초기 화면 로드시 이미지가 있는지 확인
   useEffect(() => {
     if (route.params?.selectedImage) {
-      setCurrentImageUri(route.params.selectedImage.uri);
-      setOriginalImageUri(route.params.selectedImage.uri); // 원본 이미지 URI도 저장
+      try {
+        const imageUri = route.params.selectedImage.uri;
+        console.log('초기 이미지 로드:', imageUri);
+        if (imageUri) {
+          setCurrentImageUri(imageUri);
+          setOriginalImageUri(imageUri); // 원본 이미지 URI 저장
+        } else {
+          console.warn('유효하지 않은 이미지 URI');
+        }
+      } catch (error) {
+        console.error('이미지 로드 중 오류:', error);
+      }
     }
 
     // 기프티콘 타입 및 등록 위치 정보 가져오기
@@ -94,15 +109,20 @@ const RegisterDetailScreen = () => {
         setBoxModalVisible(true);
       }, 300);
     }
+
+    // 컴포넌트 언마운트 시 메모리 정리
+    return () => {
+      console.log('컴포넌트 언마운트: 이미지 상태 정리');
+      // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
+    };
   }, [route.params]);
 
-  // useEffect로 크롭 결과를 감시하여 적용
+  // 편집된 이미지가 있을 경우 썸네일에 표시 (로직 개선)
   useEffect(() => {
-    if (croppedImageResult && croppedImageResult.uri) {
-      setCurrentImageUri(croppedImageResult.uri);
-      // 원본 이미지는 그대로 유지
+    if (currentImageUri) {
+      console.log('편집된 이미지로 썸네일 업데이트:', currentImageUri);
     }
-  }, [croppedImageResult]);
+  }, [currentImageUri]);
 
   // 뒤로가기 처리
   const handleGoBack = () => {
@@ -140,23 +160,18 @@ const RegisterDetailScreen = () => {
     }
   };
 
-  // 이미지 선택 모달 표시
-  const showImageOptions = () => {
-    // 이미 이미지가 있으면 바로 편집 화면으로, 없으면 옵션 모달 보여주기
-    if (currentImageUri) {
-      setImageEditorVisible(true);
-    } else {
-      setImageOptionVisible(true);
-    }
-  };
-
   // 이미지 컨테이너 터치 핸들러
   const handleImageContainerPress = () => {
-    // 이미지가 있으면 원본 이미지 팝업 표시, 없으면 이미지 옵션 모달 표시
-    if (originalImageUri) {
-      setOriginalImageVisible(true);
-    } else {
-      setImageOptionVisible(true);
+    try {
+      // 이미지가 있으면 원본 이미지 팝업 표시, 없으면 이미지 옵션 모달 표시
+      if (originalImageUri) {
+        console.log('원본 이미지 모달 표시:', originalImageUri);
+        setOriginalImageVisible(true);
+      } else {
+        setImageOptionVisible(true);
+      }
+    } catch (error) {
+      console.error('이미지 컨테이너 터치 처리 오류:', error);
     }
   };
 
@@ -179,7 +194,7 @@ const RegisterDetailScreen = () => {
     return true;
   };
 
-  // 갤러리에서 이미지 선택
+  // 갤러리에서 이미지 선택 (강화된 로직)
   const handlePickImage = () => {
     try {
       // 옵션 설정
@@ -188,38 +203,79 @@ const RegisterDetailScreen = () => {
         storageOptions: {
           skipBackup: true,
           path: 'images',
+          privateDirectory: true, // 앱 내부 저장 경로 사용
         },
-        quality: 0.8,
-        maxWidth: 2000,
-        maxHeight: 2000,
+        quality: 0.9, // 조금 더 높은 품질
+        maxWidth: 1500, // 적절한 크기로 조정
+        maxHeight: 1500,
+        includeBase64: false,
       };
 
       // 이미지 라이브러리 호출
       launchImageLibrary(options, response => {
+        console.log('이미지 라이브러리 응답:', JSON.stringify(response).substring(0, 150) + '...');
+
         if (response.didCancel) {
-          // 사용자가 취소
-        } else if (response.error) {
-          Alert.alert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
+          console.log('사용자가 이미지 선택을 취소했습니다');
+        } else if (response.errorCode) {
+          console.error(`이미지 선택 오류 (${response.errorCode}):`, response.errorMessage);
+          Alert.alert(
+            '오류',
+            `이미지를 선택하는 중 오류가 발생했습니다: ${response.errorMessage || '알 수 없는 오류'}`
+          );
         } else {
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
 
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작
-            setCurrentImageUri(imageAsset.uri);
-            setOriginalImageUri(imageAsset.uri); // 원본 이미지 URI 저장
-            setImageEditorVisible(true);
+            console.log('이미지 선택 완료 - URI:', imageAsset.uri);
+            console.log(
+              '이미지 정보:',
+              `타입: ${imageAsset.type || '알 수 없음'}, ` +
+                `파일명: ${imageAsset.fileName || '알 수 없음'}, ` +
+                `크기: ${(imageAsset.fileSize / 1024).toFixed(2)}KB`
+            );
+
+            try {
+              // 이미지가 유효한지 확인
+              if (
+                imageAsset.uri.startsWith('file://') ||
+                imageAsset.uri.startsWith('content://') ||
+                imageAsset.uri.startsWith('/')
+              ) {
+                // 이미지 URI 저장 (원본 및 현재)
+                setOriginalImageUri(imageAsset.uri);
+                setCurrentImageUri(imageAsset.uri);
+
+                // 편집 상태 초기화
+                processingRef.current = false;
+
+                // 옵션 모달 닫기
+                setImageOptionVisible(false);
+
+                // 바로 이미지 편집기 실행
+                showImageEditor(imageAsset.uri);
+              } else {
+                console.error('유효하지 않은 이미지 URI 형식:', imageAsset.uri);
+                Alert.alert('오류', '이미지 형식이 유효하지 않습니다. 다른 이미지를 선택해주세요.');
+              }
+            } catch (err) {
+              console.error('이미지 URI 설정 중 오류:', err);
+              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
+            }
           } else {
+            console.error('이미지 자산이 없음:', imageAsset);
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
           }
         }
       });
     } catch (error) {
+      console.error('이미지 선택 중 오류:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
   };
 
-  // 카메라로 촬영
+  // 카메라로 촬영 (개선된 로직)
   const handleOpenCamera = async () => {
     try {
       const hasPermission = await requestCameraPermission();
@@ -235,78 +291,139 @@ const RegisterDetailScreen = () => {
         storageOptions: {
           skipBackup: true,
           path: 'images',
+          privateDirectory: true,
           cameraRoll: true,
           waitUntilSaved: true,
         },
-        quality: 0.8,
-        maxWidth: 2000,
-        maxHeight: 2000,
+        quality: 0.9,
+        maxWidth: 1500,
+        maxHeight: 1500,
+        includeBase64: false,
+        saveToPhotos: false, // 사진 앱에 자동 저장 안 함
       };
 
       // 카메라 호출
       launchCamera(options, response => {
+        console.log('카메라 응답:', JSON.stringify(response).substring(0, 150) + '...');
+
         if (response.didCancel) {
-          // 사용자가 취소
-        } else if (response.error) {
-          Alert.alert('오류', '카메라를 사용하는 중 오류가 발생했습니다: ' + response.error);
+          console.log('사용자가 카메라 촬영을 취소했습니다');
+        } else if (response.errorCode) {
+          console.error(`카메라 오류 (${response.errorCode}):`, response.errorMessage);
+          Alert.alert(
+            '오류',
+            `카메라를 사용하는 중 오류가 발생했습니다: ${response.errorMessage || '알 수 없는 오류'}`
+          );
         } else {
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
 
           if (imageAsset && imageAsset.uri) {
-            // 선택한 이미지 편집 모드 시작
-            setCurrentImageUri(imageAsset.uri);
-            setOriginalImageUri(imageAsset.uri); // 원본 이미지 URI 저장
-            setImageEditorVisible(true);
+            console.log('카메라 촬영 완료 - URI:', imageAsset.uri);
+            console.log(
+              '이미지 정보:',
+              `타입: ${imageAsset.type || '알 수 없음'}, ` +
+                `파일명: ${imageAsset.fileName || '알 수 없음'}, ` +
+                `크기: ${(imageAsset.fileSize / 1024).toFixed(2)}KB`
+            );
+
+            try {
+              // 이미지가 유효한지 확인
+              if (
+                imageAsset.uri.startsWith('file://') ||
+                imageAsset.uri.startsWith('content://') ||
+                imageAsset.uri.startsWith('/')
+              ) {
+                // 이미지 URI 저장 (원본 및 현재)
+                setOriginalImageUri(imageAsset.uri);
+                setCurrentImageUri(imageAsset.uri);
+
+                // 편집 상태 초기화
+                processingRef.current = false;
+
+                // 옵션 모달 닫기
+                setImageOptionVisible(false);
+
+                // 바로 이미지 편집기 실행
+                showImageEditor(imageAsset.uri);
+              } else {
+                console.error('유효하지 않은 이미지 URI 형식:', imageAsset.uri);
+                Alert.alert('오류', '카메라 이미지 형식이 유효하지 않습니다. 다시 시도해주세요.');
+              }
+            } catch (err) {
+              console.error('카메라 이미지 URI 설정 중 오류:', err);
+              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
+            }
           } else {
+            console.error('카메라 이미지 자산이 없음:', imageAsset);
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
           }
         }
       });
     } catch (error) {
+      console.error('카메라 사용 중 오류:', error);
       Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
     }
   };
 
-  // 이미지 편집 완료 후 처리
-  const handleImageEditComplete = async () => {
-    if (cropViewRef.current) {
-      try {
-        // 현재 편집 상태를 저장 - Promise 반환 형태
-        const cropResult = await cropViewRef.current.saveImage(true, 100);
-
-        // 결과 확인 및 로그
-        console.log('이미지 저장 결과:', cropResult);
-
-        // 편집기 모달 닫기
-        setImageEditorVisible(false);
-
-        // 약간의 딜레이 후 이미지 URI 업데이트
-        setTimeout(() => {
-          if (cropResult && cropResult.uri) {
-            // 편집된 이미지 URI를 명시적으로 설정
-            setCurrentImageUri(cropResult.uri);
-            // 상태 업데이트 확인을 위한 로그
-            console.log('이미지 편집 완료. 새 URI:', cropResult.uri);
-          } else {
-            console.warn('유효한 크롭 결과가 없습니다');
-          }
-        }, 300);
-      } catch (error) {
-        console.error('이미지 저장 중 오류 발생:', error);
-        Alert.alert('오류', '이미지 편집을 저장하는 중 문제가 발생했습니다.');
-        setImageEditorVisible(false);
+  // 이미지 편집기 실행 함수
+  const showImageEditor = imageUri => {
+    try {
+      if (!imageUri) {
+        console.warn('이미지 URI가 없습니다');
+        return;
       }
-    } else {
-      console.warn('cropViewRef가 없습니다');
-      setImageEditorVisible(false);
-    }
-  };
 
-  // 이미지 편집 취소
-  const handleImageEditCancel = () => {
-    // 취소 시 크롭 결과 초기화 없이 모달만 닫음
-    setImageEditorVisible(false);
+      if (processingRef.current) {
+        console.warn('이미지 처리 중입니다');
+        return;
+      }
+
+      processingRef.current = true;
+      console.log('이미지 편집 시작:', imageUri);
+
+      // 원본 이미지가 있으면 원본을 사용하여 매번 새롭게 편집
+      const sourceUri = originalImageUri || imageUri;
+
+      // ImagePicker 라이브러리의 openCropper 사용
+      ImagePicker.openCropper({
+        path: sourceUri,
+        width: 300,
+        height: 300,
+        cropperToolbarTitle: '이미지 편집',
+        cropperToolbarColor: '#000000',
+        cropperStatusBarColor: '#000000',
+        cropperActiveWidgetColor: '#56AEE9',
+        cropperToolbarWidgetColor: '#FFFFFF',
+        loadingLabelText: '처리 중...',
+        mediaType: 'photo',
+        cropperChooseText: '적용',
+        cropperCancelText: '취소',
+        // 자유롭게 비율 조정 가능
+        freeStyleCropEnabled: true,
+        // 회전 활성화
+        enableRotationGesture: true,
+      })
+        .then(image => {
+          console.log('이미지 크롭 성공:', image.path);
+          // 편집된 이미지 저장
+          setCurrentImageUri(image.path);
+          processingRef.current = false;
+        })
+        .catch(error => {
+          console.log('이미지 크롭 취소 또는 오류:', error);
+          processingRef.current = false;
+
+          // 사용자가 취소한 경우는 무시
+          if (error.code !== 'E_PICKER_CANCELLED') {
+            Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
+          }
+        });
+    } catch (error) {
+      console.error('이미지 편집기 실행 중 오류:', error);
+      processingRef.current = false;
+      Alert.alert('오류', '이미지 편집을 시작할 수 없습니다.');
+    }
   };
 
   // 박스명 가져오기
@@ -404,7 +521,7 @@ const RegisterDetailScreen = () => {
             <TouchableOpacity style={styles.imageContainer} onPress={handleImageContainerPress}>
               {currentImageUri ? (
                 <Image
-                  source={{ uri: currentImageUri + `?timestamp=${Date.now()}` }}
+                  source={imageSource(currentImageUri)}
                   style={styles.image}
                   resizeMode="cover"
                   key={`image-${Date.now()}`} // 강제 리렌더링을 위한 키 추가
@@ -423,7 +540,7 @@ const RegisterDetailScreen = () => {
               title={currentImageUri ? '이미지 편집하기' : '이미지 등록하기'}
               variant="outline"
               style={styles.imageButton}
-              onPress={showImageOptions}
+              onPress={showImageEditor}
             />
           </View>
 
@@ -756,165 +873,6 @@ const RegisterDetailScreen = () => {
         </View>
       </Modal>
 
-      {/* 이미지 편집 모달 */}
-      <Modal visible={isImageEditorVisible} animationType="slide">
-        <View style={styles.editorContainer}>
-          <View style={styles.editorHeader}>
-            <TouchableOpacity onPress={handleImageEditCancel} style={styles.editorHeaderButton}>
-              <Text variant="body1" weight="bold" color="#56AEE9">
-                취소
-              </Text>
-            </TouchableOpacity>
-            <Text variant="h4" weight="bold" color="white">
-              이미지 편집
-            </Text>
-            <TouchableOpacity onPress={handleImageEditComplete} style={styles.editorHeaderButton}>
-              <Text variant="body1" weight="bold" color="#56AEE9">
-                적용
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.cropContainer}>
-            {currentImageUri ? (
-              <>
-                <CropView
-                  ref={cropViewRef}
-                  sourceUrl={currentImageUri}
-                  style={styles.cropView}
-                  onError={error => {
-                    console.error('이미지 로드 오류:', error);
-                    Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
-                  }}
-                  onImageCrop={res => {
-                    console.log('이미지 크롭 완료:', res);
-                    // 크롭 결과 확인
-                    if (res && res.uri) {
-                      console.log('크롭된 이미지 URI:', res.uri);
-                      // 크롭 결과를 상태에 저장
-                      setCroppedImageResult({ ...res });
-                      // 현재 이미지 URI도 명시적으로 업데이트 (원본은 보존)
-                      setCurrentImageUri(res.uri);
-                    }
-                  }}
-                  cropAreaWidth={300}
-                  cropAreaHeight={300}
-                  containerColor="black"
-                  areaColor="white"
-                  keepAspectRatio={keepAspectRatio}
-                  aspectRatio={aspectRatio}
-                  iosDimensionSwapEnabled={true}
-                  maxZoom={8}
-                  quality={100}
-                />
-              </>
-            ) : (
-              <View style={styles.emptyImageContainer}>
-                <Icon name="image" size={50} color="#CCCCCC" />
-                <Text variant="body2" color="#DDDDDD" style={styles.emptyImageText}>
-                  이미지 로드 실패
-                </Text>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.editorToolbar}>
-            <TouchableOpacity
-              style={styles.toolbarButton}
-              onPress={() => {
-                if (cropViewRef.current) {
-                  try {
-                    // 회전 후 즉시 저장 시도
-                    cropViewRef.current.rotateImage(true);
-                    // 회전된 이미지 상태를 바로 저장하지 않고 적용 버튼 누를 때 저장
-                  } catch (error) {
-                    console.error('회전 중 오류:', error);
-                  }
-                }
-              }}
-            >
-              <Icon name="rotate-right" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                회전
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.toolbarButton, !keepAspectRatio && styles.activeToolbarButton]}
-              onPress={() => {
-                setKeepAspectRatio(false);
-                setAspectRatio(null);
-              }}
-            >
-              <Icon name="crop-free" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                자유
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.toolbarButton,
-                keepAspectRatio &&
-                  aspectRatio &&
-                  aspectRatio.width === 1 &&
-                  aspectRatio.height === 1 &&
-                  styles.activeToolbarButton,
-              ]}
-              onPress={() => {
-                setKeepAspectRatio(true);
-                setAspectRatio({ width: 1, height: 1 });
-              }}
-            >
-              <Icon name="crop-square" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                1:1
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.toolbarButton,
-                keepAspectRatio &&
-                  aspectRatio &&
-                  aspectRatio.width === 4 &&
-                  aspectRatio.height === 3 &&
-                  styles.activeToolbarButton,
-              ]}
-              onPress={() => {
-                setKeepAspectRatio(true);
-                setAspectRatio({ width: 4, height: 3 });
-              }}
-            >
-              <Icon name="crop-7-5" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                4:3
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.toolbarButton,
-                keepAspectRatio &&
-                  aspectRatio &&
-                  aspectRatio.width === 16 &&
-                  aspectRatio.height === 9 &&
-                  styles.activeToolbarButton,
-              ]}
-              onPress={() => {
-                setKeepAspectRatio(true);
-                setAspectRatio({ width: 16, height: 9 });
-              }}
-            >
-              <Icon name="crop-16-9" size={24} color="#FFFFFF" />
-              <Text variant="body2" color="#FFFFFF" style={styles.toolbarButtonText}>
-                16:9
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
       {/* 원본 이미지 팝업 모달 */}
       <Modal
         visible={isOriginalImageVisible}
@@ -929,11 +887,21 @@ const RegisterDetailScreen = () => {
         >
           <View style={styles.originalImageModalContent}>
             <Image
-              source={{ uri: originalImageUri }}
+              source={imageSource(originalImageUri)}
               style={styles.originalImage}
               resizeMode="contain"
-              key={`original-${originalImageUri}`}
             />
+
+            {/* 원본 이미지에서 편집 시작 버튼 */}
+            <TouchableOpacity
+              style={styles.editFromOriginalButton}
+              onPress={() => {
+                setOriginalImageVisible(false);
+                setTimeout(() => showImageEditor(originalImageUri), 300);
+              }}
+            >
+              <Icon name="edit" size={24} color="white" />
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -1245,10 +1213,30 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
   },
   originalImage: {
     width: '100%',
     height: '100%',
+  },
+  editFromOriginalButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(86, 174, 233, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
 });
 
