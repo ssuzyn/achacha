@@ -1,6 +1,5 @@
 package com.eurachacha.achacha.application.service.auth;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,8 +11,8 @@ import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLogin
 import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTokenRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
-import com.eurachacha.achacha.application.port.output.auth.BleTokenServicePort;
 import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
+import com.eurachacha.achacha.application.port.output.auth.dto.response.BleTokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
@@ -29,6 +28,7 @@ import com.eurachacha.achacha.domain.model.user.BleToken;
 import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
+import com.eurachacha.achacha.domain.service.auth.BleTokenDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -48,7 +48,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 	private final AuthServicePort authServicePort;
 	private final TokenServicePort tokenServicePort;
 	private final BleTokenRepository bleTokenRepository;
-	private final BleTokenServicePort bleTokenServicePort;
+	private final BleTokenDomainService bleTokenDomainService;
 
 	// 카카오 제공자 상수
 	private static final String KAKAO_PROVIDER = "KAKAO";
@@ -96,10 +96,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 		// 리프레시 토큰 저장
 		saveRefreshToken(user, refreshToken);
 
-		BleToken bleToken = getBleToken(user);
-
-		return new TokenResponseDto(accessToken, refreshToken, tokenServicePort.getAccessTokenExpirySeconds(),
-			bleToken.getToken(), bleToken.getExpiryAt());
+		return new TokenResponseDto(accessToken, refreshToken, tokenServicePort.getAccessTokenExpirySeconds());
 	}
 
 	@Override
@@ -116,10 +113,49 @@ public class AuthAppServiceImpl implements AuthAppService {
 
 		String newAccessToken = tokenServicePort.createAccessToken(userId);
 
-		BleToken bleToken = getBleToken(user);
-
 		return new TokenResponseDto(newAccessToken, refreshToken.getValue(),
-			tokenServicePort.getAccessTokenExpirySeconds(), bleToken.getToken(), bleToken.getExpiryAt());
+			tokenServicePort.getAccessTokenExpirySeconds());
+	}
+
+	@Override
+	@Transactional
+	public BleTokenResponseDto generateBleToken(String tokenValue) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// if (tokenValue != null && !tokenValue.isBlank()) {
+		bleTokenRepository.deleteByUserIdAndValue(userId, tokenValue);
+		// }
+
+		// 중복되지 않는 새 토큰 생성
+		String newTokenValue;
+		boolean isDuplicate;
+		int attempts = 0;
+
+		do {
+			// 최대 시도 횟수 초과 시 로그 기록
+			if (attempts++ > 3) {
+				log.warn("{}번 째 토큰 생성 시도", attempts);
+			}
+
+			// 새 토큰 생성
+			newTokenValue = bleTokenDomainService.generateToken();
+
+			// 중복 검사
+			isDuplicate = bleTokenRepository.existsByValue(newTokenValue);
+		} while (isDuplicate);
+
+		// 새 토큰 저장
+		BleToken bleToken = BleToken.builder()
+			.user(userRepository.findById(userId))
+			.value(newTokenValue)
+			.build();
+
+		bleTokenRepository.save(bleToken);
+
+		return BleTokenResponseDto.builder()
+			.bleToken(newTokenValue)
+			.build();
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {
@@ -210,31 +246,4 @@ public class AuthAppServiceImpl implements AuthAppService {
 	// 	refreshTokenRepository.deleteByValue(refreshToken);
 	//
 	// }
-
-	private BleToken getBleToken(User user) {
-		// BLE 토큰 확인
-		BleToken bleToken = bleTokenRepository.findByUserId(user.getId())
-			.orElseGet(() -> { // 최초 로그인 시 토큰 발급
-				log.info("BLE 토큰 생성: userId={}", user.getId());
-				BleToken newBleToken = BleToken.builder()
-					.user(user)
-					.token(bleTokenServicePort.generateUniqueToken())
-					.expiryAt(LocalDateTime.now().plusDays(7))
-					.build();
-
-				bleTokenRepository.save(newBleToken);
-				return newBleToken;
-			});
-
-		// 만료 여부 확인
-		checkExpiresAt(user, bleToken);
-		return bleToken;
-	}
-
-	private void checkExpiresAt(User user, BleToken bleToken) {
-		if (bleToken.isExpired()) {
-			log.info("BLE 토큰 재발급: userId={}", user.getId());
-			bleToken.updateToken(bleTokenServicePort.generateUniqueToken(), LocalDateTime.now().plusDays(7));
-		}
-	}
 }
