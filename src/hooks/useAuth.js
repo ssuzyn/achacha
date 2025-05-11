@@ -1,112 +1,214 @@
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
-// axios 등 HTTP 클라이언트 라이브러리
-import apiClient from '../api/apiClient'; // 백엔드 통신용으로 설정한 클라이언트
-import { API_CONFIG } from '../api/config'; // 추가: API 설정 import
-// 실제 소셜 로그인 SDK import (예시)
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { AUTH_ERROR_MESSAGES } from '../api/authErrors';
+import useAuthStore from '../store/authStore';
+import {
+  loginWithKakao,
+  refreshTokens,
+  getUserProfile,
+  logout as logoutService,
+} from '../services/authService';
+
+// ================ React Query Hooks ================
 
 /**
- * 소셜 로그인 관련 로직을 관리하는 커스텀 훅.
- * @returns {object} authState: 로그인 상태 ('idle', 'loading', 'success', 'error') - 필요 시 추가
- * @returns {function} signInWithKakao: 카카오 로그인 시도 함수
- * @returns {function} signInWithGoogle: 구글 로그인 시도 함수
+ * 카카오 로그인을 처리하는 React Query mutation 훅
+ */
+const useKakaoLoginMutation = () => {
+  const setAuth = useAuthStore(state => state.setAuth);
+
+  return useMutation({
+    mutationFn: loginWithKakao,
+    onSuccess: data => {
+      // 서버에서 받은 데이터로 인증 상태 업데이트
+      const { user, accessToken, refreshToken } = data;
+      setAuth(user, { accessToken, refreshToken }, 'kakao');
+    },
+    onError: error => {
+      // 자동 에러 처리는 useAuth에서 처리
+      console.error('Kakao Login API Error:', error);
+    },
+  });
+};
+
+/**
+ * 토큰 갱신을 처리하는 React Query mutation 훅
+ */
+export const useRefreshTokens = () => {
+  const updateTokens = useAuthStore(state => state.updateTokens);
+
+  return useMutation({
+    mutationFn: refreshTokens,
+    onSuccess: data => {
+      const { accessToken, refreshToken } = data;
+      updateTokens(accessToken, refreshToken);
+    },
+    onError: error => {
+      console.error('Token Refresh API Error:', error);
+      // 토큰 갱신 실패 시 로그인 화면으로 리디렉션하는 등의 처리는
+      // 호출하는 쪽이나 인터셉터에서 처리
+    },
+  });
+};
+
+/**
+ * 사용자 프로필을 조회하는 React Query 훅
+ */
+export const useUserProfile = (options = {}) => {
+  const isLoggedIn = useAuthStore(state => state.isLoggedIn);
+  const enabled = options.enabled !== undefined ? options.enabled : true;
+
+  return useQuery({
+    queryKey: ['userProfile'],
+    queryFn: getUserProfile,
+    enabled: isLoggedIn && enabled,
+    staleTime: options.staleTime || 5 * 60 * 1000, // 기본값 5분
+    retry: options.retry || 1, // 기본값 1회 재시도
+    onError: error => {
+      console.error('Get User Profile API Error:', error);
+    },
+  });
+};
+
+/**
+ * 로그아웃을 처리하는 React Query mutation 훅
+ */
+const useLogoutMutation = () => {
+  const logout = useAuthStore(state => state.logout);
+
+  return useMutation({
+    mutationFn: logoutService,
+    onSuccess: () => {
+      // 로컬 상태 초기화
+      logout();
+    },
+    onError: error => {
+      console.error('Logout API Error:', error);
+      // API 오류 발생 시에도 로컬 상태는 클리어
+      logout();
+    },
+  });
+};
+
+// ================ 메인 인증 Hook ================
+
+/**
+ * 인증 관련 로직을 관리하는 통합 커스텀 훅.
+ * React Query와 Zustand를 활용
  */
 export const useAuth = () => {
   const navigation = useNavigation();
-  // 필요에 따라 로딩/에러 상태 추가
-  const [authState, setAuthState] = useState('idle');
-  const [user, setUser] = useState(null);
-  const [error, setError] = useState(null);
+
+  // Zustand 스토어에서 상태 가져오기
+  const { user, isLoggedIn, loginType } = useAuthStore();
+
+  // React Query 훅 사용
+  const {
+    mutateAsync: kakaoLoginMutate,
+    isPending: isKakaoLoginPending,
+    isError: isKakaoLoginError,
+    isSuccess: isKakaoLoginSuccess,
+    error: kakaoLoginError,
+  } = useKakaoLoginMutation();
+
+  const { mutateAsync: logoutMutate, isPending: isLoggingOut } = useLogoutMutation();
+
+  const {
+    data: userProfile,
+    isLoading: isUserProfileLoading,
+    refetch: refetchUserProfile,
+  } = useUserProfile();
+
+  // 로그인 상태 (React Query의 mutation 상태 활용)
+  const authState = isKakaoLoginPending
+    ? 'loading'
+    : isKakaoLoginError
+      ? 'error'
+      : isKakaoLoginSuccess
+        ? 'success'
+        : 'idle';
 
   // 카카오 로그인 처리 함수
   const signInWithKakao = useCallback(async () => {
     console.log('[ACHACHA_DEBUG] Attempting Kakao Login via @react-native-seoul/kakao-login...');
-    setAuthState('loading');
-    setError(null);
+
     try {
+      // 카카오 SDK 로그인 시도 - 이 부분은 React Query 밖에서 처리해야 함
       console.log('[ACHACHA_DEBUG] Calling kakaoLogin() from @react-native-seoul/kakao-login');
-      const kakaoResult = await kakaoLogin(); // 카카오 SDK 로그인 시도
+      const kakaoResult = await kakaoLogin();
+
       // 실제 토큰 문자열만 추출 (accessToken, token, 또는 문자열)
       const kakaoAccessToken =
         kakaoResult?.accessToken ||
         kakaoResult?.token ||
         (typeof kakaoResult === 'string' ? kakaoResult : '');
+
       console.log('[ACHACHA_DEBUG] kakaoAccessToken:', kakaoAccessToken);
 
-      // 2. 백엔드에 토큰 전달
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.KAKAO_LOGIN, {
-        kakaoAccessToken,
-      });
+      // React Query mutation으로 로그인 처리
+      await kakaoLoginMutate(kakaoAccessToken);
 
-      // 3. 자체 토큰 저장 (예: AsyncStorage, SecureStore 등)
-      const { accessToken, refreshToken, expiresIn } = response.data;
-      await AsyncStorage.setItem('accessToken', accessToken);
-      await AsyncStorage.setItem('refreshToken', refreshToken);
-
-      // 저장 확인용 로그
-      const storedAccessToken = await AsyncStorage.getItem('accessToken');
-      const storedRefreshToken = await AsyncStorage.getItem('refreshToken');
-      console.log('[ACHACHA_DEBUG] AsyncStorage accessToken:', storedAccessToken);
-      console.log('[ACHACHA_DEBUG] AsyncStorage refreshToken:', storedRefreshToken);
-
-      setAuthState('success');
-      navigation.replace('Main'); // 로그인 성공 시 HomeScreen으로 이동
+      // 로그인 성공 시 화면 이동
+      navigation.replace('Main');
     } catch (error) {
-      console.error('[ACHACHA_DEBUG] Kakao login error:', error);
-      setAuthState('error');
-      // 에러 메시지 매핑 및 Alert
-      let errorMessage = '로그인 중 알 수 없는 오류가 발생했습니다.';
-      if (error.response && error.response.data && error.response.data.errorCode) {
-        const code = error.response.data.errorCode;
-        errorMessage = AUTH_ERROR_MESSAGES[code] || error.response.data.message || errorMessage;
-      }
-      Alert.alert('로그인 실패', errorMessage);
+      // 카카오 SDK 에러만 여기서 처리 (백엔드 API 에러는 React Query에서 처리)
+      console.error('[ACHACHA_DEBUG] Kakao SDK login error:', error);
+      Alert.alert('카카오 로그인 실패', '카카오 로그인 연동 중 오류가 발생했습니다.');
     }
+  }, [navigation, kakaoLoginMutate]);
+
+  // 로그인 에러 핸들러
+  const handleLoginError = useCallback(() => {
+    if (!kakaoLoginError) return;
+
+    // API 에러 처리
+    let errorMessage = '로그인 중 알 수 없는 오류가 발생했습니다.';
+    if (kakaoLoginError.response?.data?.errorCode) {
+      const code = kakaoLoginError.response.data.errorCode;
+      errorMessage =
+        AUTH_ERROR_MESSAGES[code] || kakaoLoginError.response.data.message || errorMessage;
+    }
+
+    Alert.alert('로그인 실패', errorMessage);
+  }, [kakaoLoginError]);
+
+  // 카카오 로그인 에러 발생 시 자동으로 에러 처리
+  if (isKakaoLoginError && kakaoLoginError) {
+    handleLoginError();
+  }
+
+  // 구글 로그인 처리 함수 (예시 코드로 유지)
+  const signInWithGoogle = useCallback(async () => {
+    // 구현할 경우, 카카오 로그인과 같은 패턴으로 SDK 호출 후 mutation 실행
   }, [navigation]);
 
-  // 구글 로그인 처리 함수
-  const signInWithGoogle = useCallback(async () => {
-    setAuthState('loading'); // 로딩 상태 시작 (옵션)
+  // 로그아웃 함수
+  const logout = useCallback(async () => {
     try {
-      // --- 실제 구글 로그인 로직 구현 ---
-      // await GoogleSignin.hasPlayServices();
-      // const userInfo = await GoogleSignin.signIn();
-      // console.log('Google Login Success:', userInfo);
-      // await handleBackendLogin('google', userInfo.idToken); // 백엔드 로그인 처리
-      // ---------------------------------
-
-      // 현재는 임시 로직
-      setAuthState('success'); // 성공 상태 (옵션)
-      navigation.navigate('Main'); // 홈으로 이동
+      await logoutMutate();
+      navigation.replace('Login');
     } catch (error) {
-      console.error('[useAuth] Google Login Error:', error);
-      setAuthState('error'); // 에러 상태 (옵션)
-      // 구글 로그인은 사용자가 취소한 경우 특정 에러 코드를 반환할 수 있음
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // 사용자가 로그인 흐름을 취소함
-      } else {
-        //
-      }
+      // API 에러는 이미 React Query에서 관리되므로 여기서는 처리하지 않음
+      // 추가 UI 상호작용만 처리
     }
-  }, [navigation]); // navigation 의존성 추가
+  }, [logoutMutate, navigation]);
 
   // 훅 사용 컴포넌트에 필요한 상태와 함수 반환
   return {
-    authState, // 현재 상태 (로딩, 에러 등 표시 위해)
-    user,
-    error,
+    authState,
+    user: user || userProfile,
+    isLoggedIn,
+    loginType,
+    isKakaoLoginPending,
+    isLoggingOut,
+    isUserProfileLoading,
+    error: kakaoLoginError,
     signInWithKakao,
     signInWithGoogle,
+    logout,
+    refetchUserProfile,
   };
-};
-
-// 실제 구글 로그인 사용 시 필요할 수 있는 에러 코드 (참고용)
-// import { statusCodes } from '@react-native-google-signin/google-signin';
-const statusCodes = {
-  SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
-  // ... 다른 상태 코드들
 };
