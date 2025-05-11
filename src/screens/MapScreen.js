@@ -279,7 +279,7 @@ const MapScreen = () => {
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.header}>
-          <Text style={styles.headerText}>기프티콘 Map</Text>
+          <Text style={styles.headerText}>기프티콘 MAP</Text>
         </View>
       </SafeAreaView>
 
@@ -315,21 +315,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
   },
   header: {
-    padding: 20,
+    padding: 12,
     backgroundColor: '#f8f8f8',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   headerText: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
   },
   mapContainer: {
     flex: 1,
   },
   locationButton: {
     position: 'absolute',
-    top: 100,
+    top: 80,
     right: 13,
     width: 45,
     height: 45,
