@@ -205,7 +205,9 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
       clearTimeout(searchTimerRef.current);
     }
 
+    console.log('디바운스 타이머 설정: 1초 후 검색 예정');
     searchTimerRef.current = setTimeout(() => {
+      console.log('디바운스 타이머 만료: 검색 실행');
       searchNearbyStores();
     }, 1000); // 1초 디바운스
   };
