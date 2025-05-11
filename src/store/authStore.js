@@ -3,7 +3,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * 인증 관련 상태를 관리하는 Zustand 스토어
+- Zustand 기반 전역 상태 관리
+- 인증 정보 저장 및 관리 (토큰, 사용자 정보 등)
+- AsyncStorage와 연동하여 영구 저장소 처리
  */
+
 const useAuthStore = create((set, get) => ({
   // 상태
   user: null,

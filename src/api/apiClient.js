@@ -1,6 +1,11 @@
+// - Axios 인스턴스를 기반으로 구현
+// - 요청 인터셉터: 모든 요청에 토큰 자동 첨부
+// - 응답 인터셉터: 토큰 만료 시 자동 갱신 처리
+
 import axios from 'axios';
 import { API_CONFIG } from './config'; // 설정 파일 import 경로 변경
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AUTH_ERROR_MESSAGES } from './authErrors';
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -13,8 +18,23 @@ const apiClient = axios.create({
   },
 });
 
-// (옵션) 요청 인터셉터: 모든 요청에 공통 로직을 추가할 때 유용합니다.
-// 예를 들어, 모든 요청 헤더에 인증 토큰(JWT)을 자동으로 추가할 수 있습니다.
+// 토큰 갱신 중인지 여부를 추적하는 변수
+let isRefreshing = false;
+// 토큰 갱신 대기 중인 요청들의 배열
+let refreshSubscribers = [];
+
+// 토큰 갱신 후 실행할 콜백 함수 등록
+const subscribeTokenRefresh = callback => {
+  refreshSubscribers.push(callback);
+};
+
+// 등록된 모든 콜백 함수 실행 (토큰 갱신 완료 시)
+const onRefreshed = newToken => {
+  refreshSubscribers.forEach(callback => callback(newToken));
+  refreshSubscribers = [];
+};
+
+// 요청 인터셉터: 모든 요청에 인증 토큰을 자동으로 추가
 apiClient.interceptors.request.use(
   async config => {
     try {
@@ -23,7 +43,7 @@ apiClient.interceptors.request.use(
         config.headers.Authorization = `Bearer ${accessToken}`;
       }
     } catch (e) {
-      // 토큰 읽기 실패 시 아무것도 하지 않음
+      console.error('토큰 가져오기 실패:', e);
     }
     return config;
   },
@@ -32,23 +52,83 @@ apiClient.interceptors.request.use(
   }
 );
 
-// (옵션) 응답 인터셉터: 모든 응답에 공통 로직을 추가할 때 유용합니다.
-// 예를 들어, 특정 API 에러 코드(예: 401 Unauthorized)를 감지하여 자동으로 로그아웃 처리 등을 할 수 있습니다.
-/*
+// 응답 인터셉터: 토큰 만료 시 자동 갱신 처리
 apiClient.interceptors.response.use(
-  (response) => {
-    // 정상 응답은 그대로 반환
+  response => {
     return response;
   },
-  (error) => {
-    // if (error.response && error.response.status === 401) {
-    //   // 예: 토큰 만료 또는 인증 실패 시 로그아웃 처리 로직
-    //   console.log('Unauthorized! Logging out...');
-    //   // 여기서 로그아웃 함수를 호출하거나, 로그인 화면으로 리디렉션할 수 있습니다.
-    // }
+  async error => {
+    const originalRequest = error.config;
+
+    // 401 에러이고, 토큰 만료 에러이며, 아직 재시도하지 않았을 경우
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      error.response.data &&
+      (error.response.data.errorCode === 'AUTH_02' ||
+        error.response.data.message === AUTH_ERROR_MESSAGES.AUTH_02) &&
+      !originalRequest._retry
+    ) {
+      // 토큰 갱신 중이 아니라면 갱신 시작
+      if (!isRefreshing) {
+        isRefreshing = true;
+        originalRequest._retry = true;
+
+        try {
+          // 리프레시 토큰으로 새 액세스 토큰 요청
+          const refreshToken = await AsyncStorage.getItem('refreshToken');
+          const response = await axios.post(
+            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`,
+            { refreshToken }
+          );
+
+          const { accessToken, newRefreshToken } = response.data;
+
+          // 새 토큰 저장
+          await AsyncStorage.setItem('accessToken', accessToken);
+          if (newRefreshToken) {
+            await AsyncStorage.setItem('refreshToken', newRefreshToken);
+          }
+
+          // 헤더 업데이트
+          apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+          // 대기 중인 요청들 처리
+          onRefreshed(accessToken);
+          isRefreshing = false;
+
+          // 원래 요청 재시도
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          // 리프레시 토큰도 만료된 경우 로그아웃 처리
+          isRefreshing = false;
+
+          // AsyncStorage에서 모든 인증 관련 데이터 제거
+          await AsyncStorage.removeItem('accessToken');
+          await AsyncStorage.removeItem('refreshToken');
+
+          // 로그인 화면으로 이동 로직 (필요 시 네비게이션 혹은 이벤트 발생)
+          // 여기서는 글로벌 상태에 접근하지 않고 이벤트를 발생시키는 것이 좋습니다.
+          const logoutEvent = new Event('logout');
+          document.dispatchEvent(logoutEvent);
+
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // 이미 토큰 갱신 중이라면 갱신된 토큰으로 요청 재시도를 예약
+        return new Promise(resolve => {
+          subscribeTokenRefresh(newToken => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(apiClient(originalRequest));
+          });
+        });
+      }
+    }
+
+    // 다른 종류의 에러는 그대로 반환
     return Promise.reject(error);
   }
 );
-*/
 
 export default apiClient;

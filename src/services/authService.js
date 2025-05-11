@@ -1,3 +1,6 @@
+// - API 클라이언트를 활용하여 실제 인증 API 호출 함수 구현
+// - 로그인, 로그아웃, 토큰 갱신, 사용자 정보 조회 등의 함수 제공
+
 import apiClient from '../api/apiClient';
 import { API_CONFIG } from '../api/config';
 

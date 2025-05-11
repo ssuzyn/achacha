@@ -13,6 +13,8 @@ import {
 } from '../services/authService';
 
 // ================ React Query Hooks ================
+// - React Query와 Zustand를 통합한 인증 관련 커스텀 훅
+// - 컴포넌트에서 인증 관련 상태와 기능을 쉽게 사용할 수 있는 인터페이스 제공
 
 /**
  * 카카오 로그인을 처리하는 React Query mutation 훅
