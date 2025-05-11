@@ -75,10 +75,18 @@ const RegisterDetailScreen = () => {
     if (route.params?.selectedImage) {
       try {
         const imageUri = route.params.selectedImage.uri;
-        console.log('초기 이미지 로드:', imageUri);
+        console.log('편집된 이미지 로드:', imageUri);
         if (imageUri) {
           setCurrentImageUri(imageUri);
-          setOriginalImageUri(imageUri); // 원본 이미지 URI 저장
+
+          // 원본 이미지 URI 처리
+          if (route.params?.originalImage && route.params.originalImage.uri) {
+            console.log('원본 이미지 로드:', route.params.originalImage.uri);
+            setOriginalImageUri(route.params.originalImage.uri);
+          } else {
+            // 원본 이미지가 없는 경우 현재 이미지를 원본으로 설정
+            setOriginalImageUri(imageUri);
+          }
         } else {
           console.warn('유효하지 않은 이미지 URI');
         }
@@ -91,7 +99,8 @@ const RegisterDetailScreen = () => {
     if (route.params?.gifticonType) {
       setGifticonType(route.params.gifticonType);
       setIsTypeBoxSelected(true);
-      // 최초 등록 시에는 타입 잠금 해제 상태로 유지
+      // 유형이 이미 선택되었으므로 잠금 상태로 설정
+      setIsTypeLocked(true);
     }
 
     if (route.params?.boxType) {
@@ -164,10 +173,14 @@ const RegisterDetailScreen = () => {
   const handleImageContainerPress = () => {
     try {
       // 이미지가 있으면 원본 이미지 팝업 표시, 없으면 이미지 옵션 모달 표시
-      if (originalImageUri) {
-        console.log('원본 이미지 모달 표시:', originalImageUri);
-        setOriginalImageVisible(true);
+      if (currentImageUri) {
+        // 원본 이미지가 있는 경우에만 원본 이미지 모달 표시
+        if (originalImageUri) {
+          console.log('원본 이미지 모달 표시:', originalImageUri);
+          setOriginalImageVisible(true);
+        }
       } else {
+        // 이미지가 없는 경우 이미지 옵션 모달 표시
         setImageOptionVisible(true);
       }
     } catch (error) {
@@ -540,7 +553,13 @@ const RegisterDetailScreen = () => {
               title={currentImageUri ? '이미지 편집하기' : '이미지 등록하기'}
               variant="outline"
               style={styles.imageButton}
-              onPress={showImageEditor}
+              onPress={() => {
+                if (currentImageUri) {
+                  showImageEditor(currentImageUri);
+                } else {
+                  setImageOptionVisible(true);
+                }
+              }}
             />
           </View>
 
@@ -886,14 +905,18 @@ const RegisterDetailScreen = () => {
           onPress={() => setOriginalImageVisible(false)}
         >
           <View style={styles.originalImageModalContent}>
-            <Text style={styles.originalImageGuideText}>
-              업로드 한 원본 이미지를 확인할 수 있어요.
-            </Text>
+            <Text style={styles.originalImageGuideText}>업로드 한 원본 이미지입니다</Text>
             <Image
               source={imageSource(originalImageUri)}
               style={styles.originalImage}
               resizeMode="contain"
             />
+            <TouchableOpacity
+              style={styles.originalImageCloseButton}
+              onPress={() => setOriginalImageVisible(false)}
+            >
+              <Icon name="close" size={24} color="white" />
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -1200,12 +1223,13 @@ const styles = StyleSheet.create({
   originalImageModalContent: {
     width: '90%',
     height: '80%',
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     borderRadius: 16,
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
+    padding: 10,
   },
   originalImageGuideText: {
     color: 'white',
@@ -1222,6 +1246,18 @@ const styles = StyleSheet.create({
   originalImage: {
     width: '100%',
     height: '100%',
+  },
+  originalImageCloseButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
   },
 });
 

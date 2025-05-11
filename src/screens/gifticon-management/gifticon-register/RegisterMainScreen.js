@@ -22,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import ImagePicker from 'react-native-image-crop-picker';
 
 const RegisterMainScreen = () => {
   const { theme } = useTheme();
@@ -45,9 +46,9 @@ const RegisterMainScreen = () => {
     navigation.goBack();
   }, [navigation]);
 
-  // 업로드 버튼 클릭 시 이미지 옵션 모달 바로 표시
+  // 업로드 버튼 클릭 시 타입 및 위치 모달 먼저 표시
   const handleUploadPress = useCallback(() => {
-    setImageOptionVisible(true);
+    setTypeModalVisible(true);
   }, []);
 
   // 안드로이드 카메라 권한 요청
@@ -107,11 +108,42 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 크롭 과정 없이 바로 상세 화면으로 이동
-            navigation.navigate('RegisterDetail', {
-              selectedImage: { uri: imageAsset.uri },
-            });
-            setImageOptionVisible(false);
+            // 이미지 편집기 호출 - ImagePicker 라이브러리 사용
+            ImagePicker.openCropper({
+              path: imageAsset.uri,
+              width: 300,
+              height: 300,
+              cropperToolbarTitle: '이미지 편집',
+              cropperToolbarColor: '#000000',
+              cropperStatusBarColor: '#000000',
+              cropperActiveWidgetColor: '#56AEE9',
+              cropperToolbarWidgetColor: '#FFFFFF',
+              loadingLabelText: '처리 중...',
+              mediaType: 'photo',
+              cropperChooseText: '적용',
+              cropperCancelText: '취소',
+              freeStyleCropEnabled: true,
+              enableRotationGesture: true,
+            })
+              .then(croppedImage => {
+                console.log('이미지 크롭 성공:', croppedImage.path);
+                // 편집된 이미지와 함께 상세 화면으로 이동
+                // 원본 이미지와 편집된 이미지 모두 전달
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: croppedImage.path },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                });
+                setImageOptionVisible(false);
+              })
+              .catch(error => {
+                console.log('이미지 크롭 취소 또는 오류:', error);
+                if (error.code !== 'E_PICKER_CANCELLED') {
+                  Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
+                }
+              });
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
@@ -124,7 +156,7 @@ const RegisterMainScreen = () => {
       console.error('이미지 선택 예외 발생:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
-  }, [navigation]);
+  }, [navigation, gifticonType, boxType, selectedShareBoxId]);
 
   // 카메라로 촬영
   const handleOpenCamera = useCallback(async () => {
@@ -172,11 +204,42 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 크롭 과정 없이 바로 상세 화면으로 이동
-            navigation.navigate('RegisterDetail', {
-              selectedImage: { uri: imageAsset.uri },
-            });
-            setImageOptionVisible(false);
+            // 이미지 편집기 호출 - ImagePicker 라이브러리 사용
+            ImagePicker.openCropper({
+              path: imageAsset.uri,
+              width: 300,
+              height: 300,
+              cropperToolbarTitle: '이미지 편집',
+              cropperToolbarColor: '#000000',
+              cropperStatusBarColor: '#000000',
+              cropperActiveWidgetColor: '#56AEE9',
+              cropperToolbarWidgetColor: '#FFFFFF',
+              loadingLabelText: '처리 중...',
+              mediaType: 'photo',
+              cropperChooseText: '적용',
+              cropperCancelText: '취소',
+              freeStyleCropEnabled: true,
+              enableRotationGesture: true,
+            })
+              .then(croppedImage => {
+                console.log('이미지 크롭 성공:', croppedImage.path);
+                // 편집된 이미지와 함께 상세 화면으로 이동
+                // 원본 이미지와 편집된 이미지 모두 전달
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: croppedImage.path },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                });
+                setImageOptionVisible(false);
+              })
+              .catch(error => {
+                console.log('이미지 크롭 취소 또는 오류:', error);
+                if (error.code !== 'E_PICKER_CANCELLED') {
+                  Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
+                }
+              });
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
@@ -189,7 +252,7 @@ const RegisterMainScreen = () => {
       console.error('카메라 촬영 예외 발생:', error);
       Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
     }
-  }, [navigation, requestCameraPermission]);
+  }, [navigation, requestCameraPermission, gifticonType, boxType, selectedShareBoxId]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
