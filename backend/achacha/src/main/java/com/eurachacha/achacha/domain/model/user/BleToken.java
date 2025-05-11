@@ -1,7 +1,5 @@
 package com.eurachacha.achacha.domain.model.user;
 
-import java.time.LocalDateTime;
-
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 
 import jakarta.persistence.Column;
@@ -34,18 +32,6 @@ public class BleToken extends TimeStampEntity {
 	private User user;
 
 	@Column(nullable = false, unique = true, length = 16)
-	private String token;
+	private String value;
 
-	@Column(nullable = false)
-	private LocalDateTime expiryAt;
-
-	// 유효기간 만료 여부
-	public boolean isExpired() {
-		return !LocalDateTime.now().isBefore(expiryAt);
-	}
-
-	public void updateToken(String token, LocalDateTime expiresAt) {
-		this.token = token;
-		this.expiryAt = expiresAt;
-	}
 }
