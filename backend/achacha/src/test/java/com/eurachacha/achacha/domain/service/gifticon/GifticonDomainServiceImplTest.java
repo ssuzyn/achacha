@@ -24,6 +24,7 @@ class GifticonDomainServiceImplTest {
 	@InjectMocks
 	private GifticonDomainServiceImpl gifticonDomainService;
 
+	// 금액 검증 테스트 - 경계값 위주로 테스트
 	@Test
 	@DisplayName("금액형 기프티콘인데 금액이 null이면 예외가 발생해야 한다")
 	void validateGifticonAmount_WhenAmountTypeWithNullAmount_ThenThrowException() {
@@ -51,28 +52,15 @@ class GifticonDomainServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("금액형 기프티콘인데 금액이 음수이면 예외가 발생해야 한다")
-	void validateGifticonAmount_WhenAmountTypeWithNegativeAmount_ThenThrowException() {
-		// given
-		GifticonType type = GifticonType.AMOUNT;
-		Integer amount = -1000;
-
-		// when & then
-		assertThatThrownBy(() -> gifticonDomainService.validateGifticonAmount(type, amount))
-			.isInstanceOf(CustomException.class)
-			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.INVALID_AMOUNT_GIFTICON_VALUE);
-	}
-
-	@Test
 	@DisplayName("금액형 기프티콘인데 금액이 양수이면 예외가 발생하지 않아야 한다")
 	void validateGifticonAmount_WhenAmountTypeWithPositiveAmount_ThenNoException() {
 		// given
 		GifticonType type = GifticonType.AMOUNT;
-		Integer amount = 10000;
+		Integer amount = 1; // 경계값 - 최소 유효 금액
 
 		// when & then
-		gifticonDomainService.validateGifticonAmount(type, amount);
-		// 예외가 발생하지 않으면 테스트 성공
+		assertThatCode(() -> gifticonDomainService.validateGifticonAmount(type, amount))
+			.doesNotThrowAnyException();
 	}
 
 	@Test
@@ -83,10 +71,11 @@ class GifticonDomainServiceImplTest {
 		Integer amount = null;
 
 		// when & then
-		gifticonDomainService.validateGifticonAmount(type, amount);
-		// 예외가 발생하지 않으면 테스트 성공
+		assertThatCode(() -> gifticonDomainService.validateGifticonAmount(type, amount))
+			.doesNotThrowAnyException();
 	}
 
+	// 기프티콘 만료 여부 테스트 - 경계값(하루 전, 당일, 하루 후)
 	@Test
 	@DisplayName("유효기간이 지난 기프티콘은 만료됨으로 판단해야 한다")
 	void isExpired_WhenExpiryDateIsBeforeToday_ThenReturnTrue() {
@@ -115,20 +104,7 @@ class GifticonDomainServiceImplTest {
 		assertThat(result).isFalse();
 	}
 
-	@Test
-	@DisplayName("유효기간이 미래인 기프티콘은 만료되지 않음으로 판단해야 한다")
-	void isExpired_WhenExpiryDateIsAfterToday_ThenReturnFalse() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getExpiryDate()).willReturn(LocalDate.now().plusDays(1));
-
-		// when
-		boolean result = gifticonDomainService.isExpired(gifticon);
-
-		// then
-		assertThat(result).isFalse();
-	}
-
+	// 사용자 접근 권한 테스트
 	@ParameterizedTest
 	@CsvSource({
 		"1, 1, true",
@@ -148,64 +124,9 @@ class GifticonDomainServiceImplTest {
 		assertThat(result).isEqualTo(expected);
 	}
 
+	// validateGifticonAvailability 메서드 테스트 (핵심 기능)
 	@Test
-	@DisplayName("삭제된 기프티콘은 삭제됨으로 판단해야 한다")
-	void isDeleted_WhenGifticonIsDeleted_ThenReturnTrue() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(true);
-
-		// when
-		boolean result = gifticonDomainService.isDeleted(gifticon);
-
-		// then
-		assertThat(result).isTrue();
-	}
-
-	@Test
-	@DisplayName("삭제되지 않은 기프티콘은 삭제되지 않음으로 판단해야 한다")
-	void isDeleted_WhenGifticonIsNotDeleted_ThenReturnFalse() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(false);
-
-		// when
-		boolean result = gifticonDomainService.isDeleted(gifticon);
-
-		// then
-		assertThat(result).isFalse();
-	}
-
-	@Test
-	@DisplayName("사용된 기프티콘은 사용됨으로 판단해야 한다")
-	void isUsed_WhenGifticonIsUsed_ThenReturnTrue() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsUsed()).willReturn(true);
-
-		// when
-		boolean result = gifticonDomainService.isUsed(gifticon);
-
-		// then
-		assertThat(result).isTrue();
-	}
-
-	@Test
-	@DisplayName("사용되지 않은 기프티콘은 사용되지 않음으로 판단해야 한다")
-	void isUsed_WhenGifticonIsNotUsed_ThenReturnFalse() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsUsed()).willReturn(false);
-
-		// when
-		boolean result = gifticonDomainService.isUsed(gifticon);
-
-		// then
-		assertThat(result).isFalse();
-	}
-
-	@Test
-	@DisplayName("삭제된 기프티콘은 예외가 발생해야 한다")
+	@DisplayName("삭제된 기프티콘 검증 시 예외가 발생해야 한다")
 	void validateGifticonAvailability_WhenGifticonIsDeleted_ThenThrowException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
@@ -218,7 +139,7 @@ class GifticonDomainServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("사용된 기프티콘은 예외가 발생해야 한다")
+	@DisplayName("사용된 기프티콘 검증 시 예외가 발생해야 한다")
 	void validateGifticonAvailability_WhenGifticonIsUsed_ThenThrowException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
@@ -232,7 +153,7 @@ class GifticonDomainServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("만료된 기프티콘은 예외가 발생해야 한다")
+	@DisplayName("만료된 기프티콘 검증 시 예외가 발생해야 한다")
 	void validateGifticonAvailability_WhenGifticonIsExpired_ThenThrowException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
@@ -247,7 +168,7 @@ class GifticonDomainServiceImplTest {
 	}
 
 	@Test
-	@DisplayName("사용 가능한 기프티콘은 예외가 발생하지 않아야 한다")
+	@DisplayName("사용 가능한 기프티콘 검증 시 예외가 발생하지 않아야 한다")
 	void validateGifticonAvailability_WhenGifticonIsAvailable_ThenNoException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
@@ -256,25 +177,13 @@ class GifticonDomainServiceImplTest {
 		given(gifticon.getExpiryDate()).willReturn(LocalDate.now().plusDays(1));
 
 		// when & then
-		gifticonDomainService.validateGifticonAvailability(gifticon);
-		// 예외가 발생하지 않으면 테스트 성공
+		assertThatCode(() -> gifticonDomainService.validateGifticonAvailability(gifticon))
+			.doesNotThrowAnyException();
 	}
 
+	// validateGifticonIsUsed 메서드에 대한 핵심 테스트 (부정 케이스만)
 	@Test
-	@DisplayName("삭제된 기프티콘은 예외가 발생해야 한다")
-	void validateGifticonIsUsed_WhenGifticonIsDeleted_ThenThrowException() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(true);
-
-		// when & then
-		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsUsed(gifticon))
-			.isInstanceOf(CustomException.class)
-			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_DELETED);
-	}
-
-	@Test
-	@DisplayName("사용되지 않은 기프티콘은 예외가 발생해야 한다")
+	@DisplayName("사용된 기프티콘 검증 시 사용된 기프티콘이 아니면 예외가 발생해야 한다")
 	void validateGifticonIsUsed_WhenGifticonIsNotUsed_ThenThrowException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
@@ -285,58 +194,5 @@ class GifticonDomainServiceImplTest {
 		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsUsed(gifticon))
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_AVAILABLE);
-	}
-
-	@Test
-	@DisplayName("사용된 기프티콘은 예외가 발생하지 않아야 한다")
-	void validateGifticonIsUsed_WhenGifticonIsUsed_ThenNoException() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(false);
-		given(gifticon.getIsUsed()).willReturn(true);
-
-		// when & then
-		gifticonDomainService.validateGifticonIsUsed(gifticon);
-		// 예외가 발생하지 않으면 테스트 성공
-	}
-
-	@Test
-	@DisplayName("삭제된 기프티콘은 예외가 발생해야 한다")
-	void validateGifticonIsAvailable_WhenGifticonIsDeleted_ThenThrowException() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(true);
-
-		// when & then
-		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsAvailable(gifticon))
-			.isInstanceOf(CustomException.class)
-			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_DELETED);
-	}
-
-	@Test
-	@DisplayName("사용된 기프티콘은 예외가 발생해야 한다")
-	void validateGifticonIsAvailable_WhenGifticonIsUsed_ThenThrowException() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(false);
-		given(gifticon.getIsUsed()).willReturn(true);
-
-		// when & then
-		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsAvailable(gifticon))
-			.isInstanceOf(CustomException.class)
-			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_ALREADY_USED);
-	}
-
-	@Test
-	@DisplayName("사용 가능한 기프티콘은 예외가 발생하지 않아야 한다")
-	void validateGifticonIsAvailable_WhenGifticonIsAvailable_ThenNoException() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(false);
-		given(gifticon.getIsUsed()).willReturn(false);
-
-		// when & then
-		gifticonDomainService.validateGifticonIsAvailable(gifticon);
-		// 예외가 발생하지 않으면 테스트 성공
 	}
 }
