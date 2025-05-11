@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { API_CONFIG } from '../constants/config'; // 설정 파일 import 경로 변경
+import { API_CONFIG } from './config'; // 설정 파일 import 경로 변경
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: API_CONFIG.BASE_URL,   // 설정 파일에서 Base URL 가져오기
-  timeout: API_CONFIG.TIMEOUT,     // 설정 파일에서 Timeout 가져오기
+  baseURL: API_CONFIG.BASE_URL, // 설정 파일에서 Base URL 가져오기
+  timeout: API_CONFIG.TIMEOUT, // 설정 파일에서 Timeout 가져오기
   headers: {
     'Content-Type': 'application/json',
     // 필요에 따라 다른 기본 헤더를 여기에 추가할 수 있습니다.
@@ -16,7 +16,7 @@ const apiClient = axios.create({
 // (옵션) 요청 인터셉터: 모든 요청에 공통 로직을 추가할 때 유용합니다.
 // 예를 들어, 모든 요청 헤더에 인증 토큰(JWT)을 자동으로 추가할 수 있습니다.
 apiClient.interceptors.request.use(
-  async (config) => {
+  async config => {
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       if (accessToken) {
@@ -27,7 +27,7 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
+  error => {
     return Promise.reject(error);
   }
 );
@@ -51,4 +51,4 @@ apiClient.interceptors.response.use(
 );
 */
 
-export default apiClient; 
+export default apiClient;

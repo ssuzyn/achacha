@@ -2,12 +2,12 @@ import { useState, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
 // axios 등 HTTP 클라이언트 라이브러리
-import apiClient from '../services/apiClient'; // 백엔드 통신용으로 설정한 클라이언트
-import { API_CONFIG } from '../constants/config'; // 추가: API 설정 import
+import apiClient from '../api/apiClient'; // 백엔드 통신용으로 설정한 클라이언트
+import { API_CONFIG } from '../api/config'; // 추가: API 설정 import
 // 실제 소셜 로그인 SDK import (예시)
 // import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AUTH_ERROR_MESSAGES } from '../constants/authErrors';
+import { AUTH_ERROR_MESSAGES } from '../api/authErrors';
 
 /**
  * 소셜 로그인 관련 로직을 관리하는 커스텀 훅.
@@ -31,7 +31,10 @@ export const useAuth = () => {
       console.log('[ACHACHA_DEBUG] Calling kakaoLogin() from @react-native-seoul/kakao-login');
       const kakaoResult = await kakaoLogin(); // 카카오 SDK 로그인 시도
       // 실제 토큰 문자열만 추출 (accessToken, token, 또는 문자열)
-      const kakaoAccessToken = kakaoResult?.accessToken || kakaoResult?.token || (typeof kakaoResult === 'string' ? kakaoResult : '');
+      const kakaoAccessToken =
+        kakaoResult?.accessToken ||
+        kakaoResult?.token ||
+        (typeof kakaoResult === 'string' ? kakaoResult : '');
       console.log('[ACHACHA_DEBUG] kakaoAccessToken:', kakaoAccessToken);
 
       // 2. 백엔드에 토큰 전달
