@@ -83,7 +83,10 @@ public enum ErrorCode {
 	SHAREBOX_PARTICIPATION_DISABLED(HttpStatus.FORBIDDEN, "SHAREBOX_004", "참여가 비활성화된 쉐어박스입니다."),
 	ALREADY_PARTICIPATING_SHAREBOX(HttpStatus.CONFLICT, "SHAREBOX_005", "이미 참여 중인 쉐어박스입니다."),
 	SHAREBOX_MAX_PARTICIPANTS_REACHED(HttpStatus.FORBIDDEN, "SHAREBOX_006", "최대 참여자 수(10명)에 도달했습니다."),
-	INVALID_SHAREBOX_NAME(HttpStatus.BAD_REQUEST, "SHAREBOX_007", "유효하지 않은 쉐어박스 이름입니다.");
+	INVALID_SHAREBOX_NAME(HttpStatus.BAD_REQUEST, "SHAREBOX_007", "유효하지 않은 쉐어박스 이름입니다."),
+	UNAUTHORIZED_SHAREBOX_ACCESS(HttpStatus.FORBIDDEN, "SHAREBOX_008", "해당 쉐어박스에 접근 권한이 없습니다."),
+	CANNOT_SHARE_USED_AMOUNT_GIFTICON(HttpStatus.BAD_REQUEST, "SHAREBOX_009", "일부 사용된 금액형 기프티콘은 공유할 수 없습니다."),
+	GIFTICON_ALREADY_SHARED(HttpStatus.BAD_REQUEST, "SHAREBOX_010", "이미 공유된 기프티콘입니다.");
 
 	// http 상태 코드
 	private final HttpStatus status;
