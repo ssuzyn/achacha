@@ -10,7 +10,10 @@ import com.eurachacha.achacha.application.port.input.notification.NotificationSe
 import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationSettingDto;
 import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
+import com.eurachacha.achacha.domain.model.notification.NotificationType;
+import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class NotificationSettingAppServiceImpl implements NotificationSettingAppService {
 
 	private final NotificationSettingRepository notificationSettingRepository;
+	private final NotificationTypeRepository notificationTypeRepository;
 	private final SecurityServicePort securityServicePort;
 
 	@Override
@@ -38,5 +42,21 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 				.expirationCycle(setting.getExpirationCycle())
 				.build())
 			.collect(Collectors.toList());
+	}
+
+	@Override
+	@Transactional
+	public void updateNotificationSetting(NotificationTypeCode typeCode, Boolean isEnabled) {
+		// User user = securityServicePort.getLoggedInUser();
+		Integer userId = 1;
+
+		// 코드로 직접 알림 타입 찾기
+		NotificationType notificationType = notificationTypeRepository.findByCode(typeCode);
+
+		// 사용자 ID와 알림 타입 ID로 설정 직접 찾기
+		NotificationSetting setting = notificationSettingRepository
+			.findByUserIdAndNotificationTypeId(userId, notificationType.getId());
+
+		setting.updateIsEnabled(isEnabled);
 	}
 }

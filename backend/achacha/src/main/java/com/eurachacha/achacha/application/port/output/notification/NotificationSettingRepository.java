@@ -8,6 +8,8 @@ public interface NotificationSettingRepository {
 
 	List<NotificationSetting> findAllByUserId(Integer userId);
 
+	NotificationSetting findByUserIdAndNotificationTypeId(Integer userId, Integer typeId);
+
 	NotificationSetting save(NotificationSetting notificationSetting);
 
 	List<NotificationSetting> saveAll(List<NotificationSetting> notificationSettings);
