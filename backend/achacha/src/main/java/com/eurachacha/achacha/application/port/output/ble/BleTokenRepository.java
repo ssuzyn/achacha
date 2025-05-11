@@ -1,6 +1,6 @@
-package com.eurachacha.achacha.application.port.output.user;
+package com.eurachacha.achacha.application.port.output.ble;
 
-import com.eurachacha.achacha.domain.model.user.BleToken;
+import com.eurachacha.achacha.domain.ble.BleToken;
 
 public interface BleTokenRepository {
 	void deleteByUserIdAndValue(Integer userId, String tokenValue);

@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.domain.service.auth;
+package com.eurachacha.achacha.domain.service.ble;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;

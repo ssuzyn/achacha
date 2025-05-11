@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.application.port.output.auth.dto.response;
+package com.eurachacha.achacha.application.port.input.ble.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

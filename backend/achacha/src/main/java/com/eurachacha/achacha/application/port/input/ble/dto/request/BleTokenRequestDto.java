@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.application.port.input.auth.dto.request;
+package com.eurachacha.achacha.application.port.input.ble.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

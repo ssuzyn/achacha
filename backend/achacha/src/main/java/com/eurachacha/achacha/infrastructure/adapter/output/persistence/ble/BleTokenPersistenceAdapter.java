@@ -1,9 +1,9 @@
-package com.eurachacha.achacha.infrastructure.adapter.output.persistence.user;
+package com.eurachacha.achacha.infrastructure.adapter.output.persistence.ble;
 
 import org.springframework.stereotype.Component;
 
-import com.eurachacha.achacha.application.port.output.user.BleTokenRepository;
-import com.eurachacha.achacha.domain.model.user.BleToken;
+import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
+import com.eurachacha.achacha.domain.ble.BleToken;
 
 import lombok.RequiredArgsConstructor;
 
