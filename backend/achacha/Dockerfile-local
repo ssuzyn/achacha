@@ -24,7 +24,7 @@ RUN ./gradlew --no-daemon dependencies || true
 COPY src ./src
 
 # 빌드 (테스트 스킵하려면 -x test 옵션)
-RUN ./gradlew --no-daemon clean build -x test
+RUN ./gradlew --no-daemon clean build
 
 # -----------------------------
 # 2) Runtime Stage
