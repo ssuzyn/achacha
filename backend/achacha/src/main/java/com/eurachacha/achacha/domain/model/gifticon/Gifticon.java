@@ -94,4 +94,8 @@ public class Gifticon extends TimeStampEntity {
 			this.isUsed = true;
 		}
 	}
+
+	public void updateShareBox(ShareBox shareBox) {
+		this.sharebox = shareBox;
+	}
 }
