@@ -282,7 +282,6 @@ const GiveAwayScreen = () => {
         onCancel={handleCancel}
         onConfirm={handleConfirm}
       />
-      <BottomTabBar />
     </View>
   );
 };
