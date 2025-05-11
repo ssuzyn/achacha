@@ -38,4 +38,11 @@ interface ApiService {
         @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int
     ): Response<BarcodeInfo>
+
+    // 기프티콘 상세 정보 조회 API 추가
+    @GET("api/available-gifticons/{gifticonId}")
+    suspend fun getGifticonDetail(
+        @Header("Authorization") authorization: String,
+        @Path("gifticonId") gifticonId: Int
+    ): Response<ApiGifticon>
 } 
