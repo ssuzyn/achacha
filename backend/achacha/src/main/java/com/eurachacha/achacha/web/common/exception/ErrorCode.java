@@ -23,6 +23,10 @@ public enum ErrorCode {
 	// FCM 토큰 관련 에러 코드
 	FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_001", "FCM 토큰을 찾을 수 없습니다."),
 
+	// 알림 관련 에러 코드
+	NOTIFICATION_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "알림 타입을 찾을 수 없습니다."),
+	NOTIFICATION_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_002", "알림 설정을 찾을 수 없습니다."),
+
 	// 기프티콘 관련 에러 코드
 	GIFTICON_NOT_FOUND(HttpStatus.NOT_FOUND, "GIFTICON_001", "기프티콘 정보를 찾을 수 없습니다."),
 	UNAUTHORIZED_GIFTICON_ACCESS(HttpStatus.FORBIDDEN, "GIFTICON_002", "해당 기프티콘에 접근 권한이 없습니다."),
