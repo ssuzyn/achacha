@@ -7,6 +7,8 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.POST
+import retrofit2.http.Body
 
 // API 응답 전체 구조 (페이지네이션 포함)
 @Serializable
@@ -45,4 +47,16 @@ interface ApiService {
         @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int
     ): Response<ApiGifticon>
-} 
+
+    // 상품권 사용 API 추가
+    @POST("api/product-gifticons/{gifticonId}/use")
+    suspend fun useProductGifticon(
+        @Header("Authorization") authorization: String,
+        @Path("gifticonId") gifticonId: Int,
+        @Body message: UseGifticonRequest
+    ): Response<Unit>
+}
+
+// 상품권 사용 요청 바디 데이터 클래스
+@Serializable
+data class UseGifticonRequest(val message: String) 

@@ -490,9 +490,49 @@ class MainActivity : ComponentActivity() {
                                             _selectedGifticonRemainingAmount.value = clickedGifticon.gifticonRemainingAmount // 잔액 저장
                                             _currentScreen.value = ScreenState.ENTER_AMOUNT // 금액 입력 화면으로 전환
                                         } else {
-                                            // 상품권일 경우 (직접 사용 처리)
-                                            addLog("GifticonDetail: Product type gifticon. Triggering use action.")
-                                            // TODO: 상품권 사용 처리 API 호출 구현
+                                            // 상품권일 경우 (API 호출)
+                                            addLog("GifticonDetail: Product type gifticon. Calling useProductGifticon API.")
+                                            lifecycleScope.launch {
+                                                val token = userDataStore.accessTokenFlow.firstOrNull()
+                                                if (token.isNullOrEmpty()) {
+                                                    addLog("[API] Error: Access Token is missing for useProductGifticon.")
+                                                    _connectionError.value = "인증 토큰이 없습니다.";
+                                                    _currentScreen.value = ScreenState.CONNECTING
+                                                    return@launch
+                                                }
+                                                val authorizationHeader = "Bearer $token"
+                                                try {
+                                                    val response = apiService.useProductGifticon(
+                                                        authorization = authorizationHeader,
+                                                        gifticonId = gifticonId,
+                                                        message = com.koup28.achacha_app.data.UseGifticonRequest("기프티콘이 사용되었습니다.")
+                                                    )
+                                                    if (response.isSuccessful) {
+                                                        addLog("[API] Product gifticon used successfully.")
+                                                        // 상세 정보 새로고침
+                                                        fetchGifticonDetail(gifticonId)
+                                                        // 필요시 토스트 등 추가
+                                                    } else {
+                                                        val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                                                        val errorMessage = when (response.code()) {
+                                                            404 -> when {
+                                                                errorBody.contains("GIFTICON_001") -> "기프티콘 정보를 찾을 수 없습니다."
+                                                                errorBody.contains("GIFTICON_003") -> "기프티콘이 만료되었습니다."
+                                                                errorBody.contains("GIFTICON_004") -> "이미 사용된 기프티콘입니다."
+                                                                errorBody.contains("GIFTICON_005") -> "삭제된 기프티콘입니다."
+                                                                errorBody.contains("FILE_008") -> "파일을 찾을 수 없습니다."
+                                                                else -> "기프티콘 상세 정보를 찾을 수 없습니다."
+                                                            }
+                                                            else -> "상세 정보 로딩 실패 (${response.code()})"
+                                                        }
+                                                        addLog("[API] Error using product gifticon: ${response.code()} - $errorBody")
+                                                        _connectionError.value = errorMessage
+                                                    }
+                                                } catch (e: Exception) {
+                                                    addLog("[API] Exception using product gifticon: ${e.message}")
+                                                    _connectionError.value = "상품권 사용 중 오류: ${e.localizedMessage}"
+                                                }
+                                            }
                                         }
                                     } else {
                                         addLog("[Error] Clicked gifticon for use not found: $gifticonId")
@@ -804,7 +844,18 @@ class MainActivity : ComponentActivity() {
                     }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                    _gifticonDetailError.value = "상세 정보 로딩 실패 (${response.code()})"
+                    val errorMessage = when (response.code()) {
+                        404 -> when {
+                            errorBody.contains("GIFTICON_001") -> "기프티콘 정보를 찾을 수 없습니다."
+                            errorBody.contains("GIFTICON_003") -> "기프티콘이 만료되었습니다."
+                            errorBody.contains("GIFTICON_004") -> "이미 사용된 기프티콘입니다."
+                            errorBody.contains("GIFTICON_005") -> "삭제된 기프티콘입니다."
+                            errorBody.contains("FILE_008") -> "파일을 찾을 수 없습니다."
+                            else -> "기프티콘 상세 정보를 찾을 수 없습니다."
+                        }
+                        else -> "상세 정보 로딩 실패 (${response.code()})"
+                    }
+                    _gifticonDetailError.value = errorMessage
                     addLog("[API] Error fetching gifticon detail for ID $gifticonId: ${response.code()} - $errorBody")
                     if (response.code() == 401) {
                         addLog("[API] Detail Unauthorized. Token might be invalid. Clearing token.")
