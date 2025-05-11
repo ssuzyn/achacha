@@ -23,6 +23,9 @@ public enum ErrorCode {
 	// FCM 토큰 관련 에러 코드
 	FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_001", "FCM 토큰을 찾을 수 없습니다."),
 
+	// BLE 토큰 관련 에러 코드
+	BLE_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "BLE_001", "BLE 토큰을 찾을 수 없습니다."),
+
 	// 알림 관련 에러 코드
 	NOTIFICATION_TYPE_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_001", "알림 타입을 찾을 수 없습니다."),
 	NOTIFICATION_SETTING_NOT_FOUND(HttpStatus.NOT_FOUND, "NOTIFICATION_002", "알림 설정을 찾을 수 없습니다."),
