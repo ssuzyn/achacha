@@ -36,8 +36,10 @@ const RegisterDetailScreen = () => {
   const [expiryDate, setExpiryDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentImageUri, setCurrentImageUri] = useState(null);
+  const [originalImageUri, setOriginalImageUri] = useState(null); // 원본 이미지 URI 저장
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
   const [isImageEditorVisible, setImageEditorVisible] = useState(false);
+  const [isOriginalImageVisible, setOriginalImageVisible] = useState(false); // 원본 이미지 팝업 표시 여부
   const [aspectRatio, setAspectRatio] = useState(null);
   const [keepAspectRatio, setKeepAspectRatio] = useState(false);
   const [croppedImageResult, setCroppedImageResult] = useState(null);
@@ -67,6 +69,7 @@ const RegisterDetailScreen = () => {
   useEffect(() => {
     if (route.params?.selectedImage) {
       setCurrentImageUri(route.params.selectedImage.uri);
+      setOriginalImageUri(route.params.selectedImage.uri); // 원본 이미지 URI도 저장
     }
 
     // 기프티콘 타입 및 등록 위치 정보 가져오기
@@ -97,6 +100,7 @@ const RegisterDetailScreen = () => {
   useEffect(() => {
     if (croppedImageResult && croppedImageResult.uri) {
       setCurrentImageUri(croppedImageResult.uri);
+      // 원본 이미지는 그대로 유지
     }
   }, [croppedImageResult]);
 
@@ -141,6 +145,16 @@ const RegisterDetailScreen = () => {
     // 이미 이미지가 있으면 바로 편집 화면으로, 없으면 옵션 모달 보여주기
     if (currentImageUri) {
       setImageEditorVisible(true);
+    } else {
+      setImageOptionVisible(true);
+    }
+  };
+
+  // 이미지 컨테이너 터치 핸들러
+  const handleImageContainerPress = () => {
+    // 이미지가 있으면 원본 이미지 팝업 표시, 없으면 이미지 옵션 모달 표시
+    if (originalImageUri) {
+      setOriginalImageVisible(true);
     } else {
       setImageOptionVisible(true);
     }
@@ -193,6 +207,7 @@ const RegisterDetailScreen = () => {
           if (imageAsset && imageAsset.uri) {
             // 선택한 이미지 편집 모드 시작
             setCurrentImageUri(imageAsset.uri);
+            setOriginalImageUri(imageAsset.uri); // 원본 이미지 URI 저장
             setImageEditorVisible(true);
           } else {
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
@@ -241,6 +256,7 @@ const RegisterDetailScreen = () => {
           if (imageAsset && imageAsset.uri) {
             // 선택한 이미지 편집 모드 시작
             setCurrentImageUri(imageAsset.uri);
+            setOriginalImageUri(imageAsset.uri); // 원본 이미지 URI 저장
             setImageEditorVisible(true);
           } else {
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
@@ -253,15 +269,43 @@ const RegisterDetailScreen = () => {
   };
 
   // 이미지 편집 완료 후 처리
-  const handleImageEditComplete = () => {
-    // 편집기 닫기만 하고, 이미지는 onImageCrop에서 처리
-    setImageEditorVisible(false);
+  const handleImageEditComplete = async () => {
+    if (cropViewRef.current) {
+      try {
+        // 현재 편집 상태를 저장 - Promise 반환 형태
+        const cropResult = await cropViewRef.current.saveImage(true, 100);
+
+        // 결과 확인 및 로그
+        console.log('이미지 저장 결과:', cropResult);
+
+        // 편집기 모달 닫기
+        setImageEditorVisible(false);
+
+        // 약간의 딜레이 후 이미지 URI 업데이트
+        setTimeout(() => {
+          if (cropResult && cropResult.uri) {
+            // 편집된 이미지 URI를 명시적으로 설정
+            setCurrentImageUri(cropResult.uri);
+            // 상태 업데이트 확인을 위한 로그
+            console.log('이미지 편집 완료. 새 URI:', cropResult.uri);
+          } else {
+            console.warn('유효한 크롭 결과가 없습니다');
+          }
+        }, 300);
+      } catch (error) {
+        console.error('이미지 저장 중 오류 발생:', error);
+        Alert.alert('오류', '이미지 편집을 저장하는 중 문제가 발생했습니다.');
+        setImageEditorVisible(false);
+      }
+    } else {
+      console.warn('cropViewRef가 없습니다');
+      setImageEditorVisible(false);
+    }
   };
 
   // 이미지 편집 취소
   const handleImageEditCancel = () => {
-    // 취소 시 크롭 결과 초기화
-    setCroppedImageResult(null);
+    // 취소 시 크롭 결과 초기화 없이 모달만 닫음
     setImageEditorVisible(false);
   };
 
@@ -357,9 +401,14 @@ const RegisterDetailScreen = () => {
         >
           {/* 이미지 선택 영역 */}
           <View style={styles.imageContainerWrapper}>
-            <TouchableOpacity style={styles.imageContainer} onPress={showImageOptions}>
+            <TouchableOpacity style={styles.imageContainer} onPress={handleImageContainerPress}>
               {currentImageUri ? (
-                <Image source={{ uri: currentImageUri }} style={styles.image} resizeMode="cover" />
+                <Image
+                  source={{ uri: currentImageUri + `?timestamp=${Date.now()}` }}
+                  style={styles.image}
+                  resizeMode="cover"
+                  key={`image-${Date.now()}`} // 강제 리렌더링을 위한 키 추가
+                />
               ) : (
                 <View style={styles.imagePlaceholder}>
                   <RNEIcon name="image" type="material" size={60} color="#CCCCCC" />
@@ -734,14 +783,17 @@ const RegisterDetailScreen = () => {
                   sourceUrl={currentImageUri}
                   style={styles.cropView}
                   onError={error => {
+                    console.error('이미지 로드 오류:', error);
                     Alert.alert('오류', '이미지 로드 중 오류가 발생했습니다.');
                   }}
                   onImageCrop={res => {
+                    console.log('이미지 크롭 완료:', res);
                     // 크롭 결과 확인
                     if (res && res.uri) {
+                      console.log('크롭된 이미지 URI:', res.uri);
                       // 크롭 결과를 상태에 저장
                       setCroppedImageResult({ ...res });
-                      // 현재 이미지 URI도 즉시 업데이트
+                      // 현재 이미지 URI도 명시적으로 업데이트 (원본은 보존)
                       setCurrentImageUri(res.uri);
                     }
                   }}
@@ -752,6 +804,8 @@ const RegisterDetailScreen = () => {
                   keepAspectRatio={keepAspectRatio}
                   aspectRatio={aspectRatio}
                   iosDimensionSwapEnabled={true}
+                  maxZoom={8}
+                  quality={100}
                 />
               </>
             ) : (
@@ -772,13 +826,9 @@ const RegisterDetailScreen = () => {
                   try {
                     // 회전 후 즉시 저장 시도
                     cropViewRef.current.rotateImage(true);
-                    setTimeout(() => {
-                      if (cropViewRef.current) {
-                        cropViewRef.current.saveImage(true, 100);
-                      }
-                    }, 300); // 약간의 딜레이 추가
+                    // 회전된 이미지 상태를 바로 저장하지 않고 적용 버튼 누를 때 저장
                   } catch (error) {
-                    // 오류 처리
+                    console.error('회전 중 오류:', error);
                   }
                 }
               }}
@@ -863,6 +913,29 @@ const RegisterDetailScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+      </Modal>
+
+      {/* 원본 이미지 팝업 모달 */}
+      <Modal
+        visible={isOriginalImageVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setOriginalImageVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.originalImageModalOverlay}
+          activeOpacity={1}
+          onPress={() => setOriginalImageVisible(false)}
+        >
+          <View style={styles.originalImageModalContent}>
+            <Image
+              source={{ uri: originalImageUri }}
+              style={styles.originalImage}
+              resizeMode="contain"
+              key={`original-${originalImageUri}`}
+            />
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -1157,6 +1230,25 @@ const styles = StyleSheet.create({
   },
   disabledRow: {
     opacity: 0.8,
+  },
+  originalImageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  originalImageModalContent: {
+    width: '90%',
+    height: '80%',
+    backgroundColor: 'transparent',
+    borderRadius: 16,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  originalImage: {
+    width: '100%',
+    height: '100%',
   },
 });
 
