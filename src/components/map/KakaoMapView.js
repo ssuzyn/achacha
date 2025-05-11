@@ -15,6 +15,8 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
   const { location, errorMsg } = useLocationTracking();
   const [debugMessage, setDebugMessage] = useState('');
   const geofencingService = new GeofencingService(uniqueBrands);
+  const [prevLocation, setPrevLocation] = useState(null); // 이전 위치 저장 - 위치 변화량을 계산하는 데 사용
+  const searchTimerRef = useRef(null); // 디바운스 처리를 위한 타이머 참조 - 연속적인 위치 업데이트 최적화에 사용
 
   // mapScreen의 moveToCurrentLocation에 접근
   useImperativeHandle(ref, () => ({
@@ -133,6 +135,23 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 
     webViewRef.current.injectJavaScript(script);
   };
+
+  // 일정 거리 이상 이동 시 위치 변경을 감지하기 위한 거리 계산 함수
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371e3; // 지구 반지름 (미터)
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+          Math.cos(φ1) * Math.cos(φ2) *
+          Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
+
 
   // 매장 검색 함수
   const searchNearbyStores = async () => {
