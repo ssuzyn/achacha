@@ -12,6 +12,8 @@ import theme from './src/theme/theme';
 import * as Font from 'expo-font';
 import { navigationRef } from './src/navigation/NavigationService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import AppQueryClientProvider from './src/context/QueryClientProvider';
+import useAuthStore from './src/store/authStore';
 
 // 특정 경고 무시 설정
 LogBox.ignoreLogs([
@@ -87,10 +89,13 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
+  // Zustand 스토어의 토큰 복원 함수
+  const restoreAuth = useAuthStore(state => state.restoreAuth);
 
-  // 폰트 로딩 함수
-  const loadFonts = async () => {
+  // 폰트 및 인증 상태 로딩 함수
+  const loadResources = async () => {
     try {
+      // 폰트 로딩
       await Font.loadAsync({
         'Pretendard-Thin': require('./src/assets/fonts/Pretendard-Thin.otf'),
         'Pretendard-ExtraLight': require('./src/assets/fonts/Pretendard-ExtraLight.otf'),
@@ -102,16 +107,19 @@ export default function App() {
         'Pretendard-ExtraBold': require('./src/assets/fonts/Pretendard-ExtraBold.otf'),
         'Pretendard-Black': require('./src/assets/fonts/Pretendard-Black.otf'),
       });
+
+      // 인증 상태 복원
+      await restoreAuth();
     } catch (error) {
-      // 오류 처리
+      console.error('리소스 로딩 중 오류 발생:', error);
     } finally {
       setIsReady(true);
     }
   };
 
-  // 앱 초기화 시 폰트 로드
+  // 앱 초기화 시 리소스 로드
   useEffect(() => {
-    loadFonts();
+    loadResources();
   }, []);
 
   const onLayoutRootView = useCallback(async () => {
@@ -120,12 +128,12 @@ export default function App() {
       try {
         await SplashScreen.hideAsync();
       } catch (e) {
-        // 오류 처리
+        console.error('스플래시 화면 숨기기 실패:', e);
       }
     }
   }, [isReady]);
 
-  // 폰트 로딩이 완료될 때까지 아무것도 렌더링하지 않음
+  // 리소스 로딩이 완료될 때까지 아무것도 렌더링하지 않음
   if (!isReady) {
     return null;
   }
@@ -133,20 +141,23 @@ export default function App() {
   return (
     <AppWrapper>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <ThemeProvider theme={theme}>
-          <SafeAreaProvider>
-            <View style={styles.container} onLayout={onLayoutRootView}>
-              <HeaderBarProvider>
-                <TabBarProvider>
-                  <NavigationContainer ref={navigationRef}>
-                    <AppNavigator />
-                    <StatusBar style="auto" />
-                  </NavigationContainer>
-                </TabBarProvider>
-              </HeaderBarProvider>
-            </View>
-          </SafeAreaProvider>
-        </ThemeProvider>
+        {/* React Query Provider 추가 */}
+        <AppQueryClientProvider>
+          <ThemeProvider theme={theme}>
+            <SafeAreaProvider>
+              <View style={styles.container} onLayout={onLayoutRootView}>
+                <HeaderBarProvider>
+                  <TabBarProvider>
+                    <NavigationContainer ref={navigationRef}>
+                      <AppNavigator />
+                      <StatusBar style="auto" />
+                    </NavigationContainer>
+                  </TabBarProvider>
+                </HeaderBarProvider>
+              </View>
+            </SafeAreaProvider>
+          </ThemeProvider>
+        </AppQueryClientProvider>
       </GestureHandlerRootView>
     </AppWrapper>
   );
