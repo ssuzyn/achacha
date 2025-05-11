@@ -137,30 +137,30 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
   };
 
   // 일정 거리 이상 이동 시 위치 변경을 감지하기 위한 거리 계산 함수
-const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371e3; // 지구 반지름 (미터)
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δφ = (lat2 - lat1) * Math.PI / 180;
-  const Δλ = (lon2 - lon1) * Math.PI / 180;
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // 지구 반지름 (미터)
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
 
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-};
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
-// 디바운스 함수
-const debouncedSearchNearbyStores = () => {
-  if (searchTimerRef.current) {
-    clearTimeout(searchTimerRef.current);
-  }
-  
-  searchTimerRef.current = setTimeout(() => {
-    searchNearbyStores();
-  }, 1000); // 1초 디바운스
-};
+  // 디바운스 함수
+  const debouncedSearchNearbyStores = () => {
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    searchTimerRef.current = setTimeout(() => {
+      searchNearbyStores();
+    }, 1000); // 1초 디바운스
+  };
 
   // 매장 검색 함수
   const searchNearbyStores = async () => {
@@ -220,12 +220,28 @@ const debouncedSearchNearbyStores = () => {
 
   // 위치가 변경되거나 브랜드 목록이 변경될 때 매장 검색 실행
   useEffect(() => {
-    // 초기 검색 여부와 상관없이 위치가 변경될 때마다 매장 검색 실행
     if (location && mapLoaded && uniqueBrands) {
-      console.log('위치 변경 감지: 주변 매장 재검색');
-      searchNearbyStores();
+      const { latitude, longitude } = location.coords;
+
+      // 이전 위치가 없거나, 이전 위치에서 100m 이상 이동한 경우
+      const shouldSearchAgain =
+        !prevLocation ||
+        calculateDistance(prevLocation.latitude, prevLocation.longitude, latitude, longitude) > 100;
+
+      if (shouldSearchAgain) {
+        console.log('유의미한 위치 변경 감지: 디바운스 적용 검색 시작');
+        debouncedSearchNearbyStores();
+        setPrevLocation({ latitude, longitude });
+      }
     }
-  }, [location, mapLoaded, uniqueBrands]);
+
+    // 컴포넌트 언마운트 시 타이머 정리
+    return () => {
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
+    };
+  }, [location, mapLoaded, uniqueBrands, prevLocation]);
 
   // 선택된 브랜드가 변경될 때는 필터링, 지오펜스 재설정
   useEffect(() => {
