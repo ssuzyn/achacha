@@ -192,9 +192,9 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 
   // 위치가 변경되거나 브랜드 목록이 변경될 때 매장 검색 실행
   useEffect(() => {
-    // 최초 한 번만 매장 검색 실행 (selectedBrand 변경 시에는 재검색하지 않음)
-    if (location && mapLoaded && uniqueBrands && !window.initialSearchDone) {
-      window.initialSearchDone = true;
+    // 초기 검색 여부와 상관없이 위치가 변경될 때마다 매장 검색 실행
+    if (location && mapLoaded && uniqueBrands) {
+      console.log('위치 변경 감지: 주변 매장 재검색');
       searchNearbyStores();
     }
   }, [location, mapLoaded, uniqueBrands]);
