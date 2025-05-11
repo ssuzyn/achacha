@@ -1,13 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import {
-  View,
-  StyleSheet,
-  Dimensions,
-  StatusBar,
-  TouchableOpacity,
-  Image,
-  Text,
-} from 'react-native';
+import { View, StyleSheet, Dimensions, TouchableOpacity, Image, Text } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
@@ -209,7 +201,6 @@ const GiveAwayScreen = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#f1f7ff" barStyle="dark-content" />
       <HeaderBar />
       <View style={styles.svgContainer}>
         <Svg width={width * 2} height={height * 2} style={styles.svgImage}>
