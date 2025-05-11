@@ -97,20 +97,32 @@ fun BarcodeScreen(
                     }
                 }
                 barcodeInfo != null -> {
-                    Image(
-                        painter = rememberAsyncImagePainter(
-                            model = barcodeInfo.barcodeDrawableResId ?: barcodeInfo.barcodePath,
-                            onError = { err ->
-                                Log.e("BarcodeScreen", "Image load error: ${err.result.throwable.localizedMessage}")
-                            },
-                            onLoading = { 
-                                
-                            }
-                        ),
-                        contentDescription = "바코드 이미지",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit
-                    )
+                    Column(
+                        modifier = Modifier.align(Alignment.Center),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = barcodeInfo.barcodeDrawableResId ?: barcodeInfo.barcodePath,
+                                onError = { err ->
+                                    Log.e("BarcodeScreen", "Image load error: \\${err.result.throwable.localizedMessage}")
+                                },
+                                onLoading = { 
+                                    
+                                }
+                            ),
+                            contentDescription = "바코드 이미지",
+                            modifier = Modifier.size(120.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = barcodeInfo.gifticonBarcodeNumber,
+                            style = MaterialTheme.typography.title2,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
                 else -> {
                     Column(
