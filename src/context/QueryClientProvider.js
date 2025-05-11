@@ -1,5 +1,6 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryErrorHandler } from '../utils/errorHandler';
 
 // 전역으로 사용할 QueryClient 인스턴스 생성
 const queryClient = new QueryClient({
@@ -10,9 +11,11 @@ const queryClient = new QueryClient({
       cacheTime: 5 * 60 * 1000, // 캐시에 데이터가 유지되는 시간 (5분)
       refetchOnWindowFocus: false, // 창 포커스 시 자동 재요청 비활성화
       useErrorBoundary: false, // 에러 발생 시 Error Boundary 사용 안 함
+      onError: queryErrorHandler, // 공통 에러 핸들러 통합
     },
     mutations: {
       useErrorBoundary: false,
+      onError: queryErrorHandler, // 공통 에러 핸들러 통합
     },
   },
 });
