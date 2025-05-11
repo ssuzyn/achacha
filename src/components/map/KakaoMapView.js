@@ -1,5 +1,3 @@
-// 카카오맵뷰 변경 전
-
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { View, StyleSheet, Dimensions, Text, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -10,15 +8,23 @@ import GeofencingService from '../../services/GeofencingService';
 import { getKakaoMapHtml } from './KakaoMapHtml';
 
 const { width } = Dimensions.get('window');
+let geofencingServiceInstance = null;
 
 const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand }, ref) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const webViewRef = useRef(null);
   const { location, errorMsg } = useLocationTracking();
   const [debugMessage, setDebugMessage] = useState('');
-  const geofencingService = new GeofencingService(uniqueBrands);
   const [prevLocation, setPrevLocation] = useState(null); // 이전 위치 저장 - 위치 변화량을 계산하는 데 사용
   const searchTimerRef = useRef(null); // 디바운스 처리를 위한 타이머 참조 - 연속적인 위치 업데이트 최적화에 사용
+
+  // 지오펜싱 서비스 인스턴스 생성 (싱글톤)
+  useEffect(() => {
+    if (!geofencingServiceInstance && uniqueBrands) {
+      geofencingServiceInstance = new GeofencingService(uniqueBrands);
+      console.log('GeofencingService 인스턴스 생성 (싱글톤)');
+    }
+  }, [uniqueBrands]);
 
   // mapScreen의 moveToCurrentLocation에 접근
   useImperativeHandle(ref, () => ({
@@ -28,14 +34,14 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
   // 위치 정보가 확인된 후에만 지오펜싱 초기화
   useEffect(() => {
     if (location) {
-      geofencingService.initGeofencing();
+      geofencingServiceInstance.initGeofencing();
     }
   }, [location]);
 
   // 컴포넌트 언마운트 시 지오펜싱 정리
   useEffect(() => {
     return () => {
-      geofencingService.cleanup();
+      geofencingServiceInstance.cleanup();
     };
   }, []);
 
@@ -265,12 +271,12 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
       // 모든 매장에 대한 지오펜스 설정
       console.log('지오펜스 설정 시작, selectedBrand:', selectedBrand);
 
-      if (!geofencingService.initialized) {
+      if (!geofencingServiceInstance.initialized) {
         console.log('지오펜싱이 초기화되지 않음, 재초기화 시도');
-        await geofencingService.initGeofencing();
+        await geofencingServiceInstance.initGeofencing();
       }
 
-      geofencingService.setupGeofences(results, selectedBrand);
+      geofencingServiceInstance.setupGeofences(results, selectedBrand);
       console.log('지오펜스 설정 완료');
     } catch (error) {
       console.error('매장 검색 실패:', error);
