@@ -1,28 +1,55 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { KAKAO_MAP_API_KEY, KAKAO_REST_API_KEY } from '@env';
-import useLocationTracking from '../hooks/useLocationTracking';
-import { updateMapMarkers, filterMarkersByBrand } from '../utils/mapMarkerUtils';
+import { KAKAO_REST_API_KEY } from '@env';
+import useLocationTracking from '../../hooks/useLocationTracking';
+import { updateMapMarkers, filterMarkersByBrand } from '../../utils/mapMarkerUtils';
+import GeofencingService from '../../services/GeofencingService';
+import { getKakaoMapHtml } from './KakaoMapHtml';
 
 const { width } = Dimensions.get('window');
+// 지오펜싱 서비스 싱글톤 인스턴스
+let geofencingServiceInstance = null;
 
 const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand }, ref) => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const webViewRef = useRef(null);
   const { location, errorMsg } = useLocationTracking();
   const [debugMessage, setDebugMessage] = useState('');
+  const [prevLocation, setPrevLocation] = useState(null); // 이전 위치 저장 - 위치 변화량 계산용
+  const searchTimerRef = useRef(null); // 디바운스 처리를 위한 타이머 참조
 
-  // mapScreen의 moveToCurrentLocation에 접근
+  // 지오펜싱 서비스 싱글톤 인스턴스 초기화
+  useEffect(() => {
+    if (!geofencingServiceInstance && uniqueBrands) {
+      geofencingServiceInstance = new GeofencingService(uniqueBrands);
+      console.log('GeofencingService 인스턴스 생성 (싱글톤)');
+    }
+  }, [uniqueBrands]);
+
+  // 부모 컴포넌트에서 현재 위치로 이동 메서드 접근 허용
   useImperativeHandle(ref, () => ({
     moveToCurrentLocation: () => moveToCurrentLocation(),
   }));
+
+  // 위치 정보가 확인된 후에만 지오펜싱 초기화
+  useEffect(() => {
+    if (location) {
+      geofencingServiceInstance.initGeofencing();
+    }
+  }, [location]);
+
+  // 컴포넌트 언마운트 시 지오펜싱 정리
+  useEffect(() => {
+    return () => {
+      geofencingServiceInstance.cleanup();
+    };
+  }, []);
 
   // 웹뷰에서 메시지를 받아 처리하는 함수
   const handleMessage = event => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-
       setDebugMessage(`마지막 메시지: [${data.type}] ${data.message || 'no message'}`);
 
       if (data.type === 'mapLoaded' && data.success) {
@@ -31,19 +58,17 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 
         setTimeout(() => {
           if (location) {
-            console.log('위치 이동 시도...');
             moveToCurrentLocation();
           }
         }, 1000);
       }
 
-      // 마커 클릭 이벤트
+      // 마커 클릭 이벤트 처리
       if (data.type === 'markerClick') {
-        // 타입 변환 처리
         const currentBrandId = selectedBrand !== null ? Number(selectedBrand) : null;
         const clickedBrandId = Number(data.brandId);
 
-        // 부모 컴포넌트로 브랜드 id 전달
+        // 같은 브랜드 재클릭 시 선택 해제, 다른 브랜드 클릭 시 선택
         if (currentBrandId === clickedBrandId) {
           console.log('같은 브랜드 다시 클릭: 선택 해제');
           onSelectBrand(null);
@@ -58,7 +83,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     }
   };
 
-  // 위치 정보가 변경될 때마다 실행
+  // 위치 정보가 변경될 때마다 지도 업데이트
   useEffect(() => {
     if (location && mapLoaded && webViewRef.current) {
       console.log('위치 정보 변경됨, 맵 업데이트 시도');
@@ -66,7 +91,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     }
   }, [location, mapLoaded]);
 
-  // 현재 위치로 맵 이동하는 함수
+  // 현재 위치로 지도 이동 함수
   const moveToCurrentLocation = () => {
     if (!location || !webViewRef.current) {
       console.log('위치 이동 불가: 위치 정보 또는 webViewRef 없음');
@@ -74,7 +99,6 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     }
 
     const { latitude, longitude } = location.coords;
-    console.log(`위치 이동 시도: ${latitude}, ${longitude}`);
 
     const script = `
       try {
@@ -118,7 +142,35 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     webViewRef.current.injectJavaScript(script);
   };
 
-  // 매장 검색 함수
+  // 두 지점 간의 거리를 미터 단위로 계산하는 함수
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371e3; // 지구 반지름 (미터)
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  // 연속적인 API 호출 방지를 위한 디바운스 함수
+  const debouncedSearchNearbyStores = () => {
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+    }
+
+    console.log('디바운스 타이머 설정: 1초 후 검색 예정');
+    searchTimerRef.current = setTimeout(() => {
+      console.log('디바운스 타이머 만료: 검색 실행');
+      searchNearbyStores();
+    }, 1000); // 1초 디바운스
+  };
+
+  // 주변 매장 검색 및 지오펜스 설정 함수
   const searchNearbyStores = async () => {
     if (!location || !uniqueBrands || uniqueBrands.length === 0) {
       console.log('조건 미충족으로 리턴');
@@ -129,6 +181,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     console.log(`검색 위치: ${latitude}, ${longitude}`);
 
     try {
+      // 각 브랜드별 매장 검색
       const searchPromises = uniqueBrands.map(async brand => {
         console.log(`브랜드 검색 중: ${brand.brandName}`);
         const response = await fetch(
@@ -151,6 +204,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
         }
 
         const data = await response.json();
+        console.log(`${brand.brandName} 검색 결과: ${data.documents.length}개 매장 찾음`);
 
         return {
           brandId: brand.brandId,
@@ -160,128 +214,58 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
       });
 
       const results = await Promise.all(searchPromises);
+      console.log(
+        '총 매장 수:',
+        results.reduce((sum, brand) => sum + brand.stores.length, 0)
+      );
 
-      // WebView로 매장 데이터 전송 - 유틸리티 함수 사용
+      // 전체 매장 데이터 저장 및 지도에 표시
+      window.allStoreData = results;
       updateMapMarkers(webViewRef, results);
+
+      // 지오펜스 설정 전 초기화 상태 확인
+      if (!geofencingServiceInstance.initialized) {
+        console.log('지오펜싱 재초기화 시도');
+        await geofencingServiceInstance.initGeofencing();
+      }
+
+      // 매장 데이터 기반 지오펜스 설정
+      console.log('지오펜스 설정 시작');
+      geofencingServiceInstance.setupGeofences(results, selectedBrand);
+      console.log('지오펜스 설정 완료');
     } catch (error) {
       console.error('매장 검색 실패:', error);
     }
   };
 
-  // 위치가 변경되거나 브랜드 목록이 변경될 때 매장 검색 실행
+  // 위치 변경 시 100m 이상 이동 시에만 매장 재검색
   useEffect(() => {
-    // 최초 한 번만 매장 검색 실행 (selectedBrand 변경 시에는 재검색하지 않음)
-    if (location && mapLoaded && uniqueBrands && !window.initialSearchDone) {
-      window.initialSearchDone = true;
-      searchNearbyStores();
+    if (location && mapLoaded && uniqueBrands) {
+      const { latitude, longitude } = location.coords;
+
+      // 이전 위치와 비교하여 100m 이상 이동했는지 확인
+      const shouldSearchAgain =
+        !prevLocation ||
+        calculateDistance(prevLocation.latitude, prevLocation.longitude, latitude, longitude) > 100;
+
+      if (shouldSearchAgain) {
+        console.log('위치 변경 감지: 100m 이상 이동');
+        // 디바운스 적용하여 검색 실행
+        debouncedSearchNearbyStores();
+        setPrevLocation({ latitude, longitude });
+      } else {
+        console.log('작은 위치 변경 무시: 100m 이내 이동');
+      }
     }
   }, [location, mapLoaded, uniqueBrands]);
 
-  // 선택된 브랜드가 변경될 때는 필터링만 수행 - 유틸리티 함수 사용
+  // 선택된 브랜드가 변경될 때 지도 마커 필터링
   useEffect(() => {
     if (mapLoaded && webViewRef.current) {
+      console.log('브랜드 선택 변경 감지:', selectedBrand);
       filterMarkersByBrand(webViewRef, selectedBrand);
     }
   }, [selectedBrand, mapLoaded]);
-
-  // 카카오맵 HTML 코드
-  const htmlContent = `
-   <!DOCTYPE html>
-   <html>
-   <head>
-     <meta charset="utf-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-     <title>카카오맵</title>
-     <style>
-       body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
-       #map { width: 100%; height: 100%; }
-     </style>
-   </head>
-   <body>
-     <div id="map"></div>
-
-     <script>
-       var map = null;
-       var storeMarkers = [];
-       
-       function debugLog(message) {
-         if (window.ReactNativeWebView) {
-           window.ReactNativeWebView.postMessage(JSON.stringify({
-             type: 'log',
-             message: message
-           }));
-         }
-       }
-
-       function debugError(message) {
-         if (window.ReactNativeWebView) {
-           window.ReactNativeWebView.postMessage(JSON.stringify({
-             type: 'error',
-             message: message
-           }));
-         }
-       }
-
-       document.addEventListener('DOMContentLoaded', function() {
-         debugLog('DOM 로드됨, 카카오맵 SDK 로드 시작...');
-         
-         const script = document.createElement('script');
-         script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false';
-         
-         script.onload = function() {
-           debugLog('카카오맵 SDK 스크립트 로드 완료');
-           
-           kakao.maps.load(function() {
-             debugLog('카카오맵 SDK 초기화 완료, 지도 생성 시작');
-             
-             try {
-               var mapContainer = document.getElementById('map');
-               if (!mapContainer) {
-                 debugError('맵 컨테이너를 찾을 수 없습니다.');
-                 return;
-               }
-               
-               var mapOption = { 
-                 center: new kakao.maps.LatLng(37.566826, 126.9786567),
-                 level: 4
-               };
-
-               debugLog('지도 생성 중...');
-               map = new kakao.maps.Map(mapContainer, mapOption);
-               
-               debugLog('지도 생성 성공!');
-               
-               if (window.ReactNativeWebView) {
-                 window.ReactNativeWebView.postMessage(JSON.stringify({
-                   type: 'mapLoaded',
-                   success: true,
-                   message: '카카오맵 로드 완료'
-                 }));
-               }
-             } catch (error) {
-               debugError('지도 생성 중 오류: ' + error.message);
-               
-               if (window.ReactNativeWebView) {
-                 window.ReactNativeWebView.postMessage(JSON.stringify({
-                   type: 'mapLoaded',
-                   success: false,
-                   error: error.message
-                 }));
-               }
-             }
-           });
-         };
-         
-         script.onerror = function(error) {
-           debugError('카카오맵 SDK 로드 실패: ' + error);
-         };
-         
-         document.head.appendChild(script);
-       });
-     </script>
-   </body>
-   </html>
- `;
 
   return (
     <View style={styles.container}>
@@ -294,7 +278,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
       <WebView
         ref={webViewRef}
         originWhitelist={['*']}
-        source={{ html: htmlContent }}
+        source={{ html: getKakaoMapHtml() }}
         style={styles.webView}
         javaScriptEnabled={true}
         domStorageEnabled={true}
@@ -315,10 +299,9 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: width,
-    width: 'auto', // width: width 대신 auto로 변경
-    marginLeft: 10, // 왼쪽 여백 추가
-    marginRight: 10, // 오른쪽 여백 추가
+    width: 'auto',
+    marginLeft: 10,
+    marginRight: 10,
     backgroundColor: '#fff',
   },
   webView: {

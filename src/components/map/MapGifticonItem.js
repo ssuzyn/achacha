@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { calculateDday } from '../utils/dateUtils';
+import { calculateDday } from '../../utils/dateUtils';
 
 const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
   const { brandName, gifticonExpiryDate, gifticonName, thumbnailPath, gifticonId, brandId } =
