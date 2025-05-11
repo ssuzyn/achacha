@@ -2,6 +2,7 @@ package com.koup28.achacha_app
 
 import android.app.Application
 import android.content.res.Configuration
+import android.util.Log
 
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
@@ -48,6 +49,8 @@ class MainApplication : Application(), ReactApplication {
       load()
     }
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    // 카카오 앱키 로그 출력
+    Log.d("KAKAO_APP_KEY", BuildConfig.KAKAO_APP_KEY)
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

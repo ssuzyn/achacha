@@ -10,13 +10,39 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
 
+import android.content.pm.PackageManager
+import android.util.Base64
+import android.util.Log
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
+
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
     // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
-    super.onCreate(null)
+    super.onCreate(savedInstanceState)
+
+    // --- 키 해시 로깅 코드 추가 ---
+    try {
+        val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNATURES)
+        info.signatures?.let { signatures -> 
+            for (signature in signatures) {
+                val md = MessageDigest.getInstance("SHA")
+                md.update(signature.toByteArray())
+                val keyHash = Base64.encodeToString(md.digest(), Base64.NO_WRAP)
+                Log.d("KeyHash_Native_Kotlin", "Key Hash: $keyHash")
+            }
+        }
+    } catch (e: PackageManager.NameNotFoundException) {
+        Log.e("KeyHash_Native_Kotlin", "Error getting package info", e)
+    } catch (e: NoSuchAlgorithmException) {
+        Log.e("KeyHash_Native_Kotlin", "Error getting SHA instance", e)
+    } catch (e: Exception) {
+        Log.e("KeyHash_Native_Kotlin", "Unknown error getting key hash", e)
+    }
+    // --- 키 해시 로깅 코드 추가 끝 ---
   }
 
   /**

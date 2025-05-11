@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { PermissionsAndroid, Platform, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { launchImageLibrary } from 'react-native-image-picker';
+import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 // BleManager 관련 코드는 이 훅에서 직접 사용하지 않으므로 제거합니다.
 // BleManager 초기화는 앱의 다른 부분(예: PermissionScreen 또는 App.js)에서 관리되어야 합니다.
 
@@ -70,33 +70,15 @@ export const usePermissions = () => {
       // 내부 로그는 handleAndroidBluetoothPermissions 에서 처리
 
       // 3. 갤러리 권한 요청 - 이전 결과와 관계없이 실행
-      // react-native-image-picker 사용
+      // react-native-permissions 사용
       try {
-        const options = {
-          mediaType: 'photo',
-          includeBase64: false,
-        };
-
-        const result = await new Promise(resolve => {
-          launchImageLibrary(options, response => {
-            if (response.didCancel) {
-              // 사용자가 취소했지만 권한은 부여된 것으로 간주
-              resolve({ success: true });
-            } else if (response.errorCode) {
-              // 권한 거부 또는 다른 오류
-              if (response.errorCode === 'permission') {
-                resolve({ success: false });
-              } else {
-                resolve({ success: true }); // 다른 오류는 권한은 있다고 가정
-              }
-            } else {
-              // 이미지 선택 성공 = 권한 있음
-              resolve({ success: true });
-            }
-          });
-        });
-
-        finalOutcome.mediaLibrary = result.success;
+        let status;
+        if (Platform.OS === 'android') {
+          status = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES || PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
+        } else {
+          status = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
+        }
+        finalOutcome.mediaLibrary = status === RESULTS.GRANTED;
       } catch (e) {
         finalOutcome.mediaLibrary = false;
       }

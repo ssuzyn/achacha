@@ -2,6 +2,7 @@
   "expo": {
     "name": "achacha_app",
     "slug": "achacha_app",
+    "scheme": "com.koup28.achacha_app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,6 +30,23 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "@react-native-seoul/kakao-login",
+        {
+          "kakaoAppKey": "process.env.KAKAO_APP_KEY",
+          "customScheme": "kakao${process.env.KAKAO_APP_KEY}"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraMavenRepos": ["https://devrepo.kakao.com/nexus/content/groups/public/"]
+          }
+        }
+      ]
+    ]
   }
 }
