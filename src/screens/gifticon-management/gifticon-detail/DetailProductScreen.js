@@ -51,6 +51,8 @@ const DetailProductScreen = () => {
   // 공유 위치 선택 상태
   const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+  // 바코드 확대 보기 모달 상태
+  const [isBarcodeModalVisible, setBarcodeModalVisible] = useState(false);
 
   // 더미 데이터: 쉐어박스 목록
   const shareBoxes = [
@@ -293,12 +295,15 @@ const DetailProductScreen = () => {
     setIsUsing(false);
   };
 
-  // 돋보기 기능 - 확대 화면으로 이동
+  // 바코드 확대 보기 모달 표시 함수 개선
   const handleMagnify = () => {
-    navigation.navigate('UseProductScreen', {
-      id: gifticonData.gifticonId,
-      barcodeNumber: gifticonData.barcodeNumber,
-    });
+    // 바코드 이미지가 있는 경우에만 확대 보기 표시
+    if (gifticonData && gifticonData.barcodeImageUrl) {
+      // 바코드 이미지 확대 모달 상태 설정
+      setBarcodeModalVisible(true);
+    } else {
+      Alert.alert('알림', '바코드 이미지가 없습니다.');
+    }
   };
 
   // 선물하기 기능
@@ -782,6 +787,63 @@ const DetailProductScreen = () => {
         </View>
       </Modal>
 
+      {/* 바코드 확대 보기 모달 */}
+      <Modal
+        visible={isBarcodeModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBarcodeModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.barcodeModalOverlay}
+          activeOpacity={1}
+          onPress={() => setBarcodeModalVisible(false)}
+        >
+          <View style={styles.barcodeModalContent}>
+            <View style={styles.barcodeModalHeader}>
+              <Text style={styles.barcodeModalTitle}>바코드</Text>
+              <TouchableOpacity
+                style={styles.barcodeModalCloseButton}
+                onPress={() => setBarcodeModalVisible(false)}
+              >
+                <Icon name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            {/* 바코드 이미지 영역 */}
+            <View style={styles.barcodeDisplaySection}>
+              <Image
+                source={gifticonData?.barcodeImageUrl}
+                style={styles.barcodeImage}
+                resizeMode="contain"
+              />
+            </View>
+
+            {/* 바코드 정보 영역 */}
+            <View style={styles.barcodeInfoContainer}>
+              <View style={styles.barcodeInfoRow}>
+                <Text style={styles.barcodeInfoLabel}>바코드 번호:</Text>
+                <Text style={styles.barcodeInfoValue}>{gifticonData?.barcodeNumber}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.barcodeCopyButton}
+                onPress={() => {
+                  // 클립보드에 바코드 번호 복사 (실제 구현 필요)
+                  Alert.alert(
+                    '알림',
+                    `바코드 번호 ${gifticonData?.barcodeNumber}이(가) 복사되었습니다.`
+                  );
+                }}
+              >
+                <Icon name="content-copy" size={20} color="white" />
+                <Text style={styles.barcodeCopyText}>바코드 복사</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* 알림 다이얼로그 */}
       <AlertDialog
         isVisible={alertVisible}
@@ -1132,6 +1194,104 @@ const styles = StyleSheet.create({
   },
   confirmShareButtonText: {
     color: '#FFFFFF',
+  },
+  // 바코드 모달 스타일
+  barcodeModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  barcodeModalContent: {
+    width: '90%',
+    height: '70%',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  barcodeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 15,
+    paddingTop: 15,
+    position: 'absolute',
+    top: 0,
+    zIndex: 10,
+  },
+  barcodeModalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  barcodeModalCloseButton: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  barcodeDisplaySection: {
+    width: '90%',
+    height: '70%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  barcodeImage: {
+    width: '90%',
+    height: '90%',
+  },
+  barcodeInfoContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 15,
+    borderRadius: 10,
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  barcodeInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  barcodeInfoLabel: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  barcodeInfoValue: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+  },
+  barcodeCopyButton: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(74, 144, 226, 0.7)',
+    borderRadius: 5,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  barcodeCopyText: {
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
 

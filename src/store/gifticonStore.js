@@ -99,24 +99,15 @@ const useGifticonStore = create(set => ({
     })),
 
   // 현재 작업 중인 바코드 정보 설정
-  setCurrentBarcodeInfo: (barcodeValue, barcodeFormat, boundingBox) =>
+  setCurrentBarcodeInfo: (barcodeValue, barcodeFormat, barcodeBoundingBox, barcodeImageUri) =>
     set(state => ({
+      ...state,
       currentBarcodeInfo: {
         value: barcodeValue,
         format: barcodeFormat,
-        boundingBox: boundingBox,
+        boundingBox: barcodeBoundingBox,
+        imageUri: barcodeImageUri,
       },
-      // 현재 작업 중인 기프티콘 ID가 있으면 저장된 바코드 정보도 업데이트
-      barcodeInfo: state.currentGifticonId
-        ? {
-            ...state.barcodeInfo,
-            [state.currentGifticonId]: {
-              value: barcodeValue,
-              format: barcodeFormat,
-              boundingBox: boundingBox,
-            },
-          }
-        : state.barcodeInfo,
     })),
 
   // 기프티콘 이미지 상태 초기화

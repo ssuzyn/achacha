@@ -374,76 +374,106 @@ const RegisterDetailScreen = () => {
     setBarcodeImageVisible(true);
   };
 
-  // 갤러리 선택 함수
-  const handlePickImage = () => {
-    setImageOptionVisible(true);
+  // 이미지 선택 시 바코드 자동 추출 및 인식 기능 추가
+  const processImageForBarcode = async imageUri => {
+    if (!imageUri) return;
+
+    try {
+      console.log('[이미지 처리] 바코드 인식 시작:', imageUri);
+
+      // 바코드 감지 및 추출 실행
+      const result = await detectAndCropBarcode(imageUri);
+
+      if (result.success) {
+        console.log('[이미지 처리] 바코드 인식 및 추출 성공:', result);
+
+        // 바코드 정보 저장
+        setBarcode(result.barcodeValue);
+        setBarcodeFormat(result.barcodeFormat);
+        setBarcodeImageUri(result.croppedImageUri);
+
+        // Zustand 스토어에 바코드 정보 저장 (이미지 URI 포함)
+        setCurrentBarcodeInfo(
+          result.barcodeValue,
+          result.barcodeFormat,
+          result.boundingBox,
+          result.croppedImageUri
+        );
+
+        // 성공 메시지 (선택적)
+        if (!result.boundingBox) {
+          console.log('[이미지 처리] 바코드 값은 인식했으나 정확한 위치는 파악하지 못했습니다.');
+        }
+      } else {
+        console.log('[이미지 처리] 바코드 인식 실패:', result.message);
+      }
+    } catch (error) {
+      console.error('[이미지 처리] 오류:', error);
+    }
   };
 
-  // 카메라로 촬영 함수
-  const handleOpenCamera = async () => {
+  // 갤러리에서 이미지 선택 함수 수정
+  const handlePickFromGallery = async () => {
+    try {
+      const image = await ImagePicker.openPicker({
+        width: 1000,
+        height: 1000,
+        cropping: false,
+        mediaType: 'photo',
+      });
+
+      console.log('[이미지 선택] 갤러리에서 선택:', image.path);
+
+      // 이미지 URI 저장
+      setCurrentImageUri(image.path);
+      setOriginalImageUri(image.path);
+
+      // 이미지 모달 닫기
+      setImageOptionVisible(false);
+
+      // 바코드 자동 인식 및 추출 처리
+      await processImageForBarcode(image.path);
+    } catch (error) {
+      // 사용자가 취소한 경우 무시
+      if (error.code !== 'E_PICKER_CANCELLED') {
+        console.error('[이미지 선택] 오류:', error);
+        Alert.alert('오류', '이미지 선택 중 문제가 발생했습니다.');
+      }
+    }
+  };
+
+  // 카메라로 촬영 함수 수정
+  const handleTakePhoto = async () => {
     const hasPermission = await requestCameraPermission();
     if (!hasPermission) {
       Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
       return;
     }
-    setImageOptionVisible(true);
-  };
 
-  // 이미지 편집기 실행 함수
-  const showImageEditor = async imageUri => {
     try {
-      if (!imageUri) {
-        console.warn('이미지 URI가 없습니다');
-        return;
-      }
+      const image = await ImagePicker.openCamera({
+        width: 1000,
+        height: 1000,
+        cropping: false,
+      });
 
-      if (processingRef.current) {
-        console.warn('이미지 처리 중입니다');
-        return;
-      }
+      console.log('[이미지 선택] 카메라로 촬영:', image.path);
 
-      processingRef.current = true;
-      console.log('이미지 편집 시작:', imageUri);
+      // 이미지 URI 저장
+      setCurrentImageUri(image.path);
+      setOriginalImageUri(image.path);
 
-      // 원본 이미지가 있으면 원본을 사용하여 매번 새롭게 편집
-      const sourceUri = originalImageUri || imageUri;
+      // 이미지 모달 닫기
+      setImageOptionVisible(false);
 
-      // ImagePicker 라이브러리의 openCropper 사용
-      ImagePicker.openCropper({
-        path: sourceUri,
-        width: 300,
-        height: 300,
-        cropperToolbarTitle: '이미지 편집',
-        cropperToolbarColor: '#000000',
-        cropperStatusBarColor: '#000000',
-        cropperActiveWidgetColor: '#56AEE9',
-        cropperToolbarWidgetColor: '#FFFFFF',
-        loadingLabelText: '처리 중...',
-        mediaType: 'photo',
-        cropperChooseText: '적용',
-        cropperCancelText: '취소',
-        // 자유롭게 비율 조정 가능
-        freeStyleCropEnabled: true,
-        // 회전 활성화
-        enableRotationGesture: true,
-      })
-        .then(image => {
-          // 편집된 이미지 저장
-          setCurrentImageUri(image.path);
-          processingRef.current = false;
-        })
-        .catch(error => {
-          processingRef.current = false;
-
-          // 사용자가 취소한 경우는 무시
-          if (error.code !== 'E_PICKER_CANCELLED') {
-            Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
-          }
-        });
+      // 바코드 자동 인식 및 추출 처리
+      await processImageForBarcode(image.path);
     } catch (error) {
-      console.error('이미지 편집 오류:', error);
-      processingRef.current = false;
-      Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다. 다시 시도해주세요.');
+      // 사용자가 취소한 경우 무시
+      if (error.code !== 'E_PICKER_CANCELLED') {
+        console.error('[이미지 선택] 오류:', error);
+        Alert.alert('오류', '카메라 사용 중 문제가 발생했습니다.');
+      }
     }
   };
 
@@ -509,6 +539,64 @@ const RegisterDetailScreen = () => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}.${month}.${day}`;
+  };
+
+  // 이미지 편집기 실행 함수
+  const showImageEditor = async imageUri => {
+    try {
+      if (!imageUri) {
+        console.warn('이미지 URI가 없습니다');
+        return;
+      }
+
+      if (processingRef.current) {
+        console.warn('이미지 처리 중입니다');
+        return;
+      }
+
+      processingRef.current = true;
+      console.log('이미지 편집 시작:', imageUri);
+
+      // 원본 이미지가 있으면 원본을 사용하여 매번 새롭게 편집
+      const sourceUri = originalImageUri || imageUri;
+
+      // ImagePicker 라이브러리의 openCropper 사용
+      ImagePicker.openCropper({
+        path: sourceUri,
+        width: 300,
+        height: 300,
+        cropperToolbarTitle: '이미지 편집',
+        cropperToolbarColor: '#000000',
+        cropperStatusBarColor: '#000000',
+        cropperActiveWidgetColor: '#56AEE9',
+        cropperToolbarWidgetColor: '#FFFFFF',
+        loadingLabelText: '처리 중...',
+        mediaType: 'photo',
+        cropperChooseText: '적용',
+        cropperCancelText: '취소',
+        // 자유롭게 비율 조정 가능
+        freeStyleCropEnabled: true,
+        // 회전 활성화
+        enableRotationGesture: true,
+      })
+        .then(image => {
+          // 편집된 이미지 저장
+          setCurrentImageUri(image.path);
+          processingRef.current = false;
+        })
+        .catch(error => {
+          processingRef.current = false;
+
+          // 사용자가 취소한 경우는 무시
+          if (error.code !== 'E_PICKER_CANCELLED') {
+            Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
+          }
+        });
+    } catch (error) {
+      console.error('이미지 편집 오류:', error);
+      processingRef.current = false;
+      Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -740,7 +828,7 @@ const RegisterDetailScreen = () => {
               style={styles.modalOption}
               onPress={() => {
                 setImageOptionVisible(false);
-                handlePickImage();
+                handlePickFromGallery();
               }}
             >
               <Icon name="photo-library" size={24} color="#333333" style={styles.modalOptionIcon} />
@@ -750,7 +838,7 @@ const RegisterDetailScreen = () => {
               style={styles.modalOption}
               onPress={() => {
                 setImageOptionVisible(false);
-                handleOpenCamera();
+                handleTakePhoto();
               }}
             >
               <Icon name="camera-alt" size={24} color="#333333" style={styles.modalOptionIcon} />
@@ -940,7 +1028,7 @@ const RegisterDetailScreen = () => {
           activeOpacity={1}
           onPress={() => setBarcodeImageVisible(false)}
         >
-          <View style={styles.originalImageModalContent}>
+          <View style={styles.barcodeModalContent}>
             <View style={styles.barcodeModalHeader}>
               <Text style={styles.barcodeModalTitle}>바코드 정보</Text>
               <TouchableOpacity
@@ -951,24 +1039,37 @@ const RegisterDetailScreen = () => {
               </TouchableOpacity>
             </View>
 
-            {barcodeImageUri ? (
-              <Image
-                source={imageSource(barcodeImageUri)}
-                style={styles.originalImage}
-                resizeMode="contain"
-              />
-            ) : currentImageUri ? (
-              <Image
-                source={imageSource(currentImageUri)}
-                style={styles.originalImage}
-                resizeMode="contain"
-              />
-            ) : (
-              <View style={styles.noImageContainer}>
-                <Text style={styles.noImageText}>바코드 이미지가 없습니다.</Text>
-              </View>
-            )}
+            {/* 바코드 이미지 영역 */}
+            <View style={styles.barcodeDisplaySection}>
+              {barcodeImageUri ? (
+                <View style={styles.barcodeImageWrapper}>
+                  <Image
+                    source={imageSource(barcodeImageUri)}
+                    style={styles.barcodeOnlyImage}
+                    resizeMode="contain"
+                  />
+                </View>
+              ) : currentImageUri ? (
+                <View style={styles.barcodeImageWrapper}>
+                  <Image
+                    source={imageSource(currentImageUri)}
+                    style={styles.barcodeImage}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.noBarcodeOverlay}>
+                    <Text style={styles.noBarcodeText}>
+                      바코드 이미지 영역이 감지되지 않았습니다.
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.noImageContainer}>
+                  <Text style={styles.noImageText}>바코드 이미지가 없습니다.</Text>
+                </View>
+              )}
+            </View>
 
+            {/* 바코드 정보 영역 */}
             <View style={styles.barcodeInfoContainer}>
               <View style={styles.barcodeInfoRow}>
                 <Text style={styles.barcodeInfoLabel}>바코드 번호:</Text>
@@ -1354,6 +1455,52 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 5,
   },
+  barcodeDisplaySection: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    paddingTop: 60,
+    paddingBottom: 100,
+  },
+  barcodeImageWrapper: {
+    width: '90%',
+    height: '100%',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  barcodeImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+  },
+  barcodeOnlyImage: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    resizeMode: 'contain',
+  },
+  noBarcodeOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 10,
+  },
+  noBarcodeText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+    padding: 10,
+  },
   barcodeInfoContainer: {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     padding: 15,
@@ -1405,6 +1552,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
+  },
+  barcodeModalContent: {
+    width: '90%',
+    height: '80%',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    borderRadius: 16,
+    overflow: 'hidden',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'relative',
+    padding: 0,
+    flexDirection: 'column',
   },
 });
 
