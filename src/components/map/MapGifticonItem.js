@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   image: {
     width: 40,
     height: 40,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   infoContainer: {
     flex: 1,
@@ -76,31 +76,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
-    gap: 8,
+    gap: 10,
   },
   brand: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-SemiBold',
   },
   menuName: {
     fontSize: 14,
-    color: '#666',
+    fontFamily: 'Pretendard-Medium',
   },
   dday: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#278CCC',
-    fontWeight: '500',
+    fontFamily: 'Pretendard-SemiBold',
   },
   useButton: {
     backgroundColor: '#56AEE9',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: 'Pretendard-SemiBold',
   },
 });
 

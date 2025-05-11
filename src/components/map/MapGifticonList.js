@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
   },
   header: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     marginBottom: 14,
     marginHorizontal: 20,
     marginTop: 4,

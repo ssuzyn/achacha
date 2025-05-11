@@ -316,13 +316,12 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 12,
-    backgroundColor: '#f8f8f8',
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
   headerText: {
     fontSize: 20,
-    fontFamily: 'Pretendard-Bold',
+    fontFamily: 'Pretendard-ExtraBold',
   },
   mapContainer: {
     flex: 1,

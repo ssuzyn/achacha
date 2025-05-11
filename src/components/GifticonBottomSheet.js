@@ -53,6 +53,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 14,
     borderTopRightRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 12,
   },
 });
 
