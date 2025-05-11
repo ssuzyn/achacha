@@ -1,3 +1,5 @@
+// 카카오맵뷰 변경 전
+
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { View, StyleSheet, Dimensions, Text, Alert } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -162,7 +164,6 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     }, 1000); // 1초 디바운스
   };
 
-  // 매장 검색 함수
   const searchNearbyStores = async () => {
     if (!location || !uniqueBrands || uniqueBrands.length === 0) {
       console.log('조건 미충족으로 리턴');
@@ -171,6 +172,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 
     const { latitude, longitude } = location.coords;
     console.log(`검색 위치: ${latitude}, ${longitude}`);
+    console.log('검색할 브랜드:', uniqueBrands.map(b => b.brandName).join(', '));
 
     try {
       const searchPromises = uniqueBrands.map(async brand => {
@@ -195,6 +197,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
         }
 
         const data = await response.json();
+        console.log(`${brand.brandName} 검색 결과: ${data.documents.length}개 매장 찾음`);
 
         return {
           brandId: brand.brandId,
@@ -204,15 +207,31 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
       });
 
       const results = await Promise.all(searchPromises);
+      console.log('모든 브랜드 검색 완료, 총 결과:', results.length);
+      console.log(
+        '총 매장 수:',
+        results.reduce((sum, brand) => sum + brand.stores.length, 0)
+      );
 
       // 전체 매장 데이터 저장(지오펜스 재설정에 사용)
       window.allStoreData = results;
+      console.log('전역 변수에 매장 데이터 저장 완료');
 
       // WebView로 매장 데이터 전송
+      console.log('WebView로 마커 데이터 전송 시작');
       updateMapMarkers(webViewRef, results);
+      console.log('WebView로 마커 데이터 전송 완료');
 
       // 모든 매장에 대한 지오펜스 설정
+      console.log('지오펜스 설정 시작, selectedBrand:', selectedBrand);
+
+      if (!geofencingService.initialized) {
+        console.log('지오펜싱이 초기화되지 않음, 재초기화 시도');
+        await geofencingService.initGeofencing();
+      }
+
       geofencingService.setupGeofences(results, selectedBrand);
+      console.log('지오펜스 설정 완료');
     } catch (error) {
       console.error('매장 검색 실패:', error);
     }
