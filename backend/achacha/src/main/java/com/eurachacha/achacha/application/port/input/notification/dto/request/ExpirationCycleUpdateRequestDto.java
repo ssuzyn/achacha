@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ExpirationCycleUpdateDto {
+public class ExpirationCycleUpdateRequestDto {
 
 	private ExpirationCycle expirationCycle;
 }

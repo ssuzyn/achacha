@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.notification.NotificationSettingAppService;
-import com.eurachacha.achacha.application.port.input.notification.dto.request.ExpirationCycleUpdateDto;
+import com.eurachacha.achacha.application.port.input.notification.dto.request.ExpirationCycleUpdateRequestDto;
 import com.eurachacha.achacha.application.port.input.notification.dto.request.NotificationSettingUpdateRequestDto;
 import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationSettingDto;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
@@ -42,7 +42,8 @@ public class NotificationController {
 	}
 
 	@PatchMapping("/expirationCycle")
-	public ResponseEntity<?> updateExpirationCycle(@RequestBody ExpirationCycleUpdateDto expirationCycleUpdateDto) {
+	public ResponseEntity<?> updateExpirationCycle(
+		@RequestBody ExpirationCycleUpdateRequestDto expirationCycleUpdateDto) {
 		notificationSettingAppService.updateExpirationCycle(expirationCycleUpdateDto.getExpirationCycle());
 
 		return ResponseEntity.ok("알림 주기 변경 성공");
