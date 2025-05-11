@@ -5,7 +5,7 @@
 import axios from 'axios';
 import { API_CONFIG } from './config'; // 설정 파일 import 경로 변경
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AUTH_ERROR_MESSAGES } from './authErrors';
+import { ERROR_CODES } from '../constants/errorCodes';
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -65,8 +65,7 @@ apiClient.interceptors.response.use(
       error.response &&
       error.response.status === 401 &&
       error.response.data &&
-      (error.response.data.errorCode === 'AUTH_02' ||
-        error.response.data.message === AUTH_ERROR_MESSAGES.AUTH_02) &&
+      error.response.data.errorCode === ERROR_CODES.AUTH_02 &&
       !originalRequest._retry
     ) {
       // 토큰 갱신 중이 아니라면 갱신 시작
@@ -109,9 +108,9 @@ apiClient.interceptors.response.use(
           await AsyncStorage.removeItem('refreshToken');
 
           // 로그인 화면으로 이동 로직 (필요 시 네비게이션 혹은 이벤트 발생)
-          // 여기서는 글로벌 상태에 접근하지 않고 이벤트를 발생시키는 것이 좋습니다.
-          const logoutEvent = new Event('logout');
-          document.dispatchEvent(logoutEvent);
+          // RN 환경에서는 이벤트 발생 방식이 조금 다름
+          // 전역 이벤트 발행 (EventEmitter 사용시)
+          // global.eventEmitter.emit('logout');
 
           return Promise.reject(refreshError);
         }
