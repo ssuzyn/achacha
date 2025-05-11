@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { queryErrorHandler } from './utils/errorHandler';
+import { handleError, handleAuthError } from './utils/errorHandler';
 
 // React Query 클라이언트 생성 및 기본 옵션 설정
 const queryClient = new QueryClient({
@@ -7,10 +7,16 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1, // 실패 시 1번만 재시도
       refetchOnWindowFocus: false, // 창 포커스 시 자동 리페치 비활성화
-      onError: queryErrorHandler, // 기본 에러 핸들러 설정
+      onError: error => {
+        // 인증 에러 처리를 포함한 공통 에러 처리
+        handleError(error, { onAuthError: handleAuthError });
+      },
     },
     mutations: {
-      onError: queryErrorHandler, // 기본 에러 핸들러 설정
+      onError: error => {
+        // 인증 에러 처리를 포함한 공통 에러 처리
+        handleError(error, { onAuthError: handleAuthError });
+      },
     },
   },
 });

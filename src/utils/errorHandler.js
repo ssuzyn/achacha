@@ -110,15 +110,3 @@ export const handleAuthError = async () => {
     console.error('로그아웃 처리 중 오류 발생:', err);
   }
 };
-
-/**
- * React Query에서 사용할 기본 에러 처리 콜백입니다.
- * @param {Error} error - 에러 객체
- * @param {Object} options - 추가 옵션
- */
-export const queryErrorHandler = (error, options = {}) => {
-  return handleError(error, {
-    ...options,
-    onAuthError: handleAuthError,
-  });
-};
