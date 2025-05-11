@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="643ce2da-126f-4978-988f-3264d55bbfcd" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-register/RegisterDetailScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-register/RegisterDetailScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/store/gifticonStore.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/gifticonStore.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/BarcodeUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/BarcodeUtils.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
