@@ -12,19 +12,7 @@ import HomeScreen from '../../screens/HomeScreen';
 import SettingScreen from '../../screens/SettingScreen';
 import ManageListScreen from '../../screens/gifticon-management/ManageListScreen';
 import BoxMainScreen from '../../screens/gifticon-share-box/BoxMainScreen';
-
-// 임시 스크린
-const MapScreen = () => {
-  const { theme } = useTheme();
-
-  return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text variant="body1" weight="medium" style={styles.screenText}>
-        기프티콘 MAP 화면
-      </Text>
-    </View>
-  );
-};
+import MapScreen from '../../screens/MapScreen';
 
 const Tab = createBottomTabNavigator();
 
