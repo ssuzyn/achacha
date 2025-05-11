@@ -4,7 +4,6 @@ import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
 import HeaderBar from '../components/common/HeaderBar';
-import BottomTabBar from '../components/common/BottomTabBar';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../assets/images/giveaway-button.png');
@@ -196,19 +195,27 @@ const GiveAwayScreen = () => {
     setConfirmModalVisible(false);
   };
 
+  // 목록 외 영역 클릭 핸들러
+  const handleOutsidePress = () => {
+    if (listVisible) {
+      setListVisible(false);
+      setButtonVisible(true);
+    }
+  };
+
   // 사용자 위치 계산 (고정)
   const userPositions = calculateUserPositions(users);
 
   return (
     <View style={styles.container}>
       <HeaderBar />
-      <View style={styles.svgContainer}>
-        <Svg width={width * 2} height={height * 2} style={styles.svgImage}>
+      <TouchableOpacity style={styles.svgContainer} activeOpacity={1} onPress={handleOutsidePress}>
+        <Svg width={width} height={height} style={styles.svgImage}>
           {radiusArray.map((radius, index) => (
             <Circle
               key={index}
-              cx={centerX * 2}
-              cy={centerY * 2}
+              cx={centerX}
+              cy={centerY}
               r={radius}
               stroke="#CCCCCC"
               strokeWidth="1"
@@ -256,7 +263,7 @@ const GiveAwayScreen = () => {
             <Image source={giveAwayButtonImg} style={styles.centerButtonImage} />
           </View>
         )}
-      </View>
+      </TouchableOpacity>
 
       {/* 뿌리기 기프티콘 목록 버튼 */}
       {buttonVisible && (
@@ -267,12 +274,16 @@ const GiveAwayScreen = () => {
 
       {/* 기프티콘 목록 컴포넌트 */}
       {listVisible && (
-        <View style={styles.gifticonListContainer}>
+        <TouchableOpacity
+          style={styles.gifticonListContainer}
+          activeOpacity={1}
+          onPress={e => e.stopPropagation()}
+        >
           <GiveAwayGifticonList
             gifticons={dummyGifticons.gifticons}
             onSelectGifticon={handleGifticonSelect}
           />
-        </View>
+        </TouchableOpacity>
       )}
 
       {/* 기프티콘 선택 확인 모달 컴포넌트 */}
@@ -300,8 +311,8 @@ const styles = StyleSheet.create({
   },
   svgImage: {
     position: 'absolute',
-    left: -width * 0.5,
-    top: -height * 0.5,
+    width: '100%',
+    height: '100%',
   },
   userContainer: {
     position: 'absolute',
