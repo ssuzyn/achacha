@@ -4,8 +4,10 @@ import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import GeofencingService from '../services/GeofencingService';
+import { useNavigation } from '@react-navigation/native';
 
 const MapScreen = () => {
+  const navigation = useNavigation();
   const [selectedBrand, setSelectedBrand] = useState(null);
   const mapRef = useRef(null);
   const geofencingServiceRef = useRef();
@@ -277,11 +279,9 @@ const MapScreen = () => {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>기프티콘 MAP</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>기프티콘 MAP</Text>
+      </View>
 
       <View style={styles.mapContainer}>
         {/* 브랜드 목록과 선택한 브랜드 넘겨줌 */}
@@ -295,6 +295,12 @@ const MapScreen = () => {
       </View>
       <TouchableOpacity style={styles.locationButton} onPress={moveToCurrentLocation}>
         <Icon name="my-location" size={24} color="#278CCC" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.giftButton}
+        onPress={() => navigation.navigate('GiveAwayScreen')}
+      >
+        <Icon name="card-giftcard" size={24} color="#278CCC" />
       </TouchableOpacity>
       <GifticonBottomSheet
         gifticons={filteredGifticons}
@@ -310,9 +316,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  safeArea: {
-    backgroundColor: '#f8f8f8',
   },
   header: {
     padding: 12,
@@ -331,7 +334,20 @@ const styles = StyleSheet.create({
   locationButton: {
     position: 'absolute',
     top: 80,
-    right: 13,
+    right: 6,
+    width: 45,
+    height: 45,
+    borderRadius: 24,
+    backgroundColor: 'rgba(229, 244, 254, 0.8)',
+    borderColor: '#56AEE9',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  giftButton: {
+    position: 'absolute',
+    top: 140,
+    right: 6,
     width: 45,
     height: 45,
     borderRadius: 24,
