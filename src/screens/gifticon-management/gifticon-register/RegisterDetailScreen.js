@@ -886,22 +886,14 @@ const RegisterDetailScreen = () => {
           onPress={() => setOriginalImageVisible(false)}
         >
           <View style={styles.originalImageModalContent}>
+            <Text style={styles.originalImageGuideText}>
+              업로드 한 원본 이미지를 확인할 수 있어요.
+            </Text>
             <Image
               source={imageSource(originalImageUri)}
               style={styles.originalImage}
               resizeMode="contain"
             />
-
-            {/* 원본 이미지에서 편집 시작 버튼 */}
-            <TouchableOpacity
-              style={styles.editFromOriginalButton}
-              onPress={() => {
-                setOriginalImageVisible(false);
-                setTimeout(() => showImageEditor(originalImageUri), 300);
-              }}
-            >
-              <Icon name="edit" size={24} color="white" />
-            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -1215,28 +1207,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     position: 'relative',
   },
+  originalImageGuideText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+    position: 'absolute',
+    top: 20,
+    textAlign: 'center',
+    width: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingVertical: 8,
+    zIndex: 10,
+  },
   originalImage: {
     width: '100%',
     height: '100%',
-  },
-  editFromOriginalButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(86, 174, 233, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 5,
   },
 });
 
