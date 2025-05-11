@@ -13,7 +13,11 @@ import com.eurachacha.achacha.application.port.output.notification.NotificationS
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
 import com.eurachacha.achacha.domain.model.notification.NotificationType;
+import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
+import com.eurachacha.achacha.domain.service.notification.NotificationSettingDomainService;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +28,7 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final NotificationTypeRepository notificationTypeRepository;
+	private final NotificationSettingDomainService notificationSettingDomainService;
 	private final SecurityServicePort securityServicePort;
 
 	@Override
@@ -50,7 +55,7 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 		// User user = securityServicePort.getLoggedInUser();
 		Integer userId = 1;
 
-		// 코드로 직접 알림 타입 찾기
+		// 알림 타입 찾기
 		NotificationType notificationType = notificationTypeRepository.findByCode(typeCode);
 
 		// 사용자 ID와 알림 타입 ID로 설정 직접 찾기
@@ -58,5 +63,25 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 			.findByUserIdAndNotificationTypeId(userId, notificationType.getId());
 
 		setting.updateIsEnabled(isEnabled);
+	}
+
+	@Override
+	@Transactional
+	public void updateExpirationCycle(ExpirationCycle expirationCycle) {
+		// User user = securityServicePort.getLoggedInUser();
+		Integer userId = 1;
+
+		// 알림 타입 찾기
+		NotificationType notificationType = notificationTypeRepository.findByCode(NotificationTypeCode.EXPIRY_DATE);
+
+		// 사용자 ID와 알림 타입 ID로 설정 직접 찾기
+		NotificationSetting setting = notificationSettingRepository
+			.findByUserIdAndNotificationTypeId(userId, notificationType.getId());
+
+		if (!notificationSettingDomainService.isEnabled(setting)) {
+			throw new CustomException(ErrorCode.NOTIFICATION_SETTING_DISABLED);
+		}
+
+		setting.updateExpirationCycle(expirationCycle);
 	}
 }
