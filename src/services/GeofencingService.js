@@ -209,7 +209,7 @@ class GeofencingService {
               id: geofenceId,
               latitude: parseFloat(store.y),
               longitude: parseFloat(store.x),
-              radius: 200, // 미터 단위 (50)
+              radius: 50, // 지오펜싱 범위 설정(미터 단위)
               notifyOnEntry: true,
               notifyOnExit: false,
             });
