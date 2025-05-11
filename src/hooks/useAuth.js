@@ -3,7 +3,8 @@ import { useNavigation } from '@react-navigation/native';
 import { login as kakaoLogin } from '@react-native-seoul/kakao-login';
 import { Alert } from 'react-native';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AUTH_ERROR_MESSAGES } from '../api/authErrors';
+import { ERROR_MESSAGES } from '../constants/errorMessages';
+import { handleError, handleAuthError } from '../utils/errorHandler';
 import useAuthStore from '../store/authStore';
 import {
   loginWithKakao,
@@ -30,7 +31,8 @@ const useKakaoLoginMutation = () => {
       setAuth(user, { accessToken, refreshToken }, 'kakao');
     },
     onError: error => {
-      // 자동 에러 처리는 useAuth에서 처리
+      // 공통 에러 핸들러 사용
+      handleError(error);
       console.error('Kakao Login API Error:', error);
     },
   });
@@ -49,9 +51,9 @@ export const useRefreshTokens = () => {
       updateTokens(accessToken, refreshToken);
     },
     onError: error => {
+      // 공통 에러 핸들러 사용 (인증 에러 처리 포함)
+      handleError(error, { onAuthError: handleAuthError });
       console.error('Token Refresh API Error:', error);
-      // 토큰 갱신 실패 시 로그인 화면으로 리디렉션하는 등의 처리는
-      // 호출하는 쪽이나 인터셉터에서 처리
     },
   });
 };
@@ -70,6 +72,8 @@ export const useUserProfile = (options = {}) => {
     staleTime: options.staleTime || 5 * 60 * 1000, // 기본값 5분
     retry: options.retry || 1, // 기본값 1회 재시도
     onError: error => {
+      // 공통 에러 핸들러 사용 (인증 에러 처리 포함)
+      handleError(error, { onAuthError: handleAuthError });
       console.error('Get User Profile API Error:', error);
     },
   });
@@ -88,6 +92,8 @@ const useLogoutMutation = () => {
       logout();
     },
     onError: error => {
+      // 공통 에러 핸들러 사용
+      handleError(error);
       console.error('Logout API Error:', error);
       // API 오류 발생 시에도 로컬 상태는 클리어
       logout();
@@ -170,8 +176,7 @@ export const useAuth = () => {
     let errorMessage = '로그인 중 알 수 없는 오류가 발생했습니다.';
     if (kakaoLoginError.response?.data?.errorCode) {
       const code = kakaoLoginError.response.data.errorCode;
-      errorMessage =
-        AUTH_ERROR_MESSAGES[code] || kakaoLoginError.response.data.message || errorMessage;
+      errorMessage = ERROR_MESSAGES[code] || kakaoLoginError.response.data.message || errorMessage;
     }
 
     Alert.alert('로그인 실패', errorMessage);
