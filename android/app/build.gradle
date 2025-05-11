@@ -185,4 +185,7 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // ML Kit 바코드 스캐닝 모듈 추가
+    implementation 'com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1'
 }
