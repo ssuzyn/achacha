@@ -232,7 +232,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 	}
 
 	private void checkExpiresAt(User user, BleToken bleToken) {
-		if (!bleToken.isExpired()) {
+		if (bleToken.isExpired()) {
 			log.info("BLE 토큰 재발급: userId={}", user.getId());
 			bleToken.updateToken(bleTokenServicePort.generateUniqueToken(), LocalDateTime.now().plusDays(7));
 		}
