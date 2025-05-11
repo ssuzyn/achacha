@@ -299,9 +299,7 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    width: 'auto',
-    marginLeft: 10,
-    marginRight: 10,
+    width: '100%',
     backgroundColor: '#fff',
   },
   webView: {

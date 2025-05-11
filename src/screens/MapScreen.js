@@ -326,6 +326,8 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flex: 1,
+    margin: 0,
+    padding: 0,
   },
   locationButton: {
     position: 'absolute',
