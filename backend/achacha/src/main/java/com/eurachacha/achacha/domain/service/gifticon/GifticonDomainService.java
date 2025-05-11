@@ -25,4 +25,9 @@ public interface GifticonDomainService {
 
 	void validateGifticonIsAvailable(Gifticon gifticon);
 
+	boolean isAlreadyShared(Gifticon gifticon);
+
+	boolean isAmountGifticonUsed(Gifticon gifticon);
+
+	void validateGifticonSharable(Gifticon gifticon);
 }
