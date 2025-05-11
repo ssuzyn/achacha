@@ -131,6 +131,7 @@ android {
     packagingOptions {
         jniLibs {
             useLegacyPackaging (findProperty('expo.useLegacyPackaging')?.toBoolean() ?: false)
+            doNotStrip "**/**/libucrop.so"
         }
     }
     androidResources {
