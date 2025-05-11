@@ -151,7 +151,16 @@ const calculateDistance = (lat1, lon1, lat2, lon2) => {
   return R * c;
 };
 
-
+// 디바운스 함수
+const debouncedSearchNearbyStores = () => {
+  if (searchTimerRef.current) {
+    clearTimeout(searchTimerRef.current);
+  }
+  
+  searchTimerRef.current = setTimeout(() => {
+    searchNearbyStores();
+  }, 1000); // 1초 디바운스
+};
 
   // 매장 검색 함수
   const searchNearbyStores = async () => {
