@@ -243,15 +243,10 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     };
   }, [location, mapLoaded, uniqueBrands, prevLocation]);
 
-  // 선택된 브랜드가 변경될 때는 필터링, 지오펜스 재설정
+  // 선택된 브랜드가 변경될 때는 필터링
   useEffect(() => {
     if (mapLoaded && webViewRef.current) {
       filterMarkersByBrand(webViewRef, selectedBrand);
-
-      // 모든 매장 데이터가 있으면 지오펜스도 재설정
-      if (window.allStoreData) {
-        geofencingService.setupGeofences(window.allStoreData, selectedBrand);
-      }
     }
   }, [selectedBrand, mapLoaded]);
 
