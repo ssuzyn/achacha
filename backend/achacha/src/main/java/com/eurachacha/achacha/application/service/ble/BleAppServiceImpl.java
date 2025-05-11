@@ -25,14 +25,29 @@ public class BleAppServiceImpl implements BleAppService {
 
 	@Override
 	@Transactional
-	public BleTokenResponseDto generateBleToken(String tokenValue) {
+	public BleTokenResponseDto generateBleToken(String value) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
-		// if (tokenValue != null && !tokenValue.isBlank()) {
-		bleTokenRepository.deleteByUserIdAndValue(userId, tokenValue);
-		// }
+		bleTokenRepository.deleteByUserIdAndValue(userId, value);
 
+		// 토큰 생성
+		String newTokenValue = generateToken();
+
+		// 새 토큰 저장
+		BleToken bleToken = BleToken.builder()
+			.user(userRepository.findById(userId))
+			.value(newTokenValue)
+			.build();
+
+		bleTokenRepository.save(bleToken);
+
+		return BleTokenResponseDto.builder()
+			.bleToken(newTokenValue)
+			.build();
+	}
+
+	private String generateToken() {
 		// 중복되지 않는 새 토큰 생성
 		String newTokenValue;
 		boolean isDuplicate;
@@ -50,17 +65,6 @@ public class BleAppServiceImpl implements BleAppService {
 			// 중복 검사
 			isDuplicate = bleTokenRepository.existsByValue(newTokenValue);
 		} while (isDuplicate);
-
-		// 새 토큰 저장
-		BleToken bleToken = BleToken.builder()
-			.user(userRepository.findById(userId))
-			.value(newTokenValue)
-			.build();
-
-		bleTokenRepository.save(bleToken);
-
-		return BleTokenResponseDto.builder()
-			.bleToken(newTokenValue)
-			.build();
+		return newTokenValue;
 	}
 }
