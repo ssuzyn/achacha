@@ -153,6 +153,46 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
     return R * c;
   };
 
+  // 브랜드 필터링
+  const testFiltering = brandId => {
+    if (!webViewRef.current) return;
+
+    console.log('테스트: 브랜드 필터링 직접 호출:', brandId);
+
+    const script = `
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'debug',
+      message: '필터링 테스트 - 현재 마커 수: ' + (window.allMarkers ? window.allMarkers.length : 0)
+    }));
+    
+    // 실제 필터링 시도
+    (function() {
+      try {
+        if (!window.brandMarkers) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'error',
+            message: '브랜드 마커가 초기화되지 않았습니다'
+          }));
+          return;
+        }
+        
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'debug',
+          message: '브랜드 마커 정보: ' + JSON.stringify(Object.keys(window.brandMarkers))
+        }));
+      } catch (error) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'error',
+          message: '필터링 테스트 오류: ' + error.message
+        }));
+      }
+    })();
+    true;
+  `;
+
+    webViewRef.current.injectJavaScript(script);
+  };
+
   // 디바운스 함수
   const debouncedSearchNearbyStores = () => {
     if (searchTimerRef.current) {
@@ -265,7 +305,13 @@ const KakaoMapView = forwardRef(({ uniqueBrands, selectedBrand, onSelectBrand },
   // 선택된 브랜드가 변경될 때는 필터링
   useEffect(() => {
     if (mapLoaded && webViewRef.current) {
+      console.log('브랜드 선택 변경 감지:', selectedBrand);
       filterMarkersByBrand(webViewRef, selectedBrand);
+
+      // 추가 디버깅
+      setTimeout(() => {
+        testFiltering(selectedBrand);
+      }, 500);
     }
   }, [selectedBrand, mapLoaded]);
 
