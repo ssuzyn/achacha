@@ -11,6 +11,10 @@ export const API_CONFIG = {
     REFRESH_TOKEN: '/api/auth/refresh', // 토큰 갱신
     USER_PROFILE: '/api/users/me', // 사용자 정보 조회
 
+    // 쉐어박스 관련
+    CREATE_SHARE_BOX: '/api/share-boxes',
+    JOIN_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/join`,
+
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
     //     CREATE_USER: '/api/users',

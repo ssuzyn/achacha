@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, ScrollView, View, FlatList, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
 import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import NavigationService from '../navigation/NavigationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -34,6 +35,16 @@ const SAMPLE_GIFTICONS = [
 const HomeScreen = () => {
   const { theme } = useTheme();
   const username = '으라차차'; // 실제 앱에서는 로그인된 사용자 이름을 가져옵니다
+
+  useEffect(() => {
+    const printTokens = async () => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+      console.log('Access Token:', accessToken);
+      console.log('Refresh Token:', refreshToken);
+    };
+    printTokens();
+  }, []);
 
   // 날짜 간격 계산 함수
   const calculateDaysLeft = expiryDate => {
