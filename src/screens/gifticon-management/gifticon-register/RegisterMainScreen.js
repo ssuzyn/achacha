@@ -22,7 +22,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-import ImagePicker from 'react-native-image-crop-picker';
 
 const RegisterMainScreen = () => {
   const { theme } = useTheme();
@@ -89,7 +88,7 @@ const RegisterMainScreen = () => {
       };
 
       // 이미지 라이브러리 호출
-      launchImageLibrary(options, response => {
+      launchImageLibrary(options, async response => {
         console.log('이미지 선택 응답:', JSON.stringify(response));
 
         if (response.didCancel) {
@@ -108,42 +107,65 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 이미지 편집기 호출 - ImagePicker 라이브러리 사용
-            ImagePicker.openCropper({
-              path: imageAsset.uri,
-              width: 300,
-              height: 300,
-              cropperToolbarTitle: '이미지 편집',
-              cropperToolbarColor: '#000000',
-              cropperStatusBarColor: '#000000',
-              cropperActiveWidgetColor: '#56AEE9',
-              cropperToolbarWidgetColor: '#FFFFFF',
-              loadingLabelText: '처리 중...',
-              mediaType: 'photo',
-              cropperChooseText: '적용',
-              cropperCancelText: '취소',
-              freeStyleCropEnabled: true,
-              enableRotationGesture: true,
-            })
-              .then(croppedImage => {
-                console.log('이미지 크롭 성공:', croppedImage.path);
-                // 편집된 이미지와 함께 상세 화면으로 이동
-                // 원본 이미지와 편집된 이미지 모두 전달
-                navigation.navigate('RegisterDetail', {
-                  selectedImage: { uri: croppedImage.path },
-                  originalImage: { uri: imageAsset.uri },
-                  gifticonType: gifticonType,
-                  boxType: boxType,
-                  shareBoxId: selectedShareBoxId,
-                });
-                setImageOptionVisible(false);
-              })
-              .catch(error => {
-                console.log('이미지 크롭 취소 또는 오류:', error);
-                if (error.code !== 'E_PICKER_CANCELLED') {
-                  Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
+            try {
+              // 바코드 인식 먼저 시도
+              console.log('[메인] 바코드 인식 시도 시작');
+              // 바코드 인식 유틸리티 불러오기
+              const {
+                detectBarcode,
+                detectAndCropBarcode,
+              } = require('../../../utils/BarcodeUtils');
+
+              // 1. 바코드 인식
+              const barcodeResult = await detectBarcode(imageAsset.uri);
+              console.log('[메인] 바코드 인식 결과:', JSON.stringify(barcodeResult));
+
+              let barcodeValue = null;
+              let barcodeFormat = null;
+              let barcodeBoundingBox = null;
+              let barcodeImageUri = null;
+
+              if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                // 바코드 인식 성공
+                const firstBarcode = barcodeResult.barcodes[0];
+                barcodeValue = firstBarcode.value;
+                barcodeFormat = firstBarcode.format;
+                barcodeBoundingBox = firstBarcode.boundingBox;
+
+                console.log('[메인] 바코드 인식 성공:', barcodeValue, barcodeFormat);
+
+                // 2. 바코드 영역 크롭 시도
+                try {
+                  const cropResult = await detectAndCropBarcode(imageAsset.uri);
+                  if (cropResult.success && cropResult.croppedImageUri) {
+                    barcodeImageUri = cropResult.croppedImageUri;
+                    console.log('[메인] 바코드 이미지 크롭 성공:', barcodeImageUri);
+                  }
+                } catch (cropError) {
+                  console.error('[메인] 바코드 크롭 오류:', cropError);
                 }
+              }
+
+              // 바코드 정보와 함께 바로 상세 화면으로 이동
+              setImageOptionVisible(false);
+
+              // 바코드 인식 결과 정보와 함께 상세 화면으로 이동
+              navigation.navigate('RegisterDetail', {
+                selectedImage: { uri: imageAsset.uri },
+                originalImage: { uri: imageAsset.uri },
+                gifticonType: gifticonType,
+                boxType: boxType,
+                shareBoxId: selectedShareBoxId,
+                // 바코드 정보 추가
+                barcodeValue: barcodeValue,
+                barcodeFormat: barcodeFormat,
+                barcodeBoundingBox: barcodeBoundingBox,
+                barcodeImageUri: barcodeImageUri,
               });
+            } catch (processingError) {
+              console.error('이미지 처리 중 오류:', processingError);
+              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
+            }
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
@@ -185,7 +207,7 @@ const RegisterMainScreen = () => {
       console.log('카메라 호출 전');
 
       // 카메라 호출
-      launchCamera(options, response => {
+      launchCamera(options, async response => {
         console.log('카메라 응답:', JSON.stringify(response));
 
         if (response.didCancel) {
@@ -204,42 +226,65 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 이미지 편집기 호출 - ImagePicker 라이브러리 사용
-            ImagePicker.openCropper({
-              path: imageAsset.uri,
-              width: 300,
-              height: 300,
-              cropperToolbarTitle: '이미지 편집',
-              cropperToolbarColor: '#000000',
-              cropperStatusBarColor: '#000000',
-              cropperActiveWidgetColor: '#56AEE9',
-              cropperToolbarWidgetColor: '#FFFFFF',
-              loadingLabelText: '처리 중...',
-              mediaType: 'photo',
-              cropperChooseText: '적용',
-              cropperCancelText: '취소',
-              freeStyleCropEnabled: true,
-              enableRotationGesture: true,
-            })
-              .then(croppedImage => {
-                console.log('이미지 크롭 성공:', croppedImage.path);
-                // 편집된 이미지와 함께 상세 화면으로 이동
-                // 원본 이미지와 편집된 이미지 모두 전달
-                navigation.navigate('RegisterDetail', {
-                  selectedImage: { uri: croppedImage.path },
-                  originalImage: { uri: imageAsset.uri },
-                  gifticonType: gifticonType,
-                  boxType: boxType,
-                  shareBoxId: selectedShareBoxId,
-                });
-                setImageOptionVisible(false);
-              })
-              .catch(error => {
-                console.log('이미지 크롭 취소 또는 오류:', error);
-                if (error.code !== 'E_PICKER_CANCELLED') {
-                  Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
+            try {
+              // 바코드 인식 먼저 시도
+              console.log('[메인] 카메라 바코드 인식 시도 시작');
+              // 바코드 인식 유틸리티 불러오기
+              const {
+                detectBarcode,
+                detectAndCropBarcode,
+              } = require('../../../utils/BarcodeUtils');
+
+              // 1. 바코드 인식
+              const barcodeResult = await detectBarcode(imageAsset.uri);
+              console.log('[메인] 카메라 바코드 인식 결과:', JSON.stringify(barcodeResult));
+
+              let barcodeValue = null;
+              let barcodeFormat = null;
+              let barcodeBoundingBox = null;
+              let barcodeImageUri = null;
+
+              if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                // 바코드 인식 성공
+                const firstBarcode = barcodeResult.barcodes[0];
+                barcodeValue = firstBarcode.value;
+                barcodeFormat = firstBarcode.format;
+                barcodeBoundingBox = firstBarcode.boundingBox;
+
+                console.log('[메인] 카메라 바코드 인식 성공:', barcodeValue, barcodeFormat);
+
+                // 2. 바코드 영역 크롭 시도
+                try {
+                  const cropResult = await detectAndCropBarcode(imageAsset.uri);
+                  if (cropResult.success && cropResult.croppedImageUri) {
+                    barcodeImageUri = cropResult.croppedImageUri;
+                    console.log('[메인] 카메라 바코드 이미지 크롭 성공:', barcodeImageUri);
+                  }
+                } catch (cropError) {
+                  console.error('[메인] 카메라 바코드 크롭 오류:', cropError);
                 }
+              }
+
+              // 바코드 정보와 함께 바로 상세 화면으로 이동
+              setImageOptionVisible(false);
+
+              // 바코드 인식 결과 정보와 함께 상세 화면으로 이동
+              navigation.navigate('RegisterDetail', {
+                selectedImage: { uri: imageAsset.uri },
+                originalImage: { uri: imageAsset.uri },
+                gifticonType: gifticonType,
+                boxType: boxType,
+                shareBoxId: selectedShareBoxId,
+                // 바코드 정보 추가
+                barcodeValue: barcodeValue,
+                barcodeFormat: barcodeFormat,
+                barcodeBoundingBox: barcodeBoundingBox,
+                barcodeImageUri: barcodeImageUri,
               });
+            } catch (processingError) {
+              console.error('카메라 이미지 처리 중 오류:', processingError);
+              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
+            }
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');

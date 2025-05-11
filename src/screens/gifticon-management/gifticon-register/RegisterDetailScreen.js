@@ -20,7 +20,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon as RNEIcon } from 'react-native-elements';
-import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import ImagePicker from 'react-native-image-crop-picker';
 import {
   detectAndCropBarcode,
@@ -72,6 +71,13 @@ const RegisterDetailScreen = () => {
   const [isTypeBoxSelected, setIsTypeBoxSelected] = useState(false);
   const [isTypeLocked, setIsTypeLocked] = useState(false); // 유형 선택 잠금 상태
 
+  // 바코드 관련 상태 추가
+  const [barcodeImageUri, setBarcodeImageUri] = useState(null); // 잘라낸 바코드 이미지
+  const [barcodeFormat, setBarcodeFormat] = useState(null); // 바코드 포맷 정보
+
+  // 바코드 이미지 확인 모달
+  const [isBarcodeImageVisible, setBarcodeImageVisible] = useState(false);
+
   // 이미지 URI 상태를 메모이제이션하여 렌더링 최적화
   const imageSource = useCallback(uri => {
     if (!uri) return null;
@@ -84,24 +90,52 @@ const RegisterDetailScreen = () => {
     if (route.params?.selectedImage) {
       try {
         const imageUri = route.params.selectedImage.uri;
-        console.log('편집된 이미지 로드:', imageUri);
+        console.log('[상세 화면] 편집된 이미지 로드:', imageUri);
         if (imageUri) {
           setCurrentImageUri(imageUri);
 
           // 원본 이미지 URI 처리
           if (route.params?.originalImage && route.params.originalImage.uri) {
-            console.log('원본 이미지 로드:', route.params.originalImage.uri);
+            console.log('[상세 화면] 원본 이미지 로드:', route.params.originalImage.uri);
             setOriginalImageUri(route.params.originalImage.uri);
           } else {
             // 원본 이미지가 없는 경우 현재 이미지를 원본으로 설정
             setOriginalImageUri(imageUri);
           }
         } else {
-          console.warn('유효하지 않은 이미지 URI');
+          console.warn('[상세 화면] 유효하지 않은 이미지 URI');
         }
       } catch (error) {
-        console.error('이미지 로드 중 오류:', error);
+        console.error('[상세 화면] 이미지 로드 중 오류:', error);
       }
+    }
+
+    // 바코드 정보 가져오기 (메인 화면에서 전달받은 정보)
+    if (route.params?.barcodeValue) {
+      console.log('[상세 화면] 이전 화면에서 전달받은 바코드:', route.params.barcodeValue);
+
+      // 바코드 정보 설정
+      setBarcode(route.params.barcodeValue);
+
+      if (route.params?.barcodeFormat) {
+        setBarcodeFormat(route.params.barcodeFormat);
+      }
+
+      // 바코드 이미지 정보 설정
+      if (route.params?.barcodeImageUri) {
+        console.log(
+          '[상세 화면] 이전 화면에서 전달받은 바코드 이미지:',
+          route.params.barcodeImageUri
+        );
+        setBarcodeImageUri(route.params.barcodeImageUri);
+      }
+
+      // Zustand 스토어에 바코드 정보 저장
+      setCurrentBarcodeInfo(
+        route.params.barcodeValue,
+        route.params.barcodeFormat || null,
+        route.params.barcodeBoundingBox || null
+      );
     }
 
     // 기프티콘 타입 및 등록 위치 정보 가져오기
@@ -133,7 +167,7 @@ const RegisterDetailScreen = () => {
       console.log('컴포넌트 언마운트: 이미지 상태 정리');
       // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
     };
-  }, [route.params]);
+  }, [route.params, setCurrentBarcodeInfo]);
 
   // 편집된 이미지가 있을 경우 썸네일에 표시 (로직 개선)
   useEffect(() => {
@@ -216,248 +250,143 @@ const RegisterDetailScreen = () => {
     return true;
   };
 
-  // 갤러리에서 이미지 선택 (강화된 로직)
-  const handlePickImage = () => {
-    try {
-      // 옵션 설정
-      const options = {
-        title: '이미지 선택',
-        storageOptions: {
-          skipBackup: true,
-          path: 'images',
-          privateDirectory: true, // 앱 내부 저장 경로 사용
-        },
-        quality: 0.9, // 조금 더 높은 품질
-        maxWidth: 1500, // 적절한 크기로 조정
-        maxHeight: 1500,
-        includeBase64: false,
-      };
+  // 바코드 확인 함수 - 저장된 바코드 정보를 확인할 수 있도록 개선
+  const showBarcodeImage = () => {
+    // 디버깅 로그
+    console.log('[기프티콘 등록] 바코드 확인 - 현재 바코드:', barcode);
+    console.log('[기프티콘 등록] 바코드 이미지 URI:', barcodeImageUri);
+    console.log('[기프티콘 등록] 현재 이미지 URI:', currentImageUri);
+    console.log('[기프티콘 등록] 원본 이미지 URI:', originalImageUri);
 
-      // 이미지 라이브러리 호출
-      launchImageLibrary(options, async response => {
-        console.log('이미지 라이브러리 응답:', JSON.stringify(response).substring(0, 150) + '...');
+    // 바코드 번호가 없으면 수동 입력 요청
+    if (!barcode) {
+      Alert.alert(
+        '바코드 정보 없음',
+        '인식된 바코드 번호가 없습니다. 바코드 번호를 수동으로 입력하시겠습니까?',
+        [
+          { text: '취소', style: 'cancel' },
+          {
+            text: '바코드 인식 재시도',
+            onPress: async () => {
+              if (originalImageUri) {
+                try {
+                  console.log('[기프티콘 등록] 바코드 재인식 시도:', originalImageUri);
+                  const result = await detectBarcode(originalImageUri);
 
-        if (response.didCancel) {
-          console.log('사용자가 이미지 선택을 취소했습니다');
-        } else if (response.errorCode) {
-          console.error(`이미지 선택 오류 (${response.errorCode}):`, response.errorMessage);
-          Alert.alert(
-            '오류',
-            `이미지를 선택하는 중 오류가 발생했습니다: ${response.errorMessage || '알 수 없는 오류'}`
-          );
-        } else {
-          // 최신 버전의 react-native-image-picker는 응답 형식이 다름
-          const imageAsset = response.assets ? response.assets[0] : response;
+                  if (result.success && result.barcodes.length > 0) {
+                    const firstBarcode = result.barcodes[0];
+                    setBarcode(firstBarcode.value);
+                    setBarcodeFormat(firstBarcode.format);
 
-          if (imageAsset && imageAsset.uri) {
-            console.log('이미지 선택 완료 - URI:', imageAsset.uri);
-            console.log(
-              '이미지 정보:',
-              `타입: ${imageAsset.type || '알 수 없음'}, ` +
-                `파일명: ${imageAsset.fileName || '알 수 없음'}, ` +
-                `크기: ${(imageAsset.fileSize / 1024).toFixed(2)}KB`
-            );
+                    // 바코드 이미지 영역 저장 시도
+                    if (firstBarcode.boundingBox) {
+                      try {
+                        const cropResult = await detectAndCropBarcode(originalImageUri);
+                        if (cropResult.success && cropResult.croppedImageUri) {
+                          setBarcodeImageUri(cropResult.croppedImageUri);
+                          console.log(
+                            '[기프티콘 등록] 바코드 이미지 저장 성공:',
+                            cropResult.croppedImageUri
+                          );
+                        }
+                      } catch (cropError) {
+                        console.error('[기프티콘 등록] 바코드 크롭 오류:', cropError);
+                      }
+                    }
 
-            try {
-              // 이미지가 유효한지 확인
-              if (
-                imageAsset.uri.startsWith('file://') ||
-                imageAsset.uri.startsWith('content://') ||
-                imageAsset.uri.startsWith('/')
-              ) {
-                // 이미지 URI 저장 (원본)
-                setOriginalImageUri(imageAsset.uri);
-
-                // 옵션 모달 닫기
-                setImageOptionVisible(false);
-
-                // 바코드 스캔 즉시 실행
-                const result = await detectBarcode(imageAsset.uri);
-
-                if (result.success && result.barcodes.length > 0) {
-                  console.log('바코드 감지 성공:', result.barcodes);
-                  const firstBarcode = result.barcodes[0];
-
-                  // 바코드 값 설정
-                  setBarcode(firstBarcode.value);
-
-                  // 바코드 정보를 Zustand 스토어에 저장
-                  setCurrentBarcodeInfo(
-                    firstBarcode.value,
-                    firstBarcode.format,
-                    firstBarcode.boundingBox
-                  );
-
-                  // 바코드 영역만 자동 크롭
-                  const cropResult = await detectAndCropBarcode(imageAsset.uri);
-
-                  if (cropResult.success) {
-                    // 크롭된 이미지로 업데이트
-                    setCurrentImageUri(cropResult.croppedImageUri);
-                    Alert.alert(
-                      '바코드 감지됨',
-                      `바코드 값: ${firstBarcode.value}\n바코드 형식: ${getBarcodeFormatName(firstBarcode.format)}`
+                    // 바코드 정보 저장
+                    setCurrentBarcodeInfo(
+                      firstBarcode.value,
+                      firstBarcode.format,
+                      firstBarcode.boundingBox
                     );
+
+                    // 바코드 이미지 모달 표시
+                    setBarcodeImageVisible(true);
                   } else {
-                    console.error('바코드 크롭 실패:', cropResult.message);
-                    // 크롭 실패 시 원본 이미지 사용
-                    setCurrentImageUri(imageAsset.uri);
-                    Alert.alert('알림', '바코드는 감지되었으나 자동 크롭에 실패했습니다.');
+                    Alert.alert('알림', '바코드를 인식할 수 없습니다. 직접 입력해주세요.', [
+                      { text: '취소', style: 'cancel' },
+                      {
+                        text: '수동 입력',
+                        onPress: () => {
+                          Alert.prompt(
+                            '바코드 번호 입력',
+                            '바코드 번호를 직접 입력해주세요.',
+                            [
+                              { text: '취소', style: 'cancel' },
+                              {
+                                text: '저장',
+                                onPress: value => {
+                                  if (value && value.trim()) {
+                                    setBarcode(value.trim());
+                                    Alert.alert('완료', '바코드 번호가 저장되었습니다.');
+                                  } else {
+                                    Alert.alert('오류', '유효한 바코드 번호를 입력해주세요.');
+                                  }
+                                },
+                              },
+                            ],
+                            'plain-text'
+                          );
+                        },
+                      },
+                    ]);
                   }
-                } else {
-                  // 바코드가 감지되지 않은 경우
-                  console.log('바코드를 감지할 수 없습니다. 원본 이미지를 사용합니다.');
-                  setCurrentImageUri(imageAsset.uri);
-                  Alert.alert(
-                    '알림',
-                    '이미지에서 바코드를 찾을 수 없습니다. 바코드를 수동으로 입력해주세요.'
-                  );
+                } catch (error) {
+                  console.error('[기프티콘 등록] 바코드 재인식 오류:', error);
+                  Alert.alert('오류', '바코드 인식 중 문제가 발생했습니다.');
                 }
               } else {
-                console.error('유효하지 않은 이미지 URI 형식:', imageAsset.uri);
-                Alert.alert('오류', '이미지 형식이 유효하지 않습니다. 다른 이미지를 선택해주세요.');
+                Alert.alert('알림', '원본 이미지가 없습니다. 이미지를 다시 업로드해주세요.');
               }
-            } catch (err) {
-              console.error('이미지 URI 설정 중 오류:', err);
-              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
-            }
-          } else {
-            console.error('이미지 자산이 없음:', imageAsset);
-            Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
-          }
-        }
-      });
-    } catch (error) {
-      console.error('이미지 선택 중 오류:', error);
-      Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
+            },
+          },
+          {
+            text: '수동 입력',
+            onPress: () => {
+              Alert.prompt(
+                '바코드 번호 입력',
+                '바코드 번호를 직접 입력해주세요.',
+                [
+                  { text: '취소', style: 'cancel' },
+                  {
+                    text: '저장',
+                    onPress: value => {
+                      if (value && value.trim()) {
+                        setBarcode(value.trim());
+                        Alert.alert('완료', '바코드 번호가 저장되었습니다.');
+                      } else {
+                        Alert.alert('오류', '유효한 바코드 번호를 입력해주세요.');
+                      }
+                    },
+                  },
+                ],
+                'plain-text'
+              );
+            },
+          },
+        ]
+      );
+      return;
     }
+
+    // 바코드 정보 모달 표시
+    setBarcodeImageVisible(true);
   };
 
-  // 카메라로 촬영 (개선된 로직)
+  // 갤러리 선택 함수
+  const handlePickImage = () => {
+    setImageOptionVisible(true);
+  };
+
+  // 카메라로 촬영 함수
   const handleOpenCamera = async () => {
-    try {
-      const hasPermission = await requestCameraPermission();
-
-      if (!hasPermission) {
-        Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
-        return;
-      }
-
-      // 옵션 설정
-      const options = {
-        title: '사진 촬영',
-        storageOptions: {
-          skipBackup: true,
-          path: 'images',
-          privateDirectory: true,
-          cameraRoll: true,
-          waitUntilSaved: true,
-        },
-        quality: 0.9,
-        maxWidth: 1500,
-        maxHeight: 1500,
-        includeBase64: false,
-        saveToPhotos: false, // 사진 앱에 자동 저장 안 함
-      };
-
-      // 카메라 호출
-      launchCamera(options, async response => {
-        console.log('카메라 응답:', JSON.stringify(response).substring(0, 150) + '...');
-
-        if (response.didCancel) {
-          console.log('사용자가 카메라 촬영을 취소했습니다');
-        } else if (response.errorCode) {
-          console.error(`카메라 오류 (${response.errorCode}):`, response.errorMessage);
-          Alert.alert(
-            '오류',
-            `카메라를 사용하는 중 오류가 발생했습니다: ${response.errorMessage || '알 수 없는 오류'}`
-          );
-        } else {
-          // 최신 버전의 react-native-image-picker는 응답 형식이 다름
-          const imageAsset = response.assets ? response.assets[0] : response;
-
-          if (imageAsset && imageAsset.uri) {
-            console.log('카메라 촬영 완료 - URI:', imageAsset.uri);
-            console.log(
-              '이미지 정보:',
-              `타입: ${imageAsset.type || '알 수 없음'}, ` +
-                `파일명: ${imageAsset.fileName || '알 수 없음'}, ` +
-                `크기: ${(imageAsset.fileSize / 1024).toFixed(2)}KB`
-            );
-
-            try {
-              // 이미지가 유효한지 확인
-              if (
-                imageAsset.uri.startsWith('file://') ||
-                imageAsset.uri.startsWith('content://') ||
-                imageAsset.uri.startsWith('/')
-              ) {
-                // 이미지 URI 저장 (원본)
-                setOriginalImageUri(imageAsset.uri);
-
-                // 옵션 모달 닫기
-                setImageOptionVisible(false);
-
-                // 바코드 스캔 즉시 실행
-                const result = await detectBarcode(imageAsset.uri);
-
-                if (result.success && result.barcodes.length > 0) {
-                  console.log('바코드 감지 성공:', result.barcodes);
-                  const firstBarcode = result.barcodes[0];
-
-                  // 바코드 값 설정
-                  setBarcode(firstBarcode.value);
-
-                  // 바코드 정보를 Zustand 스토어에 저장
-                  setCurrentBarcodeInfo(
-                    firstBarcode.value,
-                    firstBarcode.format,
-                    firstBarcode.boundingBox
-                  );
-
-                  // 바코드 영역만 자동 크롭
-                  const cropResult = await detectAndCropBarcode(imageAsset.uri);
-
-                  if (cropResult.success) {
-                    // 크롭된 이미지로 업데이트
-                    setCurrentImageUri(cropResult.croppedImageUri);
-                    Alert.alert(
-                      '바코드 감지됨',
-                      `바코드 값: ${firstBarcode.value}\n바코드 형식: ${getBarcodeFormatName(firstBarcode.format)}`
-                    );
-                  } else {
-                    console.error('바코드 크롭 실패:', cropResult.message);
-                    // 크롭 실패 시 원본 이미지 사용
-                    setCurrentImageUri(imageAsset.uri);
-                    Alert.alert('알림', '바코드는 감지되었으나 자동 크롭에 실패했습니다.');
-                  }
-                } else {
-                  // 바코드가 감지되지 않은 경우
-                  console.log('바코드를 감지할 수 없습니다. 원본 이미지를 사용합니다.');
-                  setCurrentImageUri(imageAsset.uri);
-                  Alert.alert(
-                    '알림',
-                    '이미지에서 바코드를 찾을 수 없습니다. 바코드를 수동으로 입력해주세요.'
-                  );
-                }
-              } else {
-                console.error('유효하지 않은 이미지 URI 형식:', imageAsset.uri);
-                Alert.alert('오류', '카메라 이미지 형식이 유효하지 않습니다. 다시 시도해주세요.');
-              }
-            } catch (err) {
-              console.error('카메라 이미지 URI 설정 중 오류:', err);
-              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다. 다시 시도해주세요.');
-            }
-          } else {
-            console.error('카메라 이미지 자산이 없음:', imageAsset);
-            Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
-          }
-        }
-      });
-    } catch (error) {
-      console.error('카메라 사용 중 오류:', error);
-      Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
+      return;
     }
+    setImageOptionVisible(true);
   };
 
   // 이미지 편집기 실행 함수
@@ -707,6 +636,11 @@ const RegisterDetailScreen = () => {
                 placeholder="바코드 번호를 입력해주세요."
                 keyboardType="numeric"
                 containerStyle={styles.inputContainer}
+                rightIcon={
+                  <TouchableOpacity onPress={showBarcodeImage}>
+                    <Icon name="image" size={22} color="#333333" />
+                  </TouchableOpacity>
+                }
               />
 
               <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
@@ -990,6 +924,74 @@ const RegisterDetailScreen = () => {
               style={styles.originalImage}
               resizeMode="contain"
             />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* 바코드 이미지 확인 모달 */}
+      <Modal
+        visible={isBarcodeImageVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setBarcodeImageVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.originalImageModalOverlay}
+          activeOpacity={1}
+          onPress={() => setBarcodeImageVisible(false)}
+        >
+          <View style={styles.originalImageModalContent}>
+            <View style={styles.barcodeModalHeader}>
+              <Text style={styles.barcodeModalTitle}>바코드 정보</Text>
+              <TouchableOpacity
+                style={styles.originalImageCloseButton}
+                onPress={() => setBarcodeImageVisible(false)}
+              >
+                <Icon name="close" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
+
+            {barcodeImageUri ? (
+              <Image
+                source={imageSource(barcodeImageUri)}
+                style={styles.originalImage}
+                resizeMode="contain"
+              />
+            ) : currentImageUri ? (
+              <Image
+                source={imageSource(currentImageUri)}
+                style={styles.originalImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.noImageContainer}>
+                <Text style={styles.noImageText}>바코드 이미지가 없습니다.</Text>
+              </View>
+            )}
+
+            <View style={styles.barcodeInfoContainer}>
+              <View style={styles.barcodeInfoRow}>
+                <Text style={styles.barcodeInfoLabel}>바코드 번호:</Text>
+                <Text style={styles.barcodeInfoValue}>{barcode}</Text>
+              </View>
+
+              {barcodeFormat && (
+                <View style={styles.barcodeInfoRow}>
+                  <Text style={styles.barcodeInfoLabel}>바코드 형식:</Text>
+                  <Text style={styles.barcodeInfoValue}>{getBarcodeFormatName(barcodeFormat)}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={styles.barcodeCopyButton}
+                onPress={() => {
+                  Alert.alert('알림', `바코드 번호 ${barcode}이(가) 복사되었습니다.`);
+                }}
+              >
+                <Icon name="content-copy" size={20} color="white" />
+                <Text style={styles.barcodeCopyText}>바코드 복사</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -1331,6 +1333,78 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 20,
+  },
+  barcodeModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 10,
+    paddingTop: 10,
+    position: 'absolute',
+    top: 0,
+    zIndex: 10,
+  },
+  barcodeModalTitle: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+  },
+  barcodeInfoContainer: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: 15,
+    borderRadius: 10,
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  barcodeInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  barcodeInfoLabel: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  barcodeInfoValue: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
+  },
+  barcodeCopyButton: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(74, 144, 226, 0.7)',
+    borderRadius: 5,
+    padding: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  barcodeCopyText: {
+    color: 'white',
+    marginLeft: 8,
+    fontWeight: '500',
+  },
+  noImageContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noImageText: {
+    color: '#DDDDDD',
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 
