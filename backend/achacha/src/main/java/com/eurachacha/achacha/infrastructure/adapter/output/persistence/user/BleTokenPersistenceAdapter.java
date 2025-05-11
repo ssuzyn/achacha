@@ -1,7 +1,5 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.user;
 
-import java.util.Optional;
-
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.user.BleTokenRepository;
@@ -16,8 +14,8 @@ public class BleTokenPersistenceAdapter implements BleTokenRepository {
 	private final BleTokenJpaRepository bleTokenJpaRepository;
 
 	@Override
-	public Optional<BleToken> findByUserId(Integer userId) {
-		return bleTokenJpaRepository.findByUserId(userId);
+	public void deleteByUserIdAndValue(Integer userId, String value) {
+		bleTokenJpaRepository.deleteByUserIdAndValue(userId, value);
 	}
 
 	@Override
@@ -26,7 +24,7 @@ public class BleTokenPersistenceAdapter implements BleTokenRepository {
 	}
 
 	@Override
-	public boolean existsByToken(String token) {
-		return bleTokenJpaRepository.existsByToken(token);
+	public boolean existsByValue(String value) {
+		return bleTokenJpaRepository.existsByValue(value);
 	}
 }
