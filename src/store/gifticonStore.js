@@ -12,6 +12,10 @@ const useGifticonStore = create(set => ({
   currentOriginalImageUri: null,
   currentEditedImageUri: null,
 
+  // 바코드 관련 정보 추가
+  barcodeInfo: {}, // { gifticonId: { value: string, format: string, boundingBox: object } }
+  currentBarcodeInfo: null,
+
   // 이미지 설정 (편집 전/후 모두 저장)
   setGifticonImages: (gifticonId, originalUri, editedUri) =>
     set(state => ({
@@ -71,12 +75,57 @@ const useGifticonStore = create(set => ({
         : state.gifticonImages,
     })),
 
+  // 바코드 정보 설정 추가
+  setBarcodeInfo: (gifticonId, barcodeValue, barcodeFormat, boundingBox) =>
+    set(state => ({
+      barcodeInfo: {
+        ...state.barcodeInfo,
+        [gifticonId]: {
+          value: barcodeValue,
+          format: barcodeFormat,
+          boundingBox: boundingBox,
+        },
+      },
+      // 현재 작업 중인 기프티콘이면 현재 바코드 정보도 업데이트
+      ...(state.currentGifticonId === gifticonId
+        ? {
+            currentBarcodeInfo: {
+              value: barcodeValue,
+              format: barcodeFormat,
+              boundingBox: boundingBox,
+            },
+          }
+        : {}),
+    })),
+
+  // 현재 작업 중인 바코드 정보 설정
+  setCurrentBarcodeInfo: (barcodeValue, barcodeFormat, boundingBox) =>
+    set(state => ({
+      currentBarcodeInfo: {
+        value: barcodeValue,
+        format: barcodeFormat,
+        boundingBox: boundingBox,
+      },
+      // 현재 작업 중인 기프티콘 ID가 있으면 저장된 바코드 정보도 업데이트
+      barcodeInfo: state.currentGifticonId
+        ? {
+            ...state.barcodeInfo,
+            [state.currentGifticonId]: {
+              value: barcodeValue,
+              format: barcodeFormat,
+              boundingBox: boundingBox,
+            },
+          }
+        : state.barcodeInfo,
+    })),
+
   // 기프티콘 이미지 상태 초기화
   resetGifticonImages: () =>
     set({
       currentGifticonId: null,
       currentOriginalImageUri: null,
       currentEditedImageUri: null,
+      currentBarcodeInfo: null,
     }),
 }));
 
