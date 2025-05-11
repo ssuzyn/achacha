@@ -8,4 +8,5 @@ public interface AuthAppService {
 	TokenResponseDto loginWithKakao(KakaoLoginRequestDto requestDto);
 
 	TokenResponseDto refreshToken(RefreshTokenRequestDto requestDto);
+
 }
