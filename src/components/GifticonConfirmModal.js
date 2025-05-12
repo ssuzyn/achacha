@@ -1,10 +1,13 @@
 import React from 'react';
 import { Modal, View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
+import { useTheme } from '../hooks/useTheme';
 
 const { width } = Dimensions.get('window');
 const StarbucksImg = require('../assets/images/starbucks.png');
 
 const GifticonConfirmModal = ({ visible, selectedGifticon, onCancel, onConfirm }) => {
+  const { theme } = useTheme();
+
   return (
     <Modal transparent={true} visible={visible} onRequestClose={onCancel}>
       <View style={styles.confirmModalContainer}>
@@ -20,7 +23,7 @@ const GifticonConfirmModal = ({ visible, selectedGifticon, onCancel, onConfirm }
           )}
           <View style={styles.confirmButtonsContainer}>
             <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-              <Text style={styles.cancelButtonText}>취소</Text>
+              <Text style={[styles.cancelButtonText, { color: theme.colors.primary }]}>취소</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.okButton} onPress={onConfirm}>
               <Text style={styles.okButtonText}>확인</Text>
@@ -48,13 +51,14 @@ const styles = StyleSheet.create({
   },
   confirmModalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: '#333',
     marginBottom: 10,
     textAlign: 'center',
   },
   confirmModalSubtitle: {
     fontSize: 14,
+    fontFamily: 'Pretendard-Medium',
     color: '#888',
     marginBottom: 20,
     textAlign: 'center',
@@ -75,44 +79,43 @@ const styles = StyleSheet.create({
   },
   gifticonBrand: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-SemiBold',
     color: 'black',
     marginBottom: 5,
   },
   gifticonName: {
     fontSize: 15,
+    fontFamily: 'Pretendard-Medium',
     color: 'black',
   },
   confirmButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
     marginTop: 10,
+    gap: 15,
   },
   cancelButton: {
-    flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 35,
     borderRadius: 8,
-    marginRight: 5,
     alignItems: 'center',
     backgroundColor: '#E6F3FF',
   },
   okButton: {
-    flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 35,
     borderRadius: 8,
-    marginLeft: 5,
     alignItems: 'center',
     backgroundColor: '#56AEE9',
   },
   cancelButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#56AEE9',
+    fontSize: 18,
+    fontFamily: 'Pretendard-Bold',
   },
   okButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontFamily: 'Pretendard-Bold',
     color: 'white',
   },
 });
