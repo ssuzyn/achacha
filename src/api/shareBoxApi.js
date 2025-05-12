@@ -28,6 +28,6 @@ export const joinShareBox = async (shareBoxId, inviteCode) => {
 
 // 쉐어박스 나가기 API
 export const leaveShareBox = async (shareBoxId) => {
-  const res = await apiClient.delete(`/api/share-boxes/${shareBoxId}/leave`);
+  const res = await apiClient.delete(API_CONFIG.ENDPOINTS.LEAVE_SHARE_BOX(shareBoxId));
   return res.data;
 }; 
