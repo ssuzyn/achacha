@@ -116,8 +116,18 @@ export const detectAndCropBarcode = async imageUri => {
         // 바운딩 박스와 코너 포인트 정보 전달
         const { x, y, width, height } = barcode.boundingBox || { x: 0, y: 0, width: 0, height: 0 };
 
-        // 네이티브 모듈을 사용하여 바코드 영역 크롭 (코너 포인트 활용)
-        const cropResult = await BarcodeNativeModule.cropBarcodeArea(imageUri, x, y, width, height);
+        // cornerPoints 파라미터 처리
+        const cornerPointsArray = barcode.cornerPoints || [];
+
+        // 네이티브 모듈을 사용하여 바코드 영역 크롭
+        const cropResult = await BarcodeNativeModule.cropBarcodeArea(
+          imageUri,
+          x,
+          y,
+          width,
+          height,
+          cornerPointsArray
+        );
 
         if (cropResult.success && cropResult.croppedImageUri) {
           console.log('[바코드 추출] 네이티브 크롭 성공:', cropResult.croppedImageUri);
@@ -153,21 +163,21 @@ export const detectAndCropBarcode = async imageUri => {
       // 모든 코너 포인트 중 최소/최대 좌표 찾기
       let minX = Number.MAX_SAFE_INTEGER;
       let minY = Number.MAX_SAFE_INTEGER;
-      let maxX = 0;
-      let maxY = 0;
+      let maxX = Number.MIN_VALUE;
+      let maxY = Number.MIN_VALUE;
 
       for (const point of barcode.cornerPoints) {
-        minX = Math.min(minX, point.x);
-        minY = Math.min(minY, point.y);
-        maxX = Math.max(maxX, point.x);
-        maxY = Math.max(maxY, point.y);
+        if (point.x < minX) minX = point.x;
+        if (point.y < minY) minY = point.y;
+        if (point.x > maxX) maxX = point.x;
+        if (point.y > maxY) maxY = point.y;
       }
 
-      // 코너 포인트 기반 영역에 여백 추가
+      // 코너 포인트 기반 영역에 최소한의 여백 추가
       const cornerWidth = maxX - minX;
       const cornerHeight = maxY - minY;
 
-      // 바코드 타입에 따라 여백 조정
+      // 바코드 종류 확인
       const is1DBarcode = [
         'CODE_128',
         'CODE_39',
@@ -180,8 +190,9 @@ export const detectAndCropBarcode = async imageUri => {
         'UPC_E',
       ].includes(barcode.format);
 
-      const paddingX = cornerWidth * (is1DBarcode ? 0.3 : 0.2);
-      const paddingY = cornerHeight * (is1DBarcode ? 0.2 : 0.2);
+      // 여백 계산 - 가로는 유지, 세로는 최소화하거나 약간 잘라냄
+      const paddingX = cornerWidth * (is1DBarcode ? 0.2 : 0.15); // 가로: 1D 20%, 2D 15%
+      const paddingY = cornerHeight * -0.05; // 세로는 -5%로 설정하여 약간 잘라냄
 
       cropRegion = {
         x: Math.max(0, Math.floor(minX - paddingX)),
@@ -190,7 +201,7 @@ export const detectAndCropBarcode = async imageUri => {
         height: Math.ceil(cornerHeight + paddingY * 2),
       };
 
-      console.log('[바코드 추출] 코너 포인트 기반 크롭 영역:', JSON.stringify(cropRegion));
+      console.log('[바코드 추출] 코너 포인트 기반 정확한 크롭 영역:', JSON.stringify(cropRegion));
     } else {
       // 코너 포인트가 없는 경우 바운딩 박스를 기반으로 여백 추가
       // x, y, width, height가 전달되는지 확인, 없으면 left, top으로 대체
@@ -205,7 +216,7 @@ export const detectAndCropBarcode = async imageUri => {
         JSON.stringify({ left, top, width: barcodeWidth, height: barcodeHeight })
       );
 
-      // 여백 계산 - 특히 가로 방향에 더 많은 여백 추가
+      // 바코드 종류 확인
       const is1DBarcode = [
         'CODE_128',
         'CODE_39',
@@ -218,8 +229,9 @@ export const detectAndCropBarcode = async imageUri => {
         'UPC_E',
       ].includes(barcode.format);
 
-      const paddingX = barcodeWidth * (is1DBarcode ? 0.3 : 0.2); // 가로 여백 증가: 1D 바코드는 30%, 2D는 20%
-      const paddingY = barcodeHeight * (is1DBarcode ? 0.2 : 0.2); // 세로 여백: 1D 바코드는 20%, 2D는 20%
+      // 최소한의 여백 계산 - 가로는 유지, 세로는 최소화
+      const paddingX = barcodeWidth * (is1DBarcode ? 0.2 : 0.15); // 가로: 1D 20%, 2D 15%
+      const paddingY = barcodeHeight * -0.05; // 세로는 -5%로 설정하여 약간 잘라냄
 
       // 크롭 영역 계산 - 정확하게 바코드 영역만
       cropRegion = {
@@ -229,7 +241,7 @@ export const detectAndCropBarcode = async imageUri => {
         height: Math.ceil(barcodeHeight + paddingY * 2),
       };
 
-      console.log('[바코드 추출] 바운딩 박스 기반 크롭 영역:', JSON.stringify(cropRegion));
+      console.log('[바코드 추출] 바운딩 박스 기반 정확한 크롭 영역:', JSON.stringify(cropRegion));
     }
 
     // 이미지 URI 처리 (file:// 접두사가 필요한 경우 처리)
