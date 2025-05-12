@@ -45,6 +45,13 @@ public class FilePersistenceAdapter implements FileRepository {
 	}
 
 	@Override
+	public List<File> findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(String referenceEntityType,
+		List<Integer> ids, FileType type) {
+		return fileJpaRepository.findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(referenceEntityType, ids,
+			type);
+	}
+
+	@Override
 	public void delete(File file) {
 		fileJpaRepository.delete(file);
 	}
