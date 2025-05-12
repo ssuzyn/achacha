@@ -14,8 +14,10 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.Produ
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
+import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
+import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonUsageDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
@@ -35,6 +37,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 	private final GifticonDomainService gifticonDomainService;
 	private final GifticonUsageDomainService gifticonUsageDomainService;
 	private final UsageHistoryRepository usageHistoryRepository;
+	private final UserRepository userRepository; // 유저 로직 추가 시 변경 필요
 
 	@Override
 	@Transactional
@@ -62,9 +65,11 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		// 사용 처리
 		findGifticon.use(requestDto.getUsageAmount());
 
+		User findUser = userRepository.findById(userId); // 유저 로직 추가 시 변경 필요
+
 		// 사용 기록 생성
 		UsageHistory newUsageHistory = UsageHistory.builder()
-			.user(null) // 유저 로직 추가 시 변경 필요
+			.user(findUser) // 유저 로직 추가 시 변경 필요
 			.gifticon(findGifticon)
 			.usageAmount(requestDto.getUsageAmount())
 			.build();
@@ -188,9 +193,11 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		// 사용 처리
 		findGifticon.use();
 
+		User findUser = userRepository.findById(userId); // 유저 로직 추가 시 변경 필요
+
 		// 사용 기록 생성
 		UsageHistory newUsageHistory = UsageHistory.builder()
-			.user(null) // 유저 로직 추가 시 변경 필요
+			.user(findUser) // 유저 로직 추가 시 변경 필요
 			.gifticon(findGifticon)
 			.usageAmount(null)
 			.build();

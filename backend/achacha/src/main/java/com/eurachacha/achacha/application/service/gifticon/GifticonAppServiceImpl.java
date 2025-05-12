@@ -1,6 +1,9 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -31,6 +34,7 @@ import com.eurachacha.achacha.application.port.output.history.UsageHistoryReposi
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
+import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.ai.OcrTrainingData;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.file.File;
@@ -46,6 +50,7 @@ import com.eurachacha.achacha.domain.model.history.UsageHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
 import com.eurachacha.achacha.domain.model.history.enums.UsageType;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
+import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.file.FileDomainService;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
@@ -76,6 +81,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final FileRepository fileRepository;
 	private final FileDomainService fileDomainService;
 	private final ShareBoxRepository shareBoxRepository;
+	private final UserRepository userRepository; // 유저 로직 추가 시 변경 필요
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -218,6 +224,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	public AvailableGifticonsResponseDto getAvailableGifticons(GifticonScopeType scope, GifticonType type,
 		GifticonSortType sort, Integer page, Integer size) {
 
+		log.info("사용가능 기프티콘 조회 시작");
+
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		// 페이징 처리
@@ -227,8 +235,13 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
 			scope, type, pageable);
 
+		List<AvailableGifticonResponseDto> availableGifticonResponseDtos = getAvailableGifticonResponseDtos(
+			gifticonSlice);
+
+		log.info("사용가능 기프티콘 조회 완료");
+
 		return AvailableGifticonsResponseDto.builder()
-			.gifticons(gifticonSlice.getContent())
+			.gifticons(availableGifticonResponseDtos)
 			.hasNextPage(gifticonSlice.hasNext())
 			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
 			.build();
@@ -236,6 +249,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 	@Override
 	public AvailableGifticonDetailResponseDto getAvailableGifticonDetail(Integer gifticonId) {
+
+		log.info("사용가능 기프티콘 상세 조회 시작");
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -257,6 +272,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Integer shareBoxId = findGifticon.getSharebox() == null ? null : findGifticon.getSharebox().getId();
 		String shareBoxName = findGifticon.getSharebox() == null ? null : findGifticon.getSharebox().getName();
 
+		log.info("사용가능 기프티콘 상세 조회 완료");
+
 		return AvailableGifticonDetailResponseDto.builder()
 			.gifticonId(findGifticon.getId())
 			.gifticonName(findGifticon.getName())
@@ -269,8 +286,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.userName(findGifticon.getUser().getName())
 			.shareBoxId(shareBoxId)
 			.shareBoxName(shareBoxName)
-			.thumbnailPath(null) // 파일로직 구현 후 수정
-			.originalImagePath(null) // 파일로직 구현 후 수정
+			.thumbnailPath(getGifticonImageUrl(gifticonId, FileType.THUMBNAIL)) // 파일로직 구현 후 수정
+			.originalImagePath(getGifticonImageUrl(gifticonId, FileType.ORIGINAL)) // 파일로직 구현 후 수정
 			.gifticonCreatedAt(findGifticon.getCreatedAt())
 			.gifticonOriginalAmount(findGifticon.getOriginalAmount())
 			.gifticonRemainingAmount(findGifticon.getRemainingAmount())
@@ -281,6 +298,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	public UsedGifticonsResponseDto getUsedGifticons(GifticonType type, GifticonUsedSortType sort, Integer page,
 		Integer size) {
 
+		log.info("사용완료 기프티콘 조회 시작");
+
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		// 페이징 처리
@@ -290,8 +309,12 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Slice<UsedGifticonResponseDto> gifticonSlice =
 			gifticonRepository.getUsedGifticons(userId, type, pageable);
 
+		List<UsedGifticonResponseDto> usedGifticonResponseDtos = getUsedGifticonResponseDtos(gifticonSlice);
+
+		log.info("사용완료 기프티콘 조회 완료");
+
 		return UsedGifticonsResponseDto.builder()
-			.gifticons(gifticonSlice.getContent())
+			.gifticons(usedGifticonResponseDtos)
 			.hasNextPage(gifticonSlice.hasNext())
 			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
 			.build();
@@ -299,6 +322,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 	@Override
 	public UsedGifticonDetailResponseDto getUsedGifticonDetail(Integer gifticonId) {
+
+		log.info("사용완료 기프티콘 상세 조회 시작");
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -362,6 +387,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		Integer amount = findGifticon.getType() == GifticonType.AMOUNT ? findGifticon.getOriginalAmount() : null;
 
+		log.info("사용완료 기프티콘 상세 조회 완료");
+
 		return UsedGifticonDetailResponseDto.builder()
 			.gifticonId(findGifticon.getId())
 			.gifticonName(findGifticon.getName())
@@ -382,6 +409,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	@Transactional
 	public GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId) {
 
+		log.info("사용가능 기프티콘 바코드 조회 시작");
+
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
@@ -397,14 +426,18 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
+		User findUser = userRepository.findById(userId); // 유저 로직 추가 시 변경 필요
+
 		// 바코드 조회 내역 생성
 		BarcodeHistory newBarcodeHistory = BarcodeHistory.builder()
-			.user(null) // 유저 로직 추가 시 변경 필요
+			.user(findUser) // 유저 로직 추가 시 변경 필요
 			.gifticon(findGifticon)
 			.build();
 
 		// 바코드 조회 내역 저장
 		barcodeHistoryRepository.saveBarcodeHistory(newBarcodeHistory);
+
+		log.info("사용가능 기프티콘 바코드 조회 종료");
 
 		return GifticonBarcodeResponseDto.builder()
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
@@ -414,6 +447,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 	@Override
 	public GifticonBarcodeResponseDto getUsedGifticonBarcode(Integer gifticonId) {
+
+		log.info("사용완료 기프티콘 바코드 조회 시작");
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -431,6 +466,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		if (findUsageHistory == null) {
 			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
 		}
+
+		log.info("사용완료 기프티콘 바코드 조회 종료");
 
 		return GifticonBarcodeResponseDto.builder()
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
@@ -488,6 +525,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		return fileStoragePort.generateFileUrl(file.getPath(), fileType);
 	}
 
+	private String getSignedUrl(String filePath, FileType fileType) {
+		return fileStoragePort.generateFileUrl(filePath, fileType);
+	}
+
 	private void validateGifticonAccess(Gifticon findGifticon, Integer userId) {
 		// 공유되지 않은 기프티콘인 경우 소유자 판단
 		if (findGifticon.getSharebox() == null) {
@@ -505,5 +546,70 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
 			}
 		}
+	}
+
+	private List<AvailableGifticonResponseDto> getAvailableGifticonResponseDtos(
+		Slice<AvailableGifticonResponseDto> gifticonSlice) {
+
+		// 기프티콘 id 추출
+		List<Integer> ids = gifticonSlice.getContent().stream()
+			.map(AvailableGifticonResponseDto::getGifticonId)
+			.toList();
+
+		// 파일을 한번에 조회
+		List<File> thumbs = fileRepository.findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(
+			"gifticon", ids, FileType.THUMBNAIL);
+
+		Map<Integer, String> pathMap = thumbs.stream()
+			.collect(Collectors.toMap(File::getReferenceEntityId, File::getPath));
+
+		return gifticonSlice.getContent().stream()
+			.map(dto -> AvailableGifticonResponseDto.builder()
+				.gifticonId(dto.getGifticonId())
+				.gifticonName(dto.getGifticonName())
+				.gifticonType(dto.getGifticonType())
+				.gifticonExpiryDate(dto.getGifticonExpiryDate())
+				.brandId(dto.getBrandId())
+				.brandName(dto.getBrandName())
+				.scope(dto.getScope())
+				.userId(dto.getUserId())
+				.userName(dto.getUserName())
+				.shareboxId(dto.getShareboxId())
+				.shareboxName(dto.getShareboxName())
+				.thumbnailPath(pathMap.get(dto.getGifticonId()) != null ?
+					getSignedUrl(pathMap.get(dto.getGifticonId()), FileType.THUMBNAIL) : null)
+				.build())
+			.toList();
+	}
+
+	private List<UsedGifticonResponseDto> getUsedGifticonResponseDtos(
+		Slice<UsedGifticonResponseDto> gifticonSlice) {
+
+		// 기프티콘 id 추출
+		List<Integer> ids = gifticonSlice.getContent().stream()
+			.map(UsedGifticonResponseDto::getGifticonId)
+			.toList();
+
+		// 파일을 한번에 조회
+		List<File> thumbs = fileRepository.findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(
+			"gifticon", ids, FileType.THUMBNAIL);
+
+		Map<Integer, String> pathMap = thumbs.stream()
+			.collect(Collectors.toMap(File::getReferenceEntityId, File::getPath));
+
+		return gifticonSlice.getContent().stream()
+			.map(dto -> UsedGifticonResponseDto.builder()
+				.gifticonId(dto.getGifticonId())
+				.gifticonName(dto.getGifticonName())
+				.gifticonType(dto.getGifticonType())
+				.gifticonExpiryDate(dto.getGifticonExpiryDate())
+				.brandId(dto.getBrandId())
+				.brandName(dto.getBrandName())
+				.usageType(dto.getUsageType())
+				.usedAt(dto.getUsedAt())
+				.thumbnailPath(pathMap.get(dto.getGifticonId()) != null ?
+					getSignedUrl(pathMap.get(dto.getGifticonId()), FileType.THUMBNAIL) : null)
+				.build())
+			.toList();
 	}
 }

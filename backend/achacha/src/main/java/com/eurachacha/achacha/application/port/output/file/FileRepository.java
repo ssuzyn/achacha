@@ -17,5 +17,8 @@ public interface FileRepository {
 	List<File> findAllByReferenceEntityTypeAndReferenceEntityId(
 		String referenceEntityType, Integer referenceEntityId);
 
+	List<File> findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(
+		String referenceEntityType, List<Integer> ids, FileType type);
+
 	void delete(File file);
 }

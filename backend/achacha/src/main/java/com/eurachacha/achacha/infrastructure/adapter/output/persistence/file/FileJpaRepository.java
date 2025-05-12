@@ -24,4 +24,7 @@ public interface FileJpaRepository extends JpaRepository<File, Integer> {
 
 	List<File> findAllByReferenceEntityTypeAndReferenceEntityId(
 		String referenceEntityType, Integer referenceEntityId);
+
+	List<File> findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(String referenceEntityType,
+		List<Integer> ids, FileType type);
 }
