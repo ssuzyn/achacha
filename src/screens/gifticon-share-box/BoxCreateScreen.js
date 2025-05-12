@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   StatusBar,
   TextInput,
-  Clipboard,
   Alert,
   Share,
 } from 'react-native';
@@ -22,6 +21,8 @@ import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
 import apiClient from '../../api/apiClient';
 import { API_CONFIG } from '../../api/config';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { createShareBox } from '../../api/shareBoxApi';
 
 const BoxCreateScreen = () => {
   const insets = useSafeAreaInsets();
@@ -242,17 +243,14 @@ const BoxCreateScreen = () => {
   // 쉐어박스 생성 함수
   const handleCreate = async () => {
     if (!boxName.trim()) {
-      // 이름이 비어있으면 생성 불가
       Alert.alert('알림', '박스명을 입력해주세요.');
       return;
     }
 
     try {
       // API 호출
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.CREATE_SHARE_BOX, {
-        shareBoxName: boxName.trim(),
-      });
-      setInviteCode(response.data.shareBoxInviteCode);
+      const data = await createShareBox(boxName.trim());
+      setInviteCode(data.shareBoxInviteCode);
       setScreenState('share');
     } catch (error) {
       console.error('쉐어박스 생성 실패:', error);
@@ -290,7 +288,7 @@ const BoxCreateScreen = () => {
           {/* 이미지 영역 */}
           <View style={styles.imageContainer}>
             <Image
-              source={require('../../assets/images/share-box.png')}
+              source={require('../../assets/images/share_box.png')}
               style={styles.shareImage}
               resizeMode="contain"
             />

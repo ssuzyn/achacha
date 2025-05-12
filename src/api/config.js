@@ -12,7 +12,8 @@ export const API_CONFIG = {
     USER_PROFILE: '/api/users/me', // 사용자 정보 조회
 
     // 쉐어박스 관련
-    CREATE_SHARE_BOX: '/api/share-boxes',
+    SHARE_BOXES: '/api/share-boxes', // 목록 조회(GET), 생성(POST) 모두 사용
+    CREATE_SHARE_BOX: '/api/share-boxes', // (생성용 별칭, 실제 경로는 동일)
     JOIN_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/join`,
 
     // 기타 엔드포인트들을 여기에 추가합니다.

@@ -35,7 +35,7 @@ const DUMMY_GIFTICONS = [
     userName: '홍길동',
     shareBoxId: null,
     shareBoxName: null,
-    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
     gifticonCreatedAt: '2025-01-15T10:30:00',
   },
   {
@@ -50,7 +50,7 @@ const DUMMY_GIFTICONS = [
     userName: '홍길동',
     shareBoxId: null,
     shareBoxName: null,
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-01-05T15:45:00',
   },
   {
@@ -65,7 +65,7 @@ const DUMMY_GIFTICONS = [
     userName: '홍길동',
     shareBoxId: null,
     shareBoxName: null,
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-01-20T09:15:00',
   },
   {
@@ -80,7 +80,7 @@ const DUMMY_GIFTICONS = [
     userName: '홍길동',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
     gifticonCreatedAt: '2025-01-02T14:20:00',
   },
   {
@@ -95,7 +95,7 @@ const DUMMY_GIFTICONS = [
     userName: '김철수',
     shareBoxId: 91,
     shareBoxName: '가족 모임',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-01-10T11:30:00',
   },
   {
@@ -108,7 +108,7 @@ const DUMMY_GIFTICONS = [
     scope: 'USED',
     usageType: 'SELF_USE', // 사용하기
     usedAt: '2025-01-15T14:30:00',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2024-12-20T13:10:00',
   },
   {
@@ -121,7 +121,7 @@ const DUMMY_GIFTICONS = [
     scope: 'USED',
     usageType: 'PRESENT', // 선물하기
     usedAt: '2025-01-20T10:15:00',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2024-12-15T16:40:00',
   },
   {
@@ -134,7 +134,7 @@ const DUMMY_GIFTICONS = [
     scope: 'USED',
     usageType: 'GIVE_AWAY', // 뿌리기
     usedAt: '2025-01-22T11:30:00',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2024-12-10T09:25:00',
   },
   {
@@ -147,7 +147,7 @@ const DUMMY_GIFTICONS = [
     scope: 'USED',
     usageType: 'SELF_USE',
     usedAt: '2025-01-25T16:45:00',
-    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
     gifticonCreatedAt: '2024-12-05T10:50:00',
   },
   {
@@ -162,7 +162,7 @@ const DUMMY_GIFTICONS = [
     userName: '이영희',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-01-05T13:25:00',
   },
 ];

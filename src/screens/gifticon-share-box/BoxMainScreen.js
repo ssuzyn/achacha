@@ -1,6 +1,6 @@
 // 쉐어박스 메인 스크린
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,6 +9,7 @@ import {
   Image,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
@@ -17,54 +18,51 @@ import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { API_CONFIG } from '../../api/config';
 import apiClient from '../../api/apiClient';
+import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxApi';
 
 // 샘플 데이터
-const DUMMY_DATA = {
-  data: [
-    {
-      shareBoxName: '우리 가족',
-      hostName: 'jjjjjuuuuu',
-      gifticonCount: 0,
-    },
-    {
-      shareBoxName: '내 친구들',
-      hostName: '조대성MM',
-      gifticonCount: 12,
-    },
-    {
-      shareBoxName: '자율 PJT',
-      hostName: '안수진짜',
-      gifticonCount: 15,
-    },
-    {
-      shareBoxName: '잘 사용하세요',
-      hostName: '류잼문',
-      gifticonCount: 30,
-    },
-    {
-      shareBoxName: '대학동기들',
-      hostName: '스티치짱',
-      gifticonCount: 34,
-    },
-    {
-      shareBoxName: '배고파요',
-      hostName: '정주은갈치',
-      gifticonCount: 7,
-    },
-    {
-      shareBoxName: '우리만의 쉐어박스',
-      hostName: '김철수',
-      gifticonCount: 212,
-    },
-    {
-      shareBoxName: '쉐박쉐박',
-      hostName: '김민수',
-      gifticonCount: 1,
-    },
-  ],
-  hasNextPage: true,
-  nextPage: 'MTI1',
-};
+const DUMMY_DATA = [
+  {
+    shareBoxName: '우리 가족',
+    hostName: 'jjjjjuuuuu',
+    gifticonCount: 0,
+  },
+  {
+    shareBoxName: '내 친구들',
+    hostName: '조대성MM',
+    gifticonCount: 12,
+  },
+  {
+    shareBoxName: '자율 PJT',
+    hostName: '안수진짜',
+    gifticonCount: 15,
+  },
+  {
+    shareBoxName: '잘 사용하세요',
+    hostName: '류잼문',
+    gifticonCount: 30,
+  },
+  {
+    shareBoxName: '대학동기들',
+    hostName: '스티치짱',
+    gifticonCount: 34,
+  },
+  {
+    shareBoxName: '배고파요',
+    hostName: '정주은갈치',
+    gifticonCount: 7,
+  },
+  {
+    shareBoxName: '우리만의 쉐어박스',
+    hostName: '김철수',
+    gifticonCount: 212,
+  },
+  {
+    shareBoxName: '쉐박쉐박',
+    hostName: '김민수',
+    gifticonCount: 1,
+  },
+];
 
 // 배경색 배열 - Theme에서 가져온 색상에 30% 투명도 적용
 const BACKGROUND_COLORS = [
@@ -96,11 +94,11 @@ const MATERIAL_ICONS = {
 // 기프티콘 수에 따른 아이콘 선택 함수
 const getShareBoxIcon = count => {
   if (count <= 10) {
-    return require('../../assets/images/share-box-icon1.png');
+    return require('../../assets/images/share_box_icon1.png');
   } else if (count <= 20) {
-    return require('../../assets/images/share-box-icon2.png');
+    return require('../../assets/images/share_box_icon2.png');
   } else {
-    return require('../../assets/images/share-box-icon3.png');
+    return require('../../assets/images/share_box_icon3.png');
   }
 };
 
@@ -109,6 +107,25 @@ const BoxMainScreen = () => {
   const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
   const navigation = useNavigation();
+  const [shareBoxes, setShareBoxes] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadShareBoxes = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchShareBoxes();
+        setShareBoxes(data.shareBoxes || []);
+      } catch (e) {
+        // API 실패 시 더미 데이터로 대체
+        setShareBoxes(DUMMY_DATA);
+        Alert.alert('목록 불러오기 실패', '임시 데이터로 대체합니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadShareBoxes();
+  }, []);
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
@@ -133,13 +150,8 @@ const BoxMainScreen = () => {
     }
 
     try {
-      // TODO: 실제로는 inviteCode로 shareBoxId를 서버에서 조회하거나, 사용자가 박스를 선택해야 함
-      // 여기서는 예시로 shareBoxId를 inviteCode에서 추출했다고 가정 (실제 로직에 맞게 수정 필요)
-      const shareBoxId = inviteCode.trim(); // 실제로는 올바른 shareBoxId를 사용해야 함
-      const response = await apiClient.post(
-        API_CONFIG.ENDPOINTS.JOIN_SHARE_BOX(shareBoxId),
-        { shareBoxInviteCode: inviteCode.trim() }
-      );
+      const shareBoxId = inviteCode.trim();
+      await joinShareBox(shareBoxId, inviteCode.trim());
       alert('쉐어박스에 성공적으로 참여하였습니다!');
       handleCloseModal();
       // TODO: 필요하다면 목록 새로고침 등 추가
@@ -277,7 +289,11 @@ const BoxMainScreen = () => {
         </View>
 
         <View style={styles.boxesContainer}>
-          {DUMMY_DATA.data.map((item, index) => renderShareBox(item, index))}
+          {loading ? (
+            <Text>로딩 중...</Text>
+          ) : (
+            shareBoxes.map((item, index) => renderShareBox(item, index))
+          )}
         </View>
       </ScrollView>
 

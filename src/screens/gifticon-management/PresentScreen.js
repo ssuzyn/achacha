@@ -115,7 +115,7 @@ const PresentScreen = () => {
         id: route.params.gifticonId,
         name: '맥도날드 2만원 금액권',
         brandName: '맥도날드',
-        thumbnailPath: require('../../assets/images/dummy-mc.png'),
+        thumbnailPath: require('../../assets/images/dummy_mc.png'),
       });
     }
   }, [route.params]);

@@ -37,7 +37,7 @@ const DUMMY_GIFTICONS = [
     userName: '홍길동',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
     gifticonCreatedAt: '2025-01-15T10:30:00',
   },
   {
@@ -52,7 +52,7 @@ const DUMMY_GIFTICONS = [
     userName: '홍길동',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-01-05T15:45:00',
   },
   {
@@ -67,7 +67,7 @@ const DUMMY_GIFTICONS = [
     userName: '김영희',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-01-20T09:15:00',
   },
   {
@@ -82,7 +82,7 @@ const DUMMY_GIFTICONS = [
     userName: '이철수',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-02-01T08:20:00',
   },
   {
@@ -97,7 +97,7 @@ const DUMMY_GIFTICONS = [
     userName: '박지민',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
     gifticonCreatedAt: '2025-01-10T14:40:00',
   },
   {
@@ -111,7 +111,7 @@ const DUMMY_GIFTICONS = [
     usageType: 'SELF_USE', // 사용하기
     usedAt: '2025-01-15T14:30:00',
     usedBy: '김철수', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2024-12-20T13:10:00',
   },
   {
@@ -125,7 +125,7 @@ const DUMMY_GIFTICONS = [
     usageType: 'SELF_USE', // 사용하기
     usedAt: '2025-01-20T10:15:00',
     usedBy: '이영희', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2024-12-15T16:40:00',
   },
   {
@@ -139,7 +139,7 @@ const DUMMY_GIFTICONS = [
     usageType: 'SELF_USE',
     usedAt: '2025-01-25T16:45:00',
     usedBy: '박지민', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy-starbuckscard.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
     gifticonCreatedAt: '2024-12-05T10:50:00',
   },
 ];

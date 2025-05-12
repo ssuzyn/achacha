@@ -82,7 +82,7 @@ const LoginScreen = () => {
               >
                 <View style={styles.buttonContentContainer}>
                   <Image
-                    source={require('../assets/images/login-kakaotalk.png')}
+                    source={require('../assets/images/login_kakaotalk.png')}
                     style={styles.buttonIcon}
                     resizeMode="contain"
                   />
