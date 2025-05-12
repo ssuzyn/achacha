@@ -15,6 +15,7 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
+import Tooltip from '../components/Tooltip';
 import LottieView from 'lottie-react-native';
 import NearbyUsersService from '../services/NearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -24,12 +25,15 @@ import { useNavigation } from '@react-navigation/native';
 import useDeviceStore from '../store/deviceStore';
 
 const { width, height } = Dimensions.get('window');
-const giveAwayButtonImg = require('../assets/images/giveaway-button.png');
+const giveAwayButtonImg = require('../assets/images/giveaway_button.png');
 const emoji1 = require('../assets/images/emoji1.png');
 const emoji2 = require('../assets/images/emoji2.png');
 const emoji3 = require('../assets/images/emoji3.png');
 const emoji4 = require('../assets/images/emoji4.png');
 const emoji5 = require('../assets/images/emoji5.png');
+// 사용자가 없을 때 표시할 이미지
+const giveawayManagementImg = require('../assets/images/giveaway_management.png');
+const giveawayShareboxImg = require('../assets/images/giveaway_sharebox.png');
 
 // 더미 사용자 데이터를 상수로 선언
 const DUMMY_USERS = [
@@ -87,6 +91,46 @@ const dummyGifticons = {
   ],
   hasNextPage: true,
   nextPage: '1',
+};
+
+// 주변에 사용자가 없을 때 보여줄 컴포넌트
+const NoUsersScreen = () => {
+  const navigation = useNavigation();
+
+  const handleGoToShareBox = () => {
+    navigation.navigate('ShareBox');
+  };
+
+  const handleGoToManagement = () => {
+    navigation.navigate('GifticonManagement');
+  };
+
+  return (
+    <View style={styles.noUsersContainer}>
+      <Text style={styles.noUsersText}>주변에 사용자가 없습니다</Text>
+      <Text style={styles.noUsersSubText}>다음에 다시 시도해주세요</Text>
+
+      <View style={styles.iconContainer}>
+        <TouchableOpacity style={styles.iconWrapper} onPress={handleGoToShareBox}>
+          <Image source={giveawayShareboxImg} style={styles.noUserIcon} />
+          <Text style={styles.iconText}>쉐어박스</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.iconWrapper} onPress={handleGoToManagement}>
+          <Image source={giveawayManagementImg} style={styles.noUserIcon} />
+          <Text style={styles.iconText}>기프티콘 관리</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.descriptionContainer}>
+        <Text style={styles.descriptionText}>
+          주변 친구들을 찾지 못했습니다.{'\n'}
+          기프티콘을 쉐어박스로 보내거나{'\n'}
+          다른 기프티콘을 관리해보세요.
+        </Text>
+      </View>
+    </View>
+  );
 };
 
 const GiveAwayScreen = ({ onClose }) => {
@@ -487,37 +531,8 @@ const GiveAwayScreen = ({ onClose }) => {
     setButtonVisible(false);
     setCenterButtonVisible(true);
 
-    // Alert 대신 깜빡이는 툴팁 메시지 표시
+    // 툴팁 표시
     setShowTooltip(true);
-
-    // 툴팁 깜빡임 애니메이션
-    Animated.sequence([
-      Animated.timing(tooltipOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tooltipOpacity, {
-        toValue: 0.5,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tooltipOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setTimeout(() => {
-        Animated.timing(tooltipOpacity, {
-          toValue: 0,
-          duration: 100,
-          useNativeDriver: true,
-        }).start(() => {
-          setShowTooltip(false);
-        });
-      }, 500);
-    });
   };
 
   // 선택 확인 모달에서 '취소' 버튼 핸들러
@@ -590,7 +605,8 @@ const GiveAwayScreen = ({ onClose }) => {
                 />
               </View>
             </>
-          ) : (
+          ) : users.length > 0 ? (
+            // 사용자가 있을 때 UI
             users.map((user, index) => {
               const position = userPositions[index];
               const baseSize = 80;
@@ -662,18 +678,18 @@ const GiveAwayScreen = ({ onClose }) => {
                 </Animated.View>
               );
             })
+          ) : (
+            // 사용자가 없을 때 UI
+            <NoUsersScreen />
           )}
 
-          {/* 깜빡이는 툴팁 메시지 */}
-          {showTooltip && (
-            <Animated.View style={[styles.tooltipContainer, { opacity: tooltipOpacity }]}>
-              <View style={styles.tooltipBubble}>
-                <Text style={styles.tooltipText}>
-                  선물 버튼을 원하는 방향으로 드래그하면 기프티콘 뿌리기가 시작됩니다.
-                </Text>
-              </View>
-            </Animated.View>
-          )}
+          {/* 툴팁 컴포넌트 */}
+          <Tooltip
+            visible={showTooltip}
+            message="선물 버튼을 원하는 방향으로 드래그하면 기프티콘 뿌리기가 시작됩니다."
+            autoHide={true}
+            duration={2000}
+          />
 
           {/* 기프티콘 선택 후 중앙에 표시될 버튼 - 이제 드래그 가능 */}
           {centerButtonVisible && !isTransferring && (
@@ -880,6 +896,70 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  // NoUsersScreen 관련 스타일
+  noUsersContainer: {
+    position: 'absolute',
+    width: width * 0.8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    top: height * 0.3,
+  },
+  noUsersText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  noUsersSubText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  iconWrapper: {
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 15,
+    padding: 15,
+    marginHorizontal: 10,
+    width: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  noUserIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+    resizeMode: 'contain',
+  },
+  iconText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
+  descriptionContainer: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#777',
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });
 
