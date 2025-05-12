@@ -20,7 +20,6 @@ import { BLENearbyUsersService } from '../services/NearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
-import { Button } from '../components/ui';
 import { useNavigation } from '@react-navigation/native';
 import useDeviceStore from '../store/deviceStore';
 
@@ -207,15 +206,18 @@ const GiveAwayScreen = ({ onClose }) => {
         });
       },
       onPanResponderRelease: (e, gesture) => {
-        // 드래그 위치에서 가장 가까운 사용자 찾기
+        // 드래그가 끝나면 항상 버튼을 원래 위치로 되돌리기
+        resetButtonPosition();
+
+        // 그 후 가장 가까운 사용자 찾기
         const closestUser = findClosestUser(gesture.moveX, gesture.moveY);
 
+        // 가까운 사용자가 있으면 기프티콘 전송 진행
         if (closestUser) {
-          // 가장 가까운 사용자에게 기프티콘 보내기
-          sendGifticonToUser(closestUser);
-        } else {
-          // 사용자가 근처에 없으면 원래 위치로 돌아가기
-          resetButtonPosition();
+          // 약간의 딜레이 후 전송 (버튼이 중앙으로 돌아간 후)
+          setTimeout(() => {
+            sendGifticonToUser(closestUser);
+          }, 100);
         }
       },
     })
@@ -264,7 +266,6 @@ const GiveAwayScreen = ({ onClose }) => {
   const sendGifticonToUser = async user => {
     if (!selectedGifticon || !user) return;
 
-    setIsTransferring(true);
     setGiftSentUserId(user.id);
 
     // 버튼을 사용자 쪽으로 애니메이션
@@ -274,45 +275,36 @@ const GiveAwayScreen = ({ onClose }) => {
           x: user.position.x - width / 2,
           y: user.position.y - height / 2,
         },
-        duration: 250, // 더 빠르게 (300ms → 250ms)
+        duration: 250,
         useNativeDriver: false,
       }),
       Animated.timing(buttonScaleAnim, {
         toValue: 0.5,
-        duration: 200, // 더 빠르게 (250ms → 200ms)
+        duration: 200,
         useNativeDriver: true,
       }),
       Animated.timing(buttonOpacityAnim, {
         toValue: 0,
-        duration: 300, // 더 빠르게 (400ms → 300ms)
+        duration: 300,
         useNativeDriver: true,
-        delay: 150, // 지연 시간 감소 (200ms → 150ms)
+        delay: 150,
       }),
     ]).start(async () => {
       try {
-        // 선물 효과 바로 시작
+        // 선물 효과 시작
         addReceivedAnimation(user.id);
 
-        // BLE 전송 시작 - BLENearbyUsersService 사용
-        const giftData = {
-          gifticonId: selectedGifticon.gifticonId,
-          senderId: userUUID || 'test-sender-id',
-          senderName: '내 이름', // 실제 앱에서는 로그인 사용자 이름 사용
-          receiverId: user.id,
-          timestamp: new Date().toISOString(),
-        };
+        // BLE 전송 관련 코드 제거
+        console.log(
+          `기프티콘 전송 애니메이션 완료: 사용자 ${user.id}에게 ${selectedGifticon.gifticonName}`
+        );
 
-        console.log(`기프티콘 전송 시작: ${JSON.stringify(giftData)}`);
-
-        // BLE 서비스를 통해 데이터 전송
-        const result = await bleServiceRef.current.sendGifticon(user.id, giftData);
-
-        if (result.success) {
-          // 전송 완료 후 추가 효과 (선물 효과는 이미 시작했음)
-
-          // 짧은 딜레이 후 알림 표시 (시각적 효과 감상 시간 확보)
-          setTimeout(() => {
-            Alert.alert('기프티콘 전송 완료', `${user.name}님에게 기프티콘을 전송했습니다!`, [
+        // 짧은 딜레이 후 알림 표시
+        setTimeout(() => {
+          Alert.alert(
+            '기프티콘 뿌리기 완료',
+            `${user.name}님에게 ${selectedGifticon.gifticonName}을(를) 뿌렸습니다!`,
+            [
               {
                 text: '확인',
                 onPress: () => {
@@ -320,11 +312,9 @@ const GiveAwayScreen = ({ onClose }) => {
                   resetAfterSend();
                 },
               },
-            ]);
-          }, 800);
-        } else {
-          throw new Error(result.error || '전송 실패');
-        }
+            ]
+          );
+        }, 800);
       } catch (error) {
         console.error('기프티콘 전송 오류:', error);
         Alert.alert('전송 실패', '기프티콘 전송 중 오류가 발생했습니다. 다시 시도해주세요.');
@@ -524,27 +514,16 @@ const GiveAwayScreen = ({ onClose }) => {
         duration: 300,
         useNativeDriver: true,
       }),
-      Animated.timing(tooltipOpacity, {
-        toValue: 0.5,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-      Animated.timing(tooltipOpacity, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }),
     ]).start(() => {
-      // 2초 후 툴팁 숨기기
       setTimeout(() => {
         Animated.timing(tooltipOpacity, {
           toValue: 0,
-          duration: 500,
+          duration: 100,
           useNativeDriver: true,
         }).start(() => {
           setShowTooltip(false);
         });
-      }, 2000);
+      }, 500);
     });
   };
 
@@ -697,7 +676,7 @@ const GiveAwayScreen = ({ onClose }) => {
             <Animated.View style={[styles.tooltipContainer, { opacity: tooltipOpacity }]}>
               <View style={styles.tooltipBubble}>
                 <Text style={styles.tooltipText}>
-                  선물 버튼을 원하는 방향으로 드래그하면 기프티콘 뿌리기가 시작됩니다!
+                  선물 버튼을 원하는 방향으로 드래그하면 기프티콘 뿌리기가 시작됩니다.
                 </Text>
               </View>
             </Animated.View>
@@ -890,16 +869,16 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: 'absolute',
-    top: height * 0.35,
+    top: height * 0.05,
     left: 0,
     right: 0,
     alignItems: 'center',
     zIndex: 30,
   },
   tooltipBubble: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(86, 174, 233, 0.8)',
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 18,
     borderRadius: 20,
     maxWidth: width * 0.8,
   },
