@@ -279,10 +279,6 @@ const MapScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>기프티콘 MAP</Text>
-      </View>
-
       <View style={styles.mapContainer}>
         {/* 브랜드 목록과 선택한 브랜드 넘겨줌 */}
         <KakaoMapWebView
@@ -333,7 +329,7 @@ const styles = StyleSheet.create({
   },
   locationButton: {
     position: 'absolute',
-    top: 80,
+    top: 40,
     right: 6,
     width: 45,
     height: 45,
@@ -346,7 +342,7 @@ const styles = StyleSheet.create({
   },
   giftButton: {
     position: 'absolute',
-    top: 140,
+    top: 105,
     right: 6,
     width: 45,
     height: 45,
