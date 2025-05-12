@@ -134,10 +134,10 @@ const DetailAmountScreen = () => {
             scope: scope,
             usageType: usageType || 'SELF_USE', // 사용유형
             usageHistoryCreatedAt: usedAt || '2025-01-25T16:45:00', // 사용일시
-            thumbnailPath: require('../../../assets/images/dummy-starbuckscard.png'),
+            thumbnailPath: require('../../../assets/images/dummy_starbuckscard.png'),
             originalImagePath:
               usageType === 'SELF_USE'
-                ? require('../../../assets/images/dummy-starbuckscard.png')
+                ? require('../../../assets/images/dummy_starbuckscard.png')
                 : null,
             gifticonCreatedAt: '2024-12-20T11:30:00',
             gifticonOriginalAmount: 10000,
@@ -189,8 +189,8 @@ const DetailAmountScreen = () => {
             userName: '홍길동',
             shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
             shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
-            thumbnailPath: require('../../../assets/images/dummy-starbuckscard.png'),
-            originalImagePath: require('../../../assets/images/dummy-starbuckscard.png'),
+            thumbnailPath: require('../../../assets/images/dummy_starbuckscard.png'),
+            originalImagePath: require('../../../assets/images/dummy_starbuckscard.png'),
             gifticonCreatedAt: '2025-01-15T10:30:00',
             gifticonOriginalAmount: 30000,
             gifticonRemainingAmount: 8000,
