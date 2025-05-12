@@ -8,8 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonUsageAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.AmountGifticonUseRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoriesResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoryResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoriesResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoryResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
@@ -98,8 +96,8 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		List<UsageHistory> findUsageHistories = usageHistoryRepository.findAmountGifticonUsageHistories(gifticonId);
 
 		// entity -> dto로 변환
-		List<AmountGifticonUsageHistoryResponseDto> usageHistoryResponseDtos = findUsageHistories.stream()
-			.map(history -> AmountGifticonUsageHistoryResponseDto.builder()
+		List<AmountGifticonUsageHistoriesResponseDto.UsageHistoryDto> usageHistoryResponseDtos = findUsageHistories.stream()
+			.map(history -> AmountGifticonUsageHistoriesResponseDto.UsageHistoryDto.builder()
 				.usageHistoryId(history.getId())
 				.usageAmount(history.getUsageAmount())
 				.usageHistoryCreatedAt(history.getCreatedAt())
@@ -113,7 +111,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 			.gifticonName(findGifticon.getName())
 			.gifticonOriginalAmount(findGifticon.getOriginalAmount())
 			.gifticonRemainingAmount(findGifticon.getRemainingAmount())
-			.usageHistory(usageHistoryResponseDtos)
+			.usageHistories(usageHistoryResponseDtos)
 			.build();
 	}
 
@@ -207,7 +205,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 	}
 
 	@Override
-	public ProductGifticonUsageHistoriesResponseDto getProductGifticonUsageHistories(Integer gifticonId) {
+	public ProductGifticonUsageHistoryResponseDto getProductGifticonUsageHistories(Integer gifticonId) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -226,7 +224,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, gifticonId);
 
 		// entity -> dto 변환
-		ProductGifticonUsageHistoryResponseDto usageHistoryResponseDto = ProductGifticonUsageHistoryResponseDto
+		ProductGifticonUsageHistoryResponseDto.UsageHistoryDto usageHistoryResponseDto = ProductGifticonUsageHistoryResponseDto.UsageHistoryDto
 			.builder()
 			.usageHistoryId(findUsageHistory.getId())
 			.usageHistoryCreatedAt(findUsageHistory.getCreatedAt())
@@ -234,7 +232,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 			.userName(findUsageHistory.getUser().getName())
 			.build();
 
-		return ProductGifticonUsageHistoriesResponseDto.builder()
+		return ProductGifticonUsageHistoryResponseDto.builder()
 			.gifticonId(findGifticon.getId())
 			.gifticonName(findGifticon.getName())
 			.usageHistory(usageHistoryResponseDto)

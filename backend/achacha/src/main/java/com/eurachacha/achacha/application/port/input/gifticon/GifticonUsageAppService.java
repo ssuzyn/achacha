@@ -2,7 +2,7 @@ package com.eurachacha.achacha.application.port.input.gifticon;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.AmountGifticonUseRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoriesResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoriesResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoryResponseDto;
 
 public interface GifticonUsageAppService {
 	void useAmountGifticon(Integer gifticonId, AmountGifticonUseRequestDto requestDto);
@@ -15,5 +15,5 @@ public interface GifticonUsageAppService {
 
 	void useProductGifticon(Integer gifticonId);
 
-	ProductGifticonUsageHistoriesResponseDto getProductGifticonUsageHistories(Integer gifticonId);
+	ProductGifticonUsageHistoryResponseDto getProductGifticonUsageHistories(Integer gifticonId);
 }
