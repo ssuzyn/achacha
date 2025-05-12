@@ -122,11 +122,16 @@ const GiveAwayScreen = ({ onClose }) => {
 
   // 원의 중심 좌표
   const centerX = width / 2;
-  const centerY = height / 2;
-  const smallestRadius = width * 0.15;
+  const centerY = (height - insets.top - 60) / 2 + insets.top + 60;
+
+  // 화면 크기에 맞게 원 크기 조정
+  const safeMargin = width * 0.1; // 화면 너비의 10%를 안전 여백으로 설정
+  const maxRadius = Math.min(width, height) / 2 - safeMargin;
+
+  const smallestRadius = maxRadius * 0.35;
   const diameter = smallestRadius * 2;
   const spacingRatio = 0.6;
-  const circleSpacing = diameter * 0.7;
+  const circleSpacing = diameter * 0.5;
   const radiusArray = [
     smallestRadius,
     smallestRadius + circleSpacing,
@@ -142,21 +147,33 @@ const GiveAwayScreen = ({ onClose }) => {
     const positions = [];
     const startAngle = Math.PI / 4;
     const angleStep = (2 * Math.PI) / users.length;
+
+    // 화면 경계를 고려한 안전 여백
+    const safeMargin = width * 0.1; // 화면 너비의 10%를 안전 여백으로 설정
+    const maxRadius = Math.min(width, height - insets.top - 60) / 2 - safeMargin;
+
+    // 실제 컨텐츠 영역의 중심
+    const contentCenterY = (height - insets.top - 60) / 2 + insets.top + 60;
+
     for (let i = 0; i < users.length; i++) {
       const distanceIndex = i % 3;
+
+      // 최대 반경을 기준으로 사용자 반경 조정
       let userRadius;
       if (distanceIndex === 0) {
-        userRadius = smallestRadius + circleSpacing * 0.7;
+        userRadius = maxRadius * 0.4;
       } else if (distanceIndex === 1) {
-        userRadius = smallestRadius + circleSpacing * 1.5;
+        userRadius = maxRadius * 0.65;
       } else {
-        userRadius = smallestRadius + circleSpacing * 2.2;
+        userRadius = maxRadius * 0.85;
       }
+
       const angle = startAngle + angleStep * i;
       const x = centerX + userRadius * Math.cos(angle);
-      const y = centerY + userRadius * Math.sin(angle);
+      const y = contentCenterY + userRadius * Math.sin(angle);
       const scale = 1 - distanceIndex * 0.15;
       const opacity = 1 - distanceIndex * 0.1;
+
       positions.push({ x, y, scale, opacity, distanceIndex });
     }
     userPositionsRef.current = positions;
@@ -283,12 +300,12 @@ const GiveAwayScreen = ({ onClose }) => {
           activeOpacity={1}
           onPress={handleOutsidePress}
         >
-          <Svg width={width} height={height} style={styles.svgImage}>
+          <Svg width={width} height={height - insets.top - 60} style={styles.svgImage}>
             {radiusArray.map((radius, index) => (
               <Circle
                 key={index}
                 cx={centerX}
-                cy={centerY}
+                cy={(height - insets.top - 60) / 2}
                 r={radius}
                 stroke="#CCCCCC"
                 strokeWidth="1"
