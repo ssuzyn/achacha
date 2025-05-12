@@ -37,7 +37,7 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
             <Text
               style={[
                 styles.ddayText,
-                { color: colors.primary, fontFamily: getFontFamily('bold') },
+                { color: colors.secondary, fontFamily: getFontFamily('bold') },
               ]}
             >
               {dday}

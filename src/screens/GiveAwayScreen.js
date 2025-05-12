@@ -8,6 +8,7 @@ import {
   Text,
   Alert,
   SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
@@ -15,6 +16,9 @@ import GifticonConfirmModal from '../components/GifticonConfirmModal';
 import SearchingAnimation from '../components/SearchingAnimation';
 import NearbyUsersService from '../services/NearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../hooks/useTheme';
+import { Button } from '../components/ui';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../assets/images/giveaway-button.png');
@@ -102,6 +106,8 @@ const dummyGifticons = {
 };
 
 const GiveAwayScreen = ({ onClose }) => {
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [users, setUsers] = useState([]);
   const [listVisible, setListVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
@@ -256,130 +262,141 @@ const GiveAwayScreen = ({ onClose }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeContainer}>
-      <View style={styles.container}>
-        <View style={styles.contentContainer}>
-          <TouchableOpacity
-            style={styles.svgContainer}
-            activeOpacity={1}
-            onPress={handleOutsidePress}
-          >
-            <Svg width={width} height={height} style={styles.svgImage}>
-              {radiusArray.map((radius, index) => (
-                <Circle
-                  key={index}
-                  cx={centerX}
-                  cy={centerY}
-                  r={radius}
-                  stroke="#CCCCCC"
-                  strokeWidth="1"
-                  fill="transparent"
-                />
-              ))}
-            </Svg>
-            {loading ? (
-              <>
-                <View style={styles.loadingOverlay}>
-                  <SearchingAnimation size={smallestRadius * 2} />
-                </View>
-                <View style={styles.loadingTextContainer}>
-                  <Text style={styles.loadingText}>주변 유저 찾는 중</Text>
-                </View>
-              </>
-            ) : (
-              users.map((user, index) => {
-                const position = userPositions[index];
-                const baseSize = 80;
-                const adjustedSize = baseSize * position.scale;
-                return (
-                  <View
-                    key={`user-${user.id}`}
-                    style={[
-                      styles.userContainer,
-                      {
-                        left: position.x - adjustedSize / 2,
-                        top: position.y - adjustedSize / 2,
-                        width: adjustedSize,
-                        opacity: position.opacity,
-                        zIndex: 10 - position.distanceIndex,
-                      },
-                    ]}
-                  >
-                    <View
-                      style={[styles.emojiContainer, { width: adjustedSize, height: adjustedSize }]}
-                    >
-                      <Image
-                        source={user.emoji || emoji1}
-                        style={{
-                          width: adjustedSize,
-                          height: adjustedSize,
-                          resizeMode: 'contain',
-                        }}
-                      />
-                    </View>
-                    <Text style={[styles.userName, { fontSize: 15 * position.scale }]}>
-                      {user.name}
-                    </Text>
-                    <Text style={[styles.distanceText, { fontSize: 12 * position.scale }]}>
-                      {user.distance}
-                    </Text>
-                  </View>
-                );
-              })
-            )}
-            {/* 기프티콘 선택 후 중앙에 표시될 버튼 */}
-            {centerButtonVisible && (
-              <View style={styles.centerButtonContainer}>
-                <Image source={giveAwayButtonImg} style={styles.centerButtonImage} />
-              </View>
-            )}
-          </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-          {/* 뿌리기 기프티콘 목록 버튼 */}
-          {buttonVisible && !loading && (
-            <TouchableOpacity style={styles.giveawayButton} onPress={handleButtonClick}>
-              <Image source={giveAwayButtonImg} style={styles.buttonImage} />
-            </TouchableOpacity>
-          )}
+      {/* 안전 영역 고려한 상단 여백 */}
+      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
-          {/* 기프티콘 목록 컴포넌트 */}
-          {listVisible && (
-            <TouchableOpacity
-              style={styles.gifticonListContainer}
-              activeOpacity={1}
-              onPress={e => e.stopPropagation()}
-            >
-              <GiveAwayGifticonList
-                gifticons={dummyGifticons.gifticons}
-                onSelectGifticon={handleGifticonSelect}
-              />
-            </TouchableOpacity>
-          )}
-
-          {/* 기프티콘 선택 확인 모달 컴포넌트 */}
-          <GifticonConfirmModal
-            visible={confirmModalVisible}
-            selectedGifticon={selectedGifticon}
-            onCancel={handleCancel}
-            onConfirm={handleConfirm}
-          />
-        </View>
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <Button
+          variant="ghost"
+          onPress={handleGoBack}
+          style={styles.backButton}
+          leftIcon={<Icon name="arrow-back-ios" size={22} color={theme.colors.black} />}
+        />
+        <Text style={styles.headerTitle}>기프티콘 뿌리기</Text>
+        <View style={styles.rightPlaceholder} />
       </View>
-    </SafeAreaView>
+
+      <View style={styles.contentContainer}>
+        <TouchableOpacity
+          style={styles.svgContainer}
+          activeOpacity={1}
+          onPress={handleOutsidePress}
+        >
+          <Svg width={width} height={height} style={styles.svgImage}>
+            {radiusArray.map((radius, index) => (
+              <Circle
+                key={index}
+                cx={centerX}
+                cy={centerY}
+                r={radius}
+                stroke="#CCCCCC"
+                strokeWidth="1"
+                fill="transparent"
+              />
+            ))}
+          </Svg>
+          {loading ? (
+            <>
+              <View style={styles.loadingOverlay}>
+                <SearchingAnimation size={smallestRadius * 2} />
+              </View>
+              <View style={styles.loadingTextContainer}>
+                <Text style={styles.loadingText}>주변 유저 찾는 중</Text>
+              </View>
+            </>
+          ) : (
+            users.map((user, index) => {
+              const position = userPositions[index];
+              const baseSize = 80;
+              const adjustedSize = baseSize * position.scale;
+              return (
+                <View
+                  key={`user-${user.id}`}
+                  style={[
+                    styles.userContainer,
+                    {
+                      left: position.x - adjustedSize / 2,
+                      top: position.y - adjustedSize / 2,
+                      width: adjustedSize,
+                      opacity: position.opacity,
+                      zIndex: 10 - position.distanceIndex,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[styles.emojiContainer, { width: adjustedSize, height: adjustedSize }]}
+                  >
+                    <Image
+                      source={user.emoji || emoji1}
+                      style={{
+                        width: adjustedSize,
+                        height: adjustedSize,
+                        resizeMode: 'contain',
+                      }}
+                    />
+                  </View>
+                  <Text style={[styles.userName, { fontSize: 15 * position.scale }]}>
+                    {user.name}
+                  </Text>
+                  <Text style={[styles.distanceText, { fontSize: 12 * position.scale }]}>
+                    {user.distance}
+                  </Text>
+                </View>
+              );
+            })
+          )}
+          {/* 기프티콘 선택 후 중앙에 표시될 버튼 */}
+          {centerButtonVisible && (
+            <View style={styles.centerButtonContainer}>
+              <Image source={giveAwayButtonImg} style={styles.centerButtonImage} />
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* 뿌리기 기프티콘 목록 버튼 */}
+        {buttonVisible && !loading && (
+          <TouchableOpacity style={styles.giveawayButton} onPress={handleButtonClick}>
+            <Image source={giveAwayButtonImg} style={styles.buttonImage} />
+          </TouchableOpacity>
+        )}
+
+        {/* 기프티콘 목록 컴포넌트 */}
+        {listVisible && (
+          <TouchableOpacity
+            style={styles.gifticonListContainer}
+            activeOpacity={1}
+            onPress={e => e.stopPropagation()}
+          >
+            <GiveAwayGifticonList
+              gifticons={dummyGifticons.gifticons}
+              onSelectGifticon={handleGifticonSelect}
+            />
+          </TouchableOpacity>
+        )}
+
+        {/* 기프티콘 선택 확인 모달 컴포넌트 */}
+        <GifticonConfirmModal
+          visible={confirmModalVisible}
+          selectedGifticon={selectedGifticon}
+          onCancel={handleCancel}
+          onConfirm={handleConfirm}
+        />
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeContainer: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
   container: {
     flex: 1,
     backgroundColor: '#EFF9FF',
   },
-  headerBar: {
-    height: 56,
+  header: {
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -389,15 +406,18 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   backButton: {
-    padding: 8,
+    padding: 0,
+    backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333333',
+    textAlign: 'center',
+    flex: 1,
   },
-  headerRight: {
-    width: 40,
+  rightPlaceholder: {
+    width: 48,
   },
   contentContainer: {
     flex: 1,
