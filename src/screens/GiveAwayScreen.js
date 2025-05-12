@@ -134,6 +134,9 @@ const GiveAwayScreen = ({ onClose }) => {
     smallestRadius + circleSpacing * 3,
   ];
 
+  // 두번째 원 직경 계산 (Lottie 애니메이션 크기로 사용)
+  const secondCircleDiameter = radiusArray[1] * 2;
+
   // 여러 거리에 사용자를 배치하여 원근감 부여
   const calculateUserPositions = users => {
     if (userPositionsRef.current.length === users.length) {
@@ -168,6 +171,7 @@ const GiveAwayScreen = ({ onClose }) => {
     let interval;
     // (실제 사용자 ID를 사용하세요)
     const userId = 'my-user-id';
+
     const initialize = async () => {
       try {
         setLoading(true);
@@ -310,7 +314,10 @@ const GiveAwayScreen = ({ onClose }) => {
                   source={require('../assets/lottie/search_users.json')}
                   autoPlay
                   loop
-                  style={{ width: 300, height: 300 }}
+                  style={{
+                    width: secondCircleDiameter,
+                    height: secondCircleDiameter,
+                  }}
                 />
               </View>
             </>
