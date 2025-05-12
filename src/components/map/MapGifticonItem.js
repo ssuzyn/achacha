@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { calculateDday } from '../../utils/dateUtils';
+const StarbucksImg = require('../../assets/images/starbucks.png');
 
 const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
   const { brandName, gifticonExpiryDate, gifticonName, thumbnailPath, gifticonId, brandId } =
     gifticon;
+  const [imageError, setImageError] = useState(false);
 
   const dday = calculateDday(gifticonExpiryDate);
 
@@ -19,7 +21,8 @@ const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
       onPress={handleItemPress}
       activeOpacity={0.7}
     >
-      <Image source={{ uri: `https://example.com${thumbnailPath}` }} style={styles.image} />
+      {/* 기프티콘 이미지 */}
+      <Image source={StarbucksImg} style={styles.image} />
       {/* 기프티콘 정보 */}
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>
@@ -64,8 +67,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#EBF7FF',
   },
   image: {
-    width: 40,
-    height: 40,
+    width: 55,
+    height: 55,
     borderRadius: 5,
   },
   infoContainer: {
