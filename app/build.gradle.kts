@@ -95,4 +95,5 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.5.0")
 
     // implementation(libs.play.services.wearable) // 이미 위에서 명시적으로 선언되어 중복 제거
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
 }

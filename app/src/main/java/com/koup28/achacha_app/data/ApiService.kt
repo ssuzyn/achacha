@@ -55,8 +55,22 @@ interface ApiService {
         @Path("gifticonId") gifticonId: Int,
         @Body message: UseGifticonRequest
     ): Response<Unit>
+
+    // 금액형 기프티콘 사용 API 추가
+    @POST("api/amount-gifticons/{gifticonId}/use")
+    suspend fun useAmountGifticon(
+        @Header("Authorization") authorization: String,
+        @Path("gifticonId") gifticonId: Int,
+        @Body request: UseAmountGifticonRequest
+    ): Response<UseAmountGifticonResponse>
 }
 
 // 상품권 사용 요청 바디 데이터 클래스
 @Serializable
-data class UseGifticonRequest(val message: String) 
+data class UseGifticonRequest(val message: String)
+
+@Serializable
+data class UseAmountGifticonRequest(val usageAmount: Int)
+
+@Serializable
+data class UseAmountGifticonResponse(val message: String) 

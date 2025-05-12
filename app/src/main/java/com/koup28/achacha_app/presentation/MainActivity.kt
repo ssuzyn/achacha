@@ -608,11 +608,22 @@ class MainActivity : ComponentActivity() {
                         com.koup28.achacha_app.presentation.ui.EnterAmountScreen(
                             gifticonId = _selectedGifticonId.value,
                             remainingAmount = _selectedGifticonRemainingAmount.value,
-                            onConfirmClick = { amountToUse -> // 콜백에서 다시 금액 받음
-                                addLog("EnterAmountScreen: Confirm clicked. Amount to use: $amountToUse for ID: ${_selectedGifticonId.value}")
-                                // TODO: 입력된 금액 사용 처리 API 호출 구현 (amountToUse 사용)
-                                _currentScreen.value = ScreenState.GIFTICON_DETAIL // 사용 후 상세 화면으로 복귀
-                                // 상태 초기화는 EnterAmountScreen 내부 또는 여기서 필요시
+                            onConfirmClick = { amountToUse ->
+                                val gifticonId = _selectedGifticonId.value
+                                if (gifticonId != null) {
+                                    useAmountGifticon(gifticonId, amountToUse) { success, message ->
+                                        if (success) {
+                                            // 성공 시 상세 화면으로 이동 및 메시지 표시(토스트 등)
+                                            addLog("[API] Amount gifticon used successfully: $message")
+                                            fetchGifticonDetail(gifticonId)
+                                            _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                                        } else {
+                                            // 실패 시 에러 메시지 표시(토스트 등)
+                                            addLog("[API] Error using amount gifticon: $message")
+                                            _connectionError.value = message
+                                        }
+                                    }
+                                }
                             },
                             onCancelClick = {
                                 addLog("EnterAmountScreen: Cancel clicked. Returning to GifticonDetail.")
@@ -935,6 +946,50 @@ class MainActivity : ComponentActivity() {
         }
     }
     // ------------------------------------
+
+    private fun useAmountGifticon(gifticonId: Int, usageAmount: Int, onResult: (Boolean, String) -> Unit) {
+        lifecycleScope.launch {
+            val token = userDataStore.accessTokenFlow.firstOrNull()
+            if (token.isNullOrEmpty()) {
+                onResult(false, "인증 토큰이 없습니다.")
+                return@launch
+            }
+            val authorizationHeader = "Bearer $token"
+            try {
+                val response = apiService.useAmountGifticon(
+                    authorization = authorizationHeader,
+                    gifticonId = gifticonId,
+                    request = com.koup28.achacha_app.data.UseAmountGifticonRequest(usageAmount)
+                )
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    onResult(true, body?.message ?: "기프티콘이 사용되었습니다.")
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: ""
+                    val errorMessage = when (response.code()) {
+                        400 -> when {
+                            errorBody.contains("X002") -> "[usageAmount] 사용금액은 1 이상이어야 합니다"
+                            errorBody.contains("GIFTICON_010") -> "기프티콘 잔액이 부족합니다."
+                            errorBody.contains("GIFTICON_011") -> "기프티콘 타입이 올바르지 않습니다."
+                            errorBody.contains("GIFTICON_012") -> "금액이 유효하지 않습니다."
+                            else -> "잘못된 요청입니다."
+                        }
+                        403 -> "해당 기프티콘에 접근 권한이 없습니다."
+                        404 -> when {
+                            errorBody.contains("GIFTICON_003") -> "기프티콘이 만료되었습니다."
+                            errorBody.contains("GIFTICON_004") -> "이미 사용된 기프티콘입니다."
+                            errorBody.contains("GIFTICON_005") -> "삭제된 기프티콘입니다."
+                            else -> "기프티콘을 찾을 수 없습니다."
+                        }
+                        else -> "알 수 없는 오류: ${response.code()}"
+                    }
+                    onResult(false, errorMessage)
+                }
+            } catch (e: Exception) {
+                onResult(false, "네트워크 오류: ${e.localizedMessage}")
+            }
+        }
+    }
 }
 
 // --- 임시 데이터 제거 또는 주석 처리 --- 
