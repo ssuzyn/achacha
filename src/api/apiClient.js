@@ -7,7 +7,6 @@ import { API_CONFIG } from './config'; // 설정 파일 import 경로 변경
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ERROR_CODES } from '../constants/errorCodes';
 import NetInfo from '@react-native-community/netinfo';
-import { Platform } from 'react-native';
 
 // 네트워크 연결 체크 함수
 const checkNetworkConnection = async () => {

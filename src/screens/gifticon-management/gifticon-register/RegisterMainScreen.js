@@ -250,11 +250,14 @@ const RegisterMainScreen = () => {
                   ocrTrainingDataId: imageMetadata?.ocrTrainingDataId || null,
                   // 기타 메타데이터 정보들
                   brandName: imageMetadata?.brandName || null,
+                  brandId: imageMetadata?.brandId || null,
                   gifticonName: imageMetadata?.gifticonName || null,
                   gifticonExpiryDate: imageMetadata?.gifticonExpiryDate || null,
                   gifticonOriginalAmount: imageMetadata?.gifticonOriginalAmount || null,
                   gifticonBarcodeNumber:
                     imageMetadata?.gifticonBarcodeNumber || barcodeValue || null,
+                  // API 요청을 위한 추가 정보
+                  thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용 (추후 리사이징 필요)
                 });
               } catch (metadataError) {
                 console.error('[메인] 이미지 메타데이터 조회 오류:', metadataError);
@@ -289,6 +292,9 @@ const RegisterMainScreen = () => {
                         barcodeImageUri: barcodeImageUri,
                         cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
                         cropInfo: croppedBarcodeResult?.cropInfo || null,
+                        // API 요청을 위한 추가 정보
+                        brandId: null,
+                        thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용
                       });
                     },
                   },
@@ -503,11 +509,14 @@ const RegisterMainScreen = () => {
                   ocrTrainingDataId: imageMetadata?.ocrTrainingDataId || null,
                   // 기타 메타데이터 정보들
                   brandName: imageMetadata?.brandName || null,
+                  brandId: imageMetadata?.brandId || null,
                   gifticonName: imageMetadata?.gifticonName || null,
                   gifticonExpiryDate: imageMetadata?.gifticonExpiryDate || null,
                   gifticonOriginalAmount: imageMetadata?.gifticonOriginalAmount || null,
                   gifticonBarcodeNumber:
                     imageMetadata?.gifticonBarcodeNumber || barcodeValue || null,
+                  // API 요청을 위한 추가 정보
+                  thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용 (추후 리사이징 필요)
                 });
               } catch (metadataError) {
                 console.error('[메인] 카메라 이미지 메타데이터 조회 오류:', metadataError);
@@ -542,6 +551,9 @@ const RegisterMainScreen = () => {
                         barcodeImageUri: barcodeImageUri,
                         cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
                         cropInfo: croppedBarcodeResult?.cropInfo || null,
+                        // API 요청을 위한 추가 정보
+                        brandId: null,
+                        thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용
                       });
                     },
                   },
