@@ -10,12 +10,15 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppSer
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
+import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
+import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.user.User;
+import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.domain.service.sharebox.ShareBoxDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
@@ -31,7 +34,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	private static final int MAX_ATTEMPTS = 3;
 
 	private final ShareBoxDomainService shareBoxDomainService;
+	private final GifticonDomainService gifticonDomainService;
 	private final ShareBoxRepository shareBoxRepository;
+	private final GifticonRepository gifticonRepository;
 	private final UserRepository userRepository;
 	private final ParticipationRepository participationRepository;
 
@@ -107,6 +112,42 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		participationRepository.save(participation);
 
 		log.info("쉐어박스 참여 완료 - 사용자 ID: {}, 쉐어박스 ID: {}", userId, shareBoxId);
+	}
+
+	@Transactional
+	@Override
+	public void shareGifticon(Integer shareBoxId, Integer gifticonId) {
+		log.info("기프티콘 공유 시작 - 쉐어박스 ID: {}, 기프티콘 ID: {}", shareBoxId, gifticonId);
+
+		// 현재 사용자 조회 (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 조회
+		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
+
+		// 쉐어박스 참여 여부 검증
+		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+		}
+
+		// 기프티콘 조회
+		Gifticon gifticon = gifticonRepository.findById(gifticonId);
+
+		// 기프티콘 소유권 검증
+		if (!gifticonDomainService.hasAccess(userId, gifticon.getUser().getId())) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+
+		// 기프티콘 공유 가능 여부 검증
+		gifticonDomainService.validateGifticonSharable(gifticon);
+
+		// 기프티콘의 쉐어박스 업데이트
+		gifticon.updateShareBox(shareBox);
+
+		// 변경사항 저장
+		gifticonRepository.save(gifticon);
+
+		log.info("기프티콘 공유 완료 - 기프티콘 ID: {}, 쉐어박스 ID: {}", gifticonId, shareBoxId);
 	}
 
 	// 고유한 초대 코드 생성 메서드

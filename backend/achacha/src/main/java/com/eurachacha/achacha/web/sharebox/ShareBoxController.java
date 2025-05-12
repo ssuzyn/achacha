@@ -40,4 +40,14 @@ public class ShareBoxController {
 		shareBoxAppService.joinShareBox(shareBoxId, requestDto);
 		return ResponseEntity.ok("쉐어박스에 성공적으로 참여했습니다.");
 	}
+
+	// 쉐어박스 기프티콘 공유 엔드포인트
+	@PostMapping("/{shareBoxId}/gifticons/{gifticonId}")
+	public ResponseEntity<String> shareGifticon(
+		@PathVariable Integer shareBoxId,
+		@PathVariable Integer gifticonId) {
+
+		shareBoxAppService.shareGifticon(shareBoxId, gifticonId);
+		return ResponseEntity.ok("공유 완료했습니다.");
+	}
 }

@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -194,5 +195,161 @@ class GifticonDomainServiceImplTest {
 		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsUsed(gifticon))
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_AVAILABLE);
+	}
+
+	// isAlreadyShared 메서드 테스트
+	@Test
+	@DisplayName("기프티콘에 쉐어박스가 설정된 경우 이미 공유된 것으로 판단해야 한다")
+	void isAlreadyShared_WhenShareBoxExists_ThenReturnTrue() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		ShareBox shareBox = mock(ShareBox.class);
+		given(gifticon.getSharebox()).willReturn(shareBox);
+
+		// when
+		boolean result = gifticonDomainService.isAlreadyShared(gifticon);
+
+		// then
+		assertThat(result).isTrue();
+	}
+
+	@Test
+	@DisplayName("기프티콘에 쉐어박스가 설정되지 않은 경우 공유되지 않은 것으로 판단해야 한다")
+	void isAlreadyShared_WhenShareBoxNotExists_ThenReturnFalse() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getSharebox()).willReturn(null);
+
+		// when
+		boolean result = gifticonDomainService.isAlreadyShared(gifticon);
+
+		// then
+		assertThat(result).isFalse();
+	}
+
+	// isAmountGifticonUsed 메서드 테스트
+	@Test
+	@DisplayName("금액형 기프티콘의 원래 금액과 남은 금액이 다른 경우 사용된 것으로 판단해야 한다")
+	void isAmountGifticonUsed_WhenAmountGifticonWithDifferentAmounts_ThenReturnTrue() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getType()).willReturn(GifticonType.AMOUNT);
+		given(gifticon.getOriginalAmount()).willReturn(10000);
+		given(gifticon.getRemainingAmount()).willReturn(5000);
+
+		// when
+		boolean result = gifticonDomainService.isAmountGifticonUsed(gifticon);
+
+		// then
+		assertThat(result).isTrue();
+	}
+
+	@Test
+	@DisplayName("금액형 기프티콘의 원래 금액과 남은 금액이 같은 경우 사용되지 않은 것으로 판단해야 한다")
+	void isAmountGifticonUsed_WhenAmountGifticonWithSameAmounts_ThenReturnFalse() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getType()).willReturn(GifticonType.AMOUNT);
+		given(gifticon.getOriginalAmount()).willReturn(10000);
+		given(gifticon.getRemainingAmount()).willReturn(10000);
+
+		// when
+		boolean result = gifticonDomainService.isAmountGifticonUsed(gifticon);
+
+		// then
+		assertThat(result).isFalse();
+	}
+
+	@Test
+	@DisplayName("상품형 기프티콘은 항상 사용되지 않은 것으로 판단해야 한다")
+	void isAmountGifticonUsed_WhenProductGifticon_ThenReturnFalse() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getType()).willReturn(GifticonType.PRODUCT);
+
+		// when
+		boolean result = gifticonDomainService.isAmountGifticonUsed(gifticon);
+
+		// then
+		assertThat(result).isFalse();
+	}
+
+	// validateGifticonSharable 메서드 테스트
+	@Test
+	@DisplayName("삭제된 기프티콘은 공유할 수 없어야 한다")
+	void validateGifticonSharable_WhenGifticonIsDeleted_ThenThrowException() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getIsDeleted()).willReturn(true);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonDomainService.validateGifticonSharable(gifticon))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_DELETED);
+	}
+
+	@Test
+	@DisplayName("사용된 기프티콘은 공유할 수 없어야 한다")
+	void validateGifticonSharable_WhenGifticonIsUsed_ThenThrowException() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getIsDeleted()).willReturn(false);
+		given(gifticon.getIsUsed()).willReturn(true);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonDomainService.validateGifticonSharable(gifticon))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_ALREADY_USED);
+	}
+
+	@Test
+	@DisplayName("이미 공유된 기프티콘은 다시 공유할 수 없어야 한다")
+	void validateGifticonSharable_WhenGifticonIsAlreadyShared_ThenThrowException() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		ShareBox shareBox = mock(ShareBox.class);
+		given(gifticon.getIsDeleted()).willReturn(false);
+		given(gifticon.getIsUsed()).willReturn(false);
+		given(gifticon.getSharebox()).willReturn(shareBox);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonDomainService.validateGifticonSharable(gifticon))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_ALREADY_SHARED);
+	}
+
+	@Test
+	@DisplayName("일부 사용된 금액형 기프티콘은 공유할 수 없어야 한다")
+	void validateGifticonSharable_WhenAmountGifticonIsPartiallyUsed_ThenThrowException() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getIsDeleted()).willReturn(false);
+		given(gifticon.getIsUsed()).willReturn(false);
+		given(gifticon.getSharebox()).willReturn(null);
+		given(gifticon.getType()).willReturn(GifticonType.AMOUNT);
+		given(gifticon.getOriginalAmount()).willReturn(10000);
+		given(gifticon.getRemainingAmount()).willReturn(5000);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonDomainService.validateGifticonSharable(gifticon))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.CANNOT_SHARE_USED_AMOUNT_GIFTICON);
+	}
+
+	@Test
+	@DisplayName("사용 가능한 기프티콘은 공유할 수 있어야 한다")
+	void validateGifticonSharable_WhenGifticonIsSharable_ThenNoException() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getIsDeleted()).willReturn(false);
+		given(gifticon.getIsUsed()).willReturn(false);
+		given(gifticon.getSharebox()).willReturn(null);
+		given(gifticon.getType()).willReturn(GifticonType.AMOUNT);
+		given(gifticon.getOriginalAmount()).willReturn(10000);
+		given(gifticon.getRemainingAmount()).willReturn(10000);
+
+		// when & then
+		assertThatCode(() -> gifticonDomainService.validateGifticonSharable(gifticon))
+			.doesNotThrowAnyException();
 	}
 }

@@ -8,4 +8,6 @@ public interface ShareBoxAppService {
 	ShareBoxCreateResponseDto createShareBox(ShareBoxCreateRequestDto requestDto);
 
 	void joinShareBox(Integer shareBoxId, ShareBoxJoinRequestDto requestDto);
+
+	void shareGifticon(Integer shareBoxId, Integer gifticonId);
 }

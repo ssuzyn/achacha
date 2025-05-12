@@ -87,4 +87,44 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
 		}
 	}
+
+	// 이미 공유된 기프티콘인지 확인
+	@Override
+	public boolean isAlreadyShared(Gifticon gifticon) {
+		return gifticon.getSharebox() != null;
+	}
+
+	// 금액형 - 사용한적없는 기프티콘인지 확인
+	@Override
+	public boolean isAmountGifticonUsed(Gifticon gifticon) {
+		if (gifticon.getType() != GifticonType.AMOUNT) {
+			return false;
+		}
+
+		return !gifticon.getOriginalAmount().equals(gifticon.getRemainingAmount());
+	}
+
+	// 쉐어박스에 공유할 수 있는지 검증
+	@Override
+	public void validateGifticonSharable(Gifticon gifticon) {
+		// 삭제된 기프티콘인지 검증
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용된 기프티콘인지 검증
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 이미 공유된 기프티콘인지 검증
+		if (isAlreadyShared(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_SHARED);
+		}
+
+		// 금액형 기프티콘의 경우, 일부 사용되었는지 검증
+		if (isAmountGifticonUsed(gifticon)) {
+			throw new CustomException(ErrorCode.CANNOT_SHARE_USED_AMOUNT_GIFTICON);
+		}
+	}
 }
