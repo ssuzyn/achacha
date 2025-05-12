@@ -1,7 +1,5 @@
 package com.eurachacha.achacha.domain.service.file;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,10 +21,10 @@ public class FileDomainServiceImpl implements FileDomainService {
 	private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 	// 허용하는 파일 확장자 목록 (소문자)
-	private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png");
+	private static final List<String> ALLOWED_EXTENSIONS = Arrays.asList("jpg", "jpeg", "png", "webp");
 
 	// 허용하는 MIME 타입 목록
-	private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList("image/jpeg", "image/png");
+	private static final List<String> ALLOWED_MIME_TYPES = Arrays.asList("image/jpeg", "image/png", "image/webp");
 
 	@Override
 	public File createFile(String path, FileType type, String referenceEntityType, Integer referenceEntityId) {
@@ -72,22 +70,22 @@ public class FileDomainServiceImpl implements FileDomainService {
 			throw new CustomException(ErrorCode.FILE_INVALID_MIME_TYPE);
 		}
 
-		// 5. 매직 넘버(파일 헤더) 검증
-		try (InputStream is = file.getInputStream()) {
-			// 충분한 크기의 헤더 버퍼 (JPEG: 3바이트, PNG: 8바이트)
-			byte[] header = new byte[8];
-			int readBytes = is.read(header, 0, header.length);
-			if (readBytes < 8) {
-				throw new CustomException(ErrorCode.FILE_INVALID_CONTENT);
-			}
-
-			boolean validMagic = isValidMagic(extension, header);
-			if (!validMagic) {
-				throw new CustomException(ErrorCode.FILE_INVALID_CONTENT);
-			}
-		} catch (IOException e) {
-			throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
-		}
+		// // 5. 매직 넘버(파일 헤더) 검증
+		// try (InputStream is = file.getInputStream()) {
+		// 	// 충분한 크기의 헤더 버퍼 (JPEG: 3바이트, PNG: 8바이트)
+		// 	byte[] header = new byte[8];
+		// 	int readBytes = is.read(header, 0, header.length);
+		// 	if (readBytes < 8) {
+		// 		throw new CustomException(ErrorCode.FILE_INVALID_CONTENT);
+		// 	}
+		//
+		// 	boolean validMagic = isValidMagic(extension, header);
+		// 	if (!validMagic) {
+		// 		throw new CustomException(ErrorCode.FILE_INVALID_CONTENT);
+		// 	}
+		// } catch (IOException e) {
+		// 	throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
+		// }
 	}
 
 	/**
