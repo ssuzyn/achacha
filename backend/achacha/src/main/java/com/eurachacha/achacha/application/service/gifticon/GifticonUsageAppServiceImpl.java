@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonUsageAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.AmountGifticonUseRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoriesResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoryResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoriesResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoryResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
@@ -98,8 +97,8 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		List<UsageHistory> findUsageHistories = usageHistoryRepository.findAmountGifticonUsageHistories(gifticonId);
 
 		// entity -> dto로 변환
-		List<AmountGifticonUsageHistoryResponseDto> usageHistoryResponseDtos = findUsageHistories.stream()
-			.map(history -> AmountGifticonUsageHistoryResponseDto.builder()
+		List<AmountGifticonUsageHistoriesResponseDto.UsageHistoryDto> usageHistoryResponseDtos = findUsageHistories.stream()
+			.map(history -> AmountGifticonUsageHistoriesResponseDto.UsageHistoryDto.builder()
 				.usageHistoryId(history.getId())
 				.usageAmount(history.getUsageAmount())
 				.usageHistoryCreatedAt(history.getCreatedAt())
@@ -113,7 +112,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 			.gifticonName(findGifticon.getName())
 			.gifticonOriginalAmount(findGifticon.getOriginalAmount())
 			.gifticonRemainingAmount(findGifticon.getRemainingAmount())
-			.usageHistory(usageHistoryResponseDtos)
+			.usageHistories(usageHistoryResponseDtos)
 			.build();
 	}
 
