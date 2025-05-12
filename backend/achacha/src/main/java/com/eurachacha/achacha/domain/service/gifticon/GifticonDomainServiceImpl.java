@@ -134,4 +134,25 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 			throw new CustomException(ErrorCode.GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX);
 		}
 	}
+
+	@Override
+	public void validateDeleteGifticon(Integer userId, Gifticon gifticon) {
+
+		// 삭제된 기프티콘인지 검증
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 본인 소유인지 확인
+		boolean isOwner = hasAccess(userId, gifticon.getUser().getId());
+		if (!isOwner) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+
+		// 쉐어박스에 공유중인지 확인
+		boolean alreadyShared = isAlreadyShared(gifticon);
+		if (alreadyShared) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_SHARED);
+		}
+	}
 }
