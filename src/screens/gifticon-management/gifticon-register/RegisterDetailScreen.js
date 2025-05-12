@@ -126,6 +126,7 @@ const RegisterDetailScreen = () => {
 
       // 바코드 정보 설정
       setBarcode(route.params.barcodeValue);
+      setBarcodeNumber(route.params.barcodeValue);
 
       if (route.params?.barcodeFormat) {
         setBarcodeFormat(route.params.barcodeFormat);
@@ -149,13 +150,116 @@ const RegisterDetailScreen = () => {
       );
     }
 
+    // OCR 학습 데이터 ID 처리
+    if (route.params?.ocrTrainingDataId) {
+      console.log('[상세 화면] OCR 학습 데이터 ID 설정:', route.params.ocrTrainingDataId);
+      setOcrTrainingDataId(route.params.ocrTrainingDataId);
+    }
+
+    // 메타데이터를 통해 기프티콘 정보 설정
+    if (route.params?.gifticonMetadata) {
+      console.log('[상세 화면] 메타데이터 정보 설정:', route.params.gifticonMetadata);
+
+      const metadata = route.params.gifticonMetadata;
+
+      // 브랜드 정보 처리
+      if (metadata.brandName) {
+        console.log('[상세 화면] 브랜드명 설정:', metadata.brandName);
+        setBrandSearchText(metadata.brandName);
+
+        // 브랜드 검색 및 선택 자동화 시도
+        (async () => {
+          try {
+            const brandService = require('../../../api/brandService').default;
+            const brandResults = await brandService.searchBrands(metadata.brandName);
+            if (brandResults && brandResults.length > 0) {
+              // 가장 일치하는 첫 번째 브랜드 선택
+              console.log('[상세 화면] 브랜드 자동 선택:', brandResults[0]);
+              setSelectedBrand(brandResults[0]);
+              setBrandList(brandResults);
+            }
+          } catch (err) {
+            console.error('[상세 화면] 브랜드 자동 검색 실패:', err);
+          }
+        })();
+      }
+
+      // 상품명 설정
+      if (metadata.gifticonName) {
+        console.log('[상세 화면] 상품명 설정:', metadata.gifticonName);
+        setProductName(metadata.gifticonName);
+      }
+
+      // 바코드 번호 설정 (barcodeValue가 없는 경우)
+      if (metadata.gifticonBarcodeNumber && !route.params?.barcodeValue) {
+        console.log('[상세 화면] 바코드 번호 설정:', metadata.gifticonBarcodeNumber);
+        setBarcode(metadata.gifticonBarcodeNumber);
+        setBarcodeNumber(metadata.gifticonBarcodeNumber);
+      }
+
+      // 유효기간 설정
+      if (metadata.gifticonExpiryDate) {
+        console.log('[상세 화면] 유효기간 설정:', metadata.gifticonExpiryDate);
+        setExpiryDate(new Date(metadata.gifticonExpiryDate));
+      }
+
+      // 금액형 기프티콘인 경우 금액 설정
+      if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+        console.log('[상세 화면] 금액 설정:', metadata.gifticonOriginalAmount);
+        setAmount(metadata.gifticonOriginalAmount.toString());
+      }
+    } else {
+      // 개별 메타데이터 정보 처리 (역호환성 용)
+      if (route.params?.brandName) {
+        console.log('[상세 화면] 브랜드명 설정 (개별):', route.params.brandName);
+        setBrandSearchText(route.params.brandName);
+
+        // 브랜드 검색 및 선택 자동화 시도
+        (async () => {
+          try {
+            const brandService = require('../../../api/brandService').default;
+            const brandResults = await brandService.searchBrands(route.params.brandName);
+            if (brandResults && brandResults.length > 0) {
+              console.log('[상세 화면] 브랜드 자동 선택 (개별):', brandResults[0]);
+              setSelectedBrand(brandResults[0]);
+              setBrandList(brandResults);
+            }
+          } catch (err) {
+            console.error('[상세 화면] 브랜드 자동 검색 실패 (개별):', err);
+          }
+        })();
+      }
+
+      if (route.params?.gifticonName) {
+        console.log('[상세 화면] 상품명 설정 (개별):', route.params.gifticonName);
+        setProductName(route.params.gifticonName);
+      }
+
+      if (route.params?.gifticonBarcodeNumber && !barcode) {
+        console.log('[상세 화면] 바코드 번호 설정 (개별):', route.params.gifticonBarcodeNumber);
+        setBarcode(route.params.gifticonBarcodeNumber);
+        setBarcodeNumber(route.params.gifticonBarcodeNumber);
+      }
+
+      if (route.params?.gifticonExpiryDate) {
+        console.log('[상세 화면] 유효기간 설정 (개별):', route.params.gifticonExpiryDate);
+        setExpiryDate(new Date(route.params.gifticonExpiryDate));
+      }
+
+      if (route.params?.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+        console.log('[상세 화면] 금액 설정 (개별):', route.params.gifticonOriginalAmount);
+        setAmount(route.params.gifticonOriginalAmount.toString());
+      }
+    }
+
     // 기프티콘 타입 및 등록 위치 정보 가져오기
     if (route.params?.gifticonType) {
+      setGifticonType(route.params.gifticonType);
       setTypeLocked(true);
     }
 
     if (route.params?.boxType) {
-      setBoxModalVisible(true);
+      setBoxType(route.params.boxType);
     }
 
     if (route.params?.shareBoxId) {
@@ -175,7 +279,7 @@ const RegisterDetailScreen = () => {
       console.log('컴포넌트 언마운트: 이미지 상태 정리');
       // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
     };
-  }, [route.params, setCurrentBarcodeInfo]);
+  }, [route.params, setCurrentBarcodeInfo, gifticonType, barcode]);
 
   // 편집된 이미지가 있을 경우 썸네일에 표시 (로직 개선)
   useEffect(() => {
@@ -501,6 +605,14 @@ const RegisterDetailScreen = () => {
 
         console.log('기프티콘 메타데이터 조회 결과:', metadata);
 
+        // OCR 학습 데이터 ID 저장 (강조)
+        if (metadata && metadata.ocrTrainingDataId) {
+          console.log('[갤러리 선택] OCR 학습 데이터 ID 저장:', metadata.ocrTrainingDataId);
+          setOcrTrainingDataId(metadata.ocrTrainingDataId);
+        } else {
+          console.log('[갤러리 선택] OCR 학습 데이터 ID가 없습니다');
+        }
+
         // 응답 데이터로 폼 채우기
         if (metadata) {
           // 브랜드 정보 처리
@@ -514,6 +626,10 @@ const RegisterDetailScreen = () => {
               if (brandResults && brandResults.length > 0) {
                 setBrandList(brandResults);
                 setShowBrandList(true);
+
+                // 가장 일치하는 브랜드 자동 선택 추가
+                setSelectedBrand(brandResults[0]);
+                console.log('[갤러리 선택] 브랜드 자동 선택:', brandResults[0]);
               }
             } catch (err) {
               console.error('브랜드 자동 검색 실패:', err);
@@ -540,11 +656,6 @@ const RegisterDetailScreen = () => {
           // 금액형 기프티콘인 경우 금액 설정
           if (metadata.gifticonOriginalAmount) {
             setAmount(metadata.gifticonOriginalAmount.toString());
-          }
-
-          // OCR 학습 데이터 ID 저장
-          if (metadata.ocrTrainingDataId) {
-            setOcrTrainingDataId(metadata.ocrTrainingDataId);
           }
         }
       } catch (error) {
@@ -605,6 +716,14 @@ const RegisterDetailScreen = () => {
 
         console.log('기프티콘 메타데이터 조회 결과:', metadata);
 
+        // OCR 학습 데이터 ID 저장 (강조)
+        if (metadata && metadata.ocrTrainingDataId) {
+          console.log('[카메라 촬영] OCR 학습 데이터 ID 저장:', metadata.ocrTrainingDataId);
+          setOcrTrainingDataId(metadata.ocrTrainingDataId);
+        } else {
+          console.log('[카메라 촬영] OCR 학습 데이터 ID가 없습니다');
+        }
+
         // 응답 데이터로 폼 채우기
         if (metadata) {
           // 브랜드 정보 처리
@@ -618,6 +737,10 @@ const RegisterDetailScreen = () => {
               if (brandResults && brandResults.length > 0) {
                 setBrandList(brandResults);
                 setShowBrandList(true);
+
+                // 가장 일치하는 브랜드 자동 선택 추가
+                setSelectedBrand(brandResults[0]);
+                console.log('[카메라 촬영] 브랜드 자동 선택:', brandResults[0]);
               }
             } catch (err) {
               console.error('브랜드 자동 검색 실패:', err);
@@ -644,11 +767,6 @@ const RegisterDetailScreen = () => {
           // 금액형 기프티콘인 경우 금액 설정
           if (metadata.gifticonOriginalAmount) {
             setAmount(metadata.gifticonOriginalAmount.toString());
-          }
-
-          // OCR 학습 데이터 ID 저장
-          if (metadata.ocrTrainingDataId) {
-            setOcrTrainingDataId(metadata.ocrTrainingDataId);
           }
         }
       } catch (error) {
@@ -720,6 +838,15 @@ const RegisterDetailScreen = () => {
         shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,
         ocrTrainingDataId: ocrTrainingDataId, // 이미지 메타데이터 조회 시 받은 OCR 학습 데이터 ID
       };
+
+      console.log('[기프티콘 등록] 요청 데이터:', gifticonData);
+
+      // OCR 학습 데이터 ID 로깅
+      if (ocrTrainingDataId) {
+        console.log('[기프티콘 등록] OCR 학습 데이터 ID 포함:', ocrTrainingDataId);
+      } else {
+        console.log('[기프티콘 등록] OCR 학습 데이터 ID 없음');
+      }
 
       // 이미지 파일 정보
       const originalImage = {

@@ -200,26 +200,75 @@ const RegisterMainScreen = () => {
                 }
               }
 
-              // 바코드 정보와 함께 바로 상세 화면으로 이동
-              setImageOptionVisible(false);
+              // 이미지 메타데이터 처리 추가
+              try {
+                console.log('[메인] 이미지 메타데이터 조회 시작');
+                // gifticonService import 확인
+                const gifticonService = require('../../../api/gifticonService').default;
 
-              // 바코드 인식 결과 정보와 함께 상세 화면으로 이동
-              navigation.navigate('RegisterDetail', {
-                selectedImage: { uri: imageAsset.uri },
-                originalImage: { uri: imageAsset.uri },
-                gifticonType: gifticonType,
-                boxType: boxType,
-                shareBoxId: selectedShareBoxId,
-                // 바코드 정보 추가
-                barcodeValue: barcodeValue,
-                barcodeFormat: barcodeFormat,
-                barcodeBoundingBox: barcodeBoundingBox,
-                barcodeImageUri: barcodeImageUri,
-                // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
-                cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
-                // 크롭 정보 추가 (디버깅 및 UI 표시용)
-                cropInfo: croppedBarcodeResult?.cropInfo || null,
-              });
+                // 메타데이터 조회 요청
+                const imageMetadata = await gifticonService.getGifticonImageMetadata(
+                  {
+                    uri: imageAsset.uri,
+                    type: imageAsset.type || 'image/jpeg',
+                    fileName: imageAsset.fileName || 'image.jpg',
+                  },
+                  gifticonType
+                );
+
+                console.log('[메인] 이미지 메타데이터 조회 결과:', imageMetadata);
+
+                // 바코드 정보와 함께 바로 상세 화면으로 이동
+                setImageOptionVisible(false);
+
+                // 메타데이터 및 바코드 인식 결과 정보와 함께 상세 화면으로 이동
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: imageAsset.uri },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                  // 바코드 정보 추가
+                  barcodeValue: barcodeValue,
+                  barcodeFormat: barcodeFormat,
+                  barcodeBoundingBox: barcodeBoundingBox,
+                  barcodeImageUri: barcodeImageUri,
+                  // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
+                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                  // 크롭 정보 추가 (디버깅 및 UI 표시용)
+                  cropInfo: croppedBarcodeResult?.cropInfo || null,
+                  // 메타데이터 정보 추가
+                  gifticonMetadata: imageMetadata || null,
+                  // OCR 학습 데이터 ID 추가
+                  ocrTrainingDataId: imageMetadata?.ocrTrainingDataId || null,
+                  // 기타 메타데이터 정보들
+                  brandName: imageMetadata?.brandName || null,
+                  gifticonName: imageMetadata?.gifticonName || null,
+                  gifticonExpiryDate: imageMetadata?.gifticonExpiryDate || null,
+                  gifticonOriginalAmount: imageMetadata?.gifticonOriginalAmount || null,
+                  gifticonBarcodeNumber:
+                    imageMetadata?.gifticonBarcodeNumber || barcodeValue || null,
+                });
+              } catch (metadataError) {
+                console.error('[메인] 이미지 메타데이터 조회 오류:', metadataError);
+
+                // 메타데이터 조회 실패해도 기본 정보만이라도 전달
+                setImageOptionVisible(false);
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: imageAsset.uri },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                  // 바코드 정보만 추가
+                  barcodeValue: barcodeValue,
+                  barcodeFormat: barcodeFormat,
+                  barcodeBoundingBox: barcodeBoundingBox,
+                  barcodeImageUri: barcodeImageUri,
+                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                  cropInfo: croppedBarcodeResult?.cropInfo || null,
+                });
+              }
             } catch (processingError) {
               console.error('이미지 처리 중 오류:', processingError);
               Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
@@ -376,26 +425,75 @@ const RegisterMainScreen = () => {
                 }
               }
 
-              // 바코드 정보와 함께 바로 상세 화면으로 이동
-              setImageOptionVisible(false);
+              // 이미지 메타데이터 처리 추가
+              try {
+                console.log('[메인] 카메라 이미지 메타데이터 조회 시작');
+                // gifticonService import 확인
+                const gifticonService = require('../../../api/gifticonService').default;
 
-              // 바코드 인식 결과 정보와 함께 상세 화면으로 이동
-              navigation.navigate('RegisterDetail', {
-                selectedImage: { uri: imageAsset.uri },
-                originalImage: { uri: imageAsset.uri },
-                gifticonType: gifticonType,
-                boxType: boxType,
-                shareBoxId: selectedShareBoxId,
-                // 바코드 정보 추가
-                barcodeValue: barcodeValue,
-                barcodeFormat: barcodeFormat,
-                barcodeBoundingBox: barcodeBoundingBox,
-                barcodeImageUri: barcodeImageUri,
-                // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
-                cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
-                // 크롭 정보 추가 (디버깅 및 UI 표시용)
-                cropInfo: croppedBarcodeResult?.cropInfo || null,
-              });
+                // 메타데이터 조회 요청
+                const imageMetadata = await gifticonService.getGifticonImageMetadata(
+                  {
+                    uri: imageAsset.uri,
+                    type: imageAsset.type || 'image/jpeg',
+                    fileName: imageAsset.fileName || 'image.jpg',
+                  },
+                  gifticonType
+                );
+
+                console.log('[메인] 카메라 이미지 메타데이터 조회 결과:', imageMetadata);
+
+                // 바코드 정보와 함께 바로 상세 화면으로 이동
+                setImageOptionVisible(false);
+
+                // 메타데이터 및 바코드 인식 결과 정보와 함께 상세 화면으로 이동
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: imageAsset.uri },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                  // 바코드 정보 추가
+                  barcodeValue: barcodeValue,
+                  barcodeFormat: barcodeFormat,
+                  barcodeBoundingBox: barcodeBoundingBox,
+                  barcodeImageUri: barcodeImageUri,
+                  // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
+                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                  // 크롭 정보 추가 (디버깅 및 UI 표시용)
+                  cropInfo: croppedBarcodeResult?.cropInfo || null,
+                  // 메타데이터 정보 추가
+                  gifticonMetadata: imageMetadata || null,
+                  // OCR 학습 데이터 ID 추가
+                  ocrTrainingDataId: imageMetadata?.ocrTrainingDataId || null,
+                  // 기타 메타데이터 정보들
+                  brandName: imageMetadata?.brandName || null,
+                  gifticonName: imageMetadata?.gifticonName || null,
+                  gifticonExpiryDate: imageMetadata?.gifticonExpiryDate || null,
+                  gifticonOriginalAmount: imageMetadata?.gifticonOriginalAmount || null,
+                  gifticonBarcodeNumber:
+                    imageMetadata?.gifticonBarcodeNumber || barcodeValue || null,
+                });
+              } catch (metadataError) {
+                console.error('[메인] 카메라 이미지 메타데이터 조회 오류:', metadataError);
+
+                // 메타데이터 조회 실패해도 기본 정보만이라도 전달
+                setImageOptionVisible(false);
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: imageAsset.uri },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                  // 바코드 정보만 추가
+                  barcodeValue: barcodeValue,
+                  barcodeFormat: barcodeFormat,
+                  barcodeBoundingBox: barcodeBoundingBox,
+                  barcodeImageUri: barcodeImageUri,
+                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                  cropInfo: croppedBarcodeResult?.cropInfo || null,
+                });
+              }
             } catch (processingError) {
               console.error('카메라 이미지 처리 중 오류:', processingError);
               Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
