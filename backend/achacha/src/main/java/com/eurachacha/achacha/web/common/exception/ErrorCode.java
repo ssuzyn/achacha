@@ -10,6 +10,7 @@ public enum ErrorCode {
 	INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "X002", "잘못된 파라미터가 전달되었습니다."),
 	INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "X003", "서버 에러가 발생했습니다."),
 	CONSTANT_CLASS_INSTANTIATION(HttpStatus.INTERNAL_SERVER_ERROR, "X004", "상수 클래스는 인스턴스화할 수 없습니다."),
+	UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "X005", "지원하지 않는 미디어 타입입니다."),
 
 	// Auth 관련 에러
 	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_001", "유효하지 않은 토큰입니다."),
@@ -91,7 +92,7 @@ public enum ErrorCode {
 	CANNOT_SHARE_USED_AMOUNT_GIFTICON(HttpStatus.BAD_REQUEST, "SHAREBOX_009", "일부 사용된 금액형 기프티콘은 공유할 수 없습니다."),
 	GIFTICON_ALREADY_SHARED(HttpStatus.BAD_REQUEST, "SHAREBOX_010", "이미 공유된 기프티콘입니다."),
 	GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX(HttpStatus.BAD_REQUEST, "SHAREBOX_011", "이 쉐어박스에 공유되지 않은 기프티콘입니다.");
-	
+
 	// http 상태 코드
 	private final HttpStatus status;
 	// 커스텀 에러 코드
