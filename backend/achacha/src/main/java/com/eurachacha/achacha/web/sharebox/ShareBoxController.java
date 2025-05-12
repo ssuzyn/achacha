@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.web.sharebox;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,5 +50,15 @@ public class ShareBoxController {
 
 		shareBoxAppService.shareGifticon(shareBoxId, gifticonId);
 		return ResponseEntity.ok("공유 완료했습니다.");
+	}
+
+	// 쉐어박스 기프티콘 공유 해제 엔드포인트
+	@DeleteMapping("/{shareBoxId}/gifticons/{gifticonId}")
+	public ResponseEntity<String> unshareGifticon(
+		@PathVariable Integer shareBoxId,
+		@PathVariable Integer gifticonId) {
+
+		shareBoxAppService.unshareGifticon(shareBoxId, gifticonId);
+		return ResponseEntity.ok("공유 해제 완료했습니다.");
 	}
 }
