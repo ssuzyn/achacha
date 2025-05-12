@@ -1,6 +1,7 @@
 import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
 import { Platform, NativeModules } from 'react-native';
 import PhotoManipulator from 'react-native-photo-manipulator';
+import RNFS from 'react-native-fs';
 
 // 네이티브 모듈 가져오기
 const { BarcodeNativeModule } = NativeModules;
@@ -80,8 +81,11 @@ export const detectBarcode = async imageUri => {
 /**
  * 이미지에서 바코드 영역만 정확하게 추출하는 함수
  * 직접 좌표를 사용하여 바코드 영역을 잘라냄
+ * @param {string} imageUri - 바코드가 포함된 이미지 URI
+ * @param {boolean} saveToFile - 파일로 저장할지 여부 (기본값: false)
+ * @param {string} fileName - 저장할 파일 이름 (없으면 자동 생성)
  */
-export const detectAndCropBarcode = async imageUri => {
+export const detectAndCropBarcode = async (imageUri, saveToFile = false, fileName = null) => {
   try {
     console.log('[바코드 추출] 시작:', imageUri);
 
@@ -105,7 +109,7 @@ export const detectAndCropBarcode = async imageUri => {
 
       // 바코드 값은 있지만 바운딩 박스가 없는 경우
       // 이미지 중앙 영역을 바코드 영역으로 간주하고 크롭
-      return cropWithDefaultBoundingBox(imageUri, barcode);
+      return cropWithDefaultBoundingBox(imageUri, barcode, saveToFile, fileName);
     }
 
     // 네이티브 모듈이 존재하면 네이티브 방식으로 크롭 (코너 포인트 활용)
@@ -131,6 +135,30 @@ export const detectAndCropBarcode = async imageUri => {
 
         if (cropResult.success && cropResult.croppedImageUri) {
           console.log('[바코드 추출] 네이티브 크롭 성공:', cropResult.croppedImageUri);
+
+          // 파일로 저장할지 여부 확인
+          if (saveToFile) {
+            const savedFilePath = await saveBarcodeImageToFile(
+              cropResult.croppedImageUri,
+              fileName,
+              barcode
+            );
+            return {
+              success: true,
+              croppedImageUri: cropResult.croppedImageUri,
+              barcodeValue: barcode.value,
+              barcodeFormat: barcode.format,
+              boundingBox: barcode.boundingBox,
+              cropInfo: {
+                x: cropResult.cropX,
+                y: cropResult.cropY,
+                width: cropResult.cropWidth,
+                height: cropResult.cropHeight,
+              },
+              filePath: savedFilePath, // 저장된 파일 경로 추가
+            };
+          }
+
           return {
             success: true,
             croppedImageUri: cropResult.croppedImageUri,
@@ -256,6 +284,22 @@ export const detectAndCropBarcode = async imageUri => {
       const croppedImageUri = await PhotoManipulator.crop(processedUri, cropRegion);
       console.log('[바코드 추출] 성공:', croppedImageUri);
 
+      // 파일로 저장할지 여부 확인
+      if (saveToFile) {
+        const savedFilePath = await saveBarcodeImageToFile(croppedImageUri, fileName, barcode);
+
+        // 결과 반환
+        return {
+          success: true,
+          croppedImageUri: croppedImageUri,
+          barcodeValue: barcode.value,
+          barcodeFormat: barcode.format,
+          boundingBox: barcode.boundingBox,
+          cropInfo: cropRegion,
+          filePath: savedFilePath, // 저장된 파일 경로 추가
+        };
+      }
+
       // 결과 반환
       return {
         success: true,
@@ -269,7 +313,7 @@ export const detectAndCropBarcode = async imageUri => {
       console.error('[바코드 추출] 크롭 실패:', cropError);
 
       // 크롭 실패 시 대체 방법으로 시도
-      return cropWithDefaultBoundingBox(imageUri, barcode);
+      return cropWithDefaultBoundingBox(imageUri, barcode, saveToFile, fileName);
     }
   } catch (error) {
     console.error('[바코드 추출] 전체 프로세스 오류:', error);
@@ -281,7 +325,12 @@ export const detectAndCropBarcode = async imageUri => {
  * 바코드 위치 정보가 없거나 크롭에 실패했을 때 사용하는 백업 함수
  * 이미지 중앙 영역을 바코드로 간주하고 크롭
  */
-const cropWithDefaultBoundingBox = async (imageUri, barcode) => {
+const cropWithDefaultBoundingBox = async (
+  imageUri,
+  barcode,
+  saveToFile = false,
+  fileName = null
+) => {
   try {
     console.log('[바코드 추출] 기본 영역으로 시도');
 
@@ -327,6 +376,20 @@ const cropWithDefaultBoundingBox = async (imageUri, barcode) => {
       const croppedImageUri = await PhotoManipulator.crop(processedUri, cropRegion);
       console.log('[바코드 추출] 기본 영역 크롭 성공:', croppedImageUri);
 
+      // 파일로 저장할지 여부 확인
+      if (saveToFile) {
+        const savedFilePath = await saveBarcodeImageToFile(croppedImageUri, fileName, barcode);
+
+        return {
+          success: true,
+          croppedImageUri: croppedImageUri,
+          barcodeValue: barcode.value,
+          barcodeFormat: barcode.format,
+          boundingBox: null, // 실제 바운딩 박스는 없음
+          filePath: savedFilePath, // 저장된 파일 경로 추가
+        };
+      }
+
       return {
         success: true,
         croppedImageUri: croppedImageUri,
@@ -338,6 +401,21 @@ const cropWithDefaultBoundingBox = async (imageUri, barcode) => {
       console.error('[바코드 추출] 기본 영역 크롭 실패:', cropError);
 
       // 마지막 대안: 원본 이미지 그대로 반환 (크롭 실패해도 바코드 값은 있으므로)
+      // 파일로 저장할지 여부 확인
+      if (saveToFile) {
+        const savedFilePath = await saveBarcodeImageToFile(imageUri, fileName, barcode);
+
+        return {
+          success: true,
+          croppedImageUri: imageUri, // 원본 이미지 URI 그대로 반환
+          barcodeValue: barcode.value,
+          barcodeFormat: barcode.format,
+          boundingBox: null,
+          message: '바코드 이미지 크롭에 실패했지만 바코드 번호는 인식했습니다.',
+          filePath: savedFilePath, // 저장된 파일 경로 추가
+        };
+      }
+
       return {
         success: true,
         croppedImageUri: imageUri, // 원본 이미지 URI 그대로 반환
@@ -351,6 +429,25 @@ const cropWithDefaultBoundingBox = async (imageUri, barcode) => {
     console.error('[바코드 추출] 대체 크롭 오류:', error);
 
     // 최종 대안: 원본 이미지 그대로 반환
+    // 파일로 저장할지 여부 확인
+    if (saveToFile) {
+      try {
+        const savedFilePath = await saveBarcodeImageToFile(imageUri, fileName, barcode);
+
+        return {
+          success: true,
+          croppedImageUri: imageUri,
+          barcodeValue: barcode.value,
+          barcodeFormat: barcode.format,
+          boundingBox: null,
+          message: '바코드 영역 추출에 실패했지만 바코드 번호는 인식했습니다.',
+          filePath: savedFilePath, // 저장된 파일 경로 추가
+        };
+      } catch (saveError) {
+        console.error('[바코드 추출] 파일 저장 실패:', saveError);
+      }
+    }
+
     return {
       success: true,
       croppedImageUri: imageUri,
@@ -359,6 +456,65 @@ const cropWithDefaultBoundingBox = async (imageUri, barcode) => {
       boundingBox: null,
       message: '바코드 영역 추출에 실패했지만 바코드 번호는 인식했습니다.',
     };
+  }
+};
+
+/**
+ * 바코드 이미지를 파일로 저장하는 함수
+ * @param {string} imageUri - 저장할 이미지 URI
+ * @param {string} fileName - 저장할 파일 이름 (없으면 자동 생성)
+ * @param {object} barcode - 바코드 정보 객체
+ * @returns {Promise<string>} 저장된 파일 경로
+ */
+const saveBarcodeImageToFile = async (imageUri, fileName = null, barcode = null) => {
+  try {
+    // 저장할 디렉토리 경로 설정 (플랫폼에 따라 다름)
+    const dirPath =
+      Platform.OS === 'ios'
+        ? `${RNFS.DocumentDirectoryPath}/barcodes`
+        : `${RNFS.ExternalDirectoryPath}/barcodes`;
+
+    // 디렉토리가 존재하는지 확인하고 없으면 생성
+    const dirExists = await RNFS.exists(dirPath);
+    if (!dirExists) {
+      await RNFS.mkdir(dirPath);
+      console.log('[바코드 저장] 디렉토리 생성:', dirPath);
+    }
+
+    // 파일 이름 생성 (없으면 바코드 값 + 타임스탬프로 생성)
+    const timestamp = new Date().getTime();
+    let saveFileName = fileName;
+
+    if (!saveFileName) {
+      // 바코드 정보가 있으면 값을 사용, 없으면 타임스탬프만 사용
+      const barcodeText = barcode?.value ? `${barcode.value}_` : '';
+      const barcodeFormat = barcode?.format ? `${barcode.format}_` : '';
+      saveFileName = `barcode_${barcodeText}${barcodeFormat}${timestamp}.jpg`;
+    }
+
+    // 파일 확장자 확인 (.jpg 또는 .png)
+    if (!saveFileName.endsWith('.jpg') && !saveFileName.endsWith('.png')) {
+      saveFileName += '.jpg';
+    }
+
+    // 최종 저장 경로
+    const filePath = `${dirPath}/${saveFileName}`;
+    console.log('[바코드 저장] 저장 경로:', filePath);
+
+    // 이미지 URI에서 실제 파일 경로 추출
+    let sourceUri = imageUri;
+    if (Platform.OS === 'android' && !imageUri.startsWith('file://')) {
+      sourceUri = `file://${imageUri}`;
+    }
+
+    // 이미지 파일 복사
+    await RNFS.copyFile(sourceUri.replace('file://', ''), filePath);
+    console.log('[바코드 저장] 파일 저장 완료:', filePath);
+
+    return filePath;
+  } catch (error) {
+    console.error('[바코드 저장] 파일 저장 오류:', error);
+    throw error;
   }
 };
 
