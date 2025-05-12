@@ -16,7 +16,7 @@ import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
 import LottieView from 'lottie-react-native';
-import { BLENearbyUsersService } from '../services/NearbyUsersService';
+import NearbyUsersService from '../services/NearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
@@ -30,6 +30,15 @@ const emoji2 = require('../assets/images/emoji2.png');
 const emoji3 = require('../assets/images/emoji3.png');
 const emoji4 = require('../assets/images/emoji4.png');
 const emoji5 = require('../assets/images/emoji5.png');
+
+// 더미 사용자 데이터를 상수로 선언
+const DUMMY_USERS = [
+  { id: 1, name: '안*진', emoji: emoji1 },
+  { id: 2, name: 'Gw*ter', emoji: emoji2 },
+  { id: 3, name: '스타*명', emoji: emoji3 },
+  { id: 4, name: '정*은', emoji: emoji4 },
+  { id: 5, name: '류*문', emoji: emoji5 },
+];
 
 const dummyGifticons = {
   gifticons: [
@@ -75,34 +84,6 @@ const dummyGifticons = {
       shareBoxName: null,
       thumbnailPath: '/images/gifticons/thumbnail/127.jpg',
     },
-    {
-      gifticonId: 131,
-      gifticonName: '돌체 라떼',
-      gifticonType: 'PRODUCT',
-      gifticonExpiryDate: '2025-09-05',
-      brandId: 45,
-      brandName: '스타벅스',
-      scope: 'MY_BOX',
-      userId: 78,
-      userName: '홍길동',
-      shareBoxId: null,
-      shareBoxName: null,
-      thumbnailPath: '/images/gifticons/thumbnail/131.jpg',
-    },
-    {
-      gifticonId: 123,
-      gifticonName: '아메리카노',
-      gifticonType: 'PRODUCT',
-      gifticonExpiryDate: '2025-12-31',
-      brandId: 45,
-      brandName: '스타벅스',
-      scope: 'MY_BOX',
-      userId: 78,
-      userName: '홍길동',
-      shareBoxId: null,
-      shareBoxName: null,
-      thumbnailPath: '/images/gifticons/thumbnail/123.jpg',
-    },
   ],
   hasNextPage: true,
   nextPage: '1',
@@ -129,6 +110,7 @@ const GiveAwayScreen = ({ onClose }) => {
   // BLE 관련 상태
   const { appUUID, userUUID, initializeUUIDs } = useDeviceStore();
   const [isTransferring, setIsTransferring] = useState(false);
+  const [bluetoothReady, setBluetoothReady] = useState(false);
 
   // 애니메이션을 위한 값
   const buttonPositionAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
@@ -209,40 +191,19 @@ const GiveAwayScreen = ({ onClose }) => {
         // 드래그가 끝나면 항상 버튼을 원래 위치로 되돌리기
         resetButtonPosition();
 
-        // 그 후 가장 가까운 사용자 찾기
-        const closestUser = findClosestUser(gesture.moveX, gesture.moveY);
+        // 랜덤으로 주변 사용자 선택 (가까운 사용자 찾기 대신)
+        if (users.length > 0) {
+          const randomIndex = Math.floor(Math.random() * users.length);
+          const selectedUser = { ...users[randomIndex], position: userPositions[randomIndex] };
 
-        // 가까운 사용자가 있으면 기프티콘 전송 진행
-        if (closestUser) {
           // 약간의 딜레이 후 전송 (버튼이 중앙으로 돌아간 후)
           setTimeout(() => {
-            sendGifticonToUser(closestUser);
+            sendGifticonToUser(selectedUser);
           }, 100);
         }
       },
     })
   ).current;
-
-  // 가장 가까운 사용자 찾기
-  const findClosestUser = (x, y) => {
-    if (!users.length) return null;
-
-    let closestUser = null;
-    let minDistance = 9999;
-
-    users.forEach((user, index) => {
-      const position = userPositions[index];
-      const distance = Math.sqrt(Math.pow(position.x - x, 2) + Math.pow(position.y - y, 2));
-
-      // 일정 거리 이내에 있고, 지금까지 발견한 것보다 더 가까우면 업데이트
-      if (distance < 100 && distance < minDistance) {
-        minDistance = distance;
-        closestUser = { ...user, position };
-      }
-    });
-
-    return closestUser;
-  };
 
   // 버튼 위치 초기화
   const resetButtonPosition = () => {
@@ -294,7 +255,19 @@ const GiveAwayScreen = ({ onClose }) => {
         // 선물 효과 시작
         addReceivedAnimation(user.id);
 
-        // BLE 전송 관련 코드 제거
+        // BLE를 통한 실제 데이터 전송 - 현재는 콘솔 로그만 표시
+        if (bleServiceRef.current && bluetoothReady) {
+          try {
+            console.log(`BLE를 통해 기프티콘 정보 전송 시도: ${user.id}, UUID: ${user.deviceUUID}`);
+
+            // 실제 전송 코드는 추가 구현 필요 - 백엔드에서 랜덤 유저 선정 처리
+            // 여기서는 선택한 사용자 ID와 기프티콘 ID만 서버에 전송하는 형태로 구현
+            // await sendGifticonToServer(user.id, selectedGifticon.gifticonId);
+          } catch (error) {
+            console.error('기프티콘 전송 실패:', error);
+          }
+        }
+
         console.log(
           `기프티콘 전송 애니메이션 완료: 사용자 ${user.id}에게 ${selectedGifticon.gifticonName}`
         );
@@ -382,10 +355,6 @@ const GiveAwayScreen = ({ onClose }) => {
 
   // NearbyUsersService로 위치 공유 및 주변 유저 검색
   useEffect(() => {
-    let interval;
-    // (실제 사용자 ID를 사용하세요)
-    const userId = userUUID || 'my-user-id';
-
     const initialize = async () => {
       try {
         setLoading(true);
@@ -398,72 +367,96 @@ const GiveAwayScreen = ({ onClose }) => {
         }
 
         // BLE 서비스 초기화
-        bleServiceRef.current = new BLENearbyUsersService();
-
-        // 현재는 더미 데이터 사용
-        const dummyUsers = [
-          { id: 1, name: '안*진', emoji: emoji1, distance: '5m' },
-          { id: 2, name: 'Gw*ter', emoji: emoji2, distance: '10m' },
-          { id: 3, name: '스타*명', emoji: emoji3, distance: '15m' },
-          { id: 4, name: '정*은', emoji: emoji4, distance: '8m' },
-          { id: 5, name: '류*문', emoji: emoji5, distance: '12m' },
-        ];
-
-        // 서비스 사용 (에러 발생시 더미 데이터로 대체)
         try {
-          await bleServiceRef.current.init(userId);
-          await bleServiceRef.current.startSharingLocation();
-          const foundUsers = await bleServiceRef.current.findNearbyUsers();
-          const hasUsers = foundUsers.length > 0 || dummyUsers.length > 0;
+          // NearbyUsersService 초기화 - 싱글톤이므로 참조만 저장
+          bleServiceRef.current = NearbyUsersService;
 
-          // 최대 5명의 유저만 표시
-          const limitedFoundUsers = foundUsers.length > 0 ? foundUsers.slice(0, 5) : [];
-          const limitedUsers =
-            limitedFoundUsers.length > 0 ? limitedFoundUsers : dummyUsers.slice(0, 5);
+          // BLE 초기화
+          const initResult = await bleServiceRef.current.initialize();
+          setBluetoothReady(initResult);
 
-          // 현재 시간과 로딩 시작 시간의 차이 계산
-          const elapsedTime = Date.now() - loadingStartTime;
-          const minLoadingTime = 3000; // 최소 3초
+          if (initResult) {
+            // 스캔 시작 - 한 번만 실행
+            let foundUsers = [];
+            await bleServiceRef.current.startScan(
+              user => {
+                // 새 사용자가 발견될 때마다 호출되는 콜백
+                console.log('새 사용자 발견:', user);
+              },
+              allUsers => {
+                // 스캔 완료 후 호출되는 콜백
+                console.log('스캔 완료, 발견된 사용자:', allUsers.length);
+                foundUsers = allUsers;
+              }
+            );
 
-          // 최소 3초 동안 로딩 애니메이션 표시
-          if (elapsedTime < minLoadingTime) {
-            await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime));
+            // 스캔 결과 처리를 위한 약간의 지연
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 실제 사용자가 있으면 실제 데이터 사용, 없으면 더미 데이터 사용
+            if (foundUsers.length > 0) {
+              // NearbyUsersService에서 찾은 사용자 매핑
+              const mappedUsers = foundUsers
+                .map((user, index) => {
+                  // 사용자별로 다른 이모지 할당
+                  const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
+                  const emoji = emojiOptions[index % emojiOptions.length];
+
+                  return {
+                    id: user.id,
+                    name: user.name || `사용자${index + 1}`,
+                    emoji: emoji,
+                    // BLE 정보도 저장
+                    deviceUUID: user.deviceUUID,
+                    rssi: user.rssi,
+                  };
+                })
+                .slice(0, 5); // 최대 5명까지만
+
+              // UI에 사용자 표시
+              setUsers(mappedUsers);
+              setButtonVisible(mappedUsers.length > 0);
+            } else {
+              // 더미 데이터 사용
+              setUsers(DUMMY_USERS);
+              setButtonVisible(DUMMY_USERS.length > 0);
+            }
+          } else {
+            // BLE 초기화 실패 시 더미 데이터 사용
+            setUsers(DUMMY_USERS);
+            setButtonVisible(DUMMY_USERS.length > 0);
           }
-
-          setUsers(limitedUsers);
-          setLoading(false);
-          // 주변에 유저가 있을 때만 버튼을 보이게 함
-          setButtonVisible(hasUsers);
         } catch (error) {
-          console.error('근처 사용자 서비스 초기화 실패:', error);
+          console.error('BLE 서비스 초기화 실패:', error);
 
-          // 오류가 발생해도 최소 3초 동안 로딩 애니메이션 표시
-          const elapsedTime = Date.now() - loadingStartTime;
-          const minLoadingTime = 3000; // 최소 3초
-
-          if (elapsedTime < minLoadingTime) {
-            await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime));
-          }
-
-          // 더미 데이터도 최대 5명으로 제한
-          setUsers(dummyUsers.slice(0, 5));
-          setLoading(false);
-          // 더미 데이터가 있으면 버튼 보이게 함
-          setButtonVisible(dummyUsers.length > 0);
+          // 오류 발생 시 더미 데이터 사용
+          setUsers(DUMMY_USERS);
+          setButtonVisible(DUMMY_USERS.length > 0);
         }
+
+        // 현재 시간과 로딩 시작 시간의 차이 계산
+        const elapsedTime = Date.now() - loadingStartTime;
+        const minLoadingTime = 3000; // 최소 3초
+
+        // 최소 3초 동안 로딩 애니메이션 표시
+        if (elapsedTime < minLoadingTime) {
+          await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime));
+        }
+
+        setLoading(false);
       } catch (error) {
         console.error('초기화 중 오류:', error);
-        // 최소 3초 후에 로딩 상태 해제
-        setTimeout(() => {
-          setLoading(false);
-        }, 3000);
+        setLoading(false);
+
+        // 오류 발생 시 더미 데이터 사용
+        setUsers(DUMMY_USERS);
+        setButtonVisible(DUMMY_USERS.length > 0);
       }
     };
 
     initialize();
 
     return () => {
-      if (interval) clearInterval(interval);
       if (bleServiceRef.current) {
         try {
           bleServiceRef.current.cleanup();
@@ -540,7 +533,7 @@ const GiveAwayScreen = ({ onClose }) => {
     }
   };
 
-  // 사용자 위치 계산 (고정)
+  // 사용자 위치 계산
   const userPositions = calculateUserPositions(users);
 
   // 뒤로가기 버튼 핸들러

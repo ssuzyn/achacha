@@ -85,7 +85,7 @@ class NearbyUsersService {
   generateShortUuid() {
     // 표준 UUID 생성
     const fullUuid = uuidv4();
-    
+
     // 하이픈 제거 및 앞 12자리만 사용
     return fullUuid.replace(/-/g, '').substring(0, 12);
   }
@@ -460,15 +460,6 @@ class NearbyUsersService {
     } else {
       return 0.89976 * Math.pow(ratio, 7.7095) + 0.111;
     }
-  }
-
-  // 가장 가까운 사용자 가져오기
-  getNearestUser() {
-    if (this.nearbyUsers.length === 0) return null;
-
-    return this.nearbyUsers.reduce((nearest, user) => {
-      return user.distance < nearest.distance ? user : nearest;
-    }, this.nearbyUsers[0]);
   }
 
   // 모든 근처 사용자 가져오기

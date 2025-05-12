@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // 스토리지 키
 const APP_UUID_KEY = '@app_uuid';
-const USER_UUID_KEY = '@user_uuid';`  `
+const USER_UUID_KEY = '@user_uuid';
 
 // UUID 생성 함수
 const generateUUID = () => uuidv4();
