@@ -67,7 +67,7 @@ const DUMMY_GIFTICONS = [
     userName: '김영희',
     shareBoxId: 90,
     shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starqbucks.png'),
+    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
     gifticonCreatedAt: '2025-01-20T09:15:00',
   },
   {
