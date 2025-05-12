@@ -6,6 +6,14 @@ import axios from 'axios';
 import { API_CONFIG } from './config'; // 설정 파일 import 경로 변경
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ERROR_CODES } from '../constants/errorCodes';
+import NetInfo from '@react-native-community/netinfo';
+import { Platform } from 'react-native';
+
+// 네트워크 연결 체크 함수
+const checkNetworkConnection = async () => {
+  const netInfo = await NetInfo.fetch();
+  return netInfo.isConnected && netInfo.isInternetReachable;
+};
 
 // Axios 인스턴스 생성
 const apiClient = axios.create({
@@ -38,16 +46,40 @@ const onRefreshed = newToken => {
 apiClient.interceptors.request.use(
   async config => {
     try {
+      // 네트워크 연결 체크
+      const isConnected = await checkNetworkConnection();
+      if (!isConnected) {
+        console.error('네트워크 연결이 없습니다. 요청을 중단합니다.');
+        return Promise.reject(new Error('네트워크 연결이 없습니다.'));
+      }
+
+      // 토큰 설정
       const accessToken = await AsyncStorage.getItem('accessToken');
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
       }
+
+      // 요청 로그
+      console.log(`요청: ${config.method.toUpperCase()} ${config.url}`);
+
+      // FormData 요청인 경우 로그 간소화
+      if (config.data instanceof FormData) {
+        console.log('FormData 요청 - 이미지 업로드 데이터 포함');
+      } else if (config.data) {
+        // 요청 데이터가 너무 큰 경우 로그 길이 제한
+        const dataStr = JSON.stringify(config.data);
+        console.log(
+          '요청 데이터:',
+          dataStr.length > 500 ? dataStr.substring(0, 500) + '...' : dataStr
+        );
+      }
     } catch (e) {
-      console.error('토큰 가져오기 실패:', e);
+      console.error('요청 전처리 실패:', e);
     }
     return config;
   },
   error => {
+    console.error('요청 인터셉터 오류:', error);
     return Promise.reject(error);
   }
 );

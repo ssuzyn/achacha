@@ -36,8 +36,8 @@ export const API_CONFIG = {
     // 예: GET_USERS: '/api/users',
     //     CREATE_USER: '/api/users',
   },
-  TIMEOUT: 5000, // API 요청 타임아웃 시간을 5초로 설정
-  timeout: 10000, // 기본 타임아웃 10초
+  TIMEOUT: 30000, // API 요청 타임아웃 시간을 30초로 늘림
+  timeout: 30000, // 기본 타임아웃 30초로 늘림
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

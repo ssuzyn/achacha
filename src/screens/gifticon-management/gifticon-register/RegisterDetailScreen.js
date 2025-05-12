@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
   FlatList,
 } from 'react-native';
-import { Button, InputLine, Text } from '../../../components/ui';
+import { Button, InputLine, Text, LoadingOcrModal } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -57,6 +57,7 @@ const RegisterDetailScreen = () => {
   // OCR 학습 데이터 ID 상태 추가
   const [ocrTrainingDataId, setOcrTrainingDataId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isOcrLoading, setIsOcrLoading] = useState(false); // OCR 처리 로딩 상태 추가
   // 박스 및 기프티콘 타입 상태
   const [boxType, setBoxType] = useState(route.params?.boxType || 'MY_BOX');
   const [shareBoxId, setShareBoxId] = useState(route.params?.shareBoxId || null);
@@ -597,6 +598,7 @@ const RegisterDetailScreen = () => {
 
       // 기프티콘 이미지 메타데이터 API 호출
       setIsLoading(true);
+      setIsOcrLoading(true); // OCR 로딩 모달 표시
       try {
         const metadata = await gifticonService.getGifticonImageMetadata(
           { uri: image.path, type: image.mime, fileName: image.filename || 'image.jpg' },
@@ -660,14 +662,18 @@ const RegisterDetailScreen = () => {
         }
       } catch (error) {
         console.error('기프티콘 메타데이터 조회 실패:', error);
+
+        // 네트워크 오류 확인
+        const errorMessage =
+          error.message.includes('네트워크') || error.message.includes('Network')
+            ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+            : '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.';
+
         // 에러 발생 시 사용자에게 알림
-        Alert.alert(
-          '정보 조회 실패',
-          '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.',
-          [{ text: '확인' }]
-        );
+        Alert.alert('정보 조회 실패', errorMessage, [{ text: '확인' }]);
       } finally {
         setIsLoading(false);
+        setIsOcrLoading(false); // OCR 로딩 모달 숨김
       }
     } catch (error) {
       // 사용자가 취소한 경우 무시
@@ -708,6 +714,7 @@ const RegisterDetailScreen = () => {
 
       // 기프티콘 이미지 메타데이터 API 호출
       setIsLoading(true);
+      setIsOcrLoading(true); // OCR 로딩 모달 표시
       try {
         const metadata = await gifticonService.getGifticonImageMetadata(
           { uri: image.path, type: image.mime, fileName: image.filename || 'image.jpg' },
@@ -771,14 +778,18 @@ const RegisterDetailScreen = () => {
         }
       } catch (error) {
         console.error('기프티콘 메타데이터 조회 실패:', error);
+
+        // 네트워크 오류 확인
+        const errorMessage =
+          error.message.includes('네트워크') || error.message.includes('Network')
+            ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+            : '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.';
+
         // 에러 발생 시 사용자에게 알림
-        Alert.alert(
-          '정보 조회 실패',
-          '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.',
-          [{ text: '확인' }]
-        );
+        Alert.alert('정보 조회 실패', errorMessage, [{ text: '확인' }]);
       } finally {
         setIsLoading(false);
+        setIsOcrLoading(false); // OCR 로딩 모달 숨김
       }
     } catch (error) {
       // 사용자가 취소한 경우 무시
@@ -1077,6 +1088,9 @@ const RegisterDetailScreen = () => {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
+      {/* OCR 로딩 모달 - 특별한 애니메이션과 함께 표시 */}
+      <LoadingOcrModal visible={isOcrLoading} message="기프티콘 정보를 분석하고 있습니다..." />
+
       {/* 안전 영역 고려한 상단 여백 */}
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
@@ -1334,8 +1348,8 @@ const RegisterDetailScreen = () => {
         />
       </View>
 
-      {/* 로딩 인디케이터 */}
-      {isLoading && (
+      {/* 로딩 인디케이터 - 일반 처리용 */}
+      {isLoading && !isOcrLoading && (
         <View style={styles.loadingContainer}>
           <View style={styles.loadingBox}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
