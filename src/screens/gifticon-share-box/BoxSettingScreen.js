@@ -1,6 +1,6 @@
 // 쉐어박스 설정 스크린
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
-import { leaveShareBox } from '../../api/shareBoxApi';
+import { leaveShareBox, fetchShareBoxSettings } from '../../api/shareBoxApi';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -25,11 +25,9 @@ const BoxSettingScreen = () => {
   const navigation = useNavigation();
 
   // 쉐어박스 이름 가져오기
-  const [shareBoxName, setShareBoxName] = useState(
-    route.params?.shareBoxName || '오라차차 대성이네'
-  );
+  const [shareBoxName, setShareBoxName] = useState('');
   const [memberEntryEnabled, setMemberEntryEnabled] = useState(true);
-  const shareBoxCode = 'WAZPI76R';
+  const [shareBoxCode, setShareBoxCode] = useState('');
 
   // 멤버 목록
   const members = [
@@ -39,6 +37,20 @@ const BoxSettingScreen = () => {
     { id: 4, name: '안수진', role: '멤버' },
     { id: 5, name: '정주은', role: '멤버' },
   ];
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await fetchShareBoxSettings(route.params?.shareBoxId);
+        setShareBoxName(data.shareBoxName);
+        setMemberEntryEnabled(data.shareBoxAllowParticipation);
+        setShareBoxCode(data.shareBoxInviteCode);
+      } catch (e) {
+        Alert.alert('오류', '쉐어박스 설정 정보를 불러오지 못했습니다.');
+      }
+    };
+    loadSettings();
+  }, [route.params?.shareBoxId]);
 
   // 뒤로가기 핸들러
   const handleGoBack = () => {
