@@ -40,4 +40,39 @@ export const fetchShareBoxSettings = async (shareBoxId) => {
 export const fetchShareBoxUsers = async (shareBoxId) => {
   const response = await apiClient.get(API_CONFIG.ENDPOINTS.SHARE_BOX_USERS(shareBoxId));
   return response.data;
+};
+
+export const fetchAvailableGifticons = async ({
+  shareBoxId,
+  type,    // 'PRODUCT' | 'AMOUNT' | undefined
+  sort,    // 'CREATED_DESC' | 'EXPIRY_ASC' | undefined
+  page,    // string | undefined
+  size,    // number | undefined
+}) => {
+  const params = {};
+  if (type) params.type = type;
+  if (sort) params.sort = sort;
+  if (page) params.page = page;
+  if (size) params.size = size;
+
+  const res = await apiClient.get(API_CONFIG.ENDPOINTS.AVAILABLE_GIFTICONS(shareBoxId), { params });
+  return res.data;
+};
+
+// 사용완료 기프티콘 목록 조회 API
+export const fetchUsedGifticons = async ({
+  shareBoxId,
+  type,    // 'PRODUCT' | 'AMOUNT' | undefined
+  sort,    // 'CREATED_DESC' | 'EXPIRY_ASC' | undefined
+  page,    // string | undefined
+  size,    // number | undefined
+}) => {
+  const params = {};
+  if (type) params.type = type;
+  if (sort) params.sort = sort;
+  if (page) params.page = page;
+  if (size) params.size = size;
+
+  const res = await apiClient.get(API_CONFIG.ENDPOINTS.USED_GIFTICONS(shareBoxId), { params });
+  return res.data;
 }; 

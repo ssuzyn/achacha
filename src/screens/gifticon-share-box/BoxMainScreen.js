@@ -110,20 +110,22 @@ const BoxMainScreen = () => {
   const [shareBoxes, setShareBoxes] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // 1. 함수 선언 위치를 바깥으로!
+  const loadShareBoxes = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchShareBoxes();
+      setShareBoxes(data.shareBoxes || []);
+    } catch (e) {
+      setShareBoxes(DUMMY_DATA);
+      Alert.alert('목록 불러오기 실패', '임시 데이터로 대체합니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 2. useEffect/useFocusEffect에서 호출
   useEffect(() => {
-    const loadShareBoxes = async () => {
-      setLoading(true);
-      try {
-        const data = await fetchShareBoxes();
-        setShareBoxes(data.shareBoxes || []);
-      } catch (e) {
-        // API 실패 시 더미 데이터로 대체
-        setShareBoxes(DUMMY_DATA);
-        Alert.alert('목록 불러오기 실패', '임시 데이터로 대체합니다.');
-      } finally {
-        setLoading(false);
-      }
-    };
     loadShareBoxes();
   }, []);
 

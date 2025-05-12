@@ -22,6 +22,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { fetchAvailableGifticons, fetchUsedGifticons } from '../../api/shareBoxApi';
 
 // 더미 데이터 - API 응답값 형식에 맞춰서 수정
 const DUMMY_GIFTICONS = [
@@ -202,6 +203,18 @@ const BoxListScreen = () => {
 
   // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
   const currentUserId = 78;
+
+  // 추가된 상태
+  const [availableGifticons, setAvailableGifticons] = useState([]);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [nextPage, setNextPage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // 사용완료 관련 상태
+  const [usedGifticons, setUsedGifticons] = useState([]);
+  const [usedHasNextPage, setUsedHasNextPage] = useState(false);
+  const [usedNextPage, setUsedNextPage] = useState(null);
+  const [usedLoading, setUsedLoading] = useState(false);
 
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({
@@ -689,7 +702,7 @@ const BoxListScreen = () => {
             <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -772,7 +785,7 @@ const BoxListScreen = () => {
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
                 <Image
-                  source={item.thumbnailPath}
+                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
                   style={[styles.gifticonImage, { opacity: 0.7 }]}
                 />
               </View>
@@ -855,7 +868,7 @@ const BoxListScreen = () => {
               <View style={styles.gifticonContent}>
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                  <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                  <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
                 </View>
 
                 {/* 텍스트 정보 영역 */}
@@ -954,7 +967,7 @@ const BoxListScreen = () => {
             <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -1071,6 +1084,59 @@ const BoxListScreen = () => {
     }
   };
 
+  // 필터/정렬 값에 따라 API 호출
+  useEffect(() => {
+    if (selectedCategory !== 'available') return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchAvailableGifticons({
+          shareBoxId,
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
+          sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+          page: undefined, // 첫 페이지
+          size: 20, // 원하는 페이지 크기
+        });
+        setAvailableGifticons(res.gifticons);
+        setHasNextPage(res.hasNextPage);
+        setNextPage(res.nextPage);
+      } catch (e) {
+        // 에러 처리
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedCategory, selectedFilter, sortBy.available, shareBoxId]);
+
+  useEffect(() => {
+    if (selectedCategory !== 'used') return;
+
+    const fetchData = async () => {
+      setUsedLoading(true);
+      try {
+        const res = await fetchUsedGifticons({
+          shareBoxId,
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
+          sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+          page: undefined, // 첫 페이지
+          size: 20,
+        });
+        setUsedGifticons(res.gifticons);
+        setUsedHasNextPage(res.hasNextPage);
+        setUsedNextPage(res.nextPage);
+      } catch (e) {
+        // 에러 처리
+      } finally {
+        setUsedLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedCategory, selectedFilter, sortBy.used, shareBoxId]);
+
   return (
     <TouchableWithoutFeedback onPress={handleOutsidePress}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1159,18 +1225,20 @@ const BoxListScreen = () => {
           contentContainerStyle={styles.scrollViewContent}
         >
           <View style={styles.gifticonList}>
-            {filteredGifticons.length > 0 ? (
-              filteredGifticons.map(item => renderGifticonItem(item))
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Icon name="inbox" type="material" size={48} color="#CBD5E0" />
-                <Text style={styles.emptyText}>
-                  {selectedCategory === 'available'
-                    ? '사용가능한 기프티콘이 없습니다'
-                    : '사용완료한 기프티콘이 없습니다'}
-                </Text>
-              </View>
-            )}
+            {selectedCategory === 'available'
+              ? (loading
+                  ? <Text>로딩 중...</Text>
+                  : availableGifticons.length > 0
+                    ? availableGifticons.map(item => renderGifticonItem({ ...item, scope: 'SHARE_BOX' }))
+                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text></View>
+                )
+              : (usedLoading
+                  ? <Text>로딩 중...</Text>
+                  : usedGifticons.length > 0
+                    ? usedGifticons.map(item => renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName }))
+                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text></View>
+                )
+            }
           </View>
         </ScrollView>
 
