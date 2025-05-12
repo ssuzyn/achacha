@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,6 +19,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { Button } from '../components/ui';
+import { useNavigation } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../assets/images/giveaway-button.png');
@@ -117,6 +118,7 @@ const GiveAwayScreen = ({ onClose }) => {
   const userPositionsRef = useRef([]);
   const [loading, setLoading] = useState(true);
   const nearbyUsersServiceRef = useRef(null);
+  const navigation = useNavigation();
 
   // 원의 중심 좌표
   const centerX = width / 2;
@@ -255,11 +257,9 @@ const GiveAwayScreen = ({ onClose }) => {
   const userPositions = calculateUserPositions(users);
 
   // 뒤로가기 버튼 핸들러
-  const handleGoBack = () => {
-    if (onClose) {
-      onClose();
-    }
-  };
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -270,13 +270,10 @@ const GiveAwayScreen = ({ onClose }) => {
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Button
-          variant="ghost"
-          onPress={handleGoBack}
-          style={styles.backButton}
-          leftIcon={<Icon name="arrow-back-ios" size={22} color={theme.colors.black} />}
-        />
-        <Text style={styles.headerTitle}>기프티콘 뿌리기</Text>
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
+          <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.colors.black }]}>기프티콘 뿌리기</Text>
         <View style={styles.rightPlaceholder} />
       </View>
 
@@ -303,9 +300,6 @@ const GiveAwayScreen = ({ onClose }) => {
             <>
               <View style={styles.loadingOverlay}>
                 <SearchingAnimation size={smallestRadius * 2} />
-              </View>
-              <View style={styles.loadingTextContainer}>
-                <Text style={styles.loadingText}>주변 유저 찾는 중</Text>
               </View>
             </>
           ) : (
@@ -405,19 +399,18 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
-  backButton: {
+  backButtonContainer: {
     padding: 0,
     backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333333',
     textAlign: 'center',
     flex: 1,
   },
   rightPlaceholder: {
-    width: 48,
+    width: 30,
   },
   contentContainer: {
     flex: 1,
@@ -511,19 +504,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 20,
-  },
-  loadingTextContainer: {
-    position: 'absolute',
-    bottom: 150,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 20,
-  },
-  loadingText: {
-    fontSize: 25,
-    fontFamily: 'Pretendard-Bold',
-    color: '#2563EB',
   },
 });
 
