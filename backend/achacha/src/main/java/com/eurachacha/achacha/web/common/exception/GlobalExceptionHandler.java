@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -48,6 +49,21 @@ public class GlobalExceptionHandler {
 		// ErrorCode를 고정으로 사용
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 			.body(ErrorResponse.of(ErrorCode.INVALID_PARAMETER, errorMessage));
+	}
+
+	/**
+	 * 유효성 검증 실패 예외 (MethodArgumentNotValidException 등), Request 시 인자 검증
+	 * */
+	@ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+	public ResponseEntity<ErrorResponse> handleHttpMediaTypeNotSupportedException(
+		HttpMediaTypeNotSupportedException ex
+	) {
+		String errorMessage = String.format("지원하지 않는 미디어 타입입니다: %s", ex.getContentType());
+
+		logger.error("미디어 타입 오류: {}", errorMessage, ex);
+
+		return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+			.body(ErrorResponse.of(ErrorCode.UNSUPPORTED_MEDIA_TYPE, errorMessage));
 	}
 
 	@ExceptionHandler(Exception.class)
