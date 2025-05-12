@@ -32,4 +32,6 @@ public interface GifticonAppService {
 	GifticonBarcodeResponseDto getAvailableGifticonBarcode(Integer gifticonId);
 
 	GifticonBarcodeResponseDto getUsedGifticonBarcode(Integer gifticonId);
+
+	void deleteGifticon(Integer gifticonId);
 }
