@@ -353,10 +353,15 @@ const BoxMainScreen = () => {
               placeholder="초대코드"
               placeholderTextColor="#A0AEC0"
               value={inviteCode}
-              onChangeText={setInviteCode}
-              autoCapitalize="none"
+              onChangeText={(text) => {
+                // 영문(대소문자) 또는 숫자만 허용, 10자리로 자르기
+                const filtered = text.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+                setInviteCode(filtered);
+              }}
+              autoCapitalize="characters"
               autoCorrect={false}
               fontFamily="Pretendard-Regular"
+              maxLength={10}
             />
 
             <View style={styles.buttonContainer}>
