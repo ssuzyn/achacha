@@ -150,6 +150,41 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		log.info("기프티콘 공유 완료 - 기프티콘 ID: {}, 쉐어박스 ID: {}", gifticonId, shareBoxId);
 	}
 
+	@Transactional
+	@Override
+	public void unshareGifticon(Integer shareBoxId, Integer gifticonId) {
+		log.info("기프티콘 공유 해제 시작 - 쉐어박스 ID: {}, 기프티콘 ID: {}", shareBoxId, gifticonId);
+
+		// 현재 사용자 조회 (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 존재 여부 확인
+		if (!shareBoxRepository.existsById(shareBoxId)) {
+			throw new CustomException(ErrorCode.SHAREBOX_NOT_FOUND);
+		}
+
+		// 쉐어박스 참여 여부 검증
+		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+		}
+
+		// 기프티콘 조회
+		Gifticon gifticon = gifticonRepository.findById(gifticonId);
+
+		// 기프티콘 소유권 검증
+		if (!gifticonDomainService.hasAccess(userId, gifticon.getUser().getId())) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+
+		// 현재 쉐어박스에 공유된 기프티콘인지 검증
+		gifticonDomainService.validateGifticonSharedInShareBox(gifticon, shareBoxId);
+
+		// 기프티콘 공유 해제 (쉐어박스 연결 제거)
+		gifticon.updateShareBox(null);
+
+		log.info("기프티콘 공유 해제 완료 - 기프티콘 ID: {}, 쉐어박스 ID: {}", gifticonId, shareBoxId);
+	}
+
 	// 고유한 초대 코드 생성 메서드
 	private String generateUniqueInviteCode() {
 		SecureRandom random = new SecureRandom();

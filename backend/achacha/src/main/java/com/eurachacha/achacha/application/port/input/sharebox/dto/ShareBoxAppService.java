@@ -10,4 +10,6 @@ public interface ShareBoxAppService {
 	void joinShareBox(Integer shareBoxId, ShareBoxJoinRequestDto requestDto);
 
 	void shareGifticon(Integer shareBoxId, Integer gifticonId);
+
+	void unshareGifticon(Integer shareBoxId, Integer gifticonId);
 }
