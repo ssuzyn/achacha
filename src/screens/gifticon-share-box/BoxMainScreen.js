@@ -164,7 +164,34 @@ const BoxMainScreen = () => {
       handleCloseModal();
       // TODO: 필요하다면 목록 새로고침 등 추가
     } catch (error) {
-      alert('참여에 실패했습니다. 초대코드를 확인해 주세요.');
+      let message = '참여에 실패했습니다. 다시 시도해 주세요.';
+      const errorCode = error?.response?.data?.errorCode;
+      switch (errorCode) {
+        case 'SHAREBOX_003':
+          message = '유효하지 않은 초대 코드입니다.';
+          break;
+        case 'X002':
+          message = '잘못된 파라미터가 전달되었습니다.';
+          break;
+        case 'SHAREBOX_004':
+          message = '참여가 비활성화된 쉐어박스입니다.';
+          break;
+        case 'SHAREBOX_006':
+          message = '최대 참여자 수(10명)에 도달했습니다.';
+          break;
+        case 'SHAREBOX_001':
+          message = '쉐어박스를 찾을 수 없습니다.';
+          break;
+        case 'SHAREBOX_005':
+          message = '이미 참여 중인 쉐어박스입니다.';
+          break;
+        default:
+          if (error?.response?.data?.message) {
+            message = error.response.data.message;
+          }
+          break;
+      }
+      alert(message);
     }
   };
 

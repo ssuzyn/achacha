@@ -253,8 +253,28 @@ const BoxCreateScreen = () => {
       setInviteCode(data.shareBoxInviteCode);
       setScreenState('share');
     } catch (error) {
-      console.error('쉐어박스 생성 실패:', error);
-      Alert.alert('생성 실패', '쉐어박스 생성 중 오류가 발생했습니다.');
+      let message = '쉐어박스 생성 중 오류가 발생했습니다.';
+      const errorCode = error?.response?.data?.errorCode;
+      switch (errorCode) {
+        case 'SHAREBOX_007':
+          message = '유효하지 않은 쉐어박스 이름입니다.';
+          break;
+        case 'X002':
+          message = '잘못된 파라미터가 전달되었습니다.';
+          break;
+        case 'SHAREBOX_002':
+          message = '쉐어박스 생성에 실패했습니다.';
+          break;
+        case 'X003':
+          message = '서버 에러가 발생했습니다.';
+          break;
+        default:
+          if (error?.response?.data?.message) {
+            message = error.response.data.message;
+          }
+          break;
+      }
+      Alert.alert('생성 실패', message);
     }
   };
 
