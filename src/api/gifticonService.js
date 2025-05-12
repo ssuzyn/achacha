@@ -1,11 +1,7 @@
 import apiClient from './apiClient';
 import { API_CONFIG } from './config';
 import { Platform } from 'react-native';
-import RNFetchBlob from 'react-native-blob-util';
-
-// Blob 관련 경고: React Native에서 Blob 처리가 필요한 경우
-// 'react-native-blob-util' 또는 'react-native-fetch-blob' 라이브러리 설치 필요
-// 예: import RNFetchBlob from 'react-native-blob-util';
+import RNFS from 'react-native-fs';
 
 /**
  * 기프티콘 API 서비스
@@ -96,99 +92,134 @@ const gifticonService = {
    * @returns {Promise<string>} - 등록 결과 메시지
    */
   async registerGifticon(gifticonData, originalImage, thumbnailImage, barcodeImage) {
-    const jsonString = JSON.stringify(gifticonData);
-    console.log('[API] 기프티콘 등록 데이터:', jsonString);
-
     try {
-      // react-native-blob-util을 사용하여 multipart 요청 구성
-      // 이 방식은 각 파트의 Content-Type을 명시적으로 설정할 수 있음
-      const formData = [];
+      // JSON 문자열로 변환
+      const jsonString = JSON.stringify(gifticonData);
+      console.log('[API] 기프티콘 등록 데이터:', jsonString);
 
-      // JSON 부분 - application/json으로 명시적 지정
-      formData.push({
-        name: 'body',
-        data: jsonString,
+      // 임시 파일 경로 생성
+      const fileName = 'gifticon.json';
+      const filePath = `${RNFS.TemporaryDirectoryPath}/${fileName}`;
+      console.log('[API] JSON 임시 파일 경로:', filePath);
+
+      // JSON 문자열을 파일로 저장
+      await RNFS.writeFile(filePath, jsonString, 'utf8');
+      console.log('[API] JSON 파일 저장 완료');
+
+      // FormData 생성
+      const formData = new FormData();
+
+      // JSON 파일을 FormData에 추가 (중요: 파일 형식으로 추가하면서 Content-Type 명시)
+      // 1. 'gifticon' 필드로 추가 (API 명세에 기본)
+      formData.append('gifticon', {
+        uri: Platform.OS === 'android' ? `file://${filePath}` : filePath,
         type: 'application/json',
+        name: fileName,
       });
+
+      // 2. 대체 방법: 'body' 필드로도 추가 (백엔드 개발자가 이 필드명을 사용할 수 있음)
+      // 둘 중 하나가 작동하길 바라며 두 방식 모두 시도
+      const jsonFile = {
+        uri: Platform.OS === 'android' ? `file://${filePath}` : filePath,
+        type: 'application/json',
+        name: fileName,
+      };
+      formData.append('body', jsonFile);
 
       // 이미지 파일 추가
       if (originalImage && originalImage.uri) {
-        formData.push({
-          name: 'originalImage',
-          filename: originalImage.fileName || 'original.jpg',
+        formData.append('originalImage', {
+          uri:
+            Platform.OS === 'android'
+              ? originalImage.uri
+              : originalImage.uri.replace('file://', ''),
           type: originalImage.type || 'image/jpeg',
-          data: RNFetchBlob.wrap(
-            Platform.OS === 'android' ? originalImage.uri : originalImage.uri.replace('file://', '')
-          ),
+          name: originalImage.fileName || 'original.jpg',
         });
+        console.log('[API] 원본 이미지 추가됨:', originalImage.uri);
       }
 
       if (thumbnailImage && thumbnailImage.uri) {
-        formData.push({
-          name: 'thumbnailImage',
-          filename: thumbnailImage.fileName || 'thumbnail.jpg',
-          type: thumbnailImage.type || 'image/jpeg',
-          data: RNFetchBlob.wrap(
+        formData.append('thumbnailImage', {
+          uri:
             Platform.OS === 'android'
               ? thumbnailImage.uri
-              : thumbnailImage.uri.replace('file://', '')
-          ),
+              : thumbnailImage.uri.replace('file://', ''),
+          type: thumbnailImage.type || 'image/jpeg',
+          name: thumbnailImage.fileName || 'thumbnail.jpg',
         });
+        console.log('[API] 썸네일 이미지 추가됨:', thumbnailImage.uri);
       }
 
       if (barcodeImage && barcodeImage.uri) {
-        formData.push({
-          name: 'barcodeImage',
-          filename: barcodeImage.fileName || 'barcode.jpg',
+        formData.append('barcodeImage', {
+          uri:
+            Platform.OS === 'android' ? barcodeImage.uri : barcodeImage.uri.replace('file://', ''),
           type: barcodeImage.type || 'image/jpeg',
-          data: RNFetchBlob.wrap(
-            Platform.OS === 'android' ? barcodeImage.uri : barcodeImage.uri.replace('file://', '')
-          ),
+          name: barcodeImage.fileName || 'barcode.jpg',
+        });
+        console.log('[API] 바코드 이미지 추가됨:', barcodeImage.uri);
+      }
+
+      // FormData 내용 확인 (디버깅용)
+      console.log('[API] FormData 내용:');
+      if (formData._parts) {
+        formData._parts.forEach((part, index) => {
+          console.log(
+            `[${index}] ${part[0]}: ${typeof part[1] === 'object' ? JSON.stringify(part[1]) : part[1]}`
+          );
         });
       }
 
-      console.log('[API] 기프티콘 등록 요청 시작 (RNFetchBlob 사용)');
+      // 다른 옵션: 직접 URLSearchParams 구성 시도
+      const params = new URLSearchParams();
+      params.append('jsonData', jsonString);
 
-      // 서버의 URL을 가져옴
-      const apiBaseUrl = apiClient.defaults.baseURL || '';
-      const url = `${apiBaseUrl}${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}`;
-      console.log('[API] 요청 URL:', url);
+      // API 요청 전송 (Content-Type 명시)
+      console.log('[API] 기프티콘 등록 요청 시작');
 
-      // 인증 토큰을 가져옴 (apiClient의 기본 헤더나 다른 방식으로 가져오기)
-      const authHeader = apiClient.defaults.headers.common.Authorization || '';
+      // 요청 헤더 설정
+      const headers = {
+        'Content-Type': 'multipart/form-data',
+        Accept: 'application/json',
+      };
 
-      // RNFetchBlob으로 직접 요청
-      const response = await RNFetchBlob.fetch(
-        'POST',
-        url,
-        {
-          Authorization: authHeader,
-          'Content-Type': 'multipart/form-data',
-          Accept: 'application/json',
+      // 요청 보내기
+      console.log('[API] 요청 헤더:', headers);
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.REGISTER_GIFTICON, formData, {
+        headers,
+        timeout: 60000, // 이미지 처리를 위해 타임아웃 증가
+        transformRequest: data => {
+          // 기존 transformRequest 유지 (axios가 자동으로 boundary를 설정하게 함)
+          return data;
         },
-        formData
-      );
+      });
 
-      // 응답 파싱
-      const status = response.info().status;
-      const responseData = response.json();
+      console.log('[API] 기프티콘 등록 응답 성공:', response.data);
 
-      console.log('[API] 응답 상태 코드:', status);
-      console.log('[API] 기프티콘 등록 응답 성공:', responseData);
+      // 임시 파일 삭제
+      try {
+        await RNFS.unlink(filePath);
+        console.log('[API] 임시 JSON 파일 삭제 완료');
+      } catch (cleanupError) {
+        console.warn('[API] 임시 파일 삭제 중 오류:', cleanupError);
+      }
 
-      return responseData;
+      return response.data;
     } catch (error) {
       console.error('기프티콘 등록 실패:', error);
 
-      // RNFetchBlob 오류 상세 정보 로깅
-      if (error.info) {
-        console.error('응답 정보:', error.info());
-        try {
-          const responseBody = error.json ? error.json() : error.data;
-          console.error('응답 본문:', responseBody);
-        } catch (e) {
-          console.error('응답 본문 파싱 실패:', error.data);
-        }
+      // 오류 상세 정보 로깅
+      if (error.response) {
+        // 서버에서 응답이 왔지만 상태 코드가 2xx 범위를 벗어난 경우
+        console.error('서버 응답 오류:', error.response.status, error.response.data);
+        console.error('응답 헤더:', error.response.headers);
+      } else if (error.request) {
+        // 요청은 전송되었지만 응답이 수신되지 않은 경우
+        console.error('서버 응답 없음 (요청 정보):', error.request);
+      } else {
+        // 요청 설정 중 오류가 발생한 경우
+        console.error('요청 설정 오류:', error.message);
       }
 
       throw error;
