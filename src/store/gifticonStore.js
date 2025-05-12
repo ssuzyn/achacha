@@ -13,7 +13,7 @@ const useGifticonStore = create(set => ({
   currentEditedImageUri: null,
 
   // 바코드 관련 정보 추가
-  barcodeInfo: {}, // { gifticonId: { value: string, format: string, boundingBox: object } }
+  barcodeInfo: {}, // { gifticonId: { value: string, format: string, boundingBox: object, imageUri: string } }
   currentBarcodeInfo: null,
 
   // 이미지 설정 (편집 전/후 모두 저장)
@@ -76,7 +76,7 @@ const useGifticonStore = create(set => ({
     })),
 
   // 바코드 정보 설정 추가
-  setBarcodeInfo: (gifticonId, barcodeValue, barcodeFormat, boundingBox) =>
+  setBarcodeInfo: (gifticonId, barcodeValue, barcodeFormat, boundingBox, barcodeImageUri) =>
     set(state => ({
       barcodeInfo: {
         ...state.barcodeInfo,
@@ -84,6 +84,7 @@ const useGifticonStore = create(set => ({
           value: barcodeValue,
           format: barcodeFormat,
           boundingBox: boundingBox,
+          imageUri: barcodeImageUri,
         },
       },
       // 현재 작업 중인 기프티콘이면 현재 바코드 정보도 업데이트
@@ -93,6 +94,7 @@ const useGifticonStore = create(set => ({
               value: barcodeValue,
               format: barcodeFormat,
               boundingBox: boundingBox,
+              imageUri: barcodeImageUri,
             },
           }
         : {}),
@@ -109,6 +111,60 @@ const useGifticonStore = create(set => ({
         imageUri: barcodeImageUri,
       },
     })),
+
+  // 바코드 이미지만 업데이트
+  updateBarcodeImage: (gifticonId, barcodeImageUri) =>
+    set(state => {
+      // 이미 저장된 바코드 정보가 있는 경우
+      if (state.barcodeInfo[gifticonId]) {
+        return {
+          barcodeInfo: {
+            ...state.barcodeInfo,
+            [gifticonId]: {
+              ...state.barcodeInfo[gifticonId],
+              imageUri: barcodeImageUri,
+            },
+          },
+          // 현재 작업 중인 기프티콘이면 현재 바코드 정보도 업데이트
+          ...(state.currentGifticonId === gifticonId
+            ? {
+                currentBarcodeInfo: {
+                  ...state.currentBarcodeInfo,
+                  imageUri: barcodeImageUri,
+                },
+              }
+            : {}),
+        };
+      }
+      return state;
+    }),
+
+  // 바코드 값만 업데이트
+  updateBarcodeValue: (gifticonId, barcodeValue) =>
+    set(state => {
+      // 이미 저장된 바코드 정보가 있는 경우
+      if (state.barcodeInfo[gifticonId]) {
+        return {
+          barcodeInfo: {
+            ...state.barcodeInfo,
+            [gifticonId]: {
+              ...state.barcodeInfo[gifticonId],
+              value: barcodeValue,
+            },
+          },
+          // 현재 작업 중인 기프티콘이면 현재 바코드 정보도 업데이트
+          ...(state.currentGifticonId === gifticonId
+            ? {
+                currentBarcodeInfo: {
+                  ...state.currentBarcodeInfo,
+                  value: barcodeValue,
+                },
+              }
+            : {}),
+        };
+      }
+      return state;
+    }),
 
   // 기프티콘 이미지 상태 초기화
   resetGifticonImages: () =>

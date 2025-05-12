@@ -12,6 +12,7 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
+  NativeModules,
 } from 'react-native';
 import { Text } from '../../../components/ui';
 import Card from '../../../components/ui/Card';
@@ -22,6 +23,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+
+// 네이티브 모듈 가져오기
+const { BarcodeNativeModule } = NativeModules;
 
 const RegisterMainScreen = () => {
   const { theme } = useTheme();
@@ -120,35 +124,82 @@ const RegisterMainScreen = () => {
                 detectAndCropBarcode,
               } = require('../../../utils/BarcodeUtils');
 
-              // 1. 바코드 인식
-              const barcodeResult = await detectBarcode(imageAsset.uri);
-              console.log('[메인] 바코드 인식 결과:', JSON.stringify(barcodeResult));
+              let barcodeResult;
+              let croppedBarcodeResult;
+
+              // BarcodeNativeModule을 사용하여 바코드 감지 (네이티브 모듈이 있는 경우)
+              if (BarcodeNativeModule) {
+                console.log('[메인] 네이티브 모듈로 바코드 감지 시도');
+                try {
+                  // 1. 바코드 감지 (네이티브)
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  console.log('[메인] 네이티브 바코드 감지 결과:', JSON.stringify(barcodeResult));
+
+                  // 2. 바코드 크롭 (네이티브)
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    console.log('[메인] 네이티브 바코드 크롭 시도');
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                } catch (nativeError) {
+                  console.error('[메인] 네이티브 바코드 처리 오류:', nativeError);
+                  // 오류 발생 시 JS 방식으로 전환
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                }
+              } else {
+                // 네이티브 모듈이 없는 경우 JS 방식 사용
+                console.log('[메인] JS 방식으로 바코드 감지 시도');
+                // 1. 바코드 인식 (JS)
+                barcodeResult = await detectBarcode(imageAsset.uri);
+                console.log('[메인] 바코드 인식 결과:', JSON.stringify(barcodeResult));
+
+                // 2. 바코드 영역 크롭 시도 (JS)
+                if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                  croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                }
+              }
 
               let barcodeValue = null;
               let barcodeFormat = null;
               let barcodeBoundingBox = null;
               let barcodeImageUri = null;
 
-              if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+              if (barcodeResult && barcodeResult.success && barcodeResult.barcodes.length > 0) {
                 // 바코드 인식 성공
                 const firstBarcode = barcodeResult.barcodes[0];
                 barcodeValue = firstBarcode.value;
                 barcodeFormat = firstBarcode.format;
                 barcodeBoundingBox = firstBarcode.boundingBox;
 
+                // 코너 포인트 정보 추출 (더 정확한 바코드 영역 감지를 위해)
+                const cornerPoints = firstBarcode.cornerPoints;
+                console.log('[메인] 바코드 코너 포인트:', cornerPoints);
+
                 console.log('[메인] 바코드 인식 성공:', barcodeValue, barcodeFormat);
 
-                // 2. 바코드 영역 크롭 시도
-                try {
-                  const cropResult = await detectAndCropBarcode(imageAsset.uri);
-                  if (cropResult.success && cropResult.croppedImageUri) {
-                    barcodeImageUri = cropResult.croppedImageUri;
-                    console.log('[메인] 바코드 이미지 크롭 성공:', barcodeImageUri);
-                  } else {
-                    console.warn('[메인] 바코드 크롭 실패:', cropResult.message);
+                // 바코드 영역 크롭 성공했는지 확인
+                if (
+                  croppedBarcodeResult &&
+                  croppedBarcodeResult.success &&
+                  croppedBarcodeResult.croppedImageUri
+                ) {
+                  barcodeImageUri = croppedBarcodeResult.croppedImageUri;
+                  console.log('[메인] 바코드 이미지 크롭 성공:', barcodeImageUri);
+
+                  // 크롭 정보 로깅 (디버깅용)
+                  if (croppedBarcodeResult.cropInfo) {
+                    console.log(
+                      '[메인] 바코드 크롭 정보:',
+                      JSON.stringify(croppedBarcodeResult.cropInfo)
+                    );
                   }
-                } catch (cropError) {
-                  console.error('[메인] 바코드 크롭 오류:', cropError);
+                } else {
+                  console.warn(
+                    '[메인] 바코드 크롭 실패:',
+                    croppedBarcodeResult ? croppedBarcodeResult.message : '크롭 결과 없음'
+                  );
                 }
               }
 
@@ -167,6 +218,10 @@ const RegisterMainScreen = () => {
                 barcodeFormat: barcodeFormat,
                 barcodeBoundingBox: barcodeBoundingBox,
                 barcodeImageUri: barcodeImageUri,
+                // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
+                cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                // 크롭 정보 추가 (디버깅 및 UI 표시용)
+                cropInfo: croppedBarcodeResult?.cropInfo || null,
               });
             } catch (processingError) {
               console.error('이미지 처리 중 오류:', processingError);
@@ -245,35 +300,85 @@ const RegisterMainScreen = () => {
                 detectAndCropBarcode,
               } = require('../../../utils/BarcodeUtils');
 
-              // 1. 바코드 인식
-              const barcodeResult = await detectBarcode(imageAsset.uri);
-              console.log('[메인] 카메라 바코드 인식 결과:', JSON.stringify(barcodeResult));
+              let barcodeResult;
+              let croppedBarcodeResult;
+
+              // BarcodeNativeModule을 사용하여 바코드 감지 (네이티브 모듈이 있는 경우)
+              if (BarcodeNativeModule) {
+                console.log('[메인] 네이티브 모듈로 카메라 바코드 감지 시도');
+                try {
+                  // 1. 바코드 감지 (네이티브)
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  console.log(
+                    '[메인] 네이티브 카메라 바코드 감지 결과:',
+                    JSON.stringify(barcodeResult)
+                  );
+
+                  // 2. 바코드 크롭 (네이티브)
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    console.log('[메인] 네이티브 카메라 바코드 크롭 시도');
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                } catch (nativeError) {
+                  console.error('[메인] 네이티브 카메라 바코드 처리 오류:', nativeError);
+                  // 오류 발생 시 JS 방식으로 전환
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                }
+              } else {
+                // 네이티브 모듈이 없는 경우 JS 방식 사용
+                console.log('[메인] JS 방식으로 카메라 바코드 감지 시도');
+                // 1. 바코드 인식 (JS)
+                barcodeResult = await detectBarcode(imageAsset.uri);
+                console.log('[메인] 카메라 바코드 인식 결과:', JSON.stringify(barcodeResult));
+
+                // 2. 바코드 영역 크롭 시도 (JS)
+                if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                  croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                }
+              }
 
               let barcodeValue = null;
               let barcodeFormat = null;
               let barcodeBoundingBox = null;
               let barcodeImageUri = null;
 
-              if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+              if (barcodeResult && barcodeResult.success && barcodeResult.barcodes.length > 0) {
                 // 바코드 인식 성공
                 const firstBarcode = barcodeResult.barcodes[0];
                 barcodeValue = firstBarcode.value;
                 barcodeFormat = firstBarcode.format;
                 barcodeBoundingBox = firstBarcode.boundingBox;
 
+                // 코너 포인트 정보 추출 (더 정확한 바코드 영역 감지를 위해)
+                const cornerPoints = firstBarcode.cornerPoints;
+                console.log('[메인] 카메라 바코드 코너 포인트:', cornerPoints);
+
                 console.log('[메인] 카메라 바코드 인식 성공:', barcodeValue, barcodeFormat);
 
-                // 2. 바코드 영역 크롭 시도
-                try {
-                  const cropResult = await detectAndCropBarcode(imageAsset.uri);
-                  if (cropResult.success && cropResult.croppedImageUri) {
-                    barcodeImageUri = cropResult.croppedImageUri;
-                    console.log('[메인] 카메라 바코드 이미지 크롭 성공:', barcodeImageUri);
-                  } else {
-                    console.warn('[메인] 바코드 크롭 실패:', cropResult.message);
+                // 바코드 영역 크롭 성공했는지 확인
+                if (
+                  croppedBarcodeResult &&
+                  croppedBarcodeResult.success &&
+                  croppedBarcodeResult.croppedImageUri
+                ) {
+                  barcodeImageUri = croppedBarcodeResult.croppedImageUri;
+                  console.log('[메인] 카메라 바코드 이미지 크롭 성공:', barcodeImageUri);
+
+                  // 크롭 정보 로깅 (디버깅용)
+                  if (croppedBarcodeResult.cropInfo) {
+                    console.log(
+                      '[메인] 카메라 바코드 크롭 정보:',
+                      JSON.stringify(croppedBarcodeResult.cropInfo)
+                    );
                   }
-                } catch (cropError) {
-                  console.error('[메인] 카메라 바코드 크롭 오류:', cropError);
+                } else {
+                  console.warn(
+                    '[메인] 바코드 크롭 실패:',
+                    croppedBarcodeResult ? croppedBarcodeResult.message : '크롭 결과 없음'
+                  );
                 }
               }
 
@@ -292,6 +397,10 @@ const RegisterMainScreen = () => {
                 barcodeFormat: barcodeFormat,
                 barcodeBoundingBox: barcodeBoundingBox,
                 barcodeImageUri: barcodeImageUri,
+                // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
+                cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                // 크롭 정보 추가 (디버깅 및 UI 표시용)
+                cropInfo: croppedBarcodeResult?.cropInfo || null,
               });
             } catch (processingError) {
               console.error('카메라 이미지 처리 중 오류:', processingError);

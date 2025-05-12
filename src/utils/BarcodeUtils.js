@@ -1,6 +1,9 @@
 import BarcodeScanning from '@react-native-ml-kit/barcode-scanning';
-import { Platform } from 'react-native';
+import { Platform, NativeModules } from 'react-native';
 import PhotoManipulator from 'react-native-photo-manipulator';
+
+// 네이티브 모듈 가져오기
+const { BarcodeNativeModule } = NativeModules;
 
 /**
  * 이미지에서 바코드를 감지하는 함수
@@ -8,23 +11,66 @@ import PhotoManipulator from 'react-native-photo-manipulator';
 export const detectBarcode = async imageUri => {
   try {
     console.log('[바코드 감지] 시작:', imageUri);
-    const barcodes = await BarcodeScanning.scan(imageUri);
-    console.log('[바코드 감지] 결과:', barcodes);
 
-    if (barcodes.length === 0) {
-      console.log('[바코드 감지] 바코드를 찾지 못함');
-      return { success: false, message: '이미지에서 바코드를 찾을 수 없습니다.' };
+    // 네이티브 모듈이 존재하는지 확인
+    if (BarcodeNativeModule) {
+      // 네이티브 모듈 사용하여 바코드 감지
+      console.log('[바코드 감지] 네이티브 모듈 사용');
+      const result = await BarcodeNativeModule.detectBarcode(imageUri);
+      console.log('[바코드 감지] 네이티브 결과:', result);
+
+      if (result.success) {
+        return {
+          success: true,
+          barcodes: result.barcodes.map(barcode => {
+            // boundingBox 정보 확인 및 정규화
+            const boundingBox = barcode.boundingBox
+              ? {
+                  x: barcode.boundingBox.x,
+                  y: barcode.boundingBox.y,
+                  width: barcode.boundingBox.width,
+                  height: barcode.boundingBox.height,
+                }
+              : null;
+
+            // 코너 포인트 정보 추가 (더 정확한 바코드 영역을 위해)
+            return {
+              value: barcode.value,
+              format: barcode.format,
+              boundingBox: boundingBox,
+              cornerPoints: barcode.cornerPoints || null,
+            };
+          }),
+        };
+      } else {
+        console.log('[바코드 감지] 네이티브 모듈 - 바코드 찾지 못함');
+        return {
+          success: false,
+          message: result.message || '이미지에서 바코드를 찾을 수 없습니다.',
+        };
+      }
+    } else {
+      // 네이티브 모듈이 없는 경우 기존 방식 사용
+      console.log('[바코드 감지] 기존 모듈 사용');
+      const barcodes = await BarcodeScanning.scan(imageUri);
+      console.log('[바코드 감지] 결과:', barcodes);
+
+      if (barcodes.length === 0) {
+        console.log('[바코드 감지] 바코드를 찾지 못함');
+        return { success: false, message: '이미지에서 바코드를 찾을 수 없습니다.' };
+      }
+
+      // 바코드 정보 반환
+      return {
+        success: true,
+        barcodes: barcodes.map(barcode => ({
+          value: barcode.value,
+          format: barcode.format,
+          boundingBox: barcode.boundingBox,
+          cornerPoints: barcode.cornerPoints || null,
+        })),
+      };
     }
-
-    // 바코드 정보 반환
-    return {
-      success: true,
-      barcodes: barcodes.map(barcode => ({
-        value: barcode.value,
-        format: barcode.format,
-        boundingBox: barcode.boundingBox,
-      })),
-    };
   } catch (error) {
     console.error('[바코드 감지] 오류:', error);
     return { success: false, message: '바코드 감지 중 오류가 발생했습니다.', error };
@@ -54,7 +100,7 @@ export const detectAndCropBarcode = async imageUri => {
     console.log('[바코드 추출] 감지된 바코드:', barcode.value, barcode.format);
 
     // 바코드 위치 정보 확인
-    if (!barcode.boundingBox) {
+    if (!barcode.boundingBox && !barcode.cornerPoints) {
       console.log('[바코드 추출] 바코드 위치 정보 없음');
 
       // 바코드 값은 있지만 바운딩 박스가 없는 경우
@@ -62,39 +108,129 @@ export const detectAndCropBarcode = async imageUri => {
       return cropWithDefaultBoundingBox(imageUri, barcode);
     }
 
-    // 바코드 영역만 정확하게 크롭
-    const { left, top, width, height } = barcode.boundingBox;
+    // 네이티브 모듈이 존재하면 네이티브 방식으로 크롭 (코너 포인트 활용)
+    if (BarcodeNativeModule) {
+      try {
+        console.log('[바코드 추출] 네이티브 모듈로 크롭 시도');
 
-    // 바코드 영역 로깅
-    console.log('[바코드 추출] 감지된 바코드 영역:', JSON.stringify(barcode.boundingBox));
+        // 바운딩 박스와 코너 포인트 정보 전달
+        const { x, y, width, height } = barcode.boundingBox || { x: 0, y: 0, width: 0, height: 0 };
 
-    // 바코드 영역에 여백 추가 (정확한 인식을 위해)
-    // 바코드 타입에 따라 여백 조정 (1D 바코드는 가로로 더 길기 때문에 세로 여백 더 많이 필요)
-    const is1DBarcode = [
-      'CODE_128',
-      'CODE_39',
-      'CODE_93',
-      'CODABAR',
-      'EAN_13',
-      'EAN_8',
-      'ITF',
-      'UPC_A',
-      'UPC_E',
-    ].includes(barcode.format);
+        // 네이티브 모듈을 사용하여 바코드 영역 크롭 (코너 포인트 활용)
+        const cropResult = await BarcodeNativeModule.cropBarcodeArea(imageUri, x, y, width, height);
 
-    // 1D 바코드는 가로로 더 길어서 세로 여백을 더 많이 줌
-    const paddingX = width * (is1DBarcode ? 0.05 : 0.1);
-    const paddingY = height * (is1DBarcode ? 0.2 : 0.1);
+        if (cropResult.success && cropResult.croppedImageUri) {
+          console.log('[바코드 추출] 네이티브 크롭 성공:', cropResult.croppedImageUri);
+          return {
+            success: true,
+            croppedImageUri: cropResult.croppedImageUri,
+            barcodeValue: barcode.value,
+            barcodeFormat: barcode.format,
+            boundingBox: barcode.boundingBox,
+            cropInfo: {
+              x: cropResult.cropX,
+              y: cropResult.cropY,
+              width: cropResult.cropWidth,
+              height: cropResult.cropHeight,
+            },
+          };
+        } else {
+          console.log('[바코드 추출] 네이티브 크롭 실패, JS 방식으로 전환');
+        }
+      } catch (nativeError) {
+        console.error('[바코드 추출] 네이티브 크롭 에러:', nativeError);
+        // 네이티브 크롭 실패 시 JS 방식으로 진행
+      }
+    }
 
-    // 크롭 영역 계산 - 정확하게 바코드 영역만
-    const cropRegion = {
-      x: Math.max(0, Math.floor(left - paddingX)),
-      y: Math.max(0, Math.floor(top - paddingY)),
-      width: Math.ceil(width + paddingX * 2),
-      height: Math.ceil(height + paddingY * 2),
-    };
+    // 바코드 영역만 정확하게 크롭 (JS 방식 - 코너 포인트가 없는 경우 폴백)
+    const { x, y, width, height } = barcode.boundingBox;
 
-    console.log('[바코드 추출] 크롭 영역:', JSON.stringify(cropRegion));
+    // 코너 포인트가 있는 경우 보다 정확한 바코드 영역 계산
+    let cropRegion;
+
+    if (barcode.cornerPoints && barcode.cornerPoints.length >= 4) {
+      // 모든 코너 포인트 중 최소/최대 좌표 찾기
+      let minX = Number.MAX_SAFE_INTEGER;
+      let minY = Number.MAX_SAFE_INTEGER;
+      let maxX = 0;
+      let maxY = 0;
+
+      for (const point of barcode.cornerPoints) {
+        minX = Math.min(minX, point.x);
+        minY = Math.min(minY, point.y);
+        maxX = Math.max(maxX, point.x);
+        maxY = Math.max(maxY, point.y);
+      }
+
+      // 코너 포인트 기반 영역에 여백 추가
+      const cornerWidth = maxX - minX;
+      const cornerHeight = maxY - minY;
+
+      // 바코드 타입에 따라 여백 조정
+      const is1DBarcode = [
+        'CODE_128',
+        'CODE_39',
+        'CODE_93',
+        'CODABAR',
+        'EAN_13',
+        'EAN_8',
+        'ITF',
+        'UPC_A',
+        'UPC_E',
+      ].includes(barcode.format);
+
+      const paddingX = cornerWidth * (is1DBarcode ? 0.3 : 0.2);
+      const paddingY = cornerHeight * (is1DBarcode ? 0.2 : 0.2);
+
+      cropRegion = {
+        x: Math.max(0, Math.floor(minX - paddingX)),
+        y: Math.max(0, Math.floor(minY - paddingY)),
+        width: Math.ceil(cornerWidth + paddingX * 2),
+        height: Math.ceil(cornerHeight + paddingY * 2),
+      };
+
+      console.log('[바코드 추출] 코너 포인트 기반 크롭 영역:', JSON.stringify(cropRegion));
+    } else {
+      // 코너 포인트가 없는 경우 바운딩 박스를 기반으로 여백 추가
+      // x, y, width, height가 전달되는지 확인, 없으면 left, top으로 대체
+      const left = x !== undefined ? x : barcode.boundingBox.left;
+      const top = y !== undefined ? y : barcode.boundingBox.top;
+      const barcodeWidth = width !== undefined ? width : barcode.boundingBox.width;
+      const barcodeHeight = height !== undefined ? height : barcode.boundingBox.height;
+
+      // 바코드 영역 로깅
+      console.log(
+        '[바코드 추출] 감지된 바코드 영역:',
+        JSON.stringify({ left, top, width: barcodeWidth, height: barcodeHeight })
+      );
+
+      // 여백 계산 - 특히 가로 방향에 더 많은 여백 추가
+      const is1DBarcode = [
+        'CODE_128',
+        'CODE_39',
+        'CODE_93',
+        'CODABAR',
+        'EAN_13',
+        'EAN_8',
+        'ITF',
+        'UPC_A',
+        'UPC_E',
+      ].includes(barcode.format);
+
+      const paddingX = barcodeWidth * (is1DBarcode ? 0.3 : 0.2); // 가로 여백 증가: 1D 바코드는 30%, 2D는 20%
+      const paddingY = barcodeHeight * (is1DBarcode ? 0.2 : 0.2); // 세로 여백: 1D 바코드는 20%, 2D는 20%
+
+      // 크롭 영역 계산 - 정확하게 바코드 영역만
+      cropRegion = {
+        x: Math.max(0, Math.floor(left - paddingX)),
+        y: Math.max(0, Math.floor(top - paddingY)),
+        width: Math.ceil(barcodeWidth + paddingX * 2),
+        height: Math.ceil(barcodeHeight + paddingY * 2),
+      };
+
+      console.log('[바코드 추출] 바운딩 박스 기반 크롭 영역:', JSON.stringify(cropRegion));
+    }
 
     // 이미지 URI 처리 (file:// 접두사가 필요한 경우 처리)
     let processedUri = imageUri;
@@ -104,7 +240,7 @@ export const detectAndCropBarcode = async imageUri => {
     }
 
     try {
-      // PhotoManipulator를 사용하여 이미지 크롭 - 정확하게 바코드 영역만
+      // PhotoManipulator를 사용하여 이미지 크롭
       const croppedImageUri = await PhotoManipulator.crop(processedUri, cropRegion);
       console.log('[바코드 추출] 성공:', croppedImageUri);
 
@@ -115,6 +251,7 @@ export const detectAndCropBarcode = async imageUri => {
         barcodeValue: barcode.value,
         barcodeFormat: barcode.format,
         boundingBox: barcode.boundingBox,
+        cropInfo: cropRegion,
       };
     } catch (cropError) {
       console.error('[바코드 추출] 크롭 실패:', cropError);
@@ -161,7 +298,7 @@ const cropWithDefaultBoundingBox = async (imageUri, barcode) => {
       ? {
           x: 50, // 왼쪽에서 50픽셀
           y: 100, // 위에서 100픽셀
-          width: 800, // 너비 800픽셀
+          width: 1000, // 너비 1000픽셀 (1D 바코드는 가로가 더 넓음)
           height: 300, // 높이 300픽셀 (1D 바코드는 세로가 더 짧음)
         }
       : {
