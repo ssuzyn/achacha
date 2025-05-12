@@ -37,4 +37,9 @@ public class ShareBoxPersistenceAdapter implements ShareBoxRepository {
 	public Optional<ShareBox> findByInviteCode(String inviteCode) {
 		return shareBoxJpaRepository.findByInviteCode(inviteCode);
 	}
+
+	@Override
+	public boolean existsById(Integer shareBoxId) {
+		return shareBoxJpaRepository.existsById(shareBoxId);
+	}
 }

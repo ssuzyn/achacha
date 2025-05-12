@@ -12,7 +12,7 @@ public class ShareBoxDomainServiceImpl implements ShareBoxDomainService {
 	private static final String ALLOWED_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	private static final int INVITE_CODE_LENGTH = 10;
 	private static final int MAX_PARTICIPANTS = 10;
-	private static final int MAX_NAME_LENGTH = 16;
+	private static final int MAX_NAME_LENGTH = 10;
 	private static final int MIN_NAME_LENGTH = 1;
 
 	@Override

@@ -352,4 +352,65 @@ class GifticonDomainServiceImplTest {
 		assertThatCode(() -> gifticonDomainService.validateGifticonSharable(gifticon))
 			.doesNotThrowAnyException();
 	}
+
+	@Test
+	@DisplayName("기프티콘이 쉐어박스에 공유되어 있는지 검증 - 기프티콘의 쉐어박스가 null이면 예외가 발생해야 한다")
+	void validateGifticonSharedInShareBox_WhenShareBoxIsNull_ThenThrowException() {
+		// given
+		Integer shareBoxId = 1;
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getSharebox()).willReturn(null);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			gifticonDomainService.validateGifticonSharedInShareBox(gifticon, shareBoxId));
+
+		// then
+		assertThat(thrown)
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX);
+	}
+
+	@Test
+	@DisplayName("기프티콘이 쉐어박스에 공유되어 있는지 검증 - 기프티콘의 쉐어박스 ID가 다르면 예외가 발생해야 한다")
+	void validateGifticonSharedInShareBox_WhenShareBoxIdDifferent_ThenThrowException() {
+		// given
+		Integer shareBoxId = 1;
+		Integer differentShareBoxId = 2;
+
+		ShareBox differentShareBox = mock(ShareBox.class);
+		given(differentShareBox.getId()).willReturn(differentShareBoxId);
+
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getSharebox()).willReturn(differentShareBox);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			gifticonDomainService.validateGifticonSharedInShareBox(gifticon, shareBoxId));
+
+		// then
+		assertThat(thrown)
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX);
+	}
+
+	@Test
+	@DisplayName("기프티콘이 쉐어박스에 공유되어 있는지 검증 - 기프티콘의 쉐어박스 ID가 일치하면 예외가 발생하지 않아야 한다")
+	void validateGifticonSharedInShareBox_WhenShareBoxIdMatch_ThenNoException() {
+		// given
+		Integer shareBoxId = 1;
+
+		ShareBox shareBox = mock(ShareBox.class);
+		given(shareBox.getId()).willReturn(shareBoxId);
+
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getSharebox()).willReturn(shareBox);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			gifticonDomainService.validateGifticonSharedInShareBox(gifticon, shareBoxId));
+
+		// then
+		assertThat(thrown).isNull();
+	}
 }

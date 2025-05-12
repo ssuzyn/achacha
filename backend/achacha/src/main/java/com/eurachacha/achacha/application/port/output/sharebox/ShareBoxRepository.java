@@ -13,4 +13,6 @@ public interface ShareBoxRepository {
 
 	// 초대 코드로 쉐어박스 찾기 메서드 추가
 	Optional<ShareBox> findByInviteCode(String inviteCode);
+
+	boolean existsById(Integer shareBoxId);
 }
