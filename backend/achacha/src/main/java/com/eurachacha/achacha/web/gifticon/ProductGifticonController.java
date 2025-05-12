@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonUsageAppService;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoriesResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.ProductGifticonUsageHistoryResponseDto;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,7 +26,7 @@ public class ProductGifticonController {
 	}
 
 	@GetMapping("/{gifticonId}/usage-history")
-	public ResponseEntity<ProductGifticonUsageHistoriesResponseDto> getUsageHistory(@PathVariable Integer gifticonId) {
+	public ResponseEntity<ProductGifticonUsageHistoryResponseDto> getUsageHistory(@PathVariable Integer gifticonId) {
 		return ResponseEntity.ok(gifticonUsageAppService.getProductGifticonUsageHistories(gifticonId));
 	}
 
