@@ -14,7 +14,7 @@ import {
   PermissionsAndroid,
   NativeModules,
 } from 'react-native';
-import { Text } from '../../../components/ui';
+import { Text, LoadingOcrModal } from '../../../components/ui';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useTheme } from '../../../hooks/useTheme';
@@ -36,6 +36,7 @@ const RegisterMainScreen = () => {
   const [gifticonType, setGifticonType] = useState('PRODUCT'); // 'PRODUCT' 또는 'AMOUNT'
   const [boxType, setBoxType] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+  const [isOcrLoading, setIsOcrLoading] = useState(false); // OCR 로딩 상태 추가
 
   // 더미 데이터: 쉐어박스 목록
   const shareBoxes = [
@@ -206,6 +207,9 @@ const RegisterMainScreen = () => {
                 // gifticonService import 확인
                 const gifticonService = require('../../../api/gifticonService').default;
 
+                // OCR 로딩 모달 표시
+                setIsOcrLoading(true);
+
                 // 메타데이터 조회 요청
                 const imageMetadata = await gifticonService.getGifticonImageMetadata(
                   {
@@ -215,6 +219,9 @@ const RegisterMainScreen = () => {
                   },
                   gifticonType
                 );
+
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
 
                 console.log('[메인] 이미지 메타데이터 조회 결과:', imageMetadata);
 
@@ -252,22 +259,44 @@ const RegisterMainScreen = () => {
               } catch (metadataError) {
                 console.error('[메인] 이미지 메타데이터 조회 오류:', metadataError);
 
-                // 메타데이터 조회 실패해도 기본 정보만이라도 전달
-                setImageOptionVisible(false);
-                navigation.navigate('RegisterDetail', {
-                  selectedImage: { uri: imageAsset.uri },
-                  originalImage: { uri: imageAsset.uri },
-                  gifticonType: gifticonType,
-                  boxType: boxType,
-                  shareBoxId: selectedShareBoxId,
-                  // 바코드 정보만 추가
-                  barcodeValue: barcodeValue,
-                  barcodeFormat: barcodeFormat,
-                  barcodeBoundingBox: barcodeBoundingBox,
-                  barcodeImageUri: barcodeImageUri,
-                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
-                  cropInfo: croppedBarcodeResult?.cropInfo || null,
-                });
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
+
+                // 네트워크 오류 확인
+                const errorMessage =
+                  metadataError.message.includes('네트워크') ||
+                  metadataError.message.includes('Network')
+                    ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+                    : '기프티콘 정보 인식 중 오류가 발생했습니다.';
+
+                // 사용자에게 알림
+                Alert.alert('메타데이터 조회 실패', errorMessage, [
+                  {
+                    text: '직접 입력하기',
+                    onPress: () => {
+                      // 메타데이터 조회 실패해도 기본 정보만이라도 전달
+                      setImageOptionVisible(false);
+                      navigation.navigate('RegisterDetail', {
+                        selectedImage: { uri: imageAsset.uri },
+                        originalImage: { uri: imageAsset.uri },
+                        gifticonType: gifticonType,
+                        boxType: boxType,
+                        shareBoxId: selectedShareBoxId,
+                        // 바코드 정보만 추가
+                        barcodeValue: barcodeValue,
+                        barcodeFormat: barcodeFormat,
+                        barcodeBoundingBox: barcodeBoundingBox,
+                        barcodeImageUri: barcodeImageUri,
+                        cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                        cropInfo: croppedBarcodeResult?.cropInfo || null,
+                      });
+                    },
+                  },
+                  {
+                    text: '취소',
+                    style: 'cancel',
+                  },
+                ]);
               }
             } catch (processingError) {
               console.error('이미지 처리 중 오류:', processingError);
@@ -431,6 +460,9 @@ const RegisterMainScreen = () => {
                 // gifticonService import 확인
                 const gifticonService = require('../../../api/gifticonService').default;
 
+                // OCR 로딩 모달 표시
+                setIsOcrLoading(true);
+
                 // 메타데이터 조회 요청
                 const imageMetadata = await gifticonService.getGifticonImageMetadata(
                   {
@@ -440,6 +472,9 @@ const RegisterMainScreen = () => {
                   },
                   gifticonType
                 );
+
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
 
                 console.log('[메인] 카메라 이미지 메타데이터 조회 결과:', imageMetadata);
 
@@ -477,22 +512,44 @@ const RegisterMainScreen = () => {
               } catch (metadataError) {
                 console.error('[메인] 카메라 이미지 메타데이터 조회 오류:', metadataError);
 
-                // 메타데이터 조회 실패해도 기본 정보만이라도 전달
-                setImageOptionVisible(false);
-                navigation.navigate('RegisterDetail', {
-                  selectedImage: { uri: imageAsset.uri },
-                  originalImage: { uri: imageAsset.uri },
-                  gifticonType: gifticonType,
-                  boxType: boxType,
-                  shareBoxId: selectedShareBoxId,
-                  // 바코드 정보만 추가
-                  barcodeValue: barcodeValue,
-                  barcodeFormat: barcodeFormat,
-                  barcodeBoundingBox: barcodeBoundingBox,
-                  barcodeImageUri: barcodeImageUri,
-                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
-                  cropInfo: croppedBarcodeResult?.cropInfo || null,
-                });
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
+
+                // 네트워크 오류 확인
+                const errorMessage =
+                  metadataError.message.includes('네트워크') ||
+                  metadataError.message.includes('Network')
+                    ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+                    : '기프티콘 정보 인식 중 오류가 발생했습니다.';
+
+                // 사용자에게 알림
+                Alert.alert('메타데이터 조회 실패', errorMessage, [
+                  {
+                    text: '직접 입력하기',
+                    onPress: () => {
+                      // 메타데이터 조회 실패해도 기본 정보만이라도 전달
+                      setImageOptionVisible(false);
+                      navigation.navigate('RegisterDetail', {
+                        selectedImage: { uri: imageAsset.uri },
+                        originalImage: { uri: imageAsset.uri },
+                        gifticonType: gifticonType,
+                        boxType: boxType,
+                        shareBoxId: selectedShareBoxId,
+                        // 바코드 정보만 추가
+                        barcodeValue: barcodeValue,
+                        barcodeFormat: barcodeFormat,
+                        barcodeBoundingBox: barcodeBoundingBox,
+                        barcodeImageUri: barcodeImageUri,
+                        cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                        cropInfo: croppedBarcodeResult?.cropInfo || null,
+                      });
+                    },
+                  },
+                  {
+                    text: '취소',
+                    style: 'cancel',
+                  },
+                ]);
               }
             } catch (processingError) {
               console.error('카메라 이미지 처리 중 오류:', processingError);
@@ -518,6 +575,9 @@ const RegisterMainScreen = () => {
 
       {/* 안전 영역 고려한 상단 여백 */}
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+
+      {/* OCR 로딩 모달 */}
+      <LoadingOcrModal visible={isOcrLoading} message="이미지 분석 중입니다..." />
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
