@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
-import { leaveShareBox, fetchShareBoxSettings } from '../../api/shareBoxApi';
+import { leaveShareBox, fetchShareBoxSettings, fetchShareBoxUsers } from '../../api/shareBoxApi';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -28,15 +28,7 @@ const BoxSettingScreen = () => {
   const [shareBoxName, setShareBoxName] = useState('');
   const [memberEntryEnabled, setMemberEntryEnabled] = useState(true);
   const [shareBoxCode, setShareBoxCode] = useState('');
-
-  // 멤버 목록
-  const members = [
-    { id: 1, name: '조대성', role: '방장' },
-    { id: 2, name: '박준수', role: '멤버' },
-    { id: 3, name: '신해인', role: '멤버' },
-    { id: 4, name: '안수진', role: '멤버' },
-    { id: 5, name: '정주은', role: '멤버' },
-  ];
+  const [members, setMembers] = useState([]);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -50,6 +42,25 @@ const BoxSettingScreen = () => {
       }
     };
     loadSettings();
+  }, [route.params?.shareBoxId]);
+
+  // 참가자 목록 불러오기
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const data = await fetchShareBoxUsers(route.params?.shareBoxId);
+        // 방장 ID와 참가자 목록을 활용해 멤버 배열 생성
+        const membersList = data.participations.map(user => ({
+          id: user.userId,
+          name: user.userName,
+          role: user.userId === data.shareBoxUserId ? '방장' : '멤버',
+        }));
+        setMembers(membersList);
+      } catch (e) {
+        Alert.alert('오류', '참가자 목록을 불러오지 못했습니다.');
+      }
+    };
+    loadUsers();
   }, [route.params?.shareBoxId]);
 
   // 뒤로가기 핸들러

@@ -35,4 +35,9 @@ export const leaveShareBox = async (shareBoxId) => {
 export const fetchShareBoxSettings = async (shareBoxId) => {
   const response = await apiClient.get(API_CONFIG.ENDPOINTS.SHARE_BOX_SETTINGS(shareBoxId));
   return response.data;
+};
+
+export const fetchShareBoxUsers = async (shareBoxId) => {
+  const response = await apiClient.get(API_CONFIG.ENDPOINTS.SHARE_BOX_USERS(shareBoxId));
+  return response.data;
 }; 

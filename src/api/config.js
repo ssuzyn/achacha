@@ -17,6 +17,7 @@ export const API_CONFIG = {
     JOIN_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/join`,
     LEAVE_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/leave`,
     SHARE_BOX_SETTINGS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/settings`,
+    SHARE_BOX_USERS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/users`,
 
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
