@@ -14,6 +14,7 @@ import {
   PermissionsAndroid,
   ActivityIndicator,
   FlatList,
+  Dimensions,
 } from 'react-native';
 import { Button, InputLine, Text } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
@@ -85,6 +86,46 @@ const RegisterDetailScreen = () => {
     if (!uri) return null;
     // 캐시 문제 해결을 위해 타임스탬프 추가
     return { uri: `${uri}?timestamp=${Date.now()}` };
+  }, []);
+
+  // 브랜드 입력 위치 관련 상태
+  const [brandInputPosition, setBrandInputPosition] = useState({ top: 0, left: 0, width: 0 });
+  const brandInputContainerRef = useRef(null);
+
+  // 브랜드 입력 컨테이너 위치 측정
+  const measureBrandInputPosition = () => {
+    if (brandInputContainerRef.current && brandInputContainerRef.current.measureInWindow) {
+      try {
+        brandInputContainerRef.current.measureInWindow((x, y, width, height) => {
+          console.log('브랜드 입력 필드 위치:', { x, y, width, height });
+          // 화면 내 절대 위치 저장
+          setBrandInputPosition({
+            top: y + height,
+            left: x,
+            width: width,
+          });
+        });
+      } catch (error) {
+        console.error('브랜드 입력 필드 위치 측정 오류:', error);
+      }
+    }
+  };
+
+  // 화면이 마운트되거나 방향이 변경될 때 위치 측정
+  useEffect(() => {
+    // 컴포넌트가 렌더링 된 후 측정
+    const timer = setTimeout(measureBrandInputPosition, 500);
+
+    // 화면 방향 변경 이벤트
+    const dimensionListener = Dimensions.addEventListener('change', () => {
+      // 방향 변경 후 약간의 지연시간을 두고 측정
+      setTimeout(measureBrandInputPosition, 300);
+    });
+
+    return () => {
+      clearTimeout(timer);
+      dimensionListener.remove();
+    };
   }, []);
 
   // 초기 화면 로드시 이미지가 있는지 확인
@@ -1074,7 +1115,11 @@ const RegisterDetailScreen = () => {
               <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
                 기프티콘 정보 입력
               </Text>
-              <View style={styles.inputWrapper}>
+              <View
+                ref={brandInputContainerRef}
+                style={styles.inputWrapper}
+                onLayout={measureBrandInputPosition}
+              >
                 <InputLine
                   value={brandSearchText}
                   onChangeText={handleBrandSearchChange}
@@ -1092,44 +1137,9 @@ const RegisterDetailScreen = () => {
                     if (brandSearchText.trim().length > 0) {
                       searchBrands(brandSearchText);
                     }
+                    measureBrandInputPosition();
                   }}
                 />
-
-                {/* 브랜드 자동완성 목록 */}
-                {showBrandList && (
-                  <View style={styles.brandListContainer}>
-                    {brandSearchLoading ? (
-                      <View style={styles.brandListLoading}>
-                        <ActivityIndicator size="small" color={theme.colors.primary} />
-                        <Text style={styles.brandListLoadingText}>검색 중...</Text>
-                      </View>
-                    ) : brandList.length > 0 ? (
-                      <FlatList
-                        data={brandList}
-                        keyExtractor={item => item.brandId.toString()}
-                        renderItem={({ item }) => (
-                          <TouchableOpacity
-                            style={styles.brandItem}
-                            onPress={() => handleSelectBrand(item)}
-                            activeOpacity={0.7}
-                          >
-                            <Text style={styles.brandItemText}>{item.brandName}</Text>
-                          </TouchableOpacity>
-                        )}
-                        style={styles.brandList}
-                        maxHeight={150}
-                        nestedScrollEnabled
-                        keyboardShouldPersistTaps="handled"
-                      />
-                    ) : (
-                      <View style={styles.noBrandResults}>
-                        <Text style={styles.noBrandResultsText}>
-                          &quot;{brandSearchText}&quot;에 대한 검색 결과가 없습니다.
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                )}
               </View>
 
               <InputLine
@@ -1188,6 +1198,52 @@ const RegisterDetailScreen = () => {
           )}
         </ScrollView>
       </TouchableOpacity>
+
+      {/* 브랜드 자동완성 목록 (ScrollView 밖으로 이동) */}
+      {showBrandList && (
+        <View
+          style={[
+            styles.brandListContainer,
+            {
+              position: 'absolute',
+              top: brandInputPosition.top + 2,
+              left: brandInputPosition.left,
+              width: brandInputPosition.width,
+              zIndex: 9999,
+            },
+          ]}
+        >
+          {brandSearchLoading ? (
+            <View style={styles.brandListLoading}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <Text style={styles.brandListLoadingText}>검색 중...</Text>
+            </View>
+          ) : brandList.length > 0 ? (
+            <FlatList
+              data={brandList.slice(0, 5)} // 최대 5개로 제한하여 성능 개선
+              keyExtractor={item => item.brandId.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.brandItem}
+                  onPress={() => handleSelectBrand(item)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.brandItemText}>{item.brandName}</Text>
+                </TouchableOpacity>
+              )}
+              style={styles.brandList}
+              keyboardShouldPersistTaps="handled"
+              scrollEnabled={false}
+            />
+          ) : (
+            <View style={styles.noBrandResults}>
+              <Text style={styles.noBrandResultsText}>
+                &quot;{brandSearchText}&quot;에 대한 검색 결과가 없습니다.
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* 버튼 영역 */}
       <View style={styles.footer}>
@@ -1817,25 +1873,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   brandListContainer: {
-    position: 'absolute',
-    top: '100%',
-    left: 0,
-    right: 0,
-    zIndex: 20,
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 8,
     backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 8,
     maxHeight: 200,
     overflow: 'hidden',
   },
   brandList: {
-    maxHeight: 200,
+    width: '100%',
+    // 스크롤 없이 고정 높이 사용
   },
   brandItem: {
     padding: 12,
