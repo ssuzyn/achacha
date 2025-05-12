@@ -252,4 +252,17 @@ class WearSyncModule(private val reactContext: ReactApplicationContext) : ReactC
         Log.i(TAG, "[Nearby] Stopped all Nearby endpoints in invalidate.")
         // Listener 등이 있다면 여기서 제거
     }
+
+    @ReactMethod
+    fun saveAccessTokenToNative(token: String, promise: Promise) {
+        try {
+            val sharedPreferences = reactContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+            sharedPreferences.edit().putString("accessToken", token).apply()
+            Log.i(TAG, "[Bridge] AccessToken saved to SharedPreferences: $token")
+            promise.resolve(true)
+        } catch (e: Exception) {
+            Log.e(TAG, "[Bridge] Failed to save AccessToken", e)
+            promise.reject("SAVE_TOKEN_FAILED", "Failed to save access token", e)
+        }
+    }
 } 

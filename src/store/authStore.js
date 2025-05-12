@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NativeModules } from 'react-native';
+const { WearSyncModule } = NativeModules;
 
 /**
  * 인증 관련 상태를 관리하는 Zustand 스토어
@@ -22,6 +24,16 @@ const useAuthStore = create((set, get) => ({
       // AsyncStorage에 토큰 저장
       await AsyncStorage.setItem('accessToken', tokens.accessToken);
       await AsyncStorage.setItem('refreshToken', tokens.refreshToken);
+
+      // ✅ 네이티브에도 토큰 저장 (Bridge 호출)
+      if (WearSyncModule && tokens.accessToken) {
+        try {
+          await WearSyncModule.saveAccessTokenToNative(tokens.accessToken);
+          // 필요하다면 refreshToken도 같이 전달 가능
+        } catch (e) {
+          console.error('네이티브에 토큰 저장 실패', e);
+        }
+      }
 
       // 스토어 상태 업데이트
       set({
