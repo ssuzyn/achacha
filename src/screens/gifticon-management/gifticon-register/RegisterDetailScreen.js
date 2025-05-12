@@ -13,6 +13,7 @@ import {
   Alert,
   PermissionsAndroid,
   ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import { Button, InputLine, Text } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
@@ -26,6 +27,7 @@ import { detectAndCropBarcode, detectBarcode } from '../../../utils/BarcodeUtils
 import useGifticonStore from '../../../store/gifticonStore';
 // 기프티콘 서비스 import
 import gifticonService from '../../../api/gifticonService';
+import brandService from '../../../api/brandService'; // 브랜드 서비스 추가
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
@@ -37,7 +39,10 @@ const RegisterDetailScreen = () => {
   const setCurrentBarcodeInfo = useGifticonStore(state => state.setCurrentBarcodeInfo);
 
   // 상태 선언
-  const [brand, setBrand] = useState('');
+  const [brandSearchText, setBrandSearchText] = useState(''); // 브랜드 검색 텍스트
+  const [brandList, setBrandList] = useState([]); // 브랜드 검색 결과 목록
+  const [showBrandList, setShowBrandList] = useState(false); // 브랜드 목록 표시 여부
+  const [selectedBrand, setSelectedBrand] = useState(null); // 선택된 브랜드 정보
   const [productName, setProductName] = useState('');
   const [expiryDate, setExpiryDate] = useState(null);
   const [amount, setAmount] = useState('');
@@ -71,6 +76,7 @@ const RegisterDetailScreen = () => {
 
   // 화면 데이터 상태 관리
   const [barcode, setBarcode] = useState('');
+  // eslint-disable-next-line no-unused-vars
   const [barcodeFormat, setBarcodeFormat] = useState(null);
   const [isOriginalImageVisible, setOriginalImageVisible] = useState(false); // 원본 이미지 팝업 표시 여부
 
@@ -489,7 +495,23 @@ const RegisterDetailScreen = () => {
 
         // 응답 데이터로 폼 채우기
         if (metadata) {
-          setBrand(metadata.brandName || '');
+          // 브랜드 정보 처리
+          if (metadata.brandName) {
+            // 브랜드명 설정
+            setBrandSearchText(metadata.brandName);
+
+            // 브랜드 자동 검색 수행 (선택은 사용자가 하도록 함)
+            try {
+              const brandResults = await brandService.searchBrands(metadata.brandName);
+              if (brandResults && brandResults.length > 0) {
+                setBrandList(brandResults);
+                setShowBrandList(true);
+              }
+            } catch (err) {
+              console.error('브랜드 자동 검색 실패:', err);
+            }
+          }
+
           setProductName(metadata.gifticonName || '');
 
           // 바코드 번호는 이미 바코드 인식을 통해 설정되었을 수 있으므로 조건부로 설정
@@ -577,7 +599,23 @@ const RegisterDetailScreen = () => {
 
         // 응답 데이터로 폼 채우기
         if (metadata) {
-          setBrand(metadata.brandName || '');
+          // 브랜드 정보 처리
+          if (metadata.brandName) {
+            // 브랜드명 설정
+            setBrandSearchText(metadata.brandName);
+
+            // 브랜드 자동 검색 수행 (선택은 사용자가 하도록 함)
+            try {
+              const brandResults = await brandService.searchBrands(metadata.brandName);
+              if (brandResults && brandResults.length > 0) {
+                setBrandList(brandResults);
+                setShowBrandList(true);
+              }
+            } catch (err) {
+              console.error('브랜드 자동 검색 실패:', err);
+            }
+          }
+
           setProductName(metadata.gifticonName || '');
 
           // 바코드 번호는 이미 바코드 인식을 통해 설정되었을 수 있으므로 조건부로 설정
@@ -638,8 +676,8 @@ const RegisterDetailScreen = () => {
       return;
     }
 
-    if (!brand.trim()) {
-      Alert.alert('알림', '브랜드명을 입력해주세요.');
+    if (!selectedBrand) {
+      Alert.alert('알림', '브랜드를 선택해주세요.');
       return;
     }
 
@@ -666,7 +704,7 @@ const RegisterDetailScreen = () => {
       // 기프티콘 정보 구성
       const gifticonData = {
         gifticonBarcodeNumber: barcodeNumber || barcode, // 메타데이터에서 받은 바코드 또는 직접 인식한 바코드
-        brandId: parseInt(brand.id || '0', 10), // 브랜드 ID (실제 구현에서는 브랜드 선택 기능 필요)
+        brandId: selectedBrand.brandId, // 선택한 브랜드 ID 사용
         gifticonName: productName,
         gifticonExpiryDate: expiryDate.toISOString().split('T')[0], // YYYY-MM-DD 형식으로 변환
         gifticonType: gifticonType,
@@ -817,6 +855,89 @@ const RegisterDetailScreen = () => {
     }
   };
 
+  // 브랜드 검색 함수
+  const searchBrands = useCallback(async searchText => {
+    try {
+      if (!searchText || searchText.trim().length === 0) {
+        setBrandList([]);
+        setShowBrandList(false);
+        return;
+      }
+
+      // 검색 로딩 표시 (매우 짧은 시간 동안)
+      setBrandSearchLoading(true);
+
+      const keyword = searchText.trim();
+
+      // API 호출
+      const results = await brandService.searchBrands(keyword);
+
+      // 결과 설정
+      setBrandList(results || []);
+      setShowBrandList(true); // 결과가 없어도 메시지 표시를 위해 true로 설정
+
+      console.log('브랜드 검색 결과:', results);
+    } catch (error) {
+      console.error('브랜드 검색 오류:', error);
+      // 오류 처리
+      setBrandList([]);
+      setShowBrandList(true); // 오류 메시지 표시를 위해 true로 설정
+    } finally {
+      setBrandSearchLoading(false);
+    }
+  }, []);
+
+  // 브랜드 검색 로딩 상태
+  const [brandSearchLoading, setBrandSearchLoading] = useState(false);
+
+  // 브랜드 검색어 변경 핸들러
+  const handleBrandSearchChange = useCallback(
+    text => {
+      setBrandSearchText(text);
+
+      // 사용자가 직접 입력하는 경우 브랜드 선택 상태 초기화
+      if (selectedBrand && selectedBrand.brandName !== text) {
+        setSelectedBrand(null);
+      }
+
+      // 디바운싱 적용
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+
+      // 빈 검색어인 경우 목록 숨김
+      if (!text.trim()) {
+        setShowBrandList(false);
+        setBrandList([]);
+        return;
+      }
+
+      debounceTimerRef.current = setTimeout(() => {
+        searchBrands(text);
+      }, 300);
+    },
+    [searchBrands, selectedBrand]
+  );
+
+  // 브랜드 선택 핸들러
+  const handleSelectBrand = useCallback(item => {
+    console.log('브랜드 선택:', item);
+    setSelectedBrand(item);
+    setBrandSearchText(item.brandName);
+    // 즉시 목록 닫기
+    setShowBrandList(false);
+  }, []);
+
+  // 화면 터치 시 브랜드 목록 닫기
+  const handleScreenPress = useCallback(() => {
+    if (showBrandList) {
+      setShowBrandList(false);
+    }
+  }, [showBrandList]);
+
+  // 디바운스 타이머 ref
+  const debounceTimerRef = useRef(null);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -838,10 +959,11 @@ const RegisterDetailScreen = () => {
         <View style={styles.rightPlaceholder} />
       </View>
 
-      <View style={styles.content}>
+      <TouchableOpacity activeOpacity={1} style={styles.content} onPress={handleScreenPress}>
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentContainer}
+          keyboardShouldPersistTaps="handled"
         >
           {/* 이미지 선택 영역 */}
           <View style={styles.imageContainerWrapper}>
@@ -952,12 +1074,63 @@ const RegisterDetailScreen = () => {
               <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
                 기프티콘 정보 입력
               </Text>
-              <InputLine
-                value={brand}
-                onChangeText={setBrand}
-                placeholder="브랜드명을 입력해주세요."
-                containerStyle={styles.inputContainer}
-              />
+              <View style={styles.inputWrapper}>
+                <InputLine
+                  value={brandSearchText}
+                  onChangeText={handleBrandSearchChange}
+                  placeholder="브랜드명을 입력해주세요."
+                  containerStyle={styles.inputContainer}
+                  rightIcon={
+                    selectedBrand ? (
+                      <View style={styles.selectedBrandIndicator}>
+                        <Icon name="check-circle" size={20} color="#2ECC71" />
+                      </View>
+                    ) : null
+                  }
+                  onFocus={() => {
+                    // 검색어가 있을 경우 브랜드 검색 수행
+                    if (brandSearchText.trim().length > 0) {
+                      searchBrands(brandSearchText);
+                    }
+                  }}
+                />
+
+                {/* 브랜드 자동완성 목록 */}
+                {showBrandList && (
+                  <View style={styles.brandListContainer}>
+                    {brandSearchLoading ? (
+                      <View style={styles.brandListLoading}>
+                        <ActivityIndicator size="small" color={theme.colors.primary} />
+                        <Text style={styles.brandListLoadingText}>검색 중...</Text>
+                      </View>
+                    ) : brandList.length > 0 ? (
+                      <FlatList
+                        data={brandList}
+                        keyExtractor={item => item.brandId.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.brandItem}
+                            onPress={() => handleSelectBrand(item)}
+                            activeOpacity={0.7}
+                          >
+                            <Text style={styles.brandItemText}>{item.brandName}</Text>
+                          </TouchableOpacity>
+                        )}
+                        style={styles.brandList}
+                        maxHeight={150}
+                        nestedScrollEnabled
+                        keyboardShouldPersistTaps="handled"
+                      />
+                    ) : (
+                      <View style={styles.noBrandResults}>
+                        <Text style={styles.noBrandResultsText}>
+                          &quot;{brandSearchText}&quot;에 대한 검색 결과가 없습니다.
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+              </View>
 
               <InputLine
                 value={productName}
@@ -1014,7 +1187,7 @@ const RegisterDetailScreen = () => {
             </View>
           )}
         </ScrollView>
-      </View>
+      </TouchableOpacity>
 
       {/* 버튼 영역 */}
       <View style={styles.footer}>
@@ -1637,6 +1810,66 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     fontSize: 16,
     marginLeft: 10,
+  },
+  inputWrapper: {
+    position: 'relative',
+    zIndex: 10,
+    marginBottom: 10,
+  },
+  brandListContainer: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    zIndex: 20,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 8,
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    maxHeight: 200,
+    overflow: 'hidden',
+  },
+  brandList: {
+    maxHeight: 200,
+  },
+  brandItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8E8E8',
+  },
+  brandItemText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  noBrandResults: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noBrandResultsText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  brandListLoading: {
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandListLoadingText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#666',
+  },
+  selectedBrandIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 
