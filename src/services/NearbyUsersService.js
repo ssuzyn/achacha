@@ -10,7 +10,7 @@ const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
 
 class NearbyUsersService {
   constructor() {
-    this.deviceId = uuidv4();
+    this.deviceId = this.generateShortUuid();
     this.nearbyUsers = [];
     this.isScanning = false;
     this.scanListener = null;
@@ -76,9 +76,23 @@ class NearbyUsersService {
     return this.deviceId;
   }
 
-  // 새 UUID 생성
+  // 전체 UUID 생성
+  generateFullUuid() {
+    return uuidv4();
+  }
+
+  // 짧은 UUID 생성 (12자)
+  generateShortUuid() {
+    // 표준 UUID 생성
+    const fullUuid = uuidv4();
+    
+    // 하이픈 제거 및 앞 12자리만 사용
+    return fullUuid.replace(/-/g, '').substring(0, 12);
+  }
+
+  // 새 짧은 UUID 생성
   generateNewUuid() {
-    this.deviceId = uuidv4();
+    this.deviceId = this.generateShortUuid();
     return this.deviceId;
   }
 
@@ -413,6 +427,21 @@ class NearbyUsersService {
     } catch (error) {
       console.error('UUID 디코딩 실패:', error);
       return 'unknown';
+    }
+  }
+
+  // 문자열을 바이트 배열로 변환
+  encodeUUID(uuid) {
+    try {
+      // 문자열을 바이트 배열로 변환
+      const bytes = [];
+      for (let i = 0; i < uuid.length; i++) {
+        bytes.push(uuid.charCodeAt(i));
+      }
+      return bytes;
+    } catch (error) {
+      console.error('UUID 인코딩 실패:', error);
+      return [];
     }
   }
 
