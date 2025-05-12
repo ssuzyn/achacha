@@ -13,7 +13,7 @@ import {
 import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
-import SearchingAnimation from '../components/SearchingAnimation';
+import LottieView from 'lottie-react-native';
 import NearbyUsersService from '../services/NearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -122,16 +122,11 @@ const GiveAwayScreen = ({ onClose }) => {
 
   // 원의 중심 좌표
   const centerX = width / 2;
-  const centerY = (height - insets.top - 60) / 2 + insets.top + 60;
-
-  // 화면 크기에 맞게 원 크기 조정
-  const safeMargin = width * 0.1; // 화면 너비의 10%를 안전 여백으로 설정
-  const maxRadius = Math.min(width, height) / 2 - safeMargin;
-
-  const smallestRadius = maxRadius * 0.35;
+  const centerY = height / 2;
+  const smallestRadius = width * 0.15;
   const diameter = smallestRadius * 2;
   const spacingRatio = 0.6;
-  const circleSpacing = diameter * 0.5;
+  const circleSpacing = diameter * 0.7;
   const radiusArray = [
     smallestRadius,
     smallestRadius + circleSpacing,
@@ -147,33 +142,21 @@ const GiveAwayScreen = ({ onClose }) => {
     const positions = [];
     const startAngle = Math.PI / 4;
     const angleStep = (2 * Math.PI) / users.length;
-
-    // 화면 경계를 고려한 안전 여백
-    const safeMargin = width * 0.1; // 화면 너비의 10%를 안전 여백으로 설정
-    const maxRadius = Math.min(width, height - insets.top - 60) / 2 - safeMargin;
-
-    // 실제 컨텐츠 영역의 중심
-    const contentCenterY = (height - insets.top - 60) / 2 + insets.top + 60;
-
     for (let i = 0; i < users.length; i++) {
       const distanceIndex = i % 3;
-
-      // 최대 반경을 기준으로 사용자 반경 조정
       let userRadius;
       if (distanceIndex === 0) {
-        userRadius = maxRadius * 0.4;
+        userRadius = smallestRadius + circleSpacing * 0.7;
       } else if (distanceIndex === 1) {
-        userRadius = maxRadius * 0.65;
+        userRadius = smallestRadius + circleSpacing * 1.5;
       } else {
-        userRadius = maxRadius * 0.85;
+        userRadius = smallestRadius + circleSpacing * 2.2;
       }
-
       const angle = startAngle + angleStep * i;
       const x = centerX + userRadius * Math.cos(angle);
-      const y = contentCenterY + userRadius * Math.sin(angle);
+      const y = centerY + userRadius * Math.sin(angle);
       const scale = 1 - distanceIndex * 0.15;
       const opacity = 1 - distanceIndex * 0.1;
-
       positions.push({ x, y, scale, opacity, distanceIndex });
     }
     userPositionsRef.current = positions;
@@ -205,13 +188,20 @@ const GiveAwayScreen = ({ onClose }) => {
           await nearbyUsersServiceRef.current.startSharingLocation();
           const foundUsers = await nearbyUsersServiceRef.current.findNearbyUsers();
           const hasUsers = foundUsers.length > 0 || dummyUsers.length > 0;
-          setUsers(foundUsers.length > 0 ? foundUsers : dummyUsers);
+
+          // 최대 5명의 유저만 표시
+          const limitedFoundUsers = foundUsers.length > 0 ? foundUsers.slice(0, 5) : [];
+          const limitedUsers =
+            limitedFoundUsers.length > 0 ? limitedFoundUsers : dummyUsers.slice(0, 5);
+
+          setUsers(limitedUsers);
           setLoading(false);
           // 주변에 유저가 있을 때만 버튼을 보이게 함
           setButtonVisible(hasUsers);
         } catch (error) {
           console.error('근처 사용자 서비스 초기화 실패:', error);
-          setUsers(dummyUsers);
+          // 더미 데이터도 최대 5명으로 제한
+          setUsers(dummyUsers.slice(0, 5));
           setLoading(false);
           // 더미 데이터가 있으면 버튼 보이게 함
           setButtonVisible(dummyUsers.length > 0);
@@ -300,12 +290,12 @@ const GiveAwayScreen = ({ onClose }) => {
           activeOpacity={1}
           onPress={handleOutsidePress}
         >
-          <Svg width={width} height={height - insets.top - 60} style={styles.svgImage}>
+          <Svg width={width} height={height} style={styles.svgImage}>
             {radiusArray.map((radius, index) => (
               <Circle
                 key={index}
                 cx={centerX}
-                cy={(height - insets.top - 60) / 2}
+                cy={centerY}
                 r={radius}
                 stroke="#CCCCCC"
                 strokeWidth="1"
@@ -316,7 +306,12 @@ const GiveAwayScreen = ({ onClose }) => {
           {loading ? (
             <>
               <View style={styles.loadingOverlay}>
-                <SearchingAnimation size={smallestRadius * 2} />
+                <LottieView
+                  source={require('../assets/lottie/search_users.json')}
+                  autoPlay
+                  loop
+                  style={{ width: 300, height: 300 }}
+                />
               </View>
             </>
           ) : (
