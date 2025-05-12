@@ -487,6 +487,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 소유자, 기프티콘 공유, 삭제여부 검증
 		gifticonDomainService.validateDeleteGifticon(userId, findGifticon);
 
+		// 바코드 정보 삭제
+		findGifticon.deleteBarcode();
+
+		// 논리 삭제
 		findGifticon.delete();
 	}
 
