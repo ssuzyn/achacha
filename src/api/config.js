@@ -11,6 +11,10 @@ export const API_CONFIG = {
     REFRESH_TOKEN: '/api/auth/refresh', // 토큰 갱신
     USER_PROFILE: '/api/users/me', // 사용자 정보 조회
 
+    // 기프티콘 관련 엔드포인트
+    GIFTICON_IMAGE_METADATA: '/api/gifticons/image-metadata', // 기프티콘 이미지 메타데이터 조회
+    REGISTER_GIFTICON: '/api/gifticons', // 기프티콘 등록
+
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
     //     CREATE_USER: '/api/users',

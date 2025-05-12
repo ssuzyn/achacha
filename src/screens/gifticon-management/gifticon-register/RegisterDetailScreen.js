@@ -12,6 +12,7 @@ import {
   StatusBar,
   Alert,
   PermissionsAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import { Button, InputLine, Text } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
@@ -21,12 +22,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon as RNEIcon } from 'react-native-elements';
 import ImagePicker from 'react-native-image-crop-picker';
-import {
-  detectAndCropBarcode,
-  detectBarcode,
-  getBarcodeFormatName,
-} from '../../../utils/BarcodeUtils';
+import { detectAndCropBarcode, detectBarcode } from '../../../utils/BarcodeUtils';
 import useGifticonStore from '../../../store/gifticonStore';
+// 기프티콘 서비스 import
+import gifticonService from '../../../api/gifticonService';
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
@@ -37,46 +36,43 @@ const RegisterDetailScreen = () => {
   // Zustand 스토어에서 바코드 관련 기능 불러오기
   const setCurrentBarcodeInfo = useGifticonStore(state => state.setCurrentBarcodeInfo);
 
-  // 화면 데이터 상태 관리
+  // 상태 선언
   const [brand, setBrand] = useState('');
   const [productName, setProductName] = useState('');
-  const [barcode, setBarcode] = useState('');
   const [expiryDate, setExpiryDate] = useState(null);
+  const [amount, setAmount] = useState('');
+  const [barcodeNumber, setBarcodeNumber] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [currentImageUri, setCurrentImageUri] = useState(null);
-  const [originalImageUri, setOriginalImageUri] = useState(null); // 원본 이미지 URI 저장
-  const [isImageOptionVisible, setImageOptionVisible] = useState(false);
-  const [isOriginalImageVisible, setOriginalImageVisible] = useState(false); // 원본 이미지 팝업 표시 여부
-
-  // 이미지 처리 상태 관리
-  const processingRef = useRef(false); // 처리 중 상태 관리
-
-  // 이전 화면에서 전달받은 기프티콘 타입 및 등록 위치 정보
-  const [gifticonType, setGifticonType] = useState('PRODUCT'); // 'PRODUCT' 또는 'AMOUNT'
-  const [boxType, setBoxType] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
-  const [shareBoxId, setShareBoxId] = useState(null);
   const [isBoxModalVisible, setBoxModalVisible] = useState(false);
+  const [isImageOptionVisible, setImageOptionVisible] = useState(false);
+  const [isTypeLocked, setTypeLocked] = useState(!!route.params?.imageUri); // 이미지가 전달되었으면 타입 잠금
+  const [isBarcodeImageModalVisible, setBarcodeImageModalVisible] = useState(false);
+  const [currentImageUri, setCurrentImageUri] = useState(route.params?.imageUri || null);
+  const [originalImageUri, setOriginalImageUri] = useState(route.params?.imageUri || null);
+  // OCR 학습 데이터 ID 상태 추가
+  const [ocrTrainingDataId, setOcrTrainingDataId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  // 박스 및 기프티콘 타입 상태
+  const [boxType, setBoxType] = useState(route.params?.boxType || 'MY_BOX');
+  const [shareBoxId, setShareBoxId] = useState(route.params?.shareBoxId || null);
+  const [gifticonType, setGifticonType] = useState(route.params?.gifticonType || 'PRODUCT');
+  // 바코드 이미지 URI 상태 추가
+  const [barcodeImageUri, setBarcodeImageUri] = useState(null);
 
-  // 더미 데이터: 쉐어박스 목록
+  // 더미 데이터: 쉐어박스 목록 (실제 구현에서는 API에서 가져오기)
   const shareBoxes = [
     { id: 1, name: '으라차차 해인네' },
     { id: 2, name: '으라차차 주은이네' },
     { id: 3, name: '으라차차 대성이네' },
   ];
 
-  // 추가 필드 (금액형일 경우)
-  const [amount, setAmount] = useState('');
+  // ref 관련 설정
+  const processingRef = useRef(false);
 
-  // 화면 상태 관리 - 유형 및 위치 선택 완료 여부
-  const [isTypeBoxSelected, setIsTypeBoxSelected] = useState(false);
-  const [isTypeLocked, setIsTypeLocked] = useState(false); // 유형 선택 잠금 상태
-
-  // 바코드 관련 상태 추가
-  const [barcodeImageUri, setBarcodeImageUri] = useState(null); // 잘라낸 바코드 이미지
-  const [barcodeFormat, setBarcodeFormat] = useState(null); // 바코드 포맷 정보
-
-  // 바코드 이미지 확인 모달
-  const [isBarcodeImageVisible, setBarcodeImageVisible] = useState(false);
+  // 화면 데이터 상태 관리
+  const [barcode, setBarcode] = useState('');
+  const [barcodeFormat, setBarcodeFormat] = useState(null);
+  const [isOriginalImageVisible, setOriginalImageVisible] = useState(false); // 원본 이미지 팝업 표시 여부
 
   // 이미지 URI 상태를 메모이제이션하여 렌더링 최적화
   const imageSource = useCallback(uri => {
@@ -127,6 +123,7 @@ const RegisterDetailScreen = () => {
           '[상세 화면] 이전 화면에서 전달받은 바코드 이미지:',
           route.params.barcodeImageUri
         );
+        // 바코드 이미지 URI 설정
         setBarcodeImageUri(route.params.barcodeImageUri);
       }
 
@@ -140,14 +137,11 @@ const RegisterDetailScreen = () => {
 
     // 기프티콘 타입 및 등록 위치 정보 가져오기
     if (route.params?.gifticonType) {
-      setGifticonType(route.params.gifticonType);
-      setIsTypeBoxSelected(true);
-      // 유형이 이미 선택되었으므로 잠금 상태로 설정
-      setIsTypeLocked(true);
+      setTypeLocked(true);
     }
 
     if (route.params?.boxType) {
-      setBoxType(route.params.boxType);
+      setBoxModalVisible(true);
     }
 
     if (route.params?.shareBoxId) {
@@ -204,9 +198,7 @@ const RegisterDetailScreen = () => {
     // 타입과 박스 모두 선택되었는지 확인
     if (gifticonType && boxType) {
       setBoxModalVisible(false);
-      setIsTypeBoxSelected(true);
-      // 모달 확인 버튼 클릭 시 유형 선택 잠금
-      setIsTypeLocked(true);
+      setTypeLocked(true);
     } else {
       Alert.alert('알림', '기프티콘 타입과 등록 위치를 모두 선택해주세요.');
     }
@@ -259,7 +251,7 @@ const RegisterDetailScreen = () => {
     console.log('[기프티콘 등록] 원본 이미지 URI:', originalImageUri);
 
     // 바코드 번호가 없으면 수동 입력 요청
-    if (!barcode) {
+    if (!barcode && !barcodeNumber) {
       Alert.alert(
         '바코드 정보 없음',
         '인식된 바코드 번호가 없습니다. 바코드 번호를 수동으로 입력하시겠습니까?',
@@ -284,6 +276,7 @@ const RegisterDetailScreen = () => {
                         const cropResult = await detectAndCropBarcode(originalImageUri);
                         if (cropResult.success && cropResult.croppedImageUri) {
                           setBarcodeImageUri(cropResult.croppedImageUri);
+                          setBarcodeImageModalVisible(true);
                           console.log(
                             '[기프티콘 등록] 바코드 이미지 저장 성공:',
                             cropResult.croppedImageUri
@@ -302,7 +295,7 @@ const RegisterDetailScreen = () => {
                     );
 
                     // 바코드 이미지 모달 표시
-                    setBarcodeImageVisible(true);
+                    setBarcodeImageModalVisible(true);
                   } else {
                     Alert.alert('알림', '바코드를 인식할 수 없습니다. 직접 입력해주세요.', [
                       { text: '취소', style: 'cancel' },
@@ -319,7 +312,12 @@ const RegisterDetailScreen = () => {
                                 onPress: value => {
                                   if (value && value.trim()) {
                                     setBarcode(value.trim());
-                                    Alert.alert('완료', '바코드 번호가 저장되었습니다.');
+                                    Alert.alert('완료', '바코드 번호가 저장되었습니다.', [
+                                      {
+                                        text: '확인',
+                                        onPress: () => setBarcodeImageModalVisible(true),
+                                      },
+                                    ]);
                                   } else {
                                     Alert.alert('오류', '유효한 바코드 번호를 입력해주세요.');
                                   }
@@ -354,7 +352,12 @@ const RegisterDetailScreen = () => {
                     onPress: value => {
                       if (value && value.trim()) {
                         setBarcode(value.trim());
-                        Alert.alert('완료', '바코드 번호가 저장되었습니다.');
+                        Alert.alert('완료', '바코드 번호가 저장되었습니다.', [
+                          {
+                            text: '확인',
+                            onPress: () => setBarcodeImageModalVisible(true),
+                          },
+                        ]);
                       } else {
                         Alert.alert('오류', '유효한 바코드 번호를 입력해주세요.');
                       }
@@ -370,8 +373,51 @@ const RegisterDetailScreen = () => {
       return;
     }
 
+    // 바코드 번호는 있지만 바코드 이미지가 없는 경우 바코드 이미지 추출 시도
+    if ((barcode || barcodeNumber) && !barcodeImageUri && originalImageUri) {
+      console.log('[기프티콘 등록] 바코드 이미지 추출 재시도');
+
+      // 사용자에게 알림
+      Alert.alert('바코드 이미지 추출', '바코드 이미지를 추출하고 있습니다. 잠시만 기다려주세요.', [
+        { text: '확인' },
+      ]);
+
+      // 잠시 후 바코드 이미지 추출 시도
+      setTimeout(async () => {
+        try {
+          setIsLoading(true);
+
+          // 바코드 추출 시도
+          const result = await detectAndCropBarcode(originalImageUri);
+
+          if (result.success && result.croppedImageUri) {
+            console.log('[기프티콘 등록] 바코드 이미지 추출 성공:', result.croppedImageUri);
+            setBarcodeImageUri(result.croppedImageUri);
+
+            // 바코드 번호가 없는 경우에만 설정
+            if (!barcode && result.barcodeValue) {
+              setBarcode(result.barcodeValue);
+              setBarcodeFormat(result.barcodeFormat);
+            }
+          } else {
+            console.log('[기프티콘 등록] 바코드 이미지 추출 실패');
+          }
+
+          setIsLoading(false);
+          // 바코드 이미지 모달 표시
+          setBarcodeImageModalVisible(true);
+        } catch (error) {
+          console.error('[기프티콘 등록] 바코드 이미지 추출 오류:', error);
+          setIsLoading(false);
+          // 오류가 발생해도 바코드 번호만이라도 표시
+          setBarcodeImageModalVisible(true);
+        }
+      }, 300);
+      return;
+    }
+
     // 바코드 정보 모달 표시
-    setBarcodeImageVisible(true);
+    setBarcodeImageModalVisible(true);
   };
 
   // 이미지 선택 시 바코드 자동 추출 및 인식 기능 추가
@@ -412,31 +458,80 @@ const RegisterDetailScreen = () => {
     }
   };
 
-  // 갤러리에서 이미지 선택 함수 수정
+  // 갤러리에서 이미지 선택
   const handlePickFromGallery = async () => {
     try {
+      setImageOptionVisible(false);
+
       const image = await ImagePicker.openPicker({
-        width: 1000,
-        height: 1000,
-        cropping: false,
         mediaType: 'photo',
+        cropping: false,
+        includeExif: true,
       });
 
-      console.log('[이미지 선택] 갤러리에서 선택:', image.path);
-
-      // 이미지 URI 저장
+      console.log('갤러리에서 선택한 이미지:', image);
       setCurrentImageUri(image.path);
       setOriginalImageUri(image.path);
 
-      // 이미지 모달 닫기
-      setImageOptionVisible(false);
-
-      // 바코드 자동 인식 및 추출 처리
+      // 바코드 처리를 먼저 수행
+      console.log('[갤러리 선택] 바코드 처리 먼저 수행');
       await processImageForBarcode(image.path);
+
+      // 기프티콘 이미지 메타데이터 API 호출
+      setIsLoading(true);
+      try {
+        const metadata = await gifticonService.getGifticonImageMetadata(
+          { uri: image.path, type: image.mime, fileName: image.filename || 'image.jpg' },
+          gifticonType
+        );
+
+        console.log('기프티콘 메타데이터 조회 결과:', metadata);
+
+        // 응답 데이터로 폼 채우기
+        if (metadata) {
+          setBrand(metadata.brandName || '');
+          setProductName(metadata.gifticonName || '');
+
+          // 바코드 번호는 이미 바코드 인식을 통해 설정되었을 수 있으므로 조건부로 설정
+          if (metadata.gifticonBarcodeNumber && !barcode) {
+            setBarcodeNumber(metadata.gifticonBarcodeNumber);
+            setBarcode(metadata.gifticonBarcodeNumber);
+            setBarcodeFormat('CODE_128');
+          } else {
+            // 이미 바코드가 인식된 경우 API 결과는 참고만 함
+            setBarcodeNumber(metadata.gifticonBarcodeNumber || '');
+          }
+
+          // 유효기간이 있으면 Date 객체로 변환
+          if (metadata.gifticonExpiryDate) {
+            setExpiryDate(new Date(metadata.gifticonExpiryDate));
+          }
+
+          // 금액형 기프티콘인 경우 금액 설정
+          if (metadata.gifticonOriginalAmount) {
+            setAmount(metadata.gifticonOriginalAmount.toString());
+          }
+
+          // OCR 학습 데이터 ID 저장
+          if (metadata.ocrTrainingDataId) {
+            setOcrTrainingDataId(metadata.ocrTrainingDataId);
+          }
+        }
+      } catch (error) {
+        console.error('기프티콘 메타데이터 조회 실패:', error);
+        // 에러 발생 시 사용자에게 알림
+        Alert.alert(
+          '정보 조회 실패',
+          '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.',
+          [{ text: '확인' }]
+        );
+      } finally {
+        setIsLoading(false);
+      }
     } catch (error) {
       // 사용자가 취소한 경우 무시
       if (error.code !== 'E_PICKER_CANCELLED') {
-        console.error('[이미지 선택] 오류:', error);
+        console.error('[갤러리 이미지 선택] 오류:', error);
         Alert.alert('오류', '이미지 선택 중 문제가 발생했습니다.');
       }
     }
@@ -451,10 +546,13 @@ const RegisterDetailScreen = () => {
     }
 
     try {
+      setImageOptionVisible(false);
+
       const image = await ImagePicker.openCamera({
         width: 1000,
         height: 1000,
         cropping: false,
+        includeExif: true,
       });
 
       console.log('[이미지 선택] 카메라로 촬영:', image.path);
@@ -463,11 +561,61 @@ const RegisterDetailScreen = () => {
       setCurrentImageUri(image.path);
       setOriginalImageUri(image.path);
 
-      // 이미지 모달 닫기
-      setImageOptionVisible(false);
-
-      // 바코드 자동 인식 및 추출 처리
+      // 바코드 처리를 먼저 수행
+      console.log('[카메라 촬영] 바코드 처리 먼저 수행');
       await processImageForBarcode(image.path);
+
+      // 기프티콘 이미지 메타데이터 API 호출
+      setIsLoading(true);
+      try {
+        const metadata = await gifticonService.getGifticonImageMetadata(
+          { uri: image.path, type: image.mime, fileName: image.filename || 'image.jpg' },
+          gifticonType
+        );
+
+        console.log('기프티콘 메타데이터 조회 결과:', metadata);
+
+        // 응답 데이터로 폼 채우기
+        if (metadata) {
+          setBrand(metadata.brandName || '');
+          setProductName(metadata.gifticonName || '');
+
+          // 바코드 번호는 이미 바코드 인식을 통해 설정되었을 수 있으므로 조건부로 설정
+          if (metadata.gifticonBarcodeNumber && !barcode) {
+            setBarcodeNumber(metadata.gifticonBarcodeNumber);
+            setBarcode(metadata.gifticonBarcodeNumber);
+            setBarcodeFormat('CODE_128');
+          } else {
+            // 이미 바코드가 인식된 경우 API 결과는 참고만 함
+            setBarcodeNumber(metadata.gifticonBarcodeNumber || '');
+          }
+
+          // 유효기간이 있으면 Date 객체로 변환
+          if (metadata.gifticonExpiryDate) {
+            setExpiryDate(new Date(metadata.gifticonExpiryDate));
+          }
+
+          // 금액형 기프티콘인 경우 금액 설정
+          if (metadata.gifticonOriginalAmount) {
+            setAmount(metadata.gifticonOriginalAmount.toString());
+          }
+
+          // OCR 학습 데이터 ID 저장
+          if (metadata.ocrTrainingDataId) {
+            setOcrTrainingDataId(metadata.ocrTrainingDataId);
+          }
+        }
+      } catch (error) {
+        console.error('기프티콘 메타데이터 조회 실패:', error);
+        // 에러 발생 시 사용자에게 알림
+        Alert.alert(
+          '정보 조회 실패',
+          '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.',
+          [{ text: '확인' }]
+        );
+      } finally {
+        setIsLoading(false);
+      }
     } catch (error) {
       // 사용자가 취소한 경우 무시
       if (error.code !== 'E_PICKER_CANCELLED') {
@@ -484,7 +632,7 @@ const RegisterDetailScreen = () => {
   };
 
   // 기프티콘 등록 처리
-  const handleRegister = () => {
+  const handleRegister = async () => {
     if (!currentImageUri) {
       Alert.alert('알림', '기프티콘 이미지를 등록해주세요.');
       return;
@@ -511,24 +659,94 @@ const RegisterDetailScreen = () => {
       return;
     }
 
-    // 여기서 등록 API 호출 또는 저장 로직을 구현
-    // 예시: 등록 후 생성된 ID를 받아옴
-    const mockRegisteredId = Date.now().toString();
+    try {
+      // 로딩 상태 활성화
+      setIsLoading(true);
 
-    Alert.alert('성공', '기프티콘이 성공적으로 등록되었습니다.', [
-      {
-        text: '확인',
-        onPress: () => {
-          // 기프티콘 타입에 따라 다른 상세 화면으로 이동
-          const targetScreen = gifticonType === 'PRODUCT' ? 'DetailProduct' : 'DetailAmount';
-          navigation.navigate(targetScreen, {
-            id: mockRegisteredId,
-            scope: boxType,
-            shareBoxId: shareBoxId,
-          });
+      // 기프티콘 정보 구성
+      const gifticonData = {
+        gifticonBarcodeNumber: barcodeNumber || barcode, // 메타데이터에서 받은 바코드 또는 직접 인식한 바코드
+        brandId: parseInt(brand.id || '0', 10), // 브랜드 ID (실제 구현에서는 브랜드 선택 기능 필요)
+        gifticonName: productName,
+        gifticonExpiryDate: expiryDate.toISOString().split('T')[0], // YYYY-MM-DD 형식으로 변환
+        gifticonType: gifticonType,
+        gifticonAmount: gifticonType === 'AMOUNT' ? parseInt(amount, 10) : null,
+        shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,
+        ocrTrainingDataId: ocrTrainingDataId, // 이미지 메타데이터 조회 시 받은 OCR 학습 데이터 ID
+      };
+
+      // 이미지 파일 정보
+      const originalImage = {
+        uri: originalImageUri,
+        type: 'image/jpeg',
+        fileName: 'original.jpg',
+      };
+
+      // 썸네일 이미지 (현재는 동일하게 전송, 실제로는 리사이징 필요)
+      const thumbnailImage = {
+        uri: currentImageUri,
+        type: 'image/jpeg',
+        fileName: 'thumbnail.jpg',
+      };
+
+      // 바코드 이미지 (바코드 인식 성공했을 경우에만)
+      const barcodeImage = barcodeImageUri
+        ? {
+            uri: barcodeImageUri,
+            type: 'image/jpeg',
+            fileName: 'barcode.jpg',
+          }
+        : null;
+
+      // API 호출
+      const response = await gifticonService.registerGifticon(
+        gifticonData,
+        originalImage,
+        thumbnailImage,
+        barcodeImage
+      );
+
+      console.log('기프티콘 등록 성공:', response);
+
+      // 성공 메시지 표시
+      Alert.alert('성공', '기프티콘이 성공적으로 등록되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 기프티콘 타입에 따라 다른 상세 화면으로 이동
+            const targetScreen = gifticonType === 'PRODUCT' ? 'DetailProduct' : 'DetailAmount';
+            navigation.navigate(targetScreen, {
+              id: response.gifticonId || Date.now().toString(), // API 응답에서 ID 추출 또는 임시 ID 사용
+              scope: boxType,
+              shareBoxId: shareBoxId,
+            });
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (error) {
+      console.error('기프티콘 등록 실패:', error);
+
+      // 에러 코드에 따라 적절한 메시지 표시
+      let errorMessage = '기프티콘 등록 중 오류가 발생했습니다.';
+
+      if (error.response && error.response.data) {
+        const { errorCode, message } = error.response.data;
+
+        if (errorCode === 'GIFTICON_006') {
+          errorMessage = '금액형 기프티콘은 금액을 입력해야 합니다.';
+        } else if (errorCode === 'GIFTICON_007') {
+          errorMessage = '이미 등록된 바코드 번호입니다.';
+        } else if (errorCode === 'FILE_001' || errorCode === 'FILE_002') {
+          errorMessage = '파일 업로드 중 문제가 발생했습니다.';
+        } else if (message) {
+          errorMessage = message;
+        }
+      }
+
+      Alert.alert('오류', errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // 날짜를 YYYY.MM.DD 형식으로 포맷
@@ -674,7 +892,7 @@ const RegisterDetailScreen = () => {
               <Text variant="body1" weight="semiBold" style={styles.infoLabel}>
                 기프티콘 타입
               </Text>
-              {isTypeBoxSelected ? (
+              {isTypeLocked ? (
                 <View style={styles.typeChip}>
                   <Text variant="body2" weight="regular" color="white">
                     {gifticonType === 'PRODUCT' ? '상품형' : '금액형'}
@@ -694,7 +912,7 @@ const RegisterDetailScreen = () => {
               <Text variant="body1" weight="semiBold" style={styles.infoLabel}>
                 등록 위치
               </Text>
-              {isTypeBoxSelected ? (
+              {isTypeLocked ? (
                 <View style={styles.boxSelector}>
                   <Text variant="body2" style={styles.boxText}>
                     {boxType === 'MY_BOX' ? '마이박스' : getShareBoxName(shareBoxId)}
@@ -713,7 +931,7 @@ const RegisterDetailScreen = () => {
           </View>
 
           {/* 입력 폼 - 타입 및 박스가 선택된 경우에만 활성화 */}
-          {isTypeBoxSelected ? (
+          {isTypeLocked ? (
             <View style={styles.formContainer}>
               <Text variant="h4" weight="bold" style={styles.formSectionTitle}>
                 바코드 번호 입력
@@ -796,17 +1014,30 @@ const RegisterDetailScreen = () => {
             </View>
           )}
         </ScrollView>
+      </View>
 
-        {/* 등록 버튼 */}
+      {/* 버튼 영역 */}
+      <View style={styles.footer}>
         <Button
           title="등록하기"
           onPress={handleRegister}
-          variant="primary"
           size="lg"
           style={styles.button}
-          disabled={!isTypeBoxSelected}
+          disabled={!isTypeLocked || isLoading}
         />
       </View>
+
+      {/* 로딩 인디케이터 */}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text variant="body1" style={styles.loadingText}>
+              처리 중...
+            </Text>
+          </View>
+        </View>
+      )}
 
       {/* 이미지 옵션 모달 */}
       <Modal
@@ -861,7 +1092,7 @@ const RegisterDetailScreen = () => {
         animationType="slide"
         onRequestClose={() => {
           // 이미 선택되어 있는 경우에만 모달 닫기 가능
-          if (isTypeBoxSelected) {
+          if (isTypeLocked) {
             setBoxModalVisible(false);
           } else {
             Alert.alert('알림', '기프티콘 타입과 등록 위치를 선택해주세요.');
@@ -1018,81 +1249,49 @@ const RegisterDetailScreen = () => {
 
       {/* 바코드 이미지 확인 모달 */}
       <Modal
-        visible={isBarcodeImageVisible}
+        visible={isBarcodeImageModalVisible}
         transparent
         animationType="fade"
-        onRequestClose={() => setBarcodeImageVisible(false)}
+        onRequestClose={() => setBarcodeImageModalVisible(false)}
       >
         <TouchableOpacity
           style={styles.originalImageModalOverlay}
           activeOpacity={1}
-          onPress={() => setBarcodeImageVisible(false)}
+          onPress={() => setBarcodeImageModalVisible(false)}
         >
-          <View style={styles.barcodeModalContent}>
-            <View style={styles.barcodeModalHeader}>
-              <Text style={styles.barcodeModalTitle}>바코드 정보</Text>
-              <TouchableOpacity
-                style={styles.originalImageCloseButton}
-                onPress={() => setBarcodeImageVisible(false)}
-              >
-                <Icon name="close" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
+          <View
+            style={styles.newBarcodeModalContent}
+            onStartShouldSetResponder={() => true}
+            onResponderRelease={() => setBarcodeImageModalVisible(false)}
+          >
+            <Text style={styles.newBarcodeTitle}>바코드 정보</Text>
 
-            {/* 바코드 이미지 영역 */}
-            <View style={styles.barcodeDisplaySection}>
-              {barcodeImageUri ? (
-                <View style={styles.barcodeImageWrapper}>
-                  <Image
-                    source={imageSource(barcodeImageUri)}
-                    style={styles.barcodeOnlyImage}
-                    resizeMode="contain"
-                  />
-                </View>
-              ) : currentImageUri ? (
-                <View style={styles.barcodeImageWrapper}>
-                  <Image
-                    source={imageSource(currentImageUri)}
-                    style={styles.barcodeImage}
-                    resizeMode="contain"
-                  />
-                  <View style={styles.noBarcodeOverlay}>
-                    <Text style={styles.noBarcodeText}>
-                      바코드 이미지 영역이 감지되지 않았습니다.
-                    </Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.noImageContainer}>
-                  <Text style={styles.noImageText}>바코드 이미지가 없습니다.</Text>
-                </View>
-              )}
-            </View>
-
-            {/* 바코드 정보 영역 */}
-            <View style={styles.barcodeInfoContainer}>
-              <View style={styles.barcodeInfoRow}>
-                <Text style={styles.barcodeInfoLabel}>바코드 번호:</Text>
-                <Text style={styles.barcodeInfoValue}>{barcode}</Text>
+            {/* 바코드 이미지 */}
+            {barcodeImageUri ? (
+              <Image
+                source={imageSource(barcodeImageUri)}
+                style={styles.newBarcodeImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <View style={styles.noNewBarcodeImage}>
+                <Icon name="qr-code" size={50} color="#CCCCCC" />
               </View>
+            )}
 
-              {barcodeFormat && (
-                <View style={styles.barcodeInfoRow}>
-                  <Text style={styles.barcodeInfoLabel}>바코드 형식:</Text>
-                  <Text style={styles.barcodeInfoValue}>{getBarcodeFormatName(barcodeFormat)}</Text>
-                </View>
-              )}
+            {/* 바코드 번호 */}
+            <Text style={styles.newBarcodeNumber}>{barcode}</Text>
 
-              <TouchableOpacity
-                style={styles.barcodeCopyButton}
-                onPress={() => {
-                  Alert.alert('알림', `바코드 번호 ${barcode}이(가) 복사되었습니다.`);
-                }}
-              >
-                <Icon name="content-copy" size={20} color="white" />
-                <Text style={styles.barcodeCopyText}>바코드 복사</Text>
-              </TouchableOpacity>
-            </View>
+            {/* 바코드 복사 버튼 */}
+            <TouchableOpacity
+              style={styles.newBarcodeCopyButton}
+              onPress={() => {
+                Alert.alert('알림', `바코드 번호 ${barcode}이(가) 복사되었습니다.`);
+              }}
+            >
+              <Icon name="content-copy" size={20} color="white" />
+              <Text style={styles.newBarcodeCopyText}>바코드 복사</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -1286,64 +1485,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     height: 50,
   },
-  // 이미지 편집기 관련 스타일
-  editorContainer: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  editorHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    backgroundColor: '#000000',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333333',
-  },
-  editorHeaderButton: {
-    padding: 8,
-  },
-  cropContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000000',
-  },
-  cropView: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#000000',
-  },
-  editorToolbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#000000',
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
-  },
-  toolbarButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 10,
-  },
-  activeToolbarButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 5,
-  },
-  toolbarButtonText: {
-    marginTop: 8,
-  },
-  emptyImageContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  emptyImageText: {
-    color: '#DDDDDD',
-  },
   infoGuideContainer: {
     backgroundColor: '#F0F7FF',
     borderRadius: 10,
@@ -1423,147 +1564,79 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  originalImageCloseButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 20,
+  footer: {
+    padding: 18,
   },
-  barcodeModalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    paddingHorizontal: 10,
-    paddingTop: 10,
-    position: 'absolute',
-    top: 0,
-    zIndex: 10,
-  },
-  barcodeModalTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  barcodeDisplaySection: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    paddingTop: 60,
-    paddingBottom: 100,
-  },
-  barcodeImageWrapper: {
-    width: '90%',
-    height: '100%',
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  barcodeImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-  },
-  barcodeOnlyImage: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'white',
-    borderRadius: 10,
-    resizeMode: 'contain',
-  },
-  noBarcodeOverlay: {
+  loadingContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 10,
-  },
-  noBarcodeText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
-    textAlign: 'center',
-    padding: 10,
-  },
-  barcodeInfoContainer: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: 15,
-    borderRadius: 10,
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
-  },
-  barcodeInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  barcodeInfoLabel: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  barcodeInfoValue: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '500',
-    flex: 1,
-    textAlign: 'right',
-  },
-  barcodeCopyButton: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(74, 144, 226, 0.7)',
-    borderRadius: 5,
-    padding: 8,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingBox: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  loadingText: {
     marginTop: 10,
   },
-  barcodeCopyText: {
-    color: 'white',
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  noImageContainer: {
-    flex: 1,
+  newBarcodeModalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 15,
+    paddingBottom: 30,
   },
-  noImageText: {
-    color: '#DDDDDD',
-    fontSize: 16,
-    fontWeight: '500',
-    textAlign: 'center',
+  newBarcodeTitle: {
+    color: '#333',
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 10,
   },
-  barcodeModalContent: {
-    width: '90%',
-    height: '80%',
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    borderRadius: 16,
-    overflow: 'hidden',
-    justifyContent: 'space-between',
+  newBarcodeImage: {
+    width: '100%',
+    height: 100,
+    marginBottom: 10,
+    resizeMode: 'contain',
+  },
+  noNewBarcodeImage: {
+    width: '100%',
+    height: 100,
+    justifyContent: 'center',
     alignItems: 'center',
-    position: 'relative',
-    padding: 0,
-    flexDirection: 'column',
+    marginBottom: 20,
+  },
+  newBarcodeNumber: {
+    color: '#333',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 25,
+  },
+  newBarcodeCopyButton: {
+    flexDirection: 'row',
+    backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  newBarcodeCopyText: {
+    color: 'white',
+    fontWeight: '500',
+    fontSize: 16,
+    marginLeft: 10,
   },
 });
 
