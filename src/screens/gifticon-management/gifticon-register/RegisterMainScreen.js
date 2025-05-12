@@ -291,9 +291,6 @@ const RegisterMainScreen = () => {
               // 바코드 인식 먼저 시도
               console.log('[메인] 카메라 바코드 인식 시도 시작');
 
-              // 사용자에게 처리 중임을 알림
-              Alert.alert('처리 중', '이미지에서 바코드를 인식하고 있습니다. 잠시만 기다려주세요.');
-
               // 바코드 인식 유틸리티 불러오기
               const {
                 detectBarcode,
