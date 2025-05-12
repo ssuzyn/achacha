@@ -9,10 +9,14 @@ import {
 } from 'react-native';
 const { width } = Dimensions.get('window');
 import { calculateDday } from '../utils/dateUtils';
+import { useTheme } from '../hooks/useTheme'; // 커스텀 useTheme 훅 가져오기
 
 const StarbucksImg = require('../assets/images/starbucks.png');
 
 const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
+  // useTheme 훅을 사용하여 테마 색상에 접근
+  const { colors, getFontFamily } = useTheme();
+
   const renderGifticonItem = ({ item }) => {
     const dday = calculateDday(item.gifticonExpiryDate);
     return (
@@ -21,12 +25,23 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
           <View style={styles.gifticonDetails}>
             <Image source={StarbucksImg} style={styles.productImg} />
             <View style={styles.textContainer}>
-              <Text style={styles.brandName}>{item.brandName}</Text>
-              <Text style={styles.productName}>{item.gifticonName}</Text>
+              <Text style={[styles.brandName, { fontFamily: getFontFamily('bold') }]}>
+                {item.brandName}
+              </Text>
+              <Text style={[styles.productName, { fontFamily: getFontFamily('regular') }]}>
+                {item.gifticonName}
+              </Text>
             </View>
           </View>
           <View style={styles.ddayContainer}>
-            <Text style={styles.ddayText}>{dday}</Text>
+            <Text
+              style={[
+                styles.ddayText,
+                { color: colors.primary, fontFamily: getFontFamily('bold') },
+              ]}
+            >
+              {dday}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -36,8 +51,28 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
   return (
     <View style={styles.listContainer}>
       <View style={styles.listHeader}>
-        <Text style={styles.listTitle}>나의 기프티콘</Text>
-        <Text style={styles.listSubtitle}>*임박순으로 표시 / 상품형만 가능</Text>
+        <Text
+          style={[
+            styles.listTitle,
+            {
+              backgroundColor: colors.secondary,
+              fontFamily: getFontFamily('bold'),
+            },
+          ]}
+        >
+          나의 기프티콘
+        </Text>
+        <Text
+          style={[
+            styles.listSubtitle,
+            {
+              color: colors.secondary,
+              fontFamily: getFontFamily('bold'),
+            },
+          ]}
+        >
+          *임박순으로 표시 / 상품형만 가능
+        </Text>
       </View>
       {gifticons && gifticons.length > 0 ? (
         <FlatList
@@ -47,7 +82,9 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
         />
       ) : (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>보유한 기프티콘이 없습니다.</Text>
+          <Text style={[styles.emptyText, { fontFamily: getFontFamily('medium') }]}>
+            보유한 기프티콘이 없습니다.
+          </Text>
         </View>
       )}
     </View>
@@ -100,13 +137,11 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 15,
-    fontWeight: 'bold',
     color: 'black',
     marginBottom: 4,
   },
   productName: {
     fontSize: 14,
-    fontWeight: '400',
     color: 'black',
   },
   ddayContainer: {
@@ -116,8 +151,6 @@ const styles = StyleSheet.create({
   },
   ddayText: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#278CCC',
   },
   listHeader: {
     flexDirection: 'row',
@@ -128,17 +161,13 @@ const styles = StyleSheet.create({
   },
   listTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: 'white',
-    backgroundColor: '#278CCC',
     paddingHorizontal: 15,
     paddingVertical: 5,
     borderRadius: 10,
   },
   listSubtitle: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#278CCC',
   },
   emptyContainer: {
     padding: 30,
@@ -157,7 +186,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    fontWeight: '500',
     color: '#555',
     textAlign: 'center',
   },
