@@ -29,7 +29,7 @@ class UserDataStore(private val context: Context) {
     // API Access Token 읽기 Flow
     val accessTokenFlow: Flow<String?> = context.userDataStore.data
         .map {
-            it[ACCESS_TOKEN_KEY] ?: "TEMP_TEST_TOKEN_BY_AI" // 저장된 토큰이 없으면 임시 토큰 반환
+            it[ACCESS_TOKEN_KEY] // 저장소에 없으면 null 반환
         }
 
     // API Access Token 삭제 함수

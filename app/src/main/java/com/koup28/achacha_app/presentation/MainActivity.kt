@@ -48,6 +48,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.LaunchedEffect
+import org.json.JSONObject
 
 // 화면 상태 정의
 enum class ScreenState {
@@ -289,20 +290,33 @@ class MainActivity : ComponentActivity() {
                     return
                 }
                 val receivedString = String(receivedBytes, StandardCharsets.UTF_8)
-                // 보안상 실제 토큰 값 로그 출력은 주의 (디버깅 시에만 사용)
-                addLog("[Payload] Received String (potential Access Token)") // 로그 수정
+                addLog("[Payload] Received raw token: '$receivedString' (length=${receivedString.length})")
 
-                lifecycleScope.launch {
-                    try {
-                        userDataStore.saveAccessToken(receivedString) // 함수 이름 변경
-                        addLog("[DataStore] Access Token saved successfully.") // 로그 수정
-                        _receivedToken.value = receivedString // 토큰 상태 업데이트 (변수명은 유지해도 무방)
-                        _connectionError.value = null      // 오류 상태 초기화
-                        _currentScreen.value = ScreenState.MAIN_MENU // 메인 메뉴 화면으로 전환
-                    } catch (e: Exception) {
-                        addLog("[DataStore] Failed to save Access Token: ${e.message}") // 로그 수정
-                        _connectionError.value = "데이터 저장 실패: ${e.localizedMessage}"
+                // JSON 파싱해서 accessToken만 추출
+                val accessToken = try {
+                    JSONObject(receivedString).getString("accessToken")
+                } catch (e: Exception) {
+                    addLog("[Payload] JSON 파싱 실패: ${e.message}")
+                    null
+                }
+
+                if (accessToken != null) {
+                    val cleanToken = accessToken.trim()
+                    addLog("[Payload] Cleaned token: '$cleanToken' (length=${cleanToken.length})")
+                    lifecycleScope.launch {
+                        try {
+                            userDataStore.saveAccessToken(cleanToken)
+                            addLog("[DataStore] Access Token saved successfully. (주의: 저장된 토큰 값 로그) -> '$cleanToken'")
+                            _receivedToken.value = cleanToken
+                            _connectionError.value = null
+                            _currentScreen.value = ScreenState.MAIN_MENU // 메인 메뉴 화면으로 전환
+                        } catch (e: Exception) {
+                            addLog("[DataStore] Failed to save Access Token: ${e.message}")
+                            _connectionError.value = "데이터 저장 실패: ${e.localizedMessage}"
+                        }
                     }
+                } else {
+                    addLog("[Payload] accessToken 추출 실패 - 저장하지 않음")
                 }
             } else {
                 addLog("[Payload] Received non-BYTES payload type: ${payload.type}")
@@ -374,9 +388,6 @@ class MainActivity : ComponentActivity() {
         userDataStore = UserDataStore(applicationContext)
         connectionsClient = Nearby.getConnectionsClient(this)
 
-        addLog("onCreate: Requesting permissions...")
-        checkAndRequestNearbyPermissions()
-
         // --- 앱 시작 시 토큰 로드 및 화면 결정 --- (수정: Access Token 확인)
         lifecycleScope.launch {
             val storedToken = userDataStore.accessTokenFlow.firstOrNull() // Flow 이름 변경
@@ -420,15 +431,17 @@ class MainActivity : ComponentActivity() {
                                     try {
                                         userDataStore.clearAccessToken() // 함수 이름 변경
                                         addLog("[DataStore] Access Token cleared successfully.") // 로그 수정
+                                        // 토큰 삭제 후 실제 저장소 값 확인 및 로그 출력
+                                        val tokenAfterDelete = userDataStore.accessTokenFlow.firstOrNull()
+                                        addLog("[DataStore] 토큰이 삭제되었습니다. 현재 저장소 토큰: '${tokenAfterDelete ?: ""}'")
                                         _receivedToken.value = null     // 내부 토큰 상태 초기화
                                         _connectionError.value = null // 이전 연결 오류 초기화
                                         _currentScreen.value = ScreenState.CONNECTING // 연결 화면 상태로 변경
                                         resetNearbyStateInternal(false) // Nearby 관련 상태 초기화
-                                        checkAndRequestNearbyPermissions() // 권한 확인 및 연결 프로세스 재시작
                                         addLog("Navigating to CONNECTING screen and re-initiating connection process after token deletion.")
                                     } catch (e: Exception) {
-                                        addLog("[DataStore] Failed to clear Access Token: ${e.message}") // 로그 수정
-                                        _connectionError.value = "토큰 삭제 중 오류: ${e.localizedMessage}" 
+                                        addLog("[DataStore] Failed to clear Access Token: "+e.message) // 로그 수정
+                                        _connectionError.value = "토큰 삭제 중 오류: "+e.localizedMessage
                                     }
                                 }
                             }
