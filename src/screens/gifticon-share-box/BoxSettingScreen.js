@@ -11,16 +11,18 @@ import {
   Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
+import { leaveShareBox } from '../../api/shareBoxApi';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const route = useRoute();
+  const navigation = useNavigation();
 
   // 쉐어박스 이름 가져오기
   const [shareBoxName, setShareBoxName] = useState(
@@ -60,9 +62,18 @@ const BoxSettingScreen = () => {
   };
 
   // 쉐어박스 나가기 핸들러
-  const leaveShareBox = () => {
-    // 쉐어박스 나가기 로직 (실제 구현 필요)
-    NavigationService.goBack();
+  const leaveShareBoxHandler = async () => {
+    try {
+      await leaveShareBox(route.params.shareBoxId);
+      Alert.alert('알림', '쉐어박스를 나갔습니다.');
+      // BoxMainScreen으로 이동 및 목록 새로고침 트리거
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'BoxMain' }],
+      });
+    } catch (e) {
+      Alert.alert('오류', '쉐어박스 나가기에 실패했습니다.');
+    }
   };
 
   return (
@@ -174,7 +185,7 @@ const BoxSettingScreen = () => {
           </View>
 
           {/* 쉐어박스 나가기 버튼 */}
-          <TouchableOpacity style={styles.leaveButton} onPress={leaveShareBox}>
+          <TouchableOpacity style={styles.leaveButton} onPress={leaveShareBoxHandler}>
             <Text variant="body1" weight="semibold" style={styles.leaveButtonText}>
               쉐어박스 나가기
             </Text>

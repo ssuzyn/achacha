@@ -24,4 +24,10 @@ export const joinShareBox = async (shareBoxId, inviteCode) => {
     { shareBoxInviteCode: inviteCode }
   );
   return response.data;
+};
+
+// 쉐어박스 나가기 API
+export const leaveShareBox = async (shareBoxId) => {
+  const res = await apiClient.delete(`/api/share-boxes/${shareBoxId}/leave`);
+  return res.data;
 }; 

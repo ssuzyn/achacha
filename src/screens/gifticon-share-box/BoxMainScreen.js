@@ -15,7 +15,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { API_CONFIG } from '../../api/config';
 import apiClient from '../../api/apiClient';
 import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxApi';
@@ -126,6 +126,12 @@ const BoxMainScreen = () => {
     };
     loadShareBoxes();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadShareBoxes();
+    }, [])
+  );
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
