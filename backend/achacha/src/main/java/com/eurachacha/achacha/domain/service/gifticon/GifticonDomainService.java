@@ -10,7 +10,7 @@ public interface GifticonDomainService {
 	// 기프티콘 만료 여부 확인
 	boolean isExpired(Gifticon gifticon);
 
-	// 기프티콘 조회 권한 여부 확인
+	// 기프티콘 소유 여부 확인
 	boolean hasAccess(Integer requestUserId, Integer gifticonUserId);
 
 	// 기프티콘 삭제 여부 확인
@@ -29,5 +29,9 @@ public interface GifticonDomainService {
 
 	boolean isAmountGifticonUsed(Gifticon gifticon);
 
+	// 쉐어박스에 공유중인 기프티콘인지 검증
 	void validateGifticonSharable(Gifticon gifticon);
+
+	// 해당 쉐어박스에 기프티콘이 올라가있는지 검증
+	void validateGifticonSharedInShareBox(Gifticon gifticon, Integer shareBoxId);
 }

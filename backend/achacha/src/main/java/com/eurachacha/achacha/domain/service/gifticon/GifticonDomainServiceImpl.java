@@ -33,7 +33,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		return gifticon.getExpiryDate().isBefore(LocalDate.now());
 	}
 
-	// 기프티콘 조회 권한 여부 확인
+	// 기프티콘 소유 여부 확인
 	@Override
 	public boolean hasAccess(Integer requestUserId, Integer gifticonUserId) {
 		return Objects.equals(requestUserId, gifticonUserId);
@@ -125,6 +125,13 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		// 금액형 기프티콘의 경우, 일부 사용되었는지 검증
 		if (isAmountGifticonUsed(gifticon)) {
 			throw new CustomException(ErrorCode.CANNOT_SHARE_USED_AMOUNT_GIFTICON);
+		}
+	}
+
+	@Override
+	public void validateGifticonSharedInShareBox(Gifticon gifticon, Integer shareBoxId) {
+		if (gifticon.getSharebox() == null || !gifticon.getSharebox().getId().equals(shareBoxId)) {
+			throw new CustomException(ErrorCode.GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX);
 		}
 	}
 }
