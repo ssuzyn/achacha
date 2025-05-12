@@ -20,6 +20,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
+import apiClient from '../../api/apiClient';
+import { API_CONFIG } from '../../api/config';
 
 const BoxCreateScreen = () => {
   const insets = useSafeAreaInsets();
@@ -237,30 +239,25 @@ const BoxCreateScreen = () => {
     }
   };
 
-  // 랜덤 초대 코드 생성 함수 (8자리 영문 숫자 조합)
-  const generateInviteCode = () => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 8; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-  };
-
   // 쉐어박스 생성 함수
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!boxName.trim()) {
       // 이름이 비어있으면 생성 불가
       Alert.alert('알림', '박스명을 입력해주세요.');
       return;
     }
 
-    // 초대 코드 생성
-    const code = generateInviteCode();
-    setInviteCode(code);
-
-    // 화면 상태 변경
-    setScreenState('share');
+    try {
+      // API 호출
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.CREATE_SHARE_BOX, {
+        shareBoxName: boxName.trim(),
+      });
+      setInviteCode(response.data.shareBoxInviteCode);
+      setScreenState('share');
+    } catch (error) {
+      console.error('쉐어박스 생성 실패:', error);
+      Alert.alert('생성 실패', '쉐어박스 생성 중 오류가 발생했습니다.');
+    }
   };
 
   // 카카오톡 공유 함수
@@ -314,7 +311,7 @@ const BoxCreateScreen = () => {
               placeholderTextColor="#A0AEC0"
               value={boxName}
               onChangeText={setBoxName}
-              maxLength={20}
+              maxLength={10}
             />
           </View>
         </View>
