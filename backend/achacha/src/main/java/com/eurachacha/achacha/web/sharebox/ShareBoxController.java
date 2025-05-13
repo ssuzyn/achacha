@@ -3,6 +3,7 @@ package com.eurachacha.achacha.web.sharebox;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
@@ -82,5 +84,14 @@ public class ShareBoxController {
 		@RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
 		@RequestParam(required = false, defaultValue = "6") @Min(1) Integer size) {
 		return ResponseEntity.ok(shareBoxAppService.getShareBoxes(sort, page, size));
+	}
+
+	@PatchMapping("/{shareBoxId}/participation-setting")
+	public ResponseEntity<String> updateParticipationSetting(
+		@PathVariable Integer shareBoxId,
+		@Valid @RequestBody ShareBoxParticipationSettingRequestDto requestDto) {
+
+		shareBoxAppService.updateParticipationSetting(shareBoxId, requestDto);
+		return ResponseEntity.ok("쉐어박스 참여 설정이 변경되었습니다.");
 	}
 }

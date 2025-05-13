@@ -11,7 +11,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
@@ -335,4 +337,64 @@ class ShareBoxAppServiceImplTest {
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX);
 	}
 
+	@DisplayName("쉐어박스 참여 설정 변경 - 방장이 요청하면 성공적으로 변경되어야 한다")
+	@Test
+	void updateParticipationSetting_WhenUserIsOwner_ThenSuccessfullyUpdate() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+		Boolean newSetting = true;
+
+		ShareBoxParticipationSettingRequestDto requestDto = new ShareBoxParticipationSettingRequestDto();
+		ReflectionTestUtils.setField(requestDto, "shareBoxAllowParticipation", newSetting);
+
+		User user = User.builder()
+			.id(userId)
+			.name("테스트 사용자")
+			.build();
+
+		ShareBox shareBox = mock(ShareBox.class);
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		willDoNothing().given(shareBoxDomainService).validateShareBoxOwner(shareBox, userId);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			shareBoxAppService.updateParticipationSetting(shareBoxId, requestDto));
+
+		// then
+		assertThat(thrown).isNull();
+		verify(shareBoxRepository).findById(eq(shareBoxId));
+		verify(shareBoxDomainService).validateShareBoxOwner(eq(shareBox), eq(userId));
+		verify(shareBox).updateAllowParticipation(eq(newSetting));
+	}
+
+	@DisplayName("쉐어박스 참여 설정 변경 - 방장이 아닌 사용자가 요청하면 예외가 발생해야 한다")
+	@Test
+	void updateParticipationSetting_WhenUserIsNotOwner_ThenThrowException() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+		Boolean newSetting = true;
+
+		ShareBoxParticipationSettingRequestDto requestDto = new ShareBoxParticipationSettingRequestDto();
+		ReflectionTestUtils.setField(requestDto, "shareBoxAllowParticipation", newSetting);
+
+		ShareBox shareBox = mock(ShareBox.class);
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		willThrow(new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS))
+			.given(shareBoxDomainService).validateShareBoxOwner(shareBox, userId);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			shareBoxAppService.updateParticipationSetting(shareBoxId, requestDto));
+
+		// then
+		assertThat(thrown)
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS);
+
+		verify(shareBox, never()).updateAllowParticipation(any());
+	}
 }

@@ -73,4 +73,11 @@ public class ShareBoxDomainServiceImpl implements ShareBoxDomainService {
 	public int getRecommendedInviteCodeLength() {
 		return INVITE_CODE_LENGTH;
 	}
+
+	@Override
+	public void validateShareBoxOwner(ShareBox shareBox, Integer userId) {
+		if (!shareBox.getUser().getId().equals(userId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS);
+		}
+	}
 }

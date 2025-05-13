@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ParticipantResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
@@ -244,6 +245,27 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 			.hasNextPage(shareBoxSlice.hasNext())
 			.nextPage(shareBoxSlice.hasNext() ? page + 1 : null)
 			.build();
+	}
+
+	@Transactional
+	@Override
+	public void updateParticipationSetting(Integer shareBoxId, ShareBoxParticipationSettingRequestDto requestDto) {
+		log.info("쉐어박스 참여 설정 변경 시작 - 쉐어박스 ID: {}, 참여 허용: {}",
+			shareBoxId, requestDto.getShareBoxAllowParticipation());
+
+		// 현재 사용자 ID (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 조회
+		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
+
+		// 방장 권한 검증
+		shareBoxDomainService.validateShareBoxOwner(shareBox, userId);
+
+		// 참여 설정 변경
+		shareBox.updateAllowParticipation(requestDto.getShareBoxAllowParticipation());
+
+		log.info("쉐어박스 참여 설정 변경 완료 - 쉐어박스 ID: {}", shareBoxId);
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package com.eurachacha.achacha.application.port.input.sharebox.dto;
 
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
@@ -19,4 +20,6 @@ public interface ShareBoxAppService {
 	ShareBoxParticipantsResponseDto getShareBoxParticipants(Integer shareBoxId);
 
 	ShareBoxesResponseDto getShareBoxes(ShareBoxSortType sort, Integer page, Integer size);
+
+	void updateParticipationSetting(Integer shareBoxId, ShareBoxParticipationSettingRequestDto requestDto);
 }
