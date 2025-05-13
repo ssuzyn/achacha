@@ -2,7 +2,10 @@ package com.eurachacha.achacha.infrastructure.adapter.output.persistence.giftico
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -176,6 +179,33 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 			content = content.subList(0, pageable.getPageSize());
 
 		return new SliceImpl<>(content, pageable, hasNext);
+	}
+
+	// 쉐어박스 목록의 사용가능한 기프티콘 갯수 조회
+	@Override
+	public Map<Integer, Long> countGifticonsByShareBoxIds(List<Integer> shareBoxIds) {
+		if (shareBoxIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		QGifticon qGifticon = QGifticon.gifticon;
+
+		List<Tuple> results = jpaQueryFactory
+			.select(qGifticon.sharebox.id, qGifticon.count())
+			.from(qGifticon)
+			.where(
+				qGifticon.sharebox.id.in(shareBoxIds),
+				qGifticon.isDeleted.eq(false),
+				qGifticon.isUsed.eq(false)
+			)
+			.groupBy(qGifticon.sharebox.id)
+			.fetch();
+
+		return results.stream()
+			.collect(Collectors.toMap(
+				tuple -> tuple.get(qGifticon.sharebox.id),
+				tuple -> tuple.get(qGifticon.count())
+			));
 	}
 
 	/**
