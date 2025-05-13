@@ -18,6 +18,7 @@ import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
 import { leaveShareBox, fetchShareBoxSettings, fetchShareBoxUsers } from '../../api/shareBoxApi';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -30,6 +31,8 @@ const BoxSettingScreen = () => {
   const [memberEntryEnabled, setMemberEntryEnabled] = useState(true);
   const [shareBoxCode, setShareBoxCode] = useState('');
   const [members, setMembers] = useState([]);
+  const [shareBoxUserId, setShareBoxUserId] = useState(null); // 방장 userId
+  const [userId, setUserId] = useState(null); // 내 userId
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -38,6 +41,7 @@ const BoxSettingScreen = () => {
         setShareBoxName(data.shareBoxName);
         setMemberEntryEnabled(data.shareBoxAllowParticipation);
         setShareBoxCode(data.shareBoxInviteCode);
+        setShareBoxUserId(data.shareBoxUserId); // 방장 userId 저장
       } catch (e) {
         const errorCode = e?.response?.data?.errorCode;
         let message = '쉐어박스 설정 정보를 불러오지 못했습니다.';
@@ -59,11 +63,20 @@ const BoxSettingScreen = () => {
     loadSettings();
   }, [route.params?.shareBoxId]);
 
+  useEffect(() => {
+    const getUserId = async () => {
+      const id = await AsyncStorage.getItem('userId');
+      setUserId(id ? Number(id) : null);
+    };
+    getUserId();
+  }, []);
+
   // 참가자 목록 불러오기
   useEffect(() => {
     const loadUsers = async () => {
       try {
         const data = await fetchShareBoxUsers(route.params?.shareBoxId);
+        setShareBoxUserId(data.shareBoxUserId); // 방장 userId 저장
         // 방장 ID와 참가자 목록을 활용해 멤버 배열 생성
         const membersList = data.participations.map(user => ({
           id: user.userId,
@@ -117,7 +130,40 @@ const BoxSettingScreen = () => {
         routes: [{ name: 'BoxMain' }],
       });
     } catch (e) {
-      Alert.alert('오류', '쉐어박스 나가기에 실패했습니다.');
+      const errorCode = e?.response?.data?.errorCode;
+      let message = '쉐어박스 나가기에 실패했습니다.';
+      if (errorCode && ERROR_MESSAGES[errorCode]) {
+        message = ERROR_MESSAGES[errorCode];
+      } else if (e?.response?.data?.message) {
+        message = e.response.data.message;
+      }
+      console.log('[쉐어박스 나가기 에러]', e);
+      console.log('[에러코드]', errorCode);
+      console.log('[에러메시지]', e?.response?.data?.message);
+      Alert.alert('오류', message);
+    }
+  };
+
+  // 나가기 버튼 클릭 핸들러 (방장 여부에 따라 안내)
+  const handleLeavePress = () => {
+    if (userId && shareBoxUserId && userId === shareBoxUserId) {
+      Alert.alert(
+        '알림',
+        '쉐어박스가 모든 인원에게 삭제됩니다. 정말 나가시겠습니까?',
+        [
+          { text: '확인', onPress: leaveShareBoxHandler },
+          { text: '취소', style: 'cancel' },
+        ]
+      );
+    } else {
+      Alert.alert(
+        '알림',
+        '쉐어박스에서 나가면 기프티콘이 회수됩니다. 정말 나가시겠습니까?',
+        [
+          { text: '확인', onPress: leaveShareBoxHandler },
+          { text: '취소', style: 'cancel' },
+        ]
+      );
     }
   };
 
@@ -230,7 +276,7 @@ const BoxSettingScreen = () => {
           </View>
 
           {/* 쉐어박스 나가기 버튼 */}
-          <TouchableOpacity style={styles.leaveButton} onPress={leaveShareBoxHandler}>
+          <TouchableOpacity style={styles.leaveButton} onPress={handleLeavePress}>
             <Text variant="body1" weight="semibold" style={styles.leaveButtonText}>
               쉐어박스 나가기
             </Text>
