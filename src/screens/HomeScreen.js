@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   },
   giftMessageTextContainerRadar: {
     flex: 1.5,
-    paddingLeft: 25,
+    paddingLeft: 15,
     paddingRight: 10,
     justifyContent: 'center',
     height: '100%',
