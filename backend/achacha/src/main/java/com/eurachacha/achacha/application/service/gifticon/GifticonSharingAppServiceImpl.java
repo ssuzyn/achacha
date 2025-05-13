@@ -17,7 +17,6 @@ import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
-import com.eurachacha.achacha.domain.service.gifticon.GifticonUsageDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -32,7 +31,6 @@ public class GifticonSharingAppServiceImpl implements GifticonSharingAppService 
 
 	private final GifticonRepository gifticonRepository;
 	private final GifticonDomainService gifticonDomainService;
-	private final GifticonUsageDomainService gifticonUsageDomainService;
 	private final UserRepository userRepository;
 	private final BleTokenRepository bleTokenRepository;
 	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
