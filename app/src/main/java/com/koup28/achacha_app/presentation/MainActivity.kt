@@ -405,6 +405,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AchachaAppTheme {
+                addLog("Compose recomposition: currentScreen.value = ${currentScreen.value}")
                 // --- 현재 화면 상태에 따라 UI 렌더링 --- (수정)
                 when (currentScreen.value) {
                     ScreenState.CONNECTING -> {
@@ -458,7 +459,16 @@ class MainActivity : ComponentActivity() {
                             error = gifticonListError.value, // 오류 상태 전달
                             onGifticonClick = { gifticonId ->
                                 addLog("GifticonList: Clicked on gifticon ID: $gifticonId for detail view.")
-                                fetchGifticonDetail(gifticonId) // 상세 정보 가져오기 함수 호출
+                                // 인덱스/ID 상태 먼저 세팅
+                                val index = gifticonList.indexOfFirst { it.gifticonId == gifticonId }
+                                if (index != -1) {
+                                    _currentGifticonIndex.value = index
+                                    _selectedGifticonId.value = gifticonId
+                                    _currentScreen.value = ScreenState.GIFTICON_DETAIL // 바로 화면 이동
+                                    fetchGifticonDetail(gifticonId) // 상세 정보는 비동기로 갱신
+                                } else {
+                                    addLog("[Error] Clicked gifticon not found in list: $gifticonId")
+                                }
                             },
                             onBackPress = { 
                                 _gifticonList.clear() // 목록 화면 벗어날 때 리스트 초기화 (선택적)
@@ -493,17 +503,14 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onUseClick = { gifticonId ->
                                     addLog("GifticonDetail: Use clicked for ID: $gifticonId")
-                                    // 클릭된 기프티콘 정보 찾기 (타입, 잔액 확인용)
                                     val clickedGifticon = gifticonList.find { it.gifticonId == gifticonId }
                                     if (clickedGifticon != null) {
                                         if (clickedGifticon.gifticonType == "AMOUNT") {
-                                            // 금액권일 경우
                                             addLog("GifticonDetail: Amount type gifticon. Navigating to EnterAmountScreen.")
-                                            _selectedGifticonId.value = gifticonId // ID 저장
-                                            _selectedGifticonRemainingAmount.value = clickedGifticon.gifticonRemainingAmount // 잔액 저장
-                                            _currentScreen.value = ScreenState.ENTER_AMOUNT // 금액 입력 화면으로 전환
+                                            _selectedGifticonId.value = gifticonId
+                                            _selectedGifticonRemainingAmount.value = clickedGifticon.gifticonRemainingAmount
+                                            _currentScreen.value = ScreenState.ENTER_AMOUNT
                                         } else {
-                                            // 상품권일 경우 (API 호출)
                                             addLog("GifticonDetail: Product type gifticon. Calling useProductGifticon API.")
                                             lifecycleScope.launch {
                                                 val token = userDataStore.accessTokenFlow.firstOrNull()
@@ -522,9 +529,8 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                     if (response.isSuccessful) {
                                                         addLog("[API] Product gifticon used successfully.")
-                                                        // 상세 정보 새로고침
-                                                        fetchGifticonDetail(gifticonId)
-                                                        // 필요시 토스트 등 추가
+                                                        // 상품형은 사용 성공 시 리스트로 이동
+                                                        _currentScreen.value = ScreenState.GIFTICON_LIST
                                                     } else {
                                                         val errorBody = response.errorBody()?.string() ?: "Unknown error"
                                                         val errorMessage = when (response.code()) {
@@ -613,12 +619,13 @@ class MainActivity : ComponentActivity() {
                                 if (gifticonId != null) {
                                     useAmountGifticon(gifticonId, amountToUse) { success, message ->
                                         if (success) {
-                                            // 성공 시 상세 화면으로 이동 및 메시지 표시(토스트 등)
                                             addLog("[API] Amount gifticon used successfully: $message")
-                                            fetchGifticonDetail(gifticonId)
-                                            _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                                            fetchGifticonDetail(gifticonId, onSuccess = {
+                                                _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                                            }, onError = { errorMsg ->
+                                                _connectionError.value = errorMsg
+                                            })
                                         } else {
-                                            // 실패 시 에러 메시지 표시(토스트 등)
                                             addLog("[API] Error using amount gifticon: $message")
                                             _connectionError.value = message
                                         }
@@ -825,7 +832,11 @@ class MainActivity : ComponentActivity() {
     // ------------------------------------
 
     // --- 기프티콘 상세 정보 API 호출 함수 추가 ---
-    private fun fetchGifticonDetail(gifticonId: Int) {
+    private fun fetchGifticonDetail(
+        gifticonId: Int,
+        onSuccess: (() -> Unit)? = null,
+        onError: ((String) -> Unit)? = null
+    ) {
         if (_isGifticonDetailLoading.value) return // 이미 로딩 중이면 중복 호출 방지
 
         addLog("[API] Fetching gifticon detail for ID: $gifticonId...")
@@ -839,6 +850,7 @@ class MainActivity : ComponentActivity() {
                 _isGifticonDetailLoading.value = false
                 addLog("[API] Detail Error: Access Token is missing.")
                 _currentScreen.value = ScreenState.CONNECTING
+                onError?.invoke("인증 토큰이 없습니다.")
                 return@launch
             }
 
@@ -850,21 +862,22 @@ class MainActivity : ComponentActivity() {
                 if (response.isSuccessful) {
                     val detailedGifticon = response.body()
                     if (detailedGifticon != null) {
-                        // 기존 목록에서 해당 아이템을 찾아 상세 정보로 업데이트
                         val index = _gifticonList.indexOfFirst { it.gifticonId == gifticonId }
                         if (index != -1) {
                             _gifticonList[index] = detailedGifticon
                             _currentGifticonIndex.value = index
                             _selectedGifticonId.value = gifticonId
-                            _currentScreen.value = ScreenState.GIFTICON_DETAIL
                             addLog("[API] Gifticon detail fetched and list updated for ID: $gifticonId")
+                            onSuccess?.invoke()
                         } else {
                             _gifticonDetailError.value = "리스트에서 아이템 찾기 실패"
                             addLog("[API] Error: Could not find gifticon ID $gifticonId in the list after fetching detail.")
+                            onError?.invoke("리스트에서 아이템 찾기 실패")
                         }
                     } else {
                         _gifticonDetailError.value = "상세 데이터 수신 실패 (null response)"
                         addLog("[API] Detail Error: Received null response body for ID: $gifticonId")
+                        onError?.invoke("상세 데이터 수신 실패 (null response)")
                     }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Unknown error"
@@ -881,19 +894,18 @@ class MainActivity : ComponentActivity() {
                     }
                     _gifticonDetailError.value = errorMessage
                     addLog("[API] Error fetching gifticon detail for ID $gifticonId: ${response.code()} - $errorBody")
+                    onError?.invoke(errorMessage)
                     if (response.code() == 401) {
                         addLog("[API] Detail Unauthorized. Token might be invalid. Clearing token.")
                         userDataStore.clearAccessToken()
                         _receivedToken.value = null
                         _currentScreen.value = ScreenState.CONNECTING
                     }
-                    // 실패 시 GificonList 화면으로 유지하거나, 에러를 DetailScreen에 전달하는 방법도 고려 가능
-                    // 현재는 별도 화면 전환 없이 GificonListScreen에 머무르며, 해당 화면에서 에러를 표시해야 함
-                    // 또는 _currentScreen.value = ScreenState.GIFTICON_LIST 로 명시적으로 설정
                 }
             } catch (e: Exception) {
                 _gifticonDetailError.value = "상세 정보 네트워크 오류: ${e.localizedMessage}"
                 addLog("[API] Exception fetching gifticon detail for ID $gifticonId: ${e.message}")
+                onError?.invoke("상세 정보 네트워크 오류: ${e.localizedMessage}")
             } finally {
                 _isGifticonDetailLoading.value = false
             }

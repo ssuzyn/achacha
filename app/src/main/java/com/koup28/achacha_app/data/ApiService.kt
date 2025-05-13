@@ -35,7 +35,7 @@ interface ApiService {
     ): Response<GifticonListApiResponse>
 
     // 바코드 정보 조회 API (수정: 인증 헤더 추가)
-    @GET("api/gifticons/{gifticonId}/barcode")
+    @GET("api/available-gifticons/{gifticonId}/barcode")
     suspend fun getGifticonBarcode(
         @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int
