@@ -451,7 +451,7 @@ class NearbyUsersService {
         if (onScanComplete) onScanComplete(this.nearbyUsers);
       });
 
-      // 스캔 시작
+      // 스캔 시작 - 고정된 SERVICE_UUID 사용
       console.log('스캔 시작: SERVICE_UUID =', SERVICE_UUID);
       await BleManager.scan([SERVICE_UUID], 5, true);
     } catch (error) {
@@ -488,6 +488,12 @@ class NearbyUsersService {
   // 발견된 기기 처리
   async handleDiscoveredDevice(peripheral, onUserFound) {
     try {
+      console.log('기기 발견:', {
+        id: peripheral.id,
+        name: peripheral.name || '이름 없음',
+        rssi: peripheral.rssi,
+      });
+
       // 이미 처리한 기기인지 확인
       const existingIndex = this.nearbyUsers.findIndex(user => user.id === peripheral.id);
       if (existingIndex !== -1) {
@@ -497,24 +503,32 @@ class NearbyUsersService {
         return;
       }
 
+      console.log('새 기기에 연결 시도:', peripheral.id);
+
       // 연결 시도
       await BleManager.connect(peripheral.id);
+      console.log('기기에 연결됨, 서비스 조회 중:', peripheral.id);
 
       // 같은 앱을 사용하는 사용자인지 확인 (서비스 UUID로 필터링)
       const peripheralInfo = await BleManager.retrieveServices(peripheral.id);
+      console.log('기기 서비스 목록:', peripheralInfo.services?.map(s => s.uuid) || '서비스 없음');
 
       if (
         peripheralInfo.services &&
-        peripheralInfo.services.some(service => service.uuid === SERVICE_UUID)
+        peripheralInfo.services.some(
+          service => service.uuid.toLowerCase() === SERVICE_UUID.toLowerCase()
+        )
       ) {
+        console.log('일치하는 SERVICE_UUID 발견:', SERVICE_UUID);
+
         // 앱 UUID 읽기 시도
         try {
-          const serviceUuid = peripheralInfo.services.find(
+          const serviceUUID = peripheralInfo.services.find(
             service => service.uuid === SERVICE_UUID
           ).uuid;
           const characteristic = await BleManager.read(
             peripheral.id,
-            serviceUuid,
+            serviceUUID,
             CHARACTERISTIC_UUID
           );
 
@@ -541,15 +555,19 @@ class NearbyUsersService {
         } catch (error) {
           console.error('UUID 읽기 실패:', error);
         }
+      } else {
+        console.log('SERVICE_UUID 불일치. 찾는 UUID:', SERVICE_UUID);
       }
 
       // 연결 해제
+      console.log('기기 연결 해제:', peripheral.id);
       await BleManager.disconnect(peripheral.id);
     } catch (error) {
       console.error('기기 정보 조회 실패:', error);
 
       // 연결되어 있는 경우 연결 해제 시도
       try {
+        console.log('오류 후 연결 해제 시도:', peripheral.id);
         await BleManager.disconnect(peripheral.id);
       } catch (disconnectError) {
         // 무시
