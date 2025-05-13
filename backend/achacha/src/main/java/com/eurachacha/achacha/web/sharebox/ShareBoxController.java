@@ -43,12 +43,11 @@ public class ShareBoxController {
 	}
 
 	// 쉐어박스 참여 엔드포인트
-	@PostMapping("/{shareBoxId}/join")
+	@PostMapping("/join")
 	public ResponseEntity<String> joinShareBox(
-		@PathVariable Integer shareBoxId,
 		@Valid @RequestBody ShareBoxJoinRequestDto requestDto) {
 
-		shareBoxAppService.joinShareBox(shareBoxId, requestDto);
+		shareBoxAppService.joinShareBox(requestDto);
 		return ResponseEntity.ok("쉐어박스에 성공적으로 참여했습니다.");
 	}
 

@@ -92,29 +92,26 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 	@Transactional
 	@Override
-	public void joinShareBox(Integer shareBoxId, ShareBoxJoinRequestDto requestDto) {
-		log.info("쉐어박스 참여 시작 - 쉐어박스 ID: {}, 초대 코드: {}", shareBoxId, requestDto.getShareBoxInviteCode());
+	public void joinShareBox(ShareBoxJoinRequestDto requestDto) {
+		log.info("쉐어박스 참여 시작 - 초대 코드: {}", requestDto.getShareBoxInviteCode());
 
 		// 현재 사용자 조회 (인증 구현 시 변경 필요)
 		Integer userId = 1; // 인증 구현 시 변경 필요
 		User user = userRepository.findById(userId);
 
 		// 쉐어박스 조회
-		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
-
-		// 초대 코드 검증
-		shareBoxDomainService.validateInviteCode(shareBox, requestDto.getShareBoxInviteCode());
+		ShareBox shareBox = shareBoxRepository.findByInviteCode(requestDto.getShareBoxInviteCode());
 
 		// 참여 가능 여부 검증
 		shareBoxDomainService.validateParticipationAllowed(shareBox);
 
 		// 이미 참여 중인지 확인
-		if (participationRepository.checkParticipation(userId, shareBoxId)) {
+		if (participationRepository.checkParticipation(userId, shareBox.getId())) {
 			throw new CustomException(ErrorCode.ALREADY_PARTICIPATING_SHAREBOX);
 		}
 
-		// 최대 참여자 수 확인
-		int currentParticipants = participationRepository.countByShareboxId(shareBoxId);
+		// 참여자 수 확인
+		int currentParticipants = participationRepository.countByShareboxId(shareBox.getId());
 		shareBoxDomainService.validateParticipantCount(currentParticipants);
 
 		// 참여 정보 저장
@@ -125,7 +122,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 		participationRepository.save(participation);
 
-		log.info("쉐어박스 참여 완료 - 사용자 ID: {}, 쉐어박스 ID: {}", userId, shareBoxId);
+		log.info("쉐어박스 참여 완료 - 사용자 ID: {}, 쉐어박스 ID: {}", userId, shareBox.getId());
 	}
 
 	@Transactional
