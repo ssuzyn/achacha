@@ -16,9 +16,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
 import coil.compose.rememberAsyncImagePainter
 import com.koup28.achacha_app.data.BarcodeInfo
+import androidx.compose.foundation.border
+import androidx.compose.ui.zIndex
 
 @Composable
 fun BarcodeScreen(
@@ -97,9 +100,13 @@ fun BarcodeScreen(
                     }
                 }
                 barcodeInfo != null -> {
-                    Column(
-                        modifier = Modifier.align(Alignment.Center),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(180.dp)
+                            .background(Color.White)
+                        ,
+                        contentAlignment = Alignment.Center
                     ) {
                         Image(
                             painter = rememberAsyncImagePainter(
@@ -107,20 +114,22 @@ fun BarcodeScreen(
                                 onError = { err ->
                                     Log.e("BarcodeScreen", "Image load error: \\${err.result.throwable.localizedMessage}")
                                 },
-                                onLoading = { 
-                                    
-                                }
+                                onLoading = { }
                             ),
                             contentDescription = "바코드 이미지",
-                            modifier = Modifier.size(120.dp),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Fit
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = barcodeInfo.gifticonBarcodeNumber,
-                            style = MaterialTheme.typography.title2,
+                            style = MaterialTheme.typography.body2,
+                            fontSize = 18.sp,
                             color = Color.Black,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .zIndex(1f)
+                                .offset(y = 40.dp)
                         )
                     }
                 }
