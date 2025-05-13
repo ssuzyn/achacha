@@ -9,7 +9,6 @@ import {
   Dimensions,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
-import Card from '../components/ui/Card';
 import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import NavigationService from '../navigation/NavigationService';
@@ -85,18 +84,6 @@ const HomeScreen = () => {
     };
     printTokens();
   }, []);
-
-  // 자동 스크롤을 위한 타이머 설정
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (carouselRef.current) {
-        const nextIndex = (activeIndex + 1) % CAROUSEL_CARDS.length;
-        carouselRef.current.scrollTo({ index: nextIndex, animated: true });
-      }
-    }, 5000); // 5초마다 자동 스크롤
-
-    return () => clearInterval(interval);
-  }, [activeIndex]);
 
   // 날짜 간격 계산 함수
   const calculateDaysLeft = expiryDate => {
@@ -244,14 +231,11 @@ const HomeScreen = () => {
             data={CAROUSEL_CARDS}
             renderItem={renderCarouselItem}
             onSnapToItem={setActiveIndex}
-            mode="parallax"
-            modeConfig={{
-              parallaxScrollingScale: 0.95,
-              parallaxScrollingOffset: 50,
-            }}
             loop
-            pagingEnabled
-            snapEnabled
+            autoPlay={true}
+            autoPlayInterval={5000}
+            style={{ borderRadius: 15, overflow: 'hidden' }}
+            scrollAnimationDuration={800}
           />
           {renderPagination()}
         </View>
@@ -322,6 +306,7 @@ const styles = StyleSheet.create({
   carouselSection: {
     alignItems: 'center',
     marginBottom: 20,
+    overflow: 'hidden',
   },
   carouselCard: {
     flex: 1,
@@ -329,6 +314,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 130,
     width: '100%',
+    borderRadius: 15,
+    overflow: 'hidden',
   },
   paginationContainer: {
     flexDirection: 'row',
