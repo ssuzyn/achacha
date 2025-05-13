@@ -268,8 +268,8 @@ const HomeScreen = () => {
 
         {/* 만료 임박 기프티콘 섹션 */}
         <View style={styles.giftListContainer}>
-          <Text variant="h5" weight="medium" style={styles.giftListTitle}>
-            만료 임박 기프티콘
+          <Text variant="h5" weight="semiBold" style={styles.giftListTitle}>
+            만료 기간 임박 기프티콘
           </Text>
           <FlatList
             data={SAMPLE_GIFTICONS}
@@ -492,9 +492,9 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   mapMessageCard: {
-    borderRadius: 15,
+    borderRadius: 8,
     overflow: 'hidden',
-    height: 130,
+    height: 90,
   },
   mapBackgroundImage: {
     width: '100%',
