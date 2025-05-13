@@ -77,7 +77,7 @@ class NearbyUsersService {
         console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청');
         await this.generateBleToken();
       }
-  
+
       // 광고 시작
       await this.startAdvertising();
     } catch (error) {
@@ -231,16 +231,16 @@ class NearbyUsersService {
   async generateBleToken() {
     try {
       console.log('BLE 토큰 요청 시작, 현재 토큰:', this.deviceId);
-  
+
       const response = await apiClient.post('/api/ble', {
         bleTokenValue: this.deviceId, // 현재 가지고 있는 토큰 값 (없으면 null)
       });
-  
+
       console.log('BLE 토큰 응답:', response.data);
-  
+
       // bleToken 필드를 찾아서 사용 (서버가 이 필드로 응답함)
       const tokenValue = response.data?.bleToken;
-  
+
       if (tokenValue) {
         console.log('새 BLE 토큰 받음:', tokenValue);
         // 새 토큰 저장 (7일간 유효)
@@ -248,7 +248,7 @@ class NearbyUsersService {
       } else {
         console.error('서버 응답에 토큰이 없습니다:', response.data);
       }
-  
+
       return response.data;
     } catch (error) {
       console.error('BLE 토큰 생성 중 오류:', error);
@@ -270,28 +270,6 @@ class NearbyUsersService {
       return false;
     }
 
-    // 서비스 UUID 조회
-    const serviceUUID = await this.getServiceUUID();
-    console.log('BLE 서비스 UUID:', serviceUUID);
-    console.log('BLE 특성 UUID:', CHARACTERISTIC_UUID);
-
-    try {
-      // 토큰 유효성 검사 및 필요 시 새 토큰 요청
-      const now = new Date();
-      if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
-        console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
-        const bleTokenResponse = await this.generateBleToken();
-      
-        // bleToken 또는 bleTokenValue 속성 모두 처리 가능하도록 수정
-        const tokenValue = bleTokenResponse?.bleToken || bleTokenResponse?.bleTokenValue;
-      
-        if (!tokenValue) {
-          console.error('BLE 토큰 응답이 올바르지 않습니다:', bleTokenResponse);
-          return false;
-        }
-      }
-  }
-
     const hasPermissions = await this.requestBluetoothPermissions();
     if (!hasPermissions) {
       console.log('블루투스 권한이 없습니다.');
@@ -304,20 +282,37 @@ class NearbyUsersService {
       return false;
     }
 
+    // 서비스 UUID 조회
+    const serviceUUID = await this.getServiceUUID();
+    console.log('BLE 서비스 UUID:', serviceUUID);
+    console.log('BLE 특성 UUID:', CHARACTERISTIC_UUID);
+
     try {
-      // BLE 토큰 생성
-      const bleToken = await this.generateBleToken();
-      this.deviceId = bleToken.bleTokenValue; // 서버에서 받은 토큰으로 deviceId 업데이트
-      console.log('생성된 앱 UUID:', this.deviceId); // 앱 UUID 로깅 추가
+      // 토큰 유효성 검사 및 필요 시 새 토큰 요청
+      const now = new Date();
+      if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
+        console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
+        const bleTokenResponse = await this.generateBleToken();
+
+        // bleToken 또는 bleTokenValue 속성 모두 처리 가능하도록 수정
+        const tokenValue = bleTokenResponse?.bleToken || bleTokenResponse?.bleTokenValue;
+
+        if (!tokenValue) {
+          console.error('BLE 토큰 응답이 올바르지 않습니다:', bleTokenResponse);
+          return false;
+        }
+      }
+
+      console.log('현재 BLE 토큰:', this.deviceId);
+
+      // 광고 시작 (자신의 UUID 알리기)
+      await this.startAdvertising();
+
+      return true;
     } catch (error) {
-      console.error('BLE 토큰 생성 실패:', error);
+      console.error('BLE 초기화 실패:', error);
       return false;
     }
-
-    // 광고 시작 (자신의 UUID 알리기)
-    await this.startAdvertising();
-
-    return true;
   }
 
   // 광고 시작 (자신을 다른 기기에 알림)
@@ -353,9 +348,20 @@ class NearbyUsersService {
 
   // Android에서 Advertising 시작
   async startAndroidAdvertising() {
-    // react-native-ble-manager는 Android에서 Advertising을 직접 지원하지 않습니다.
-    // 별도의 네이티브 코드 구현이 필요할 수 있습니다.
-    console.log('Android Advertising은 별도 구현이 필요할 수 있습니다.');
+    try {
+      if (!this.deviceId) {
+        throw new Error('BLE 토큰이 없습니다. 광고를 시작할 수 없습니다.');
+      }
+
+      const BleModule = NativeModules.BleModule;
+      // 항상 고정된 SERVICE_UUID 사용
+      console.log('Advertising 시작: SERVICE_UUID =', SERVICE_UUID);
+      await BleModule.startAdvertising(SERVICE_UUID);
+      console.log('Android Advertising 시작됨, 토큰:', this.deviceId);
+    } catch (error) {
+      console.error('Android Advertising 시작 실패:', error);
+      throw error;
+    }
   }
 
   // 광고 중지
@@ -386,7 +392,14 @@ class NearbyUsersService {
 
   // Android에서 Advertising 중지
   async stopAndroidAdvertising() {
-    // 별도 구현 필요
+    try {
+      const BleModule = NativeModules.BleModule;
+      await BleModule.stopAdvertising();
+      console.log('Android Advertising 중지됨');
+    } catch (error) {
+      console.error('Android Advertising 중지 실패:', error);
+      throw error;
+    }
   }
 
   // BLE 스캔 시작
@@ -438,7 +451,7 @@ class NearbyUsersService {
 
       // 스캔 시작
       console.log('스캔 시작: SERVICE_UUID =', SERVICE_UUID);
-      await BleManager.scan([serviceUUID], 5, true);
+      await BleManager.scan([SERVICE_UUID], 5, true);
     } catch (error) {
       this.isScanning = false;
       console.error('스캔 시작 실패:', error);
@@ -490,16 +503,16 @@ class NearbyUsersService {
 
       if (
         peripheralInfo.services &&
-        peripheralInfo.services.some(service => service.uuid === serviceUUID)
+        peripheralInfo.services.some(service => service.uuid === SERVICE_UUID)
       ) {
         // 앱 UUID 읽기 시도
         try {
-          const serviceUUID = peripheralInfo.services.find(
-            service => service.uuid === serviceUUID
+          const serviceUuid = peripheralInfo.services.find(
+            service => service.uuid === SERVICE_UUID
           ).uuid;
           const characteristic = await BleManager.read(
             peripheral.id,
-            serviceUUID,
+            serviceUuid,
             CHARACTERISTIC_UUID
           );
 
