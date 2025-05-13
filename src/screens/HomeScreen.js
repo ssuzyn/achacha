@@ -139,7 +139,7 @@ const HomeScreen = () => {
       return (
         <Animated.View style={styles.carouselCard}>
           <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
-            <View style={[styles.giftMessageCard, { backgroundColor: '#E8F1EA' }]}>
+            <View style={[styles.giftMessageCard, { backgroundColor: '#F0ECFF' }]}>
               <View style={styles.giftMessageTextContainerSharebox}>
                 <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
                   {item.title}
@@ -220,12 +220,12 @@ const HomeScreen = () => {
         <View style={styles.welcomeSection}>
           <Text variant="h3" weight="bold" style={styles.welcomeText}>
             어서오세요!{' '}
-            <Text variant="h3" weight="bold" color="primary" style={styles.welcomeText}>
+            <Text variant="h3" weight="bold" color="primary" style={null}>
               {username}
             </Text>{' '}
             님,
           </Text>
-          <Text variant="h3" weight="bold" style={styles.subWelcomeText}>
+          <Text variant="h3" weight="bold" style={styles.welcomeText}>
             당신을 위한 기프티콘이 기다려요.
           </Text>
         </View>
@@ -330,9 +330,8 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     letterSpacing: -0.3,
-  },
-  subWelcomeText: {
-    letterSpacing: -0.3,
+    fontSize: 20,
+    lineHeight: 28,
   },
   carouselSection: {
     alignItems: 'center',
