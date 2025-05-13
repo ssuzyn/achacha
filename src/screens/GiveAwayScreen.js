@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { useNavigation } from '@react-navigation/native';
 import useDeviceStore from '../store/deviceStore';
+import { PermissionsAndroid } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../assets/images/giveaway_button.png');
@@ -430,6 +431,9 @@ const GiveAwayScreen = ({ onClose }) => {
           // NearbyUsersService 초기화 - 싱글톤이므로 참조만 저장
           bleServiceRef.current = NearbyUsersService;
 
+          // 현재 광고 중이라면 중지
+          await bleServiceRef.current.stopAdvertising();
+
           // BLE 초기화
           const initResult = await bleServiceRef.current.initialize();
           setBluetoothReady(initResult);
@@ -512,6 +516,9 @@ const GiveAwayScreen = ({ onClose }) => {
                 setUsers([]);
                 setButtonVisible(false);
               }
+
+              // 스캔이 완료되면 다시 광고 시작
+              await bleServiceRef.current.startAdvertising();
             }
           } else {
             // BLE 초기화 실패 시 빈 배열 설정
@@ -545,10 +552,14 @@ const GiveAwayScreen = ({ onClose }) => {
 
     initialize();
 
+    // 컴포넌트 언마운트 시
     return () => {
       if (bleServiceRef.current) {
         try {
-          bleServiceRef.current.cleanup();
+          // 스캔 중지
+          bleServiceRef.current.stopScan();
+          // 광고 다시 시작
+          bleServiceRef.current.startAdvertising();
         } catch (e) {
           console.error('정리 중 오류:', e);
         }
@@ -600,6 +611,13 @@ const GiveAwayScreen = ({ onClose }) => {
   const handleGoBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  const permissions = [
+    PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+    PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+    PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  ];
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
