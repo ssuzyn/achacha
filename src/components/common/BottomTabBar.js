@@ -28,7 +28,7 @@ const TAB_ICONS = {
 const { width } = Dimensions.get('window');
 const ICON_SIZE = width > 380 ? 26 : 24;
 const LABEL_FONTSIZE = width > 380 ? 11 : 10;
-const FAB_SIZE = 60; // 플로팅 액션 버튼 크기
+const FAB_SIZE = 55; // 플로팅 액션 버튼 크기
 
 // 특정 화면에서 탭바를 숨길 화면 목록
 const HIDDEN_TAB_BAR_SCREENS = [
@@ -116,12 +116,17 @@ const RegisterTabComponent = () => {
 };
 
 // 등록 버튼 커스텀 탭 아이콘
-const RegisterTabIcon = ({ color, focused }) => {
+const RegisterTabIcon = ({ color, focused, onPress }) => {
   const { theme } = useTheme();
+
   return (
-    <View style={[styles.fabContainer, { backgroundColor: theme.colors.primary }]}>
+    <TouchableOpacity
+      style={[styles.fabContainer, { backgroundColor: theme.colors.primary }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Icon name={TAB_ICONS.gifticonRegister} size={28} color="#FFFFFF" type="material" />
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -138,7 +143,7 @@ const BottomTabBar = () => {
   const renderTabBarIcon = (route, focused, color) => {
     // 등록 탭은 특별 처리
     if (route.name === 'TabRegister') {
-      return <RegisterTabIcon color={color} focused={focused} />;
+      return <RegisterTabIcon color={color} focused={focused} onPress={handleRegisterPress} />;
     }
 
     let iconName;
@@ -171,14 +176,7 @@ const BottomTabBar = () => {
   const renderTabBarButton = props => {
     // 기프티콘 등록 탭은 특별한 스타일 적용
     if (props.route?.name === 'TabRegister') {
-      return (
-        <TouchableOpacity
-          {...props}
-          activeOpacity={0.8}
-          style={[props.style, styles.registerTabButton]}
-          onPress={() => handleRegisterPress()}
-        />
-      );
+      return <View {...props} style={[props.style, styles.registerTabButton]} />;
     }
     return <TouchableOpacity {...props} activeOpacity={1} style={props.style} />;
   };
@@ -247,6 +245,14 @@ const BottomTabBar = () => {
             display: 'none',
           },
         }}
+        listeners={{
+          tabPress: e => {
+            // 기본 탭 네비게이션 동작 방지
+            e.preventDefault();
+            // 대신 등록 화면으로 직접 이동
+            handleRegisterPress();
+          },
+        }}
       />
       <Tab.Screen
         name="TabMap"
@@ -299,7 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: FAB_SIZE / 2,
     justifyContent: 'center',
     alignItems: 'center',
-    bottom: 10,
+    bottom: -5, // 버튼 위치 조정
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -315,7 +321,7 @@ const styles = StyleSheet.create({
   registerTabButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -30, // 탭바 위로 버튼 올리기
+    marginTop: -20, // 탭바 위로 버튼 올리기 (값을 줄여서 아래로 내림)
   },
   tabBar: {
     height: 65,
