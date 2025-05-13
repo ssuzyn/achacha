@@ -1,6 +1,5 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -50,7 +49,7 @@ public class GifticonSharingAppServiceImpl implements GifticonSharingAppService 
 		gifticonDomainService.validateGiveAwayGifticon(userId, findGifticon);
 
 		// 유효한 uuid만 필터링
-		List<String> validUuids = getValidUuids(uuids);
+		List<String> validUuids = bleTokenRepository.findValuesByValueIn(uuids);
 
 		// 유효한 UUID가 있는지 확인
 		if (validUuids.isEmpty()) {
@@ -63,36 +62,23 @@ public class GifticonSharingAppServiceImpl implements GifticonSharingAppService 
 		BleToken findToken = bleTokenRepository.findByValue(selectedUuid);
 
 		// 받는 사람 객체
-		User receiverUser = userRepository.findById(findToken.getUser().getId());
+		User receiverUser = findToken.getUser();
 
 		// 주는 사람 객체
-		User senderUser = userRepository.findById(userId);
+		User senderUser = userRepository.findById(userId); // 유저 로직 추가 시 변경 필요
 
 		// 기프티콘 소유권 업데이트
 		findGifticon.updateUser(receiverUser);
 
 		GifticonOwnerHistory newGifticonOwnerHistory = GifticonOwnerHistory.builder()
 			.gifticon(findGifticon)
-			.fromUser(senderUser)
+			.fromUser(senderUser) // 유저 로직 추가 시 변경 필요
 			.toUser(receiverUser)
 			.transferType(TransferType.GIVE_AWAY)
 			.build();
 
 		// 전송 내역 저장
 		gifticonOwnerHistoryRepository.save(newGifticonOwnerHistory);
-	}
-
-	private List<String> getValidUuids(List<String> uuids) {
-		List<String> validUuids = new ArrayList<>();
-
-		// 유효한 uuid 인지 확인
-		uuids.forEach(uuid -> {
-			if (bleTokenRepository.existsByValue(uuid)) {
-				validUuids.add(uuid);
-			}
-		});
-
-		return validUuids;
 	}
 
 	private String getRandomUuid(List<String> validUuids) {

@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.application.port.output.ble;
 
+import java.util.List;
+
 import com.eurachacha.achacha.domain.model.ble.BleToken;
 
 public interface BleTokenRepository {
@@ -10,4 +12,6 @@ public interface BleTokenRepository {
 	boolean existsByValue(String value);
 
 	BleToken findByValue(String value);
+
+	List<String> findValuesByValueIn(List<String> values);
 }

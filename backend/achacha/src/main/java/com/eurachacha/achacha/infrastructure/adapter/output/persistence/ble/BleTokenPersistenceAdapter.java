@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.ble;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
@@ -31,5 +33,10 @@ public class BleTokenPersistenceAdapter implements BleTokenRepository {
 	@Override
 	public BleToken findByValue(String value) {
 		return bleTokenJpaRepository.findByValue(value);
+	}
+
+	@Override
+	public List<String> findValuesByValueIn(List<String> values) {
+		return bleTokenJpaRepository.findValuesByValueIn(values);
 	}
 }
