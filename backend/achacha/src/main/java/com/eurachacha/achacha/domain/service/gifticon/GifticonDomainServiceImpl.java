@@ -27,12 +27,6 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		}
 	}
 
-	// 기프티콘 만료 여부 확인
-	@Override
-	public boolean isExpired(Gifticon gifticon) {
-		return gifticon.getExpiryDate().isBefore(LocalDate.now());
-	}
-
 	// 기프티콘 소유 여부 확인
 	@Override
 	public boolean hasAccess(Integer requestUserId, Integer gifticonUserId) {
@@ -49,22 +43,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		return gifticon.getIsUsed();
 	}
 
-	@Override
-	public void validateGifticonAvailability(Gifticon gifticon) {
-
-		if (isDeleted(gifticon)) {
-			throw new CustomException(ErrorCode.GIFTICON_DELETED);
-		}
-
-		if (isUsed(gifticon)) {
-			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
-		}
-
-		if (isExpired(gifticon)) {
-			throw new CustomException(ErrorCode.GIFTICON_EXPIRED);
-		}
-	}
-
+	// 사용된 기프티콘인지 확인
 	@Override
 	public void validateGifticonIsUsed(Gifticon gifticon) {
 
@@ -77,6 +56,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		}
 	}
 
+	// 사용 가능한 기프티콘인지 확인
 	@Override
 	public void validateGifticonIsAvailable(Gifticon gifticon) {
 		if (isDeleted(gifticon)) {
@@ -153,6 +133,12 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		boolean alreadyShared = isAlreadyShared(gifticon);
 		if (alreadyShared) {
 			throw new CustomException(ErrorCode.GIFTICON_ALREADY_SHARED);
+		}
+	}
+
+	public void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate) {
+		if (gifticonExpiryDate.isBefore(currentDate)) {
+			throw new CustomException(ErrorCode.GIFTICON_EXPIRED_DATE);
 		}
 	}
 }
