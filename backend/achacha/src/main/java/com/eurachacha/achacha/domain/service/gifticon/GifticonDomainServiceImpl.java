@@ -145,6 +145,20 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 	@Override
 	public void validateGiveAwayGifticon(Integer userId, Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 유효기간
+		validateGifticonExpiryDate(gifticon.getExpiryDate(), LocalDate.now());
+
 		// 본인 소유인지 확인
 		boolean isOwner = hasAccess(userId, gifticon.getUser().getId());
 		if (!isOwner) {
