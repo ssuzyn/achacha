@@ -36,4 +36,6 @@ public interface GifticonDomainService {
 
 	// 기프티콘 유효기간 검증
 	void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate);
+
+	void validateGiveAwayGifticon(Integer userId, Gifticon gifticon);
 }
