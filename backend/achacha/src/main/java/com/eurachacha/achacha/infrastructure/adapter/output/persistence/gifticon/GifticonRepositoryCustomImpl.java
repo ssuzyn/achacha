@@ -1,6 +1,5 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -78,7 +77,7 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 				qGifticon.isDeleted.eq(false),
 				qGifticon.isUsed.eq(false),
 				qGifticon.remainingAmount.gt(0).or(qGifticon.remainingAmount.isNull()),
-				qGifticon.expiryDate.after(LocalDate.now()),
+				// qGifticon.expiryDate.after(LocalDate.now()),
 				createScopeCondition(scope, userId, qGifticon, qParticipation),
 				typeCondition(type, qGifticon)
 			)
