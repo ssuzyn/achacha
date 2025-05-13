@@ -232,7 +232,7 @@ const BottomTabBar = () => {
         name="TabGifticonManage"
         component={WrappedGifticonManageScreen}
         options={{
-          tabBarLabel: '기프티콘 관리',
+          tabBarLabel: '기프티콘',
           tabBarLabelStyle: {
             fontFamily: 'Pretendard-SemiBold',
             fontSize: LABEL_FONTSIZE,
