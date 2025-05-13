@@ -37,6 +37,9 @@ export const API_CONFIG = {
     // 금액형 기프티콘 관련 엔드포인트
     AMOUNT_GIFTICONS: '/api/amount-gifticons', // 금액형 기프티콘 API 기본 경로
 
+    // 상품형 기프티콘 관련 엔드포인트
+    PRODUCT_GIFTICONS: '/api/product-gifticons', // 상품형 기프티콘 API 기본 경로
+
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
 

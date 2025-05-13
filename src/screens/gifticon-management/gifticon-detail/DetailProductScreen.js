@@ -205,10 +205,10 @@ const DetailProductScreen = () => {
   };
 
   // D-day 계산 함수
-  const calculateDaysLeft = expiryDate => {
+  const calculateDaysLeft = dateString => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // 현재 날짜의 시간을 00:00:00으로 설정
-    const expiry = new Date(expiryDate);
+    const expiry = new Date(dateString);
     expiry.setHours(0, 0, 0, 0); // 만료 날짜의 시간을 00:00:00으로 설정
 
     const diffTime = expiry - today;
@@ -306,6 +306,33 @@ const DetailProductScreen = () => {
     }
   };
 
+  // 사용내역 조회 함수 추가
+  const loadUsageHistory = async () => {
+    if (!gifticonId || !isUsed) return;
+
+    try {
+      // SELF_USE 타입의 기프티콘만 사용내역 조회 가능
+      if (gifticonData.usageType === 'SELF_USE') {
+        const response = await gifticonService.getProductGifticonUsageHistory(gifticonId);
+        console.log('[DetailProductScreen] 상품형 기프티콘 사용내역 응답:', response);
+
+        // 필요한 경우 여기서 추가 처리
+      } else {
+        console.log('[DetailProductScreen] 선물/뿌리기 완료된 기프티콘은 사용내역 조회 불가');
+      }
+    } catch (error) {
+      console.error('[DetailProductScreen] 사용내역 조회 실패:', error);
+      // 에러 처리
+    }
+  };
+
+  // 사용 완료 상태인 경우 사용내역 조회
+  useEffect(() => {
+    if (isUsed && gifticonData && gifticonData.usageType === 'SELF_USE') {
+      loadUsageHistory();
+    }
+  }, [isUsed, gifticonData]);
+
   // 사용하기 기능
   const handleUse = async () => {
     // 만료된 경우 바로 사용완료 처리
@@ -313,22 +340,29 @@ const DetailProductScreen = () => {
 
     if (isExpired || isUsing) {
       // 이미 사용 중인 경우 또는 만료된 경우 바로 사용 완료 처리
-      // console.log('기프티콘 사용 완료');
+      try {
+        // 상품형 기프티콘 사용 API 호출
+        await gifticonService.useProductGifticon(gifticonId);
 
-      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
-      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
-
-      // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'Main',
-            params: { screen: 'TabGifticonManage', initialTab: 'used' },
-          },
-        ],
-      });
+        // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+        // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Main',
+              params: { screen: 'TabGifticonManage', initialTab: 'used' },
+            },
+          ],
+        });
+      } catch (error) {
+        console.error('[DetailProductScreen] 기프티콘 사용 실패:', error);
+        Alert.alert(
+          '오류',
+          error.response?.data?.message || '기프티콘 사용 중 오류가 발생했습니다.',
+          [{ text: '확인' }]
+        );
+      }
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
       setIsUsing(true);

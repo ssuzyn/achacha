@@ -107,7 +107,7 @@ const UseProductScreen = () => {
     try {
       setIsLoading(true);
       // 사용완료 처리 API 호출
-      await gifticonService.markGifticonAsUsed(actualGifticonId, 'SELF_USE');
+      await gifticonService.useProductGifticon(actualGifticonId);
       setIsLoading(false);
 
       // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화

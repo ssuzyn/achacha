@@ -582,6 +582,44 @@ const gifticonService = {
       throw error;
     }
   },
+
+  /**
+   * 상품형 기프티콘 사용
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<string>} - 응답 메시지
+   */
+  async useProductGifticon(gifticonId) {
+    try {
+      console.log('[API] 상품형 기프티콘 사용 요청:', gifticonId);
+      const response = await apiClient.post(
+        `${API_CONFIG.ENDPOINTS.PRODUCT_GIFTICONS}/${gifticonId}/use`
+      );
+      console.log('[API] 상품형 기프티콘 사용 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 상품형 기프티콘 사용내역 조회
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 사용내역 정보
+   */
+  async getProductGifticonUsageHistory(gifticonId) {
+    try {
+      console.log('[API] 상품형 기프티콘 사용내역 조회 요청:', gifticonId);
+      const response = await apiClient.get(
+        `${API_CONFIG.ENDPOINTS.PRODUCT_GIFTICONS}/${gifticonId}/usage-history`
+      );
+      console.log('[API] 상품형 기프티콘 사용내역 조회 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용내역 조회 실패:', error);
+      throw error;
+    }
+  },
 };
 
 export default gifticonService;
