@@ -1,15 +1,21 @@
 package com.eurachacha.achacha.application.service.sharebox;
 
 import java.security.SecureRandom;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
+import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
@@ -17,9 +23,11 @@ import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
+import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.domain.service.sharebox.ShareBoxDomainService;
+import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -39,6 +47,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	private final GifticonRepository gifticonRepository;
 	private final UserRepository userRepository;
 	private final ParticipationRepository participationRepository;
+	private final PageableFactory pageableFactory;
 
 	@Transactional
 	@Override
@@ -183,6 +192,56 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		gifticon.updateShareBox(null);
 
 		log.info("기프티콘 공유 해제 완료 - 기프티콘 ID: {}, 쉐어박스 ID: {}", gifticonId, shareBoxId);
+	}
+
+	@Override
+	public ShareBoxesResponseDto getShareBoxes(ShareBoxSortType sort, Integer page, Integer size) {
+		log.info("쉐어박스 목록 조회 시작");
+
+		// 현재 사용자 조회 (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 페이징 처리
+		Pageable pageable = pageableFactory.createPageable(page, size, sort);
+
+		// 참여 중인 쉐어박스 목록 조회
+		Slice<ShareBox> shareBoxSlice = shareBoxRepository.findParticipatedShareBoxes(userId, pageable);
+
+		// 결과가 없을 경우 빈 응답 반환
+		if (shareBoxSlice.isEmpty()) {
+			return ShareBoxesResponseDto.builder()
+				.shareBoxes(List.of())
+				.hasNextPage(false)
+				.nextPage(null)
+				.build();
+		}
+
+		// 쉐어박스 ID 목록 추출
+		List<Integer> shareBoxIds = shareBoxSlice.getContent().stream()
+			.map(ShareBox::getId)
+			.collect(Collectors.toList());
+
+		// 각 쉐어박스별 기프티콘 개수 조회
+		Map<Integer, Long> gifticonCountMap = gifticonRepository.countGifticonsByShareBoxIds(shareBoxIds);
+
+		// DTO 변환
+		List<ShareBoxResponseDto> shareBoxResponseDtos = shareBoxSlice.getContent().stream()
+			.map(shareBox -> ShareBoxResponseDto.builder()
+				.shareBoxId(shareBox.getId())
+				.shareBoxName(shareBox.getName())
+				.shareBoxUserId(shareBox.getUser().getId())
+				.shareBoxUserName(shareBox.getUser().getName())
+				.gifticonCount(gifticonCountMap.getOrDefault(shareBox.getId(), 0L).intValue())
+				.build())
+			.collect(Collectors.toList());
+
+		log.info("쉐어박스 목록 조회 완료");
+
+		return ShareBoxesResponseDto.builder()
+			.shareBoxes(shareBoxResponseDtos)
+			.hasNextPage(shareBoxSlice.hasNext())
+			.nextPage(shareBoxSlice.hasNext() ? page + 1 : null)
+			.build();
 	}
 
 	// 고유한 초대 코드 생성 메서드
