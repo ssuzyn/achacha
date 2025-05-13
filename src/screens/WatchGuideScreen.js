@@ -1,18 +1,12 @@
-import React, { useCallback, useState } from 'react';
-import {
-  StyleSheet,
-  StatusBar,
-  View,
-  TouchableOpacity,
-  ScrollView,
-  Image,
-  Dimensions,
-} from 'react-native';
+/* eslint-disable react-native/no-inline-styles */
+import React, { useCallback } from 'react';
+import { StyleSheet, StatusBar, View, ScrollView, Image, Dimensions } from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
+import LottieView from 'lottie-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -20,7 +14,7 @@ const WatchGuideScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
-  const [isConnected, setIsConnected] = useState(false); // 워치 연결 상태
+  // const [isConnected, setIsConnected] = useState(false); // 워치 연결 상태
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -29,9 +23,9 @@ const WatchGuideScreen = () => {
 
   // 워치 연동 시작하기 버튼 처리
   const handleStartWatchConnection = useCallback(() => {
-    // 여기서 워치 연동 로직 구현 가능
-    setIsConnected(true);
-  }, []);
+    // SettingScreen으로 이동
+    navigation.navigate('SettingScreen');
+  }, [navigation]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -78,7 +72,7 @@ const WatchGuideScreen = () => {
         </View>
 
         {/* 1. 스마트 연동 시작하기 */}
-        <Shadow distance={5} startColor={'rgba(0, 0, 0, 0.03)'} style={styles.cardShadow}>
+        {/* <Shadow distance={5} startColor={'rgba(0, 0, 0, 0.03)'} style={styles.cardShadow}>
           <View style={styles.featureCard}>
             <View style={styles.featureIconContainer}>
               <Icon
@@ -96,7 +90,7 @@ const WatchGuideScreen = () => {
               스마트폰과 워치를 자동으로 연동해요. Nearby API로 가까이 있을 때 자동 연결됩니다.
             </Text>
 
-            {/* 연결 상태 표시 */}
+            {/* 연결 상태 표시
             <View style={styles.connectionStatusContainer}>
               <View
                 style={[
@@ -107,43 +101,27 @@ const WatchGuideScreen = () => {
               <Text variant="body2" weight="semiBold" style={styles.statusText}>
                 {isConnected ? '연결됨' : '연결 필요'}
               </Text>
-            </View>
-
-            <TouchableOpacity
-              style={styles.guideButton}
-              onPress={() => {
-                /* 연결 가이드 보기 */
-              }}
-            >
-              <Text variant="body2" weight="medium" color="primary">
-                연결 방법 보기
-              </Text>
-              <Icon
-                name="arrow-forward-ios"
-                type="material"
-                size={14}
-                color={theme.colors.primary}
-                containerStyle={{ marginLeft: 4 }}
-              />
-            </TouchableOpacity>
-          </View>
-        </Shadow>
+            </View> */}
+        {/* </View>
+        </Shadow> */}
 
         {/* 2. 기프티콘 관리 기능 */}
         <Shadow distance={5} startColor={'rgba(0, 0, 0, 0.03)'} style={styles.cardShadow}>
           <View style={styles.featureCard}>
-            <View style={styles.featureIconContainer}>
-              <Icon
-                name="card-giftcard"
-                type="material"
-                size={24}
-                color={theme.colors.white}
-                containerStyle={[styles.iconBackground, { backgroundColor: '#F1A9D5' }]}
-              />
+            <View style={styles.featureHeader}>
+              <View style={styles.featureIconContainer}>
+                <Icon
+                  name="card-giftcard"
+                  type="material"
+                  size={24}
+                  color={theme.colors.white}
+                  containerStyle={[styles.iconBackground, { backgroundColor: '#F1A9D5' }]}
+                />
+              </View>
+              <Text variant="h4" weight="semiBold" style={styles.featureTitle}>
+                기프티콘 관리 기능
+              </Text>
             </View>
-            <Text variant="h4" weight="semiBold" style={styles.featureTitle}>
-              기프티콘 관리 기능
-            </Text>
 
             {/* 사용 가능한 목록 */}
             <View style={styles.subFeatureContainer}>
@@ -160,7 +138,7 @@ const WatchGuideScreen = () => {
                 </Text>
               </View>
               <Text variant="body2" style={styles.subFeatureDescription}>
-                워치에서 바로 사용 가능한 기프티콘을 확인할 수 있어요.
+                워치에서 바로 사용 가능한 기프티콘 확인
               </Text>
             </View>
 
@@ -179,7 +157,10 @@ const WatchGuideScreen = () => {
                 </Text>
               </View>
               <Text variant="body2" style={styles.subFeatureDescription}>
-                기프티콘 정보를 상세히 확인하고, 바코드를 볼 수 있어요.
+                상품명, 유효기간 및 바코드
+              </Text>
+              <Text variant="body2" style={styles.subFeatureDescription}>
+                최대 밝기로 조정해 바코드를 또렷하게!
               </Text>
             </View>
 
@@ -190,21 +171,15 @@ const WatchGuideScreen = () => {
               </Text>
               <View style={styles.giftTypeFeatureList}>
                 <View style={styles.giftTypeFeature}>
-                  <Icon name="qr-code-scanner" type="material" size={16} color="#555" />
+                  <Icon name="check" type="material" size={16} color="#555" />
                   <Text variant="body2" style={styles.giftTypeFeatureText}>
-                    바코드 보기: 밝기를 최대로 조정해 바코드를 또렷하게!
+                    사용 처리: 터치 한 번으로 사용 완료
                   </Text>
                 </View>
                 <View style={styles.giftTypeFeature}>
                   <Icon name="share" type="material" size={16} color="#555" />
                   <Text variant="body2" style={styles.giftTypeFeatureText}>
-                    뿌리기: 근처 사용자 탐색 후 랜덤 전송, BLE 기반
-                  </Text>
-                </View>
-                <View style={styles.giftTypeFeature}>
-                  <Icon name="check" type="material" size={16} color="#555" />
-                  <Text variant="body2" style={styles.giftTypeFeatureText}>
-                    사용 처리: 터치 한 번으로 사용 완료
+                    뿌리기: 근처 사용자 탐색 후 랜덤 전송
                   </Text>
                 </View>
               </View>
@@ -217,21 +192,15 @@ const WatchGuideScreen = () => {
               </Text>
               <View style={styles.giftTypeFeatureList}>
                 <View style={styles.giftTypeFeature}>
-                  <Icon name="qr-code-scanner" type="material" size={16} color="#555" />
-                  <Text variant="body2" style={styles.giftTypeFeatureText}>
-                    바코드 보기: 가맹점에서 빠르게 보여주세요!
-                  </Text>
-                </View>
-                <View style={styles.giftTypeFeature}>
                   <Icon name="payments" type="material" size={16} color="#555" />
                   <Text variant="body2" style={styles.giftTypeFeatureText}>
-                    사용 금액 입력: 사용 금액 입력 후 자동 계산
+                    사용 금액 입력: 입력 후 잔액 자동 계산
                   </Text>
                 </View>
                 <View style={styles.giftTypeFeature}>
                   <Icon name="done-all" type="material" size={16} color="#555" />
                   <Text variant="body2" style={styles.giftTypeFeatureText}>
-                    잔액 0원 시 자동 완료 처리
+                    잔액이 0원이 되면, 자동 완료 처리
                   </Text>
                 </View>
               </View>
@@ -242,28 +211,31 @@ const WatchGuideScreen = () => {
         {/* 3. 알림함 기능 */}
         <Shadow distance={5} startColor={'rgba(0, 0, 0, 0.03)'} style={styles.cardShadow}>
           <View style={styles.featureCard}>
-            <View style={styles.featureIconContainer}>
-              <Icon
-                name="notifications"
-                type="material"
-                size={24}
-                color={theme.colors.white}
-                containerStyle={[styles.iconBackground, { backgroundColor: '#D095EE' }]}
-              />
+            <View style={styles.featureHeader}>
+              <View style={styles.featureIconContainer}>
+                <Icon
+                  name="notifications"
+                  type="material"
+                  size={24}
+                  color={theme.colors.white}
+                  containerStyle={[styles.iconBackground, { backgroundColor: '#D095EE' }]}
+                />
+              </View>
+              <Text variant="h4" weight="semiBold" style={styles.featureTitle}>
+                알림함 기능
+              </Text>
             </View>
-            <Text variant="h4" weight="semiBold" style={styles.featureTitle}>
-              알림함 기능
-            </Text>
             <Text variant="body2" style={styles.featureDescription}>
-              쉐어박스 제외, 나에게 온 알림을 워치에서도 확인하세요. 중요 알림은 놓치지 않도록
-              손목에서 바로!
+              중요 알림은 놓치지 않도록 스마트 워치에서 바로!
             </Text>
 
-            <View style={styles.imagePlaceholder}>
-              <Icon name="watch" type="material" size={40} color="#ccc" />
-              <Text variant="caption" style={{ textAlign: 'center', marginTop: 10, color: '#999' }}>
-                알림 화면 예시
-              </Text>
+            <View style={styles.animationContainer}>
+              <LottieView
+                source={require('../assets/lottie/alert_animation.json')}
+                autoPlay
+                loop
+                style={styles.lottieAnimation}
+              />
             </View>
           </View>
         </Shadow>
@@ -275,7 +247,7 @@ const WatchGuideScreen = () => {
       {/* 하단 버튼 */}
       <View style={[styles.bottomButtonContainer, { paddingBottom: insets.bottom + 10 }]}>
         <Button
-          title="워치 연동 시작하기"
+          title="워치 연동하러 가기"
           onPress={handleStartWatchConnection}
           containerStyle={styles.buttonContainer}
           buttonStyle={[styles.startButton, { backgroundColor: theme.colors.primary }]}
@@ -330,13 +302,13 @@ const styles = StyleSheet.create({
   subText: {
     lineHeight: 24,
     marginBottom: 20,
-    color: '#555',
+    color: '#737373',
   },
   mainImage: {
     width: width - 40,
-    height: 180,
+    height: 150,
     alignSelf: 'center',
-    marginTop: 10,
+    marginTop: 5,
   },
   cardShadow: {
     width: '100%',
@@ -348,8 +320,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
   },
-  featureIconContainer: {
+  featureHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  featureIconContainer: {
+    marginRight: 12,
+    marginBottom: 0,
   },
   iconBackground: {
     width: 40,
@@ -359,39 +337,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   featureTitle: {
-    marginBottom: 12,
+    marginBottom: 0,
   },
   featureDescription: {
-    color: '#555',
-    marginBottom: 16,
+    paddingHorizontal: 8,
+    color: '#737373',
+    marginBottom: 5,
     lineHeight: 20,
   },
-  connectionStatusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F6F6F6',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  statusIndicator: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
-  },
-  statusText: {
-    color: '#333',
-  },
-  guideButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    padding: 8,
-  },
   subFeatureContainer: {
-    marginBottom: 16,
+    marginBottom: 10,
+    paddingHorizontal: 10,
   },
   subFeatureHeader: {
     flexDirection: 'row',
@@ -400,12 +356,12 @@ const styles = StyleSheet.create({
   },
   subFeatureDescription: {
     marginLeft: 26,
-    color: '#555',
+    color: '#737373',
     lineHeight: 20,
   },
   giftTypeContainer: {
-    marginTop: 12,
-    marginBottom: 12,
+    marginTop: 10,
+    marginBottom: 5,
     backgroundColor: '#F8F8F8',
     padding: 14,
     borderRadius: 12,
@@ -414,26 +370,28 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   giftTypeFeatureList: {
-    gap: 8,
+    gap: 2,
+    paddingHorizontal: 5,
   },
   giftTypeFeature: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     gap: 8,
   },
   giftTypeFeatureText: {
     flex: 1,
-    color: '#555',
+    color: '#737373',
     lineHeight: 20,
   },
-  imagePlaceholder: {
+  animationContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
-    backgroundColor: '#f9f9f9',
-    borderRadius: 12,
     marginTop: 10,
     height: 160,
+  },
+  lottieAnimation: {
+    width: 220,
+    height: 220,
   },
   bottomButtonContainer: {
     position: 'absolute',
@@ -452,6 +410,7 @@ const styles = StyleSheet.create({
   startButton: {
     borderRadius: 12,
     paddingVertical: 15,
+    height: 56,
   },
   buttonTitle: {
     fontSize: 16,
