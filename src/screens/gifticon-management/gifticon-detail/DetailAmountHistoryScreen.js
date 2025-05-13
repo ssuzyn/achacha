@@ -31,9 +31,8 @@ const DetailAmountHistoryScreen = () => {
   const [scope, setScope] = useState('MY_BOX');
   const [usageType, setUsageType] = useState(null);
   const [gifticonId, setGifticonId] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [gifticonData, setGifticonData] = useState(null);
-  const [isFromDetailScreen, setIsFromDetailScreen] = useState(false);
 
   // 바텀탭 표시
   useEffect(() => {
@@ -53,10 +52,6 @@ const DetailAmountHistoryScreen = () => {
 
       if (route.params.usageType) {
         setUsageType(route.params.usageType);
-      }
-
-      if (route.params.isFromDetailScreen) {
-        setIsFromDetailScreen(route.params.isFromDetailScreen);
       }
 
       // 브랜드명이 전달된 경우 이를 미리 설정
@@ -80,7 +75,7 @@ const DetailAmountHistoryScreen = () => {
   // 사용내역 로드 함수
   const loadUsageHistory = async () => {
     try {
-      setIsLoading(true);
+      setLoading(true);
 
       // 먼저 기프티콘 상세 정보를 가져와서 브랜드명을 얻습니다.
       let brandName = '';
@@ -127,7 +122,7 @@ const DetailAmountHistoryScreen = () => {
         setTransactions([]);
       }
 
-      setIsLoading(false);
+      setLoading(false);
     } catch (error) {
       console.error('사용내역 로드 중 오류 발생:', error);
 
@@ -150,7 +145,7 @@ const DetailAmountHistoryScreen = () => {
         Alert.alert('오류', '네트워크 연결을 확인해주세요.');
       }
 
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -200,7 +195,7 @@ const DetailAmountHistoryScreen = () => {
     }
 
     try {
-      setIsLoading(true);
+      setLoading(true);
 
       // API 호출로 사용내역 수정
       await gifticonService.updateAmountGifticonUsageHistory(
@@ -238,7 +233,7 @@ const DetailAmountHistoryScreen = () => {
         Alert.alert('오류', '네트워크 연결을 확인해주세요.');
       }
 
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -253,7 +248,7 @@ const DetailAmountHistoryScreen = () => {
         text: '삭제',
         onPress: async () => {
           try {
-            setIsLoading(true);
+            setLoading(true);
 
             // API 호출로 사용내역 삭제
             await gifticonService.deleteAmountGifticonUsageHistory(
@@ -284,7 +279,7 @@ const DetailAmountHistoryScreen = () => {
               Alert.alert('오류', '네트워크 연결을 확인해주세요.');
             }
           } finally {
-            setIsLoading(false);
+            setLoading(false);
           }
         },
         style: 'destructive',
@@ -316,7 +311,7 @@ const DetailAmountHistoryScreen = () => {
         <View style={styles.rightPlaceholder} />
       </View>
 
-      {isLoading ? (
+      {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#56AEE9" />
           <Text style={styles.loadingText}>데이터를 불러오는 중...</Text>

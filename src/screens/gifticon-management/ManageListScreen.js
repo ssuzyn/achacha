@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
@@ -572,21 +573,41 @@ const ManageListScreen = () => {
   };
 
   // 사용 완료 처리
-  const handleMarkAsUsed = () => {
+  const handleMarkAsUsed = async () => {
     if (!selectedGifticon) return;
 
-    // 여기서 API 호출로 상태 변경 (예시)
-    // TODO: 사용 완료 API 연동 필요
+    try {
+      setLoading(true);
 
-    // 상태 업데이트 및 화면 갱신 (임시 구현)
-    const updatedGifticons = filteredGifticons.filter(
-      gifticon => gifticon.gifticonId !== selectedGifticon.gifticonId
-    );
-    setFilteredGifticons(updatedGifticons);
+      // API 호출로 기프티콘을 사용완료 상태로 변경
+      await gifticonService.markGifticonAsUsed(selectedGifticon.gifticonId, 'SELF_USE');
 
-    // 다이얼로그 닫기
-    setDialogVisible(false);
-    setSelectedGifticon(null);
+      console.log('기프티콘 사용완료 처리 성공:', selectedGifticon.gifticonId);
+
+      // 상태 업데이트 및 화면 갱신
+      const updatedGifticons = filteredGifticons.filter(
+        gifticon => gifticon.gifticonId !== selectedGifticon.gifticonId
+      );
+      setFilteredGifticons(updatedGifticons);
+
+      // 성공 메시지 표시
+      Alert.alert('사용 완료', '기프티콘이 사용완료 처리되었습니다.', [{ text: '확인' }]);
+    } catch (error) {
+      console.error('기프티콘 사용완료 처리 실패:', error);
+
+      // 에러 메시지 처리
+      let errorMessage = '기프티콘 사용완료 처리 중 오류가 발생했습니다.';
+      if (error.response) {
+        errorMessage = error.response.data?.message || errorMessage;
+      }
+
+      Alert.alert('오류', errorMessage);
+    } finally {
+      setLoading(false);
+      // 다이얼로그 닫기
+      setDialogVisible(false);
+      setSelectedGifticon(null);
+    }
   };
 
   // 좌측 액션 (바코드 조회) 렌더링

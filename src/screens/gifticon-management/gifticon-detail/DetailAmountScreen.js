@@ -292,21 +292,25 @@ const DetailAmountScreen = () => {
     const isExpired = calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨';
 
     if (isExpired) {
-      // 만료된 경우 바로 사용완료 처리
-      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
-      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
-
-      // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'Main',
-            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+      // 만료된 경우 바로 사용완료 처리 (모달 표시 후 이동)
+      Alert.alert('사용 완료', '만료된 기프티콘은 자동으로 사용완료 처리됩니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+            // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'Main',
+                  params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                },
+              ],
+            });
           },
-        ],
-      });
+        },
+      ]);
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
       setIsUsing(true);
@@ -352,22 +356,50 @@ const DetailAmountScreen = () => {
       setIsLoading(true);
 
       // API 호출로 기프티콘 사용 처리
-      await gifticonService.useAmountGifticon(gifticonId, Number(amount));
+      const response = await gifticonService.useAmountGifticon(gifticonId, Number(amount));
 
       // 사용 모드 종료
       setIsUsing(false);
       setIsLoading(false);
       setAmount('');
 
-      // 사용내역 화면으로 이동
-      navigation.navigate('DetailAmountHistoryScreen', {
-        id: gifticonId,
-        gifticonId: gifticonId,
-        usedAmount: amount,
-        isFromDetailScreen: true,
-        brandName: gifticonData.brandName,
-        gifticonName: gifticonData.gifticonName,
-      });
+      // API 응답에서 남은 잔액 확인 (API 응답 형식에 따라 조정 필요)
+      // 만약 API 응답에 잔액 정보가 포함되어 있지 않다면 기존 로직 유지
+      const remainingAmount =
+        response.gifticonRemainingAmount !== undefined
+          ? response.gifticonRemainingAmount
+          : gifticonData.gifticonRemainingAmount - Number(amount);
+
+      // 잔액이 0원이면 사용완료 처리
+      if (remainingAmount === 0) {
+        // 사용 완료 모달 표시
+        Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // ManageListScreen으로 이동
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'Main',
+                    params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                  },
+                ],
+              });
+            },
+          },
+        ]);
+      } else {
+        // 일반 사용인 경우 - 사용내역 화면으로 이동
+        navigation.navigate('DetailAmountHistoryScreen', {
+          id: gifticonId,
+          gifticonId: gifticonId,
+          usedAmount: amount,
+          brandName: gifticonData.brandName,
+          gifticonName: gifticonData.gifticonName,
+        });
+      }
     } catch (error) {
       setIsLoading(false);
       setAmount('');
@@ -462,23 +494,75 @@ const DetailAmountScreen = () => {
   };
 
   // 다이얼로그 확인 버튼 처리
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setAlertVisible(false);
 
-    if (alertType === 'delete') {
-      // 삭제 처리 로직
-      // 실제 구현에서는 API 호출로 기프티콘 삭제
-      // console.log('기프티콘 삭제:', gifticonId);
+    try {
+      if (alertType === 'delete') {
+        // 자신 소유의 기프티콘만 삭제 가능 (쉐어박스에 공유되지 않은 것만)
+        if (scope !== 'MY_BOX') {
+          Alert.alert('알림', '마이박스의 기프티콘만 삭제할 수 있습니다.');
+          return;
+        }
 
-      // 리스트 화면으로 이동
-      navigation.goBack();
-    } else if (alertType === 'cancelShare') {
-      // 공유 취소 처리 로직
-      // 실제 구현에서는 API 호출로 공유 취소
-      // console.log('공유 취소:', gifticonId);
+        // 삭제 처리 API 호출
+        await gifticonService.deleteGifticon(gifticonId);
+        console.log('[DetailAmountScreen] 기프티콘 삭제 성공:', gifticonId);
 
-      // 리스트 화면으로 이동
-      navigation.goBack();
+        // 성공 메시지
+        Alert.alert('성공', '기프티콘이 성공적으로 삭제되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 리스트 화면으로 이동
+              navigation.goBack();
+            },
+          },
+        ]);
+      } else if (alertType === 'cancelShare') {
+        // 공유 취소 처리 API 호출
+        await gifticonService.cancelShareGifticon(gifticonId);
+        console.log('[DetailAmountScreen] 기프티콘 공유 취소 성공:', gifticonId);
+
+        // 성공 메시지
+        Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 리스트 화면으로 이동
+              navigation.goBack();
+            },
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error(
+        `[DetailAmountScreen] ${alertType === 'delete' ? '삭제' : '공유 취소'} 실패:`,
+        error
+      );
+
+      // 에러 메시지 처리
+      let errorMessage = `기프티콘 ${alertType === 'delete' ? '삭제' : '공유 취소'} 중 오류가 발생했습니다.`;
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400 && data.errorCode === 'SHAREBOX_010') {
+          errorMessage = '이미 공유된 기프티콘은 삭제할 수 없습니다.';
+        } else if (status === 403 && data.errorCode === 'GIFTICON_002') {
+          errorMessage = '해당 기프티콘에 접근 권한이 없습니다.';
+        } else if (status === 404) {
+          if (data.errorCode === 'GIFTICON_001') {
+            errorMessage = '기프티콘 정보를 찾을 수 없습니다.';
+          } else if (data.errorCode === 'GIFTICON_005') {
+            errorMessage = '이미 삭제된 기프티콘입니다.';
+          }
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+      }
+
+      Alert.alert('오류', errorMessage);
     }
   };
 

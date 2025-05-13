@@ -378,27 +378,70 @@ const DetailProductScreen = () => {
 
     try {
       if (alertType === 'delete') {
+        // 자신 소유의 기프티콘만 삭제 가능 (쉐어박스에 공유되지 않은 것만)
+        if (scope !== 'MY_BOX') {
+          Alert.alert('알림', '마이박스의 기프티콘만 삭제할 수 있습니다.');
+          return;
+        }
+
         // 삭제 처리 API 호출
         await gifticonService.deleteGifticon(gifticonId);
+        console.log('[DetailProductScreen] 기프티콘 삭제 성공:', gifticonId);
 
-        // 리스트 화면으로 이동
-        navigation.goBack();
+        // 성공 메시지
+        Alert.alert('성공', '기프티콘이 성공적으로 삭제되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 리스트 화면으로 이동
+              navigation.goBack();
+            },
+          },
+        ]);
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
         await gifticonService.cancelShareGifticon(gifticonId);
+        console.log('[DetailProductScreen] 기프티콘 공유 취소 성공:', gifticonId);
 
-        // 리스트 화면으로 이동
-        navigation.goBack();
+        // 성공 메시지
+        Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 리스트 화면으로 이동
+              navigation.goBack();
+            },
+          },
+        ]);
       }
     } catch (error) {
       console.error(
         `[DetailProductScreen] ${alertType === 'delete' ? '삭제' : '공유 취소'} 실패:`,
         error
       );
-      Alert.alert(
-        '오류',
-        `기프티콘 ${alertType === 'delete' ? '삭제' : '공유 취소'} 중 오류가 발생했습니다.`
-      );
+
+      // 에러 메시지 처리
+      let errorMessage = `기프티콘 ${alertType === 'delete' ? '삭제' : '공유 취소'} 중 오류가 발생했습니다.`;
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400 && data.errorCode === 'SHAREBOX_010') {
+          errorMessage = '이미 공유된 기프티콘은 삭제할 수 없습니다.';
+        } else if (status === 403 && data.errorCode === 'GIFTICON_002') {
+          errorMessage = '해당 기프티콘에 접근 권한이 없습니다.';
+        } else if (status === 404) {
+          if (data.errorCode === 'GIFTICON_001') {
+            errorMessage = '기프티콘 정보를 찾을 수 없습니다.';
+          } else if (data.errorCode === 'GIFTICON_005') {
+            errorMessage = '이미 삭제된 기프티콘입니다.';
+          }
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+      }
+
+      Alert.alert('오류', errorMessage);
     }
   };
 
