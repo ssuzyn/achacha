@@ -12,10 +12,10 @@ import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 
 @Repository
-public interface ShareBoxJpaRepository extends JpaRepository<ShareBox, Integer> {
+public interface ShareBoxJpaRepository extends JpaRepository<ShareBox, Integer>, ShareBoxRepositoryCustom {
 	@Query("SELECT s FROM ShareBox s JOIN FETCH s.user WHERE s.id = :id")
 	Optional<ShareBox> findByIdWithUser(@Param("id") Integer id);
-	
+
 	boolean existsByInviteCode(String inviteCode);
 
 	Optional<ShareBox> findByInviteCode(String inviteCode);

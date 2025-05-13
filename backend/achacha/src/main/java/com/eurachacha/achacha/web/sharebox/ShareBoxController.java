@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
@@ -14,8 +15,11 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareB
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
+import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RequestMapping("/api/share-boxes")
@@ -69,5 +73,14 @@ public class ShareBoxController {
 	public ResponseEntity<ShareBoxParticipantsResponseDto> getShareBoxParticipants(
 		@PathVariable Integer shareBoxId) {
 		return ResponseEntity.ok(shareBoxAppService.getShareBoxParticipants(shareBoxId));
+	}
+
+	// 쉐어박스 페이징 조회
+	@GetMapping
+	public ResponseEntity<ShareBoxesResponseDto> getShareBoxes(
+		@RequestParam(required = false, defaultValue = "CREATED_DESC") ShareBoxSortType sort,
+		@RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+		@RequestParam(required = false, defaultValue = "6") @Min(1) Integer size) {
+		return ResponseEntity.ok(shareBoxAppService.getShareBoxes(sort, page, size));
 	}
 }

@@ -4,6 +4,8 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareB
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
+import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 
 public interface ShareBoxAppService {
 	ShareBoxCreateResponseDto createShareBox(ShareBoxCreateRequestDto requestDto);
@@ -15,4 +17,6 @@ public interface ShareBoxAppService {
 	void unshareGifticon(Integer shareBoxId, Integer gifticonId);
 
 	ShareBoxParticipantsResponseDto getShareBoxParticipants(Integer shareBoxId);
+
+	ShareBoxesResponseDto getShareBoxes(ShareBoxSortType sort, Integer page, Integer size);
 }

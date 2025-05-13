@@ -1,5 +1,9 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
@@ -52,5 +56,14 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	public Gifticon findById(Integer gifticonId) {
 		return gifticonJpaRepository.findById(gifticonId)
 			.orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
+	}
+
+	@Override
+	public Map<Integer, Long> countGifticonsByShareBoxIds(List<Integer> shareBoxIds) {
+		if (shareBoxIds.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		return gifticonJpaRepository.countGifticonsByShareBoxIds(shareBoxIds);
 	}
 }
