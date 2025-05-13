@@ -46,10 +46,10 @@ public class GifticonSharingAppServiceImpl implements GifticonSharingAppService 
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
-		// 공유된건지 확인
+		// 공유 여부 검증
 		gifticonDomainService.validateGiveAwayGifticon(userId, findGifticon);
 
-		// 상품형인지 확인
+		// 상품형 검증
 		gifticonUsageDomainService.validateProductGifticonType(findGifticon);
 
 		// 유효한 uuid만 필터링
@@ -98,7 +98,7 @@ public class GifticonSharingAppServiceImpl implements GifticonSharingAppService 
 		return validUuids;
 	}
 
-	private static String getRandomUuid(List<String> validUuids) {
+	private String getRandomUuid(List<String> validUuids) {
 		Random random = new Random();
 		return validUuids.get(random.nextInt(validUuids.size()));
 	}
