@@ -314,8 +314,18 @@ const HomeScreen = () => {
               <View style={styles.watchMessageTextContainer}>
                 <View style={styles.watchTitleContainer} />
                 <Text variant="h4" weight="semiBold" style={styles.watchMessageTitle}>
-                  워치 활용 가이드
+                  스마트 워치가 있으신가요?
                 </Text>
+                <Text variant="body2" weight="regular" style={styles.watchMessageSubtitle}>
+                  워치 활용 가이드 보러가기 →
+                </Text>
+              </View>
+              <View style={styles.watchGuideImageContainer}>
+                <Image
+                  source={require('../assets/images/watch_guide.png')}
+                  style={styles.watchGuideImage}
+                  resizeMode="contain"
+                />
               </View>
             </View>
           </TouchableOpacity>
@@ -549,14 +559,20 @@ const styles = StyleSheet.create({
   watchMessageCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    overflow: 'hidden',
+    padding: 15,
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
     height: 90,
+    overflow: 'hidden',
+    position: 'relative',
   },
   watchMessageTextContainer: {
     flex: 1.5,
     paddingLeft: 10,
     paddingRight: 0,
     justifyContent: 'center',
+    height: '100%',
   },
   watchTitleContainer: {
     flexDirection: 'row',
@@ -565,12 +581,23 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   watchMessageTitle: {
-    alignSelf: 'flex-start',
     marginBottom: 2,
     letterSpacing: -0.2,
     lineHeight: 30,
-    marginLeft: 10,
-    color: '#000000',
+  },
+  watchMessageSubtitle: {
+    color: '#737373',
+    letterSpacing: -0.3,
+  },
+  watchGuideImageContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    marginRight: 5,
+  },
+  watchGuideImage: {
+    width: 75,
+    height: 75,
   },
 });
 
