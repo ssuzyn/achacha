@@ -36,7 +36,7 @@ data class ApiGifticon(
     val userName: String? = null,
     val shareBoxId: Int? = null,
     val shareBoxName: String? = null,
-    val thumbnailPath: String? = null
+    val gifticonOriginalAmount: Int? = null
 )
 
 @Serializable
@@ -67,27 +67,12 @@ data class GifticonListUiState(
 
 @Composable
 fun GifticonListScreen(
+    gifticons: List<ApiGifticon>,
+    isLoading: Boolean,
+    error: String?,
     onGifticonClick: (gifticonId: Int) -> Unit,
     onBackPress: () -> Unit
 ) {
-    // --- 임시 상태 데이터 사용 (ViewModel 구현 전) ---
-    val uiState = remember { 
-         GifticonListUiState(
-             isLoading = false,
-             gifticons = List(5) { // 임시 데이터 생성 시 필드 반영
-                 ApiGifticon(
-                     gifticonId = it + 100, // ID 예시
-                     gifticonName = "API 상품명 ${it + 1} 테스트",
-                     // 모든 기프티콘이 만료되지 않도록 수정 (최소 D-0부터 시작)
-                     gifticonExpiryDate = LocalDate.now().plusDays( (it * 7).toLong() ).toString(), 
-                     brandName = "API 브랜드 ${it % 2}",
-                     thumbnailPath = if (it % 3 == 0) null else "/images/dummy.jpg" // 썸네일 경로 예시
-                 )
-             }
-         )
-    }
-    // ---------------------------------------
-
     val listState = rememberScalingLazyListState()
 
     // 시스템 뒤로가기 버튼 처리
@@ -101,8 +86,26 @@ fun GifticonListScreen(
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) }
     ) {
          when {
-             uiState.isLoading -> { /* ... 로딩 UI ... */ }
-             uiState.error != null -> { /* ... 에러 UI ... */ }
+             isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+             }
+             error != null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "오류: $error\\n아래로 스와이프하여 재시도하세요.",
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.body1
+                    )
+                }
+             }
              else -> {
                 ScalingLazyColumn(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
@@ -119,11 +122,22 @@ fun GifticonListScreen(
                          )
                      }
 
-                    if (uiState.gifticons.isEmpty()) {
-                        item { /* ... 빈 목록 Text ... */ }
+                    if (gifticons.isEmpty()) {
+                        item { 
+                            Box(
+                                modifier = Modifier.fillMaxSize().padding(top = 24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "아직 등록된 기프티콘이 없어요!",
+                                    style = MaterialTheme.typography.body1,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     } else {
-                        items(uiState.gifticons.size) { index ->
-                            val gifticon = uiState.gifticons[index]
+                        items(gifticons.size) { index ->
+                            val gifticon = gifticons[index]
                             val dDay = calculateDday(gifticon.gifticonExpiryDate)
                             Chip(
                                 onClick = { onGifticonClick(gifticon.gifticonId) },
