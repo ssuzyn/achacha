@@ -353,7 +353,16 @@ const gifticonService = {
 
       const response = await axios.get(`${API_BASE_URL}${endpoint}`);
       console.log('[API] 사용 완료 기프티콘 바코드 조회 성공:', response.data);
-      return response.data;
+
+      // 응답 데이터 확인
+      if (!response.data.gifticonBarcodeNumber || !response.data.barcodePath) {
+        console.warn('[API] 바코드 정보가 누락된 응답:', response.data);
+      }
+
+      return {
+        gifticonBarcodeNumber: response.data.gifticonBarcodeNumber || '',
+        barcodePath: response.data.barcodePath || '',
+      };
     } catch (error) {
       console.error('[API] 사용 완료 기프티콘 바코드 조회 실패:', error);
 
@@ -368,11 +377,7 @@ const gifticonService = {
         } else if (status === 404) {
           console.error('기프티콘을 찾을 수 없음:', data);
           if (data.errorCode === 'GIFTICON_004') {
-            // 이미 사용된 기프티콘인 경우, 빈 바코드 정보를 반환하여 UI가 정상적으로 표시되도록 함
-            return {
-              gifticonBarcodeNumber: '0000000000000',
-              barcodePath: '/images/barcode/default-barcode.jpg',
-            };
+            throw new Error('이미 사용된 기프티콘입니다.');
           } else if (data.errorCode === 'GIFTICON_005') {
             throw new Error('삭제된 기프티콘입니다.');
           } else if (data.errorCode === 'GIFTICON_009') {
@@ -385,7 +390,8 @@ const gifticonService = {
         }
       }
 
-      throw error;
+      // 네트워크 에러 등 기타 에러
+      throw new Error('바코드 정보를 조회하는 중 오류가 발생했습니다.');
     }
   },
 
@@ -579,44 +585,6 @@ const gifticonService = {
       return response.data;
     } catch (error) {
       console.error('[API] 금액형 기프티콘 사용내역 삭제 실패:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * 상품형 기프티콘 사용
-   * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<string>} - 응답 메시지
-   */
-  async useProductGifticon(gifticonId) {
-    try {
-      console.log('[API] 상품형 기프티콘 사용 요청:', gifticonId);
-      const response = await apiClient.post(
-        `${API_CONFIG.ENDPOINTS.PRODUCT_GIFTICONS}/${gifticonId}/use`
-      );
-      console.log('[API] 상품형 기프티콘 사용 성공:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('[API] 상품형 기프티콘 사용 실패:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * 상품형 기프티콘 사용내역 조회
-   * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<Object>} - 사용내역 정보
-   */
-  async getProductGifticonUsageHistory(gifticonId) {
-    try {
-      console.log('[API] 상품형 기프티콘 사용내역 조회 요청:', gifticonId);
-      const response = await apiClient.get(
-        `${API_CONFIG.ENDPOINTS.PRODUCT_GIFTICONS}/${gifticonId}/usage-history`
-      );
-      console.log('[API] 상품형 기프티콘 사용내역 조회 성공:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('[API] 상품형 기프티콘 사용내역 조회 실패:', error);
       throw error;
     }
   },

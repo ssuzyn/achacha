@@ -139,6 +139,22 @@ const DetailAmountScreen = () => {
 
       setGifticonData(responseData);
       setIsSharer(responseData.isSharer);
+
+      // 사용완료 기프티콘인 경우 바코드 정보도 함께 로드
+      if (scope === 'USED' && responseData.usageType === 'SELF_USE') {
+        try {
+          const barcodeResponse = await gifticonService.getUsedGifticonBarcode(id);
+          if (barcodeResponse) {
+            setBarcodeInfo({
+              barcodeNumber: barcodeResponse.gifticonBarcodeNumber,
+              barcodePath: barcodeResponse.barcodePath,
+            });
+          }
+        } catch (barcodeError) {
+          console.error('[DetailAmountScreen] 바코드 정보 로드 실패:', barcodeError);
+        }
+      }
+
       setIsLoading(false);
     } catch (error) {
       console.error('[DetailAmountScreen] 기프티콘 데이터 로드 실패:', error);
@@ -755,15 +771,17 @@ const DetailAmountScreen = () => {
                     <View style={styles.usedBarcodeContainer}>
                       <Image
                         source={
-                          gifticonData.barcodeImageUrl
-                            ? { uri: gifticonData.barcodeImageUrl }
-                            : require('../../../assets/images/barcode.png')
+                          barcodeInfo && barcodeInfo.barcodePath
+                            ? getImageSource(barcodeInfo.barcodePath)
+                            : gifticonData.barcodeImageUrl
+                              ? { uri: gifticonData.barcodeImageUrl }
+                              : require('../../../assets/images/barcode.png')
                         }
                         style={styles.usedBarcodeImage}
                         resizeMode="contain"
                       />
                       <Text style={styles.usedBarcodeNumberText}>
-                        {gifticonData.barcodeNumber || '0000-0000-0000-0000'}
+                        {barcodeInfo ? barcodeInfo.barcodeNumber : gifticonData.barcodeNumber || ''}
                       </Text>
                     </View>
                   )}

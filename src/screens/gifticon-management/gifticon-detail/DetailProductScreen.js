@@ -175,6 +175,22 @@ const DetailProductScreen = () => {
         console.log('[DetailProductScreen] originalImagePath:', response.originalImagePath);
       }
       setIsSharer(response.isSharer);
+
+      // 사용완료 기프티콘인 경우 바코드 정보도 함께 로드
+      if (scope === 'USED' && response.usageType === 'SELF_USE') {
+        try {
+          const barcodeResponse = await gifticonService.getUsedGifticonBarcode(id);
+          if (barcodeResponse) {
+            setBarcodeInfo({
+              barcodeNumber: barcodeResponse.gifticonBarcodeNumber,
+              barcodePath: barcodeResponse.barcodePath,
+            });
+          }
+        } catch (barcodeError) {
+          console.error('[DetailProductScreen] 바코드 정보 로드 실패:', barcodeError);
+        }
+      }
+
       setIsLoading(false);
     } catch (error) {
       console.error('[DetailProductScreen] 기프티콘 데이터 로드 실패:', error);
@@ -205,10 +221,10 @@ const DetailProductScreen = () => {
   };
 
   // D-day 계산 함수
-  const calculateDaysLeft = dateString => {
+  const calculateDaysLeft = expiryDate => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // 현재 날짜의 시간을 00:00:00으로 설정
-    const expiry = new Date(dateString);
+    const expiry = new Date(expiryDate);
     expiry.setHours(0, 0, 0, 0); // 만료 날짜의 시간을 00:00:00으로 설정
 
     const diffTime = expiry - today;
@@ -288,50 +304,22 @@ const DetailProductScreen = () => {
     } catch (error) {
       console.error('[DetailProductScreen] 바코드 정보 로드 실패:', error);
 
-      // 오류 발생 시에도 기본 바코드 정보 설정
-      setBarcodeInfo({
-        barcodeNumber: '0000000000000',
-        barcodePath: '/images/barcode/default-barcode.jpg',
-      });
+      // 오류 메시지 처리
+      let errorMessage = '바코드 정보를 불러오는데 실패했습니다.';
 
       // 선물/뿌리기 완료된 기프티콘인 경우 바코드 정보가 없음을 알림
       if (
         isUsed &&
         (gifticonData.usageType === 'PRESENT' || gifticonData.usageType === 'GIVE_AWAY')
       ) {
-        Alert.alert('알림', '선물/뿌리기로 사용된 기프티콘은 바코드 정보를 확인할 수 없습니다.');
+        errorMessage = '선물/뿌리기로 사용된 기프티콘은 바코드 정보를 확인할 수 없습니다.';
       }
+
+      Alert.alert('알림', errorMessage);
     } finally {
       setBarcodeLoading(false);
     }
   };
-
-  // 사용내역 조회 함수 추가
-  const loadUsageHistory = async () => {
-    if (!gifticonId || !isUsed) return;
-
-    try {
-      // SELF_USE 타입의 기프티콘만 사용내역 조회 가능
-      if (gifticonData.usageType === 'SELF_USE') {
-        const response = await gifticonService.getProductGifticonUsageHistory(gifticonId);
-        console.log('[DetailProductScreen] 상품형 기프티콘 사용내역 응답:', response);
-
-        // 필요한 경우 여기서 추가 처리
-      } else {
-        console.log('[DetailProductScreen] 선물/뿌리기 완료된 기프티콘은 사용내역 조회 불가');
-      }
-    } catch (error) {
-      console.error('[DetailProductScreen] 사용내역 조회 실패:', error);
-      // 에러 처리
-    }
-  };
-
-  // 사용 완료 상태인 경우 사용내역 조회
-  useEffect(() => {
-    if (isUsed && gifticonData && gifticonData.usageType === 'SELF_USE') {
-      loadUsageHistory();
-    }
-  }, [isUsed, gifticonData]);
 
   // 사용하기 기능
   const handleUse = async () => {
@@ -340,29 +328,22 @@ const DetailProductScreen = () => {
 
     if (isExpired || isUsing) {
       // 이미 사용 중인 경우 또는 만료된 경우 바로 사용 완료 처리
-      try {
-        // 상품형 기프티콘 사용 API 호출
-        await gifticonService.useProductGifticon(gifticonId);
+      // console.log('기프티콘 사용 완료');
 
-        // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-        // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'Main',
-              params: { screen: 'TabGifticonManage', initialTab: 'used' },
-            },
-          ],
-        });
-      } catch (error) {
-        console.error('[DetailProductScreen] 기프티콘 사용 실패:', error);
-        Alert.alert(
-          '오류',
-          error.response?.data?.message || '기프티콘 사용 중 오류가 발생했습니다.',
-          [{ text: '확인' }]
-        );
-      }
+      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
+      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
+
+      // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'Main',
+            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+          },
+        ],
+      });
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
       setIsUsing(true);
@@ -660,15 +641,17 @@ const DetailProductScreen = () => {
                     <View style={styles.usedBarcodeContainer}>
                       <Image
                         source={
-                          gifticonData.barcodeImageUrl
-                            ? { uri: gifticonData.barcodeImageUrl }
-                            : require('../../../assets/images/barcode.png')
+                          barcodeInfo && barcodeInfo.barcodePath
+                            ? getImageSource(barcodeInfo.barcodePath)
+                            : gifticonData.barcodeImageUrl
+                              ? { uri: gifticonData.barcodeImageUrl }
+                              : require('../../../assets/images/barcode.png')
                         }
                         style={styles.usedBarcodeImage}
                         resizeMode="contain"
                       />
                       <Text style={styles.usedBarcodeNumberText}>
-                        {gifticonData.barcodeNumber || '0000-0000-0000-0000'}
+                        {barcodeInfo ? barcodeInfo.barcodeNumber : gifticonData.barcodeNumber || ''}
                       </Text>
                     </View>
                   )}
