@@ -268,9 +268,6 @@ const HomeScreen = () => {
 
         {/* 만료 임박 기프티콘 섹션 */}
         <View style={styles.giftListContainer}>
-          <Text variant="h5" weight="semiBold" style={styles.giftListTitle}>
-            만료 기간 임박 기프티콘
-          </Text>
           <FlatList
             data={SAMPLE_GIFTICONS}
             renderItem={renderGiftItem}
@@ -283,7 +280,7 @@ const HomeScreen = () => {
 
         {/* 선물 카드 */}
         <View style={styles.bottomCardSection}>
-          <TouchableOpacity onPress={() => NavigationService.navigate('TabGifticonManage')}>
+          <TouchableOpacity onPress={() => NavigationService.navigate('TabMap')}>
             <View style={styles.mapMessageCard}>
               <ImageBackground
                 source={require('../assets/images/map.png')}
@@ -299,12 +296,26 @@ const HomeScreen = () => {
                         resizeMode="contain"
                       />
                       <Text variant="h4" weight="bold" style={styles.mapMessageTitle}>
-                        발견부터 설렘까지, 기프티콘 MAP
+                        MAP
                       </Text>
                     </View>
                   </View>
                 </View>
               </ImageBackground>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* 워치 카드 */}
+        <View style={styles.bottomWatchSection}>
+          <TouchableOpacity onPress={() => NavigationService.navigate('TabGifticonManage')}>
+            <View style={styles.watchMessageCard}>
+              <View style={styles.watchMessageTextContainer}>
+                <View style={styles.watchTitleContainer} />
+                <Text variant="h4" weight="semiBold" style={styles.watchMessageTitle}>
+                  워치 활용 가이드
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         </View>
@@ -335,7 +346,7 @@ const styles = StyleSheet.create({
   },
   carouselSection: {
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
     overflow: 'hidden',
   },
   carouselCard: {
@@ -361,13 +372,8 @@ const styles = StyleSheet.create({
     marginVertical: 3,
   },
   giftListContainer: {
-    marginBottom: 20,
+    marginBottom: 15,
     paddingHorizontal: 2,
-  },
-  giftListTitle: {
-    letterSpacing: -0.3,
-    marginLeft: 5,
-    marginBottom: 10,
   },
   giftListContent: {
     paddingRight: 10,
@@ -429,6 +435,7 @@ const styles = StyleSheet.create({
   },
   bottomCardSection: {
     paddingHorizontal: 2,
+    marginBottom: 10,
   },
   giftMessageCard: {
     backgroundColor: '#E5F4FE',
@@ -532,6 +539,36 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     letterSpacing: -0.2,
     lineHeight: 30,
+    color: '#000000',
+  },
+  bottomWatchSection: {
+    paddingHorizontal: 2,
+    marginBottom: 10,
+  },
+  watchMessageCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    overflow: 'hidden',
+    height: 90,
+  },
+  watchMessageTextContainer: {
+    flex: 1.5,
+    paddingLeft: 10,
+    paddingRight: 0,
+    justifyContent: 'center',
+  },
+  watchTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  watchMessageTitle: {
+    alignSelf: 'flex-start',
+    marginBottom: 2,
+    letterSpacing: -0.2,
+    lineHeight: 30,
+    marginLeft: 10,
     color: '#000000',
   },
 });
