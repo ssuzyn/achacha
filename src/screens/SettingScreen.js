@@ -18,6 +18,8 @@ import Slider from '../components/ui/Slider';
 import { Divider, Text } from '../components/ui';
 import Switch from '../components/ui/Switch';
 import { Svg, Path } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { fetchUserById } from '../api/userInfo';
 
 const SettingScreen = () => {
   const { theme } = useTheme();
@@ -35,6 +37,7 @@ const SettingScreen = () => {
   // 로그인 타입 (추후 API 연동 시 실제 데이터로 대체)
   // eslint-disable-next-line no-unused-vars
   const [loginType, setLoginType] = useState('kakao'); // 'kakao' 또는 'google'
+  const [nickname, setNickname] = useState('');
 
   // 슬라이더 마커 값
   const markers = [0, 1, 2, 3, 7, 30, 60, 90];
@@ -233,6 +236,20 @@ const SettingScreen = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchUserName = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (!userId) return;
+        const user = await fetchUserById(userId);
+        setNickname(user.userName);
+      } catch (e) {
+        console.error('유저 정보 조회 실패:', e);
+      }
+    };
+    fetchUserName();
+  }, []);
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -281,7 +298,7 @@ const SettingScreen = () => {
             닉네임
           </Text>
           <Text variant="body1" style={styles.infoValue}>
-            으라차차
+            {nickname || '으라차차'}
           </Text>
         </View>
       </View>
