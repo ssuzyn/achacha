@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.application.port.input.gifticon.dto.response;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -16,5 +17,17 @@ public class AmountGifticonUsageHistoriesResponseDto {
 	private String gifticonName;
 	private Integer gifticonOriginalAmount;
 	private Integer gifticonRemainingAmount;
-	private List<AmountGifticonUsageHistoryResponseDto> usageHistory;
+	private List<UsageHistoryDto> usageHistories;
+
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class UsageHistoryDto {
+		private Integer usageHistoryId;
+		private Integer usageAmount;
+		private LocalDateTime usageHistoryCreatedAt;
+		private Integer userId;
+		private String userName;
+	}
 }

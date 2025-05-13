@@ -1,14 +1,13 @@
 package com.eurachacha.achacha.domain.service.gifticon;
 
+import java.time.LocalDate;
+
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 public interface GifticonDomainService {
 	// 금액형 기프티콘 유효성 검증
 	void validateGifticonAmount(GifticonType type, Integer amount);
-
-	// 기프티콘 만료 여부 확인
-	boolean isExpired(Gifticon gifticon);
 
 	// 기프티콘 소유 여부 확인
 	boolean hasAccess(Integer requestUserId, Integer gifticonUserId);
@@ -18,8 +17,6 @@ public interface GifticonDomainService {
 
 	// 기프티콘 사용 여부 확인
 	boolean isUsed(Gifticon gifticon);
-
-	void validateGifticonAvailability(Gifticon gifticon);
 
 	void validateGifticonIsUsed(Gifticon gifticon);
 
@@ -34,4 +31,9 @@ public interface GifticonDomainService {
 
 	// 해당 쉐어박스에 기프티콘이 올라가있는지 검증
 	void validateGifticonSharedInShareBox(Gifticon gifticon, Integer shareBoxId);
+
+	void validateDeleteGifticon(Integer userId, Gifticon gifticon);
+
+	// 기프티콘 유효기간 검증
+	void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate);
 }

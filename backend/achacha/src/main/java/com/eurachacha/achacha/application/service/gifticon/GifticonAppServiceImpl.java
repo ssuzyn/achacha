@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -142,6 +143,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		fileDomainService.validateImageFile(barcodeImage);
 		gifticonDomainService.validateGifticonAmount(requestDto.getGifticonType(), requestDto.getGifticonAmount());
 
+		// 기프티콘 유효기간 검증
+		gifticonDomainService.validateGifticonExpiryDate(requestDto.getGifticonExpiryDate(), LocalDate.now());
 		// 바코드 중복 검사
 		if (gifticonRepository.existsByBarcode(requestDto.getGifticonBarcodeNumber())) {
 			throw new CustomException(ErrorCode.GIFTICON_BARCODE_DUPLICATE);
@@ -180,7 +183,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.remainingAmount(requestDto.getGifticonAmount())
 			.sharebox(shareBox)
 			.brand(brand)
-			.user(null) // 인증 구현 시 현재 사용자 설정
+			.user(userRepository.findById(1)) // 인증 구현 시 현재 사용자 설정
 			.build();
 
 		// 저장소를 통한 영속화
@@ -260,9 +263,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 * 사용가능 기프티콘 검증 로직
 		 *  1. 삭제 여부 판단
 		 *  2. 사용 여부 판단
-		 *  3. 유효기간 여부 판단
 		 */
-		gifticonDomainService.validateGifticonAvailability(findGifticon);
+		gifticonDomainService.validateGifticonIsAvailable(findGifticon);
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
@@ -419,9 +421,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 * 사용가능 기프티콘 검증 로직
 		 *  1. 삭제 여부 판단
 		 *  2. 사용 여부 판단
-		 *  3. 유효기간 여부 판단
 		 */
-		gifticonDomainService.validateGifticonAvailability(findGifticon);
+		gifticonDomainService.validateGifticonIsAvailable(findGifticon);
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
@@ -455,7 +456,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 해당 기프티콘 조회
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
-		// 삭제, 사용 여부 검토
+		// 삭제, 사용되었는지 검증
 		gifticonDomainService.validateGifticonIsUsed(findGifticon);
 
 		// 사용 권한 검증
@@ -473,6 +474,25 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.gifticonBarcodeNumber(findGifticon.getBarcode())
 			.barcodePath(getGifticonImageUrl(findGifticon.getId(), FileType.BARCODE))
 			.build();
+	}
+
+	@Override
+	@Transactional
+	public void deleteGifticon(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		// 소유자, 기프티콘 공유, 삭제여부 검증
+		gifticonDomainService.validateDeleteGifticon(userId, findGifticon);
+
+		// 바코드 정보 삭제
+		findGifticon.deleteBarcode();
+
+		// 논리 삭제
+		findGifticon.delete();
 	}
 
 	private Integer findBrandId(String brandName) {

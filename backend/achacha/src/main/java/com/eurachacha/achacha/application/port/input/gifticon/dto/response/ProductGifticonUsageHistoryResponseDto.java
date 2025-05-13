@@ -12,8 +12,18 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ProductGifticonUsageHistoryResponseDto {
-	private Integer usageHistoryId;
-	private LocalDateTime usageHistoryCreatedAt;
-	private Integer userId;
-	private String userName;
+	private Integer gifticonId;
+	private String gifticonName;
+	private UsageHistoryDto usageHistory;
+
+	@Getter
+	@NoArgsConstructor
+	@AllArgsConstructor
+	@Builder
+	public static class UsageHistoryDto {
+		private Integer usageHistoryId;
+		private LocalDateTime usageHistoryCreatedAt;
+		private Integer userId;
+		private String userName;
+	}
 }

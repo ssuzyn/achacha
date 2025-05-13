@@ -76,33 +76,42 @@ class GifticonDomainServiceImplTest {
 			.doesNotThrowAnyException();
 	}
 
-	// 기프티콘 만료 여부 테스트 - 경계값(하루 전, 당일, 하루 후)
+	// 기프티콘 유효기간 검증 테스트 - 새로 추가된 메서드
 	@Test
-	@DisplayName("유효기간이 지난 기프티콘은 만료됨으로 판단해야 한다")
-	void isExpired_WhenExpiryDateIsBeforeToday_ThenReturnTrue() {
+	@DisplayName("유효기간이 현재 날짜보다 이전이면 예외가 발생해야 한다")
+	void validateGifticonExpiryDate_WhenExpiryDateBeforeCurrentDate_ThenThrowException() {
 		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getExpiryDate()).willReturn(LocalDate.now().minusDays(1));
+		LocalDate expiryDate = LocalDate.of(2025, 5, 12);
+		LocalDate currentDate = LocalDate.of(2025, 5, 13);
 
-		// when
-		boolean result = gifticonDomainService.isExpired(gifticon);
-
-		// then
-		assertThat(result).isTrue();
+		// when & then
+		assertThatThrownBy(() -> gifticonDomainService.validateGifticonExpiryDate(expiryDate, currentDate))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_EXPIRED_DATE);
 	}
 
 	@Test
-	@DisplayName("유효기간이 오늘인 기프티콘은 만료되지 않음으로 판단해야 한다")
-	void isExpired_WhenExpiryDateIsToday_ThenReturnFalse() {
+	@DisplayName("유효기간이 현재 날짜와 같으면 예외가 발생하지 않아야 한다")
+	void validateGifticonExpiryDate_WhenExpiryDateEqualsCurrentDate_ThenNoException() {
 		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getExpiryDate()).willReturn(LocalDate.now());
+		LocalDate expiryDate = LocalDate.of(2025, 5, 13);
+		LocalDate currentDate = LocalDate.of(2025, 5, 13);
 
-		// when
-		boolean result = gifticonDomainService.isExpired(gifticon);
+		// when & then
+		assertThatCode(() -> gifticonDomainService.validateGifticonExpiryDate(expiryDate, currentDate))
+			.doesNotThrowAnyException();
+	}
 
-		// then
-		assertThat(result).isFalse();
+	@Test
+	@DisplayName("유효기간이 현재 날짜보다 이후면 예외가 발생하지 않아야 한다")
+	void validateGifticonExpiryDate_WhenExpiryDateAfterCurrentDate_ThenNoException() {
+		// given
+		LocalDate expiryDate = LocalDate.of(2025, 5, 14);
+		LocalDate currentDate = LocalDate.of(2025, 5, 13);
+
+		// when & then
+		assertThatCode(() -> gifticonDomainService.validateGifticonExpiryDate(expiryDate, currentDate))
+			.doesNotThrowAnyException();
 	}
 
 	// 사용자 접근 권한 테스트
@@ -125,60 +134,44 @@ class GifticonDomainServiceImplTest {
 		assertThat(result).isEqualTo(expected);
 	}
 
-	// validateGifticonAvailability 메서드 테스트 (핵심 기능)
+	// validateGifticonIsAvailable 메서드 테스트 (validateGifticonAvailability를 대체)
 	@Test
 	@DisplayName("삭제된 기프티콘 검증 시 예외가 발생해야 한다")
-	void validateGifticonAvailability_WhenGifticonIsDeleted_ThenThrowException() {
+	void validateGifticonIsAvailable_WhenGifticonIsDeleted_ThenThrowException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
 		given(gifticon.getIsDeleted()).willReturn(true);
 
 		// when & then
-		assertThatThrownBy(() -> gifticonDomainService.validateGifticonAvailability(gifticon))
+		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsAvailable(gifticon))
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_DELETED);
 	}
 
 	@Test
 	@DisplayName("사용된 기프티콘 검증 시 예외가 발생해야 한다")
-	void validateGifticonAvailability_WhenGifticonIsUsed_ThenThrowException() {
+	void validateGifticonIsAvailable_WhenGifticonIsUsed_ThenThrowException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
 		given(gifticon.getIsDeleted()).willReturn(false);
 		given(gifticon.getIsUsed()).willReturn(true);
 
 		// when & then
-		assertThatThrownBy(() -> gifticonDomainService.validateGifticonAvailability(gifticon))
+		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsAvailable(gifticon))
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_ALREADY_USED);
 	}
 
 	@Test
-	@DisplayName("만료된 기프티콘 검증 시 예외가 발생해야 한다")
-	void validateGifticonAvailability_WhenGifticonIsExpired_ThenThrowException() {
-		// given
-		Gifticon gifticon = mock(Gifticon.class);
-		given(gifticon.getIsDeleted()).willReturn(false);
-		given(gifticon.getIsUsed()).willReturn(false);
-		given(gifticon.getExpiryDate()).willReturn(LocalDate.now().minusDays(1));
-
-		// when & then
-		assertThatThrownBy(() -> gifticonDomainService.validateGifticonAvailability(gifticon))
-			.isInstanceOf(CustomException.class)
-			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_EXPIRED);
-	}
-
-	@Test
 	@DisplayName("사용 가능한 기프티콘 검증 시 예외가 발생하지 않아야 한다")
-	void validateGifticonAvailability_WhenGifticonIsAvailable_ThenNoException() {
+	void validateGifticonIsAvailable_WhenGifticonIsAvailable_ThenNoException() {
 		// given
 		Gifticon gifticon = mock(Gifticon.class);
 		given(gifticon.getIsDeleted()).willReturn(false);
 		given(gifticon.getIsUsed()).willReturn(false);
-		given(gifticon.getExpiryDate()).willReturn(LocalDate.now().plusDays(1));
 
 		// when & then
-		assertThatCode(() -> gifticonDomainService.validateGifticonAvailability(gifticon))
+		assertThatCode(() -> gifticonDomainService.validateGifticonIsAvailable(gifticon))
 			.doesNotThrowAnyException();
 	}
 
@@ -195,6 +188,35 @@ class GifticonDomainServiceImplTest {
 		assertThatThrownBy(() -> gifticonDomainService.validateGifticonIsUsed(gifticon))
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_AVAILABLE);
+	}
+
+	// isDeleted, isUsed 메서드 테스트
+	@Test
+	@DisplayName("삭제된 기프티콘은 삭제됨으로 판단해야 한다")
+	void isDeleted_WhenGifticonIsDeleted_ThenReturnTrue() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getIsDeleted()).willReturn(true);
+
+		// when
+		boolean result = gifticonDomainService.isDeleted(gifticon);
+
+		// then
+		assertThat(result).isTrue();
+	}
+
+	@Test
+	@DisplayName("사용된 기프티콘은 사용됨으로 판단해야 한다")
+	void isUsed_WhenGifticonIsUsed_ThenReturnTrue() {
+		// given
+		Gifticon gifticon = mock(Gifticon.class);
+		given(gifticon.getIsUsed()).willReturn(true);
+
+		// when
+		boolean result = gifticonDomainService.isUsed(gifticon);
+
+		// then
+		assertThat(result).isTrue();
 	}
 
 	// isAlreadyShared 메서드 테스트
