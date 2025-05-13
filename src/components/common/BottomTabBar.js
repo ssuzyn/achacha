@@ -11,7 +11,7 @@ import { Text } from '../ui';
 import HomeScreen from '../../screens/HomeScreen';
 import SettingScreen from '../../screens/SettingScreen';
 import ManageListScreen from '../../screens/gifticon-management/ManageListScreen';
-import BoxMainScreen from '../../screens/gifticon-share-box/BoxMainScreen';
+import BoxMainScreen from '../../screens/gifticon-share_box/BoxMainScreen';
 
 // 임시 스크린
 const MapScreen = () => {

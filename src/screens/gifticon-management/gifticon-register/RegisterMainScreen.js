@@ -622,7 +622,7 @@ const RegisterMainScreen = () => {
             <Card style={styles.uploadCard}>
               <View style={styles.uploadContent}>
                 <Image
-                  source={require('../../../assets/images/gifticon-upload.png')}
+                  source={require('../../../assets/images/gifticon_upload.png')}
                   style={styles.uploadIcon}
                   resizeMode="contain"
                 />

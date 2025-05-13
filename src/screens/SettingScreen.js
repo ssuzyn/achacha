@@ -180,7 +180,7 @@ const SettingScreen = () => {
             {loginType === 'kakao' ? (
               <>
                 <Image
-                  source={require('../assets/images/login-kakaotalk.png')}
+                  source={require('../assets/images/login_kakaotalk.png')}
                   style={styles.socialIcon}
                   resizeMode="contain"
                 />

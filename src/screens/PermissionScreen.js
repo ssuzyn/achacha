@@ -81,7 +81,7 @@ const PermissionScreen = () => {
             <View style={styles.headerContainer}>
               <View style={styles.titleContainer}>
                 <Image
-                  source={require('../assets/images/splash-icon.png')}
+                  source={require('../assets/images/splash_icon.png')}
                   style={styles.logoImage}
                   resizeMode="contain"
                 />

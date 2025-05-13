@@ -1,9 +1,11 @@
 // 공통 설정 값만 해당 파일에 추가해서 사용
 
 const PRODUCTION_BASE_URL = 'https://k12d205.p.ssafy.io'; // 슬래시 제거
+// const DEV_BASE_URL = 'http://10.0.2.2:8090'; // Android 에뮬레이터 localhost 연결용
 
 // API 기본 설정
-export const BASE_URL = PRODUCTION_BASE_URL; // 실제 서버 URL 사용
+export const BASE_URL = PRODUCTION_BASE_URL; // 항상 프로덕션 서버 사용
+export const API_BASE_URL = BASE_URL; // axios 직접 호출용 변수도 추가
 
 // 엔드포인트 URL을 안전하게 생성하는 유틸리티 함수
 export const endpointUrl = (baseUrl, endpoint) => {
@@ -17,7 +19,7 @@ export const endpointUrl = (baseUrl, endpoint) => {
 
 // 개발 환경과 프로덕션 환경 분리
 export const API_CONFIG = {
-  BASE_URL: PRODUCTION_BASE_URL,
+  BASE_URL: BASE_URL,
   ENDPOINTS: {
     // 인증 관련 엔드포인트
     KAKAO_LOGIN: '/api/auth/kakao', // 카카오 로그인
@@ -35,12 +37,15 @@ export const API_CONFIG = {
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
 
+    // 쉐어박스 관련 엔드포인트
+    SHARE_BOXES: '/api/share-boxes', // 쉐어박스 API
+
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
     //     CREATE_USER: '/api/users',
   },
-  TIMEOUT: 30000, // API 요청 타임아웃 시간을 30초로 늘림
-  timeout: 30000, // 기본 타임아웃 30초로 늘림
+  TIMEOUT: 60000, // API 요청 타임아웃 시간을 60초로 늘림
+  timeout: 60000, // 기본 타임아웃 60초로 늘림
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

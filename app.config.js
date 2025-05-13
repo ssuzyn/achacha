@@ -11,7 +11,7 @@ export default {
     userInterfaceStyle: 'light',
     newArchEnabled: true,
     splash: {
-      image: './assets/splash-icon.png',
+      image: './assets/splash_icon.png',
       resizeMode: 'contain',
       backgroundColor: '#ffffff',
     },
@@ -20,15 +20,11 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: './assets/adaptive-icon.png',
+        foregroundImage: './assets/adaptive_icon.png',
         backgroundColor: '#ffffff',
       },
       package: 'com.koup28.achacha_app',
-      permissions: [
-        'ACCESS_COARSE_LOCATION',
-        'ACCESS_FINE_LOCATION',
-        'ACCESS_BACKGROUND_LOCATION',
-      ],
+      permissions: ['ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION', 'ACCESS_BACKGROUND_LOCATION'],
     },
     web: {
       favicon: './assets/favicon.png',
@@ -54,4 +50,4 @@ export default {
       kakaoAppKey: process.env.KAKAO_APP_KEY,
     },
   },
-}; 
+};

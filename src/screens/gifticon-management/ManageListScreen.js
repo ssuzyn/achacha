@@ -397,10 +397,15 @@ const ManageListScreen = () => {
         params.sort = currentSortBy === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC';
       }
 
+      console.log(
+        `[ManageListScreen] 기프티콘 목록 로드 시작 - 카테고리: ${selectedCategory}, 필터: ${selectedFilter}, 정렬: ${params.sort}`
+      );
+
       // 카테고리에 따라 API 호출 분기
       let response;
       if (selectedCategory === 'used') {
         // 사용 완료 기프티콘 조회
+        console.log('[ManageListScreen] 사용 완료 기프티콘 조회 API 요청:', params);
         response = await gifticonService.getUsedGifticons(params);
       } else {
         // 사용 가능 기프티콘 조회
@@ -410,17 +415,48 @@ const ManageListScreen = () => {
             : selectedCategory === 'sharebas'
               ? 'SHARE_BOX'
               : 'ALL';
+        console.log('[ManageListScreen] 사용 가능 기프티콘 조회 API 요청:', params);
         response = await gifticonService.getAvailableGifticons(params);
+      }
+
+      console.log('[ManageListScreen] API 응답 데이터:', response);
+
+      if (!response || !response.gifticons) {
+        console.error('[ManageListScreen] API 응답에 기프티콘 데이터가 없습니다:', response);
+        setError('서버에서 응답은 받았으나 유효한 데이터가 없습니다.');
+        return;
       }
 
       // 결과 처리
       const newGifticons = response.gifticons || [];
+      console.log(`[ManageListScreen] 조회된 기프티콘 수: ${newGifticons.length}`);
+
       setFilteredGifticons(prev => (reset ? newGifticons : [...prev, ...newGifticons]));
       setHasNextPage(response.hasNextPage || false);
       setNextPage(response.nextPage || null);
     } catch (err) {
-      console.error('기프티콘 목록 로드 실패:', err);
-      setError('기프티콘 목록을 불러오는 데 실패했습니다.');
+      console.error('[ManageListScreen] 기프티콘 목록 로드 실패:', err);
+
+      // 네트워크 오류 세부 정보 로깅
+      if (err.response) {
+        // 서버 응답이 있는 경우 (4xx, 5xx 에러)
+        console.error(`[ManageListScreen] 서버 오류 응답 - 상태 코드: ${err.response.status}`);
+        console.error('[ManageListScreen] 오류 데이터:', err.response.data);
+        setError(`서버 오류가 발생했습니다 (${err.response.status}). 잠시 후 다시 시도해주세요.`);
+      } else if (err.request) {
+        // 요청은 보냈지만 응답이 없는 경우 (네트워크 오류)
+        console.error('[ManageListScreen] 네트워크 오류 - 서버 응답 없음');
+        setError('네트워크 연결을 확인해주세요. 서버에 연결할 수 없습니다.');
+      } else {
+        // 요청 자체가 실패한 경우
+        console.error('[ManageListScreen] 요청 설정 오류:', err.message);
+        setError('기프티콘 목록을 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.');
+      }
+
+      // 초기화인 경우 빈 목록 설정
+      if (reset) {
+        setFilteredGifticons([]);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -650,7 +686,7 @@ const ManageListScreen = () => {
     const imageSource =
       item.thumbnailPath && typeof item.thumbnailPath === 'string'
         ? { uri: item.thumbnailPath }
-        : item.thumbnailPath || require('../../assets/images/adaptive-icon.png');
+        : item.thumbnailPath || require('../../assets/images/adaptive_icon.png');
 
     const daysLeft = item.scope === 'USED' ? null : calculateDaysLeft(item.gifticonExpiryDate);
     const isUrgent = daysLeft !== null && typeof daysLeft === 'number' && daysLeft <= 7; // 7일 이하면 긴급(빨간색)

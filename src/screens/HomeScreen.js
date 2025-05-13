@@ -138,7 +138,7 @@ const HomeScreen = () => {
             <Card.FeatureCard
               title={`나누면\n즐거움 두배,\n쉐어박스`}
               iconName="inventory-2"
-              imageSource={require('../assets/images/share-box.png')}
+              imageSource={require('../assets/images/share_box.png')}
               onPress={handleShareBoxPress}
               style={styles.interactiveCard}
             />
@@ -146,7 +146,7 @@ const HomeScreen = () => {
             {/* 레이더 카드 */}
             <Card.RadarCard
               text={`쓱 - 뿌리기\n행운의 주인공은?`}
-              image={require('../assets/images/home-radar.png')}
+              image={require('../assets/images/home_radar.png')}
               onPress={handleMapPress}
             />
           </View>
@@ -166,7 +166,7 @@ const HomeScreen = () => {
               </View>
               <View style={styles.giftMessageImageContainer}>
                 <Image
-                  source={require('../assets/images/home-gift.png')}
+                  source={require('../assets/images/home_gift.png')}
                   style={styles.giftMessageImage}
                   resizeMode="contain"
                 />
