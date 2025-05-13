@@ -12,7 +12,8 @@ const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // 해당 �
 
 class NearbyUsersService {
   constructor() {
-    this.deviceId = this.generateShortUuid();
+    this.deviceId = null; // 초기에는 null로 설정
+    this.tokenExpiry = null; // 토큰 만료 시간 저장용
     this.nearbyUsers = [];
     this.isScanning = false;
     this.scanListener = null;
@@ -30,6 +31,9 @@ class NearbyUsersService {
 
     // 앱 상태 변경 이벤트 리스너 설정
     this.setupAppStateListener();
+
+    // 저장된 토큰 불러오기
+    this.loadStoredToken();
   }
 
   // 앱 상태 변경 이벤트 리스너 설정
@@ -67,7 +71,14 @@ class NearbyUsersService {
   // BLE 작업 재개 (포그라운드 복귀 시)
   async resumeBleOperations() {
     try {
-      // 필요한 경우 광고 재시작
+      // 토큰 유효성 검사
+      const now = new Date();
+      if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
+        console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청');
+        await this.generateBleToken();
+      }
+  
+      // 광고 시작
       await this.startAdvertising();
     } catch (error) {
       console.error('BLE 작업 재개 실패:', error);
@@ -172,12 +183,72 @@ class NearbyUsersService {
     return true; // iOS는 항상 true 반환 (권한은 앱 설치 시 요청)
   }
 
-  // BLE 토큰 생성 API 호출
-  async generateBleToken(bleTokenValue = null) {
+  // 저장된 토큰 불러오기
+  async loadStoredToken() {
     try {
+      const storedToken = await AsyncStorage.getItem('bleToken');
+      const expiryStr = await AsyncStorage.getItem('bleTokenExpiry');
+
+      if (storedToken) {
+        const expiry = expiryStr ? new Date(expiryStr) : null;
+        const now = new Date();
+
+        // 토큰이 유효한지 확인 (만료되지 않았거나 만료 정보가 없는 경우)
+        if (!expiry || expiry > now) {
+          this.deviceId = storedToken;
+          this.tokenExpiry = expiry;
+          console.log('저장된 BLE 토큰 불러옴:', this.deviceId);
+        } else {
+          console.log('저장된 BLE 토큰이 만료됨. 새 토큰 필요');
+        }
+      }
+    } catch (error) {
+      console.error('저장된 BLE 토큰 불러오기 실패:', error);
+    }
+  }
+
+  // 토큰 저장하기
+  async saveToken(token, days = 7) {
+    try {
+      // 토큰 저장
+      await AsyncStorage.setItem('bleToken', token);
+
+      // 만료일 설정 (기본 7일)
+      const expiry = new Date();
+      expiry.setDate(expiry.getDate() + days);
+      await AsyncStorage.setItem('bleTokenExpiry', expiry.toISOString());
+
+      this.deviceId = token;
+      this.tokenExpiry = expiry;
+
+      console.log('BLE 토큰 저장됨:', token, '만료일:', expiry);
+    } catch (error) {
+      console.error('BLE 토큰 저장 실패:', error);
+    }
+  }
+
+  // BLE 토큰 생성 API 호출
+  async generateBleToken() {
+    try {
+      console.log('BLE 토큰 요청 시작, 현재 토큰:', this.deviceId);
+  
       const response = await apiClient.post('/api/ble', {
-        bleTokenValue,
+        bleTokenValue: this.deviceId, // 현재 가지고 있는 토큰 값 (없으면 null)
       });
+  
+      console.log('BLE 토큰 응답:', response.data);
+  
+      // bleToken 필드를 찾아서 사용 (서버가 이 필드로 응답함)
+      const tokenValue = response.data?.bleToken;
+  
+      if (tokenValue) {
+        console.log('새 BLE 토큰 받음:', tokenValue);
+        // 새 토큰 저장 (7일간 유효)
+        await this.saveToken(tokenValue, 7);
+      } else {
+        console.error('서버 응답에 토큰이 없습니다:', response.data);
+      }
+  
       return response.data;
     } catch (error) {
       console.error('BLE 토큰 생성 중 오류:', error);
@@ -203,6 +274,23 @@ class NearbyUsersService {
     const serviceUUID = await this.getServiceUUID();
     console.log('BLE 서비스 UUID:', serviceUUID);
     console.log('BLE 특성 UUID:', CHARACTERISTIC_UUID);
+
+    try {
+      // 토큰 유효성 검사 및 필요 시 새 토큰 요청
+      const now = new Date();
+      if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
+        console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
+        const bleTokenResponse = await this.generateBleToken();
+      
+        // bleToken 또는 bleTokenValue 속성 모두 처리 가능하도록 수정
+        const tokenValue = bleTokenResponse?.bleToken || bleTokenResponse?.bleTokenValue;
+      
+        if (!tokenValue) {
+          console.error('BLE 토큰 응답이 올바르지 않습니다:', bleTokenResponse);
+          return false;
+        }
+      }
+  }
 
     const hasPermissions = await this.requestBluetoothPermissions();
     if (!hasPermissions) {
