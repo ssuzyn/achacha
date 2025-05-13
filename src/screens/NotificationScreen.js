@@ -4,7 +4,6 @@ import {
   FlatList,
   StatusBar,
   View,
-  TouchableOpacity,
   ActivityIndicator,
   Platform,
   InteractionManager,

@@ -1,6 +1,14 @@
 /* eslint-disable react-native/no-inline-styles */
 import React, { useCallback } from 'react';
-import { StyleSheet, StatusBar, View, ScrollView, Image, Dimensions } from 'react-native';
+import {
+  StyleSheet,
+  StatusBar,
+  View,
+  ScrollView,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -134,7 +142,7 @@ const WatchGuideScreen = () => {
                   containerStyle={{ marginRight: 8 }}
                 />
                 <Text variant="subtitle1" weight="semiBold">
-                  사용 가능한 목록
+                  기프티콘 조회
                 </Text>
               </View>
               <Text variant="body2" style={styles.subFeatureDescription}>
@@ -246,13 +254,28 @@ const WatchGuideScreen = () => {
 
       {/* 하단 버튼 */}
       <View style={[styles.bottomButtonContainer, { paddingBottom: insets.bottom + 10 }]}>
-        <Button
-          title="워치 연동하러 가기"
+        <TouchableOpacity
           onPress={handleStartWatchConnection}
-          containerStyle={styles.buttonContainer}
-          buttonStyle={[styles.startButton, { backgroundColor: theme.colors.primary }]}
-          titleStyle={styles.buttonTitle}
-        />
+          style={{
+            width: '100%',
+            borderRadius: 8,
+            height: 56,
+            backgroundColor: '#56AEE9',
+            justifyContent: 'center',
+            alignItems: 'center',
+            flexDirection: 'row',
+          }}
+        >
+          <Text
+            style={{
+              color: '#FFFFFF',
+              fontSize: 16,
+              fontWeight: 'semibold',
+            }}
+          >
+            워치 연동하러 가기
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -406,6 +429,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
+    height: 56,
   },
   startButton: {
     borderRadius: 12,
