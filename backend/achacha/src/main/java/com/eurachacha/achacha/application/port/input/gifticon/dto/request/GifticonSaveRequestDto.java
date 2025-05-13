@@ -4,7 +4,6 @@ import java.time.LocalDate;
 
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
-import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -28,7 +27,6 @@ public class GifticonSaveRequestDto {
 	private String gifticonName;
 
 	@NotNull(message = "유효기간은 필수입니다")
-	@FutureOrPresent(message = "유효기간은 현재 날짜 이후로 설정해야 합니다")
 	private LocalDate gifticonExpiryDate;
 
 	@NotNull(message = "기프티콘 타입은 필수입니다")
