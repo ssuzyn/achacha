@@ -7,8 +7,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from '../api/apiClient';
 
 // BLE 서비스 및 특성 UUID
-const SERVICE_UUID_KEY = '@ble_service_uuid';
-const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
+const SERVICE_UUID = '1bf0cbce-7af3-4b59-93f2-0c4c6d170164';
+const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // 해당 서비스 내의 특정 기능을 식별
 
 class NearbyUsersService {
   constructor() {
@@ -189,12 +189,12 @@ class NearbyUsersService {
   async getServiceUUID() {
     try {
       // 저장된 UUID 확인
-      let uuid = await AsyncStorage.getItem(SERVICE_UUID_KEY);
+      let uuid = await AsyncStorage.getItem(SERVICE_UUID);
 
       // 저장된 UUID가 없으면 새로 생성
       if (!uuid) {
-        uuid = uuidv4().substring(0, 11);
-        await AsyncStorage.setItem(SERVICE_UUID_KEY, uuid);
+        uuid = uuidv4(); // 전체 UUID 사용 (substring 제거)
+        await AsyncStorage.setItem(SERVICE_UUID, uuid);
       }
 
       this.serviceUUID = uuid;
