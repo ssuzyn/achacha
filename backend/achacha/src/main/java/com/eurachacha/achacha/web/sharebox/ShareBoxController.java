@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
@@ -93,5 +94,15 @@ public class ShareBoxController {
 
 		shareBoxAppService.updateParticipationSetting(shareBoxId, requestDto);
 		return ResponseEntity.ok("쉐어박스 참여 설정이 변경되었습니다.");
+	}
+
+	// 쉐어박스 이름 변경 api
+	@PatchMapping("/{shareBoxId}/name")
+	public ResponseEntity<String> updateShareBoxName(
+		@PathVariable Integer shareBoxId,
+		@Valid @RequestBody ShareBoxNameUpdateRequestDto requestDto) {
+
+		shareBoxAppService.updateShareBoxName(shareBoxId, requestDto);
+		return ResponseEntity.ok("쉐어박스 이름이 변경되었습니다.");
 	}
 }
