@@ -44,4 +44,8 @@ public class ShareBox extends TimeStampEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
+
+	public void updateAllowParticipation(Boolean allowParticipation) {
+		this.allowParticipation = allowParticipation;
+	}
 }
