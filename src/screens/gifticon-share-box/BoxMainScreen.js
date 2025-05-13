@@ -122,6 +122,11 @@ const BoxMainScreen = () => {
       handleCloseModal();
       // TODO: 필요하다면 목록 새로고침 등 추가
     } catch (error) {
+      // 에러 상세 로그 추가
+      console.log('[쉐어박스 참여 에러]', error);
+      console.log('[에러코드]', error?.response?.data?.errorCode);
+      console.log('[에러메시지]', error?.response?.data?.message);
+
       let message = '참여에 실패했습니다. 다시 시도해 주세요.';
       const errorCode = error?.response?.data?.errorCode;
       switch (errorCode) {

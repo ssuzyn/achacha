@@ -18,9 +18,9 @@ export const createShareBox = async (shareBoxName) => {
 };
 
 // 쉐어박스 참여(초대코드 입력) API
-export const joinShareBox = async (shareBoxId, inviteCode) => {
+export const joinShareBox = async (inviteCode) => {
   const response = await apiClient.post(
-    API_CONFIG.ENDPOINTS.JOIN_SHARE_BOX(shareBoxId),
+    API_CONFIG.ENDPOINTS.JOIN_SHARE_BOX,
     { shareBoxInviteCode: inviteCode }
   );
   return response.data;
