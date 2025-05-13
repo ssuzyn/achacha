@@ -21,6 +21,7 @@ class NearbyUsersService {
     this.appStateListener = null;
     this.isAdvertising = false;
     this.serviceUUID = SERVICE_UUID; // 항상 고정된 SERVICE_UUID 사용
+    this.SCAN_DURATION = 5; // 스캔 시간 5초로 설정
 
     // BleManager 초기화
     BleManager.start({ showAlert: false });
@@ -284,11 +285,6 @@ class NearbyUsersService {
       return false;
     }
 
-    // 서비스 UUID 조회
-    const serviceUUID = await this.getServiceUUID();
-    console.log('BLE 서비스 UUID:', serviceUUID);
-    console.log('BLE 특성 UUID:', CHARACTERISTIC_UUID);
-
     try {
       // 토큰 유효성 검사 및 필요 시 새 토큰 요청
       const now = new Date();
@@ -296,7 +292,6 @@ class NearbyUsersService {
         console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
         const bleTokenResponse = await this.generateBleToken();
 
-        // bleToken 또는 bleTokenValue 속성 모두 처리 가능하도록 수정
         const tokenValue = bleTokenResponse?.bleToken || bleTokenResponse?.bleTokenValue;
 
         if (!tokenValue) {
@@ -309,6 +304,20 @@ class NearbyUsersService {
 
       // 광고 시작 (자신의 UUID 알리기)
       await this.startAdvertising();
+
+      // 앱 상태 변경 리스너 설정 (광고 상태 유지를 위해)
+      if (this.appStateListener) {
+        this.appStateListener.remove();
+      }
+      this.appStateListener = AppState.addEventListener('change', nextAppState => {
+        if (nextAppState === 'active') {
+          // 포그라운드로 돌아올 때 광고 재시작
+          this.startAdvertising();
+        } else if (nextAppState === 'background') {
+          // 백그라운드로 갈 때 광고 중지
+          this.stopAdvertising();
+        }
+      });
 
       return true;
     } catch (error) {
@@ -325,6 +334,14 @@ class NearbyUsersService {
     }
 
     try {
+      if (this.isAdvertising) {
+        console.log('이미 광고 중입니다.');
+        return;
+      }
+
+      console.log('=== BLE 광고 시작 ===');
+      console.log('광고할 디바이스 ID:', this.deviceId);
+
       // 각 플랫폼에 맞는 광고 메서드 호출
       if (Platform.OS === 'ios') {
         // iOS에서는 Peripheral 모드 시작
@@ -335,9 +352,10 @@ class NearbyUsersService {
       }
 
       this.isAdvertising = true;
-      console.log('광고 시작 완료. 기기 ID:', this.deviceId);
+      console.log('광고 시작 완료');
     } catch (error) {
       console.error('광고 시작 실패:', error);
+      this.isAdvertising = false;
     }
   }
 
@@ -406,7 +424,6 @@ class NearbyUsersService {
 
   // BLE 스캔 시작
   async startScan(onUserFound, onScanComplete) {
-    // 앱이 포그라운드인지 확인
     if (AppState.currentState !== 'active') {
       console.log('앱이 포그라운드 상태가 아닙니다. 스캔을 시작할 수 없습니다.');
       if (onScanComplete) onScanComplete([]);
@@ -419,25 +436,59 @@ class NearbyUsersService {
     }
 
     try {
+      // 블루투스 상태 한번 더 체크
+      const state = await BleManager.checkState();
+      console.log('블루투스 상태:', state);
+
+      if (state !== 'on') {
+        console.log('블루투스가 꺼져있습니다.');
+        if (onScanComplete) onScanComplete([]);
+        return;
+      }
+
+      // 권한 다시 체크
+      const hasPermissions = await this.requestBluetoothPermissions();
+      console.log('블루투스 권한 상태:', hasPermissions);
+
+      if (!hasPermissions) {
+        console.log('블루투스 권한이 없습니다.');
+        if (onScanComplete) onScanComplete([]);
+        return;
+      }
+
       // 이전 스캔 결과 초기화
       this.nearbyUsers = [];
-
-      // 스캔 상태 변경
       this.isScanning = true;
 
-      // 이벤트 리스너 설정
+      console.log('=== BLE 스캔 시작 ===');
+      console.log('현재 디바이스 ID:', this.deviceId);
+      console.log('스캔 시간:', this.SCAN_DURATION, '초');
+
+      // 테스트용: 모든 기기 스캔
+      await BleManager.scan([], this.SCAN_DURATION, true);
+
+      /* 실제 서비스에 적용할 코드
+      // SERVICE_UUID로 필터링하여 같은 앱의 기기만 스캔
+      console.log('스캔 필터 SERVICE_UUID:', SERVICE_UUID);
+      await BleManager.scan([SERVICE_UUID], this.SCAN_DURATION, true);
+      */
+
+      // 디버깅을 위한 추가 로그
       this.scanListener = this.bleManagerEmitter.addListener(
         'BleManagerDiscoverPeripheral',
         peripheral => {
-          // 100m 내의 기기만 필터링 (대략적인 RSSI 값: -80 ~ -90 dBm)
-          if (peripheral.rssi && peripheral.rssi >= -90) {
-            this.handleDiscoveredDevice(peripheral, onUserFound);
-          }
+          console.log('\n=== 발견된 기기 ===');
+          console.log(JSON.stringify(peripheral, null, 2));
+          // 모든 기기 처리
+          this.handleDiscoveredDevice(peripheral, onUserFound);
         }
       );
 
       // 스캔 완료 이벤트 처리
       this.stopScanListener = this.bleManagerEmitter.addListener('BleManagerStopScan', () => {
+        console.log('\n=== 스캔 완료 ===');
+        console.log('총 발견된 기기 수:', this.nearbyUsers.length);
+
         this.isScanning = false;
         if (this.scanListener) {
           this.scanListener.remove();
@@ -447,16 +498,12 @@ class NearbyUsersService {
           this.stopScanListener.remove();
           this.stopScanListener = null;
         }
-        console.log('스캔 완료. 발견된 사용자:', this.nearbyUsers.length);
+
         if (onScanComplete) onScanComplete(this.nearbyUsers);
       });
-
-      // 스캔 시작 - 고정된 SERVICE_UUID 사용
-      console.log('스캔 시작: SERVICE_UUID =', SERVICE_UUID);
-      await BleManager.scan([SERVICE_UUID], 5, true);
     } catch (error) {
+      console.error('스캔 시작 실패. 에러:', error);
       this.isScanning = false;
-      console.error('스캔 시작 실패:', error);
       if (onScanComplete) onScanComplete([]);
     }
   }
