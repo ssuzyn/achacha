@@ -28,6 +28,8 @@ export const API_CONFIG = {
     // 기프티콘 관련 엔드포인트
     GIFTICON_IMAGE_METADATA: '/api/gifticons/image-metadata', // 기프티콘 이미지 메타데이터 조회
     REGISTER_GIFTICON: '/api/gifticons', // 기프티콘 등록
+    GET_GIFTICONS: '/api/gifticons', // 기프티콘 목록 조회
+    GET_USED_GIFTICONS: '/api/gifticons/used', // 사용 완료 기프티콘 목록 조회
 
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API

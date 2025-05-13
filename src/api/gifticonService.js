@@ -225,6 +225,44 @@ const gifticonService = {
       throw error;
     }
   },
+
+  /**
+   * 사용 가능한 기프티콘 목록 조회
+   * @param {Object} params - 조회 파라미터
+   * @param {string} params.scope - 조회 범위 ('MY_BOX'/'SHARE_BOX'/'ALL')
+   * @param {string} params.type - 기프티콘 타입 필터 ('PRODUCT'/'AMOUNT')
+   * @param {string} params.sort - 정렬 방식 ('CREATED_DESC': 등록순, 'EXPIRY_ASC': 임박순)
+   * @param {number} params.page - 페이지 번호
+   * @param {number} params.size - 페이지당 항목 수
+   * @returns {Promise<Object>} - 기프티콘 목록 조회 결과
+   */
+  async getAvailableGifticons(params = {}) {
+    try {
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_GIFTICONS, { params });
+      return response.data;
+    } catch (error) {
+      console.error('[API] 기프티콘 목록 조회 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 사용 완료된 기프티콘 목록 조회
+   * @param {Object} params - 조회 파라미터
+   * @param {string} params.type - 기프티콘 타입 필터 ('PRODUCT'/'AMOUNT')
+   * @param {number} params.page - 페이지 번호
+   * @param {number} params.size - 페이지당 항목 수
+   * @returns {Promise<Object>} - 사용 완료 기프티콘 목록 조회 결과
+   */
+  async getUsedGifticons(params = {}) {
+    try {
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_USED_GIFTICONS, { params });
+      return response.data;
+    } catch (error) {
+      console.error('[API] 사용 완료 기프티콘 목록 조회 실패:', error);
+      throw error;
+    }
+  },
 };
 
 export default gifticonService;
