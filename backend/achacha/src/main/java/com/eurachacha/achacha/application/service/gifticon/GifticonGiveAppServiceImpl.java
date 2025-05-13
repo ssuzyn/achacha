@@ -6,7 +6,7 @@ import java.util.Random;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.eurachacha.achacha.application.port.input.gifticon.GifticonSharingAppService;
+import com.eurachacha.achacha.application.port.input.gifticon.GifticonGiveAppService;
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
-public class GifticonSharingAppServiceImpl implements GifticonSharingAppService {
+public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 
 	private final GifticonRepository gifticonRepository;
 	private final GifticonDomainService gifticonDomainService;

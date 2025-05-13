@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
-import com.eurachacha.achacha.application.port.input.gifticon.GifticonSharingAppService;
+import com.eurachacha.achacha.application.port.input.gifticon.GifticonGiveAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonGiveAwayRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 public class GifticonController {
 
 	private final GifticonAppService gifticonAppService;
-	private final GifticonSharingAppService gifticonSharingAppService;
+	private final GifticonGiveAppService gifticonGiveAppService;
 
 	@PostMapping(value = "/image-metadata", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<GifticonMetadataResponseDto> extractGifticonMetadata(
@@ -60,7 +60,7 @@ public class GifticonController {
 	@PostMapping("/{gifticonId}/give-away")
 	public ResponseEntity<String> giveAwayGifticon(@PathVariable Integer gifticonId,
 		@RequestBody GifticonGiveAwayRequestDto uuids) {
-		gifticonSharingAppService.giveAwayGifticon(gifticonId, uuids.getUuids());
+		gifticonGiveAppService.giveAwayGifticon(gifticonId, uuids.getUuids());
 		return ResponseEntity.ok("기프티콘을 뿌리기 하였습니다.");
 	}
 }
