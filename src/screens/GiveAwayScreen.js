@@ -496,14 +496,7 @@ const GiveAwayScreen = ({ onClose }) => {
           setButtonVisible(DUMMY_USERS.length > 0);
         }
 
-        // 현재 시간과 로딩 시작 시간의 차이 계산
-        const elapsedTime = Date.now() - loadingStartTime;
-        const minLoadingTime = 3000; // 최소 3초
-
-        // 최소 3초 동안 로딩 애니메이션 표시
-        if (elapsedTime < minLoadingTime) {
-          await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime));
-        }
+        // 고정 5초 로딩 애니메이션 표시        const minLoadingTime = 5000; // 5초        await new Promise(resolve => setTimeout(resolve, minLoadingTime));
 
         setLoading(false);
       } catch (error) {
