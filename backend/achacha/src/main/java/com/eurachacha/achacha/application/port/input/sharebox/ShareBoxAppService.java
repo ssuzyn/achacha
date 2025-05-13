@@ -1,7 +1,8 @@
-package com.eurachacha.achacha.application.port.input.sharebox.dto;
+package com.eurachacha.achacha.application.port.input.sharebox;
 
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
@@ -25,4 +26,6 @@ public interface ShareBoxAppService {
 	void updateParticipationSetting(Integer shareBoxId, ShareBoxParticipationSettingRequestDto requestDto);
 
 	ShareBoxSettingsResponseDto getShareBoxSettings(Integer shareBoxId);
+
+	void updateShareBoxName(Integer shareBoxId, ShareBoxNameUpdateRequestDto requestDto);
 }

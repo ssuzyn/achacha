@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
@@ -451,5 +452,61 @@ class ShareBoxAppServiceImplTest {
 		assertThat(thrown)
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+	}
+
+	@DisplayName("쉐어박스 이름 변경 - 방장이 요청하면 성공적으로 변경되어야 한다")
+	@Test
+	void updateShareBoxName_WhenUserIsOwner_ThenSuccessfullyUpdate() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+		String newName = "으라차차아차차";
+
+		ShareBoxNameUpdateRequestDto requestDto = new ShareBoxNameUpdateRequestDto(newName);
+
+		ShareBox shareBox = mock(ShareBox.class);
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		willDoNothing().given(shareBoxDomainService).validateShareBoxOwner(shareBox, userId);
+		willDoNothing().given(shareBoxDomainService).validateShareBoxName(newName);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			shareBoxAppService.updateShareBoxName(shareBoxId, requestDto));
+
+		// then
+		assertThat(thrown).isNull();
+		verify(shareBoxRepository).findById(eq(shareBoxId));
+		verify(shareBoxDomainService).validateShareBoxOwner(eq(shareBox), eq(userId));
+		verify(shareBoxDomainService).validateShareBoxName(eq(newName));
+		verify(shareBox).updateName(eq(newName));
+	}
+
+	@DisplayName("쉐어박스 이름 변경 - 방장이 아닌 사용자가 요청하면 예외가 발생해야 한다")
+	@Test
+	void updateShareBoxName_WhenUserIsNotOwner_ThenThrowException() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+		String newName = "으라차차아차차";
+
+		ShareBoxNameUpdateRequestDto requestDto = new ShareBoxNameUpdateRequestDto(newName);
+
+		ShareBox shareBox = mock(ShareBox.class);
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		willThrow(new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS))
+			.given(shareBoxDomainService).validateShareBoxOwner(shareBox, userId);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			shareBoxAppService.updateShareBoxName(shareBoxId, requestDto));
+
+		// then
+		assertThat(thrown)
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS);
+
+		verify(shareBox, never()).updateName(any());
 	}
 }
