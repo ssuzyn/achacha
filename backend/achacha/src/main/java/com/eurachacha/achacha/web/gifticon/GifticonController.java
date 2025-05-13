@@ -59,8 +59,8 @@ public class GifticonController {
 
 	@PostMapping("/{gifticonId}/give-away")
 	public ResponseEntity<String> giveAwayGifticon(@PathVariable Integer gifticonId,
-		@RequestBody GifticonGiveAwayRequestDto userIds) {
-		gifticonSharingAppService.giveAwayGifticon(gifticonId, userIds.getUserIds());
+		@RequestBody GifticonGiveAwayRequestDto uuids) {
+		gifticonSharingAppService.giveAwayGifticon(gifticonId, uuids.getUuids());
 		return ResponseEntity.ok("기프티콘을 뿌리기 하였습니다.");
 	}
 }

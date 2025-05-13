@@ -10,5 +10,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class GifticonGiveAwayRequestDto {
-	private List<String> userIds;
+	private List<String> uuids;
 }
