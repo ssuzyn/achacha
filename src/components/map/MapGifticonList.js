@@ -61,12 +61,14 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   emptyContainer: {
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 50,
   },
   emptyText: {
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
+    fontFamily: 'Pretendard-Regular',
   },
 });
 

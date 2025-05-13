@@ -44,7 +44,8 @@ export const API_CONFIG = {
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
 
     // 쉐어박스 관련 엔드포인트
-    SHARE_BOXES: '/api/share-boxes', // 쉐어박스 API
+    CREATE_SHARE_BOX: '/api/share-boxes',
+    JOIN_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/join`,
 
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
