@@ -17,6 +17,7 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareB
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
 import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 
@@ -86,6 +87,7 @@ public class ShareBoxController {
 		return ResponseEntity.ok(shareBoxAppService.getShareBoxes(sort, page, size));
 	}
 
+	// 쉐어박스 참여 가능 설정
 	@PatchMapping("/{shareBoxId}/participation-setting")
 	public ResponseEntity<String> updateParticipationSetting(
 		@PathVariable Integer shareBoxId,
@@ -93,5 +95,12 @@ public class ShareBoxController {
 
 		shareBoxAppService.updateParticipationSetting(shareBoxId, requestDto);
 		return ResponseEntity.ok("쉐어박스 참여 설정이 변경되었습니다.");
+	}
+
+	// 쉐어박스 설정 조회
+	@GetMapping("/{shareBoxId}/settings")
+	public ResponseEntity<ShareBoxSettingsResponseDto> getShareBoxSettings(
+		@PathVariable Integer shareBoxId) {
+		return ResponseEntity.ok(shareBoxAppService.getShareBoxSettings(shareBoxId));
 	}
 }
