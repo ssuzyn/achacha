@@ -38,4 +38,17 @@ public interface GifticonDomainService {
 	void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate);
 
 	void validateGiveAwayGifticon(Integer userId, Gifticon gifticon);
+
+	void validateProductGifticonType(Gifticon gifticon);
+
+	void validateAmountGifticonType(Gifticon gifticon);
+
+	void validateAmountGifticonUsageHistories(Gifticon gifticon);
+
+	void validateDeleteAndUsedAndAmountType(Gifticon gifticon);
+
+	void validateDeleteAndUsedAndProductType(Gifticon gifticon);
+
+	void validateDeleteAndIsUsedAndProductType(Gifticon gifticon);
+
 }

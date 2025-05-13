@@ -3,7 +3,6 @@ package com.eurachacha.achacha.domain.service.gifticon;
 import org.springframework.stereotype.Service;
 
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
-import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
@@ -15,13 +14,6 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	public void validateBalance(Gifticon gifticon, Integer usageAmount) {
 		if (usageAmount > gifticon.getRemainingAmount()) {
 			throw new CustomException(ErrorCode.GIFTICON_INSUFFICIENT_BALANCE);
-		}
-	}
-
-	@Override // 금액형 타입 검증
-	public void validateAmountGifticonType(Gifticon gifticon) {
-		if (gifticon.getType() != GifticonType.AMOUNT) {
-			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
 		}
 	}
 
@@ -45,8 +37,6 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 
 	@Override
 	public void validateUseAmountGifticon(Gifticon gifticon, Integer usageAmount) {
-		// 타입 검증
-		validateAmountGifticonType(gifticon);
 
 		// 잔액 검증
 		validateBalance(gifticon, usageAmount);
@@ -58,8 +48,6 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	@Override
 	public int updateUsageHistory(Integer newAmount, Gifticon findGifticon,
 		UsageHistory findUsageHistory) {
-		// 기프티콘 타입 확인
-		validateAmountGifticonType(findGifticon);
 
 		// 변경 금액이 유효한지 확인
 		validateAmount(newAmount);
@@ -72,13 +60,6 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	public void validateAmount(Integer newAmount) {
 		if (newAmount <= 0) {
 			throw new CustomException(ErrorCode.INVALID_AMOUNT_VALUE);
-		}
-	}
-
-	@Override
-	public void validateProductGifticonType(Gifticon gifticon) {
-		if (gifticon.getType() != GifticonType.PRODUCT) {
-			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
 		}
 	}
 

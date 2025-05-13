@@ -7,8 +7,6 @@ public interface GifticonUsageDomainService {
 	// 잔액 여부 확인
 	void validateBalance(Gifticon gifticon, Integer usageAmount);
 
-	void validateAmountGifticonType(Gifticon gifticon);
-
 	int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon);
 
@@ -20,5 +18,4 @@ public interface GifticonUsageDomainService {
 
 	void validateAmount(Integer newAmount);
 
-	void validateProductGifticonType(Gifticon gifticon);
 }

@@ -49,9 +49,6 @@ public class GifticonSharingAppServiceImpl implements GifticonSharingAppService 
 		// 공유 여부 검증
 		gifticonDomainService.validateGiveAwayGifticon(userId, findGifticon);
 
-		// 상품형 검증
-		gifticonUsageDomainService.validateProductGifticonType(findGifticon);
-
 		// 유효한 uuid만 필터링
 		List<String> validUuids = getValidUuids(uuids);
 

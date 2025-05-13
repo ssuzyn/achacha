@@ -156,5 +156,85 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		if (alreadyShared) {
 			throw new CustomException(ErrorCode.GIFTICON_ALREADY_SHARED);
 		}
+
+		// 상품형 타입 여부
+		validateProductGifticonType(gifticon);
+
+	}
+
+	@Override
+	public void validateProductGifticonType(Gifticon gifticon) {
+		if (gifticon.getType() != GifticonType.PRODUCT) {
+			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
+		}
+	}
+
+	@Override // 금액형 타입 검증
+	public void validateAmountGifticonType(Gifticon gifticon) {
+		if (gifticon.getType() != GifticonType.AMOUNT) {
+			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
+		}
+	}
+
+	@Override
+	public void validateAmountGifticonUsageHistories(Gifticon gifticon) {
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 금액형 타입 여부
+		validateAmountGifticonType(gifticon);
+	}
+
+	@Override
+	public void validateDeleteAndUsedAndAmountType(Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 금액형 타입 여부
+		validateAmountGifticonType(gifticon);
+	}
+
+	@Override
+	public void validateDeleteAndUsedAndProductType(Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 상품형 타입 여부
+		validateProductGifticonType(gifticon);
+	}
+
+	@Override
+	public void validateDeleteAndIsUsedAndProductType(Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (!isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 상품형 타입 여부
+		validateProductGifticonType(gifticon);
 	}
 }
