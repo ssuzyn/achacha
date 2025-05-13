@@ -10,10 +10,12 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ParticipantResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
@@ -241,6 +243,44 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 			.shareBoxes(shareBoxResponseDtos)
 			.hasNextPage(shareBoxSlice.hasNext())
 			.nextPage(shareBoxSlice.hasNext() ? page + 1 : null)
+			.build();
+	}
+
+	@Override
+	public ShareBoxParticipantsResponseDto getShareBoxParticipants(Integer shareBoxId) {
+		log.info("쉐어박스 참여자 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
+
+		// 현재 사용자 ID (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 조회
+		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
+
+		// 참여 권한 검증
+		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+		}
+
+		// 참여자 목록 조회
+		List<Participation> participations = participationRepository.findByShareBoxId(shareBoxId);
+
+		// 참여자 DTO 변환
+		List<ParticipantResponseDto> participantDtos = participations.stream()
+			.map(p -> ParticipantResponseDto.builder()
+				.userId(p.getUser().getId())
+				.userName(p.getUser().getName())
+				.build())
+			.collect(Collectors.toList());
+
+		log.info("쉐어박스 참여자 조회 완료 - 참여자 수: {}", participantDtos.size());
+
+		// 응답 DTO 생성
+		return ShareBoxParticipantsResponseDto.builder()
+			.shareBoxId(shareBox.getId())
+			.shareBoxName(shareBox.getName())
+			.shareBoxUserId(shareBox.getUser().getId())
+			.shareBoxUserName(shareBox.getUser().getName())
+			.participations(participantDtos)
 			.build();
 	}
 
