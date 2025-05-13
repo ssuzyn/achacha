@@ -21,6 +21,8 @@ data class GifticonListApiResponse(
 // BarcodeInfo는 BarcodeInfo.kt 파일에 정의되어 있다고 가정
 // data class BarcodeInfo(...)
 
+data class GiveAwayRequest(val userIds: List<String>)
+
 interface ApiService {
 
     // 기프티콘 목록 조회 API
@@ -63,6 +65,12 @@ interface ApiService {
         @Path("gifticonId") gifticonId: Int,
         @Body request: UseAmountGifticonRequest
     ): Response<UseAmountGifticonResponse>
+
+    @POST("/api/gifticons/{gifticonId}/give-away")
+    suspend fun giveAwayGifticon(
+        @Path("gifticonId") gifticonId: Int,
+        @Body request: GiveAwayRequest
+    ): retrofit2.Response<Unit>
 }
 
 // 상품권 사용 요청 바디 데이터 클래스

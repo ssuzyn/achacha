@@ -49,6 +49,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.LaunchedEffect
 import org.json.JSONObject
+import androidx.compose.ui.platform.LocalContext
 
 // 화면 상태 정의
 enum class ScreenState {
@@ -61,7 +62,8 @@ enum class ScreenState {
     SHARING, // 나눔 진행 화면 상태 추가
     ENTER_AMOUNT, // 금액 입력 화면 상태 추가
     NOTIFICATION_BOX, // 알림함 화면 상태 추가
-    ERROR       // 권한 또는 연결 오류
+    ERROR,       // 권한 또는 연결 오류
+    BLE_SCAN_FAIL // BLE 탐색 실패 화면 추가
 }
 
 class MainActivity : ComponentActivity() {
@@ -405,7 +407,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AchachaAppTheme {
-                addLog("Compose recomposition: currentScreen.value = ${currentScreen.value}")
+                if (currentScreen.value != ScreenState.BLE_SCAN_FAIL) {
+                    addLog("Compose recomposition: currentScreen.value = ${currentScreen.value}")
+                }
                 // --- 현재 화면 상태에 따라 UI 렌더링 --- (수정)
                 when (currentScreen.value) {
                     ScreenState.CONNECTING -> {
@@ -588,8 +592,13 @@ class MainActivity : ComponentActivity() {
                             gifticonId = _selectedGifticonId.value,
                             onBackClick = {
                                 addLog("SharingScreen: Back clicked. Returning to GifticonDetail.")
-                                // TODO: 나눔 중단/완료 관련 로직 (Nearby 중단 등) 필요시 추가
-                                _currentScreen.value = ScreenState.GIFTICON_DETAIL // 상세 화면으로 바로 돌아감
+                                _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                            },
+                            apiService = apiService,
+                            context = LocalContext.current,
+                            onScanFail = {
+                                addLog("SharingScreen: BLE 탐색 실패. BleScanFailScreen으로 이동.")
+                                _currentScreen.value = ScreenState.BLE_SCAN_FAIL
                             }
                         )
                     }
@@ -655,6 +664,14 @@ class MainActivity : ComponentActivity() {
                                  // checkAndRequestNearbyPermissions() // 원래 재시도 로직
                              }
                             // TODO: 오류 화면을 별도로 만들거나 ConnectPhoneScreen 개선 필요
+                        )
+                    }
+                    ScreenState.BLE_SCAN_FAIL -> {
+                        com.koup28.achacha_app.presentation.ui.BleScanFailScreen(
+                            onBackClick = {
+                                addLog("BleScanFailScreen: Back clicked. Returning to GifticonDetail.")
+                                _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                            }
                         )
                     }
                 }
@@ -1001,6 +1018,11 @@ class MainActivity : ComponentActivity() {
                 onResult(false, "네트워크 오류: ${e.localizedMessage}")
             }
         }
+    }
+
+    // BLE 탐색 실패 스크린으로 이동하는 함수 추가
+    fun navigateToBleScanFailScreen() {
+        _currentScreen.value = ScreenState.BLE_SCAN_FAIL
     }
 }
 
