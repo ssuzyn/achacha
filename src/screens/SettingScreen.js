@@ -41,7 +41,10 @@ const SettingScreen = () => {
   const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
   const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(1);
   const [usageCompletionNotification, setUsageCompletionNotification] = useState(true);
-  const [shareboxNotification, setShareboxNotification] = useState(true);
+  const [shareboxGiftRegistration, setShareboxGiftRegistration] = useState(true);
+  const [shareboxGiftUsage, setShareboxGiftUsage] = useState(true);
+  const [shareboxMemberJoin, setShareboxMemberJoin] = useState(true);
+  const [shareboxGroupDelete, setShareboxGroupDelete] = useState(true);
   const [watchModalVisible, setWatchModalVisible] = useState(false);
   const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
 
@@ -430,17 +433,56 @@ const SettingScreen = () => {
             <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
           </View>
 
-          {/* 쉐어박스 알림 */}
+          {/* 쉐어박스 기프티콘 등록 알림 */}
           <View style={styles.notificationItem}>
             <View style={styles.notificationInfo}>
               <Text variant="body1" style={styles.notificationLabel}>
-                쉐어박스 알림
+                쉐어박스 기프티콘 등록 알림
               </Text>
               <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-                쉐어박스 등록, 사용완료, 새 멤버 참여 알림
+                쉐어박스 신규 기프티콘 등록 시 알림
               </Text>
             </View>
-            <Switch value={shareboxNotification} onValueChange={setShareboxNotification} />
+            <Switch value={shareboxGiftRegistration} onValueChange={setShareboxGiftRegistration} />
+          </View>
+
+          {/* 쉐어박스 기프티콘 사용 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                쉐어박스 기프티콘 사용 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                쉐어박스 기프티콘 사용 완료 시 알림
+              </Text>
+            </View>
+            <Switch value={shareboxGiftUsage} onValueChange={setShareboxGiftUsage} />
+          </View>
+
+          {/* 쉐어박스 멤버 참여 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                쉐어박스 멤버 참여 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                새 멤버 참여 시 알림
+              </Text>
+            </View>
+            <Switch value={shareboxMemberJoin} onValueChange={setShareboxMemberJoin} />
+          </View>
+
+          {/* 쉐어박스 그룹 삭제 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                쉐어박스 그룹 삭제 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                그룹 삭제 시 알림
+              </Text>
+            </View>
+            <Switch value={shareboxGroupDelete} onValueChange={setShareboxGroupDelete} />
           </View>
         </View>
 
@@ -619,7 +661,7 @@ const styles = StyleSheet.create({
   },
   sectionDivider: {
     marginBottom: 20,
-    marginTop: 10,
+    marginTop: 8,
   },
   watchItem: {
     flexDirection: 'row',
