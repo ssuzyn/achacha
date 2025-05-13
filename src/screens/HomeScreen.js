@@ -278,7 +278,7 @@ const HomeScreen = () => {
           />
         </View>
 
-        {/* 선물 카드 */}
+        {/* MAP 카드 */}
         <View style={styles.bottomCardSection}>
           <TouchableOpacity onPress={() => NavigationService.navigate('TabMap')}>
             <View style={styles.mapMessageCard}>
@@ -308,7 +308,7 @@ const HomeScreen = () => {
 
         {/* 워치 카드 */}
         <View style={styles.bottomWatchSection}>
-          <TouchableOpacity onPress={() => NavigationService.navigate('TabGifticonManage')}>
+          <TouchableOpacity onPress={() => NavigationService.navigate('WatchGuideScreen')}>
             <View style={styles.watchMessageCard}>
               <View style={styles.watchMessageTextContainer}>
                 <View style={styles.watchTitleContainer} />
