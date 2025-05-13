@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   notificationBadgeContainer: {
     position: 'relative',
-    marginRight: 12,
+    marginRight: 17,
   },
   notificationIcon: {
     padding: 0,

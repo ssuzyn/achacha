@@ -199,12 +199,15 @@ const BottomTabBar = () => {
           display: isTabBarVisible ? 'flex' : 'none',
           height: 65,
           paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+          paddingHorizontal: 10, // 전체 탭바 패딩 증가
         },
         headerShown: false,
         tabBarHideOnKeyboard: true,
         tabBarItemStyle: {
           ...styles.tabBarItem,
           justifyContent: 'center',
+          width: (width - 120) / 4, // 각 탭 아이템의 너비 조정 (더 좁게)
+          paddingHorizontal: 0, // 패딩 줄이기
         },
         tabBarButton: renderTabBarButton,
         tabBarPressColor: 'transparent',
@@ -302,10 +305,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: FAB_SIZE,
     height: FAB_SIZE,
-    borderRadius: FAB_SIZE / 2,
+    borderRadius: FAB_SIZE / 2, // 완전한 원형으로 변경
     justifyContent: 'center',
     alignItems: 'center',
-    bottom: -5, // 버튼 위치 조정
+    bottom: -8, // 버튼 위치 더 아래로 조정
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -321,7 +324,7 @@ const styles = StyleSheet.create({
   registerTabButton: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -20, // 탭바 위로 버튼 올리기 (값을 줄여서 아래로 내림)
+    marginTop: -10, // 탭바 위로 버튼 올리기 (값을 줄여서 아래로 내림)
   },
   tabBar: {
     height: 65,
