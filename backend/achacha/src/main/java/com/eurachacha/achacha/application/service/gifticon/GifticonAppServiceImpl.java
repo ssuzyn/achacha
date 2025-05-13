@@ -476,6 +476,25 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.build();
 	}
 
+	@Override
+	@Transactional
+	public void deleteGifticon(Integer gifticonId) {
+
+		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+
+		// 해당 기프티콘 조회
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		// 소유자, 기프티콘 공유, 삭제여부 검증
+		gifticonDomainService.validateDeleteGifticon(userId, findGifticon);
+
+		// 바코드 정보 삭제
+		findGifticon.deleteBarcode();
+
+		// 논리 삭제
+		findGifticon.delete();
+	}
+
 	private Integer findBrandId(String brandName) {
 		if (brandName == null || brandName.trim().isEmpty()) {
 			return null;

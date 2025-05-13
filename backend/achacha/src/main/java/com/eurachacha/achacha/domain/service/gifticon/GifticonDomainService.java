@@ -32,6 +32,8 @@ public interface GifticonDomainService {
 	// 해당 쉐어박스에 기프티콘이 올라가있는지 검증
 	void validateGifticonSharedInShareBox(Gifticon gifticon, Integer shareBoxId);
 
+	void validateDeleteGifticon(Integer userId, Gifticon gifticon);
+
 	// 기프티콘 유효기간 검증
 	void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate);
 }
