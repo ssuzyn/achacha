@@ -16,16 +16,15 @@ const HeaderBar = ({ notificationCount = 3 }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
 
-  // 추가 버튼 클릭 핸들러
-  const handleAddPress = useCallback(() => {
-    // RegisterScreen 화면으로 이동
-    NavigationService.navigate('Register', {}, true);
-  }, []);
-
   // 알림 버튼 클릭 핸들러 - 성능 최적화
   const handleNotificationPress = useCallback(() => {
     // NavigationService를 사용하여 성능 최적화
     NavigationService.navigate('Notification', {}, true);
+  }, []);
+
+  // 설정 버튼 클릭 핸들러
+  const handleSettingsPress = useCallback(() => {
+    NavigationService.navigate('Settings', {}, true);
   }, []);
 
   // 메모이제이션된 뱃지 카운트 컴포넌트
@@ -61,16 +60,6 @@ const HeaderBar = ({ notificationCount = 3 }) => {
 
         {/* 우측 아이콘 버튼 영역 */}
         <View style={styles.iconContainer}>
-          {/* 추가 버튼 */}
-          <Icon
-            name="add-circle-outline"
-            size={ICON_SIZE}
-            color={theme.colors.primary}
-            type="material"
-            containerStyle={styles.addIcon}
-            onPress={handleAddPress}
-          />
-
           {/* 알림 버튼 */}
           <View style={styles.notificationBadgeContainer}>
             <Icon
@@ -84,6 +73,16 @@ const HeaderBar = ({ notificationCount = 3 }) => {
             {/* 알림 뱃지 - Badge 컴포넌트 사용 */}
             {BadgeComponent}
           </View>
+
+          {/* 설정 버튼 */}
+          <Icon
+            name="settings"
+            size={ICON_SIZE}
+            color={theme.colors.primary}
+            type="material"
+            containerStyle={styles.settingsIcon}
+            onPress={handleSettingsPress}
+          />
         </View>
       </View>
     </View>
@@ -127,15 +126,15 @@ const styles = StyleSheet.create({
     marginRight: 10,
     paddingRight: 0,
   },
-  addIcon: {
+  notificationBadgeContainer: {
+    position: 'relative',
     marginRight: 12,
+  },
+  notificationIcon: {
     padding: 0,
     backgroundColor: 'transparent',
   },
-  notificationBadgeContainer: {
-    position: 'relative',
-  },
-  notificationIcon: {
+  settingsIcon: {
     padding: 0,
     backgroundColor: 'transparent',
   },

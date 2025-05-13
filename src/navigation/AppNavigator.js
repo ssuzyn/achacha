@@ -18,6 +18,7 @@ import UseProductScreen from '../screens/gifticon-management/gifticon-use/UsePro
 import UseAmountScreen from '../screens/gifticon-management/gifticon-use/UseAmountScreen';
 import PresentScreen from '../screens/gifticon-management/PresentScreen';
 import GiveAwayScreen from '../screens/GiveAwayScreen';
+import SettingScreen from '../screens/SettingScreen';
 // 쉐어박스 스크린 추가
 import BoxMainScreen from '../screens/gifticon-share-box/BoxMainScreen';
 import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
@@ -42,6 +43,14 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Notification"
         component={NotificationScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,
