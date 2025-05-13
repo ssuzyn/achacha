@@ -10,6 +10,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
@@ -20,49 +21,7 @@ import { API_CONFIG } from '../../api/config';
 import apiClient from '../../api/apiClient';
 import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxApi';
 
-// 샘플 데이터
-const DUMMY_DATA = [
-  {
-    shareBoxName: '우리 가족',
-    hostName: 'jjjjjuuuuu',
-    gifticonCount: 0,
-  },
-  {
-    shareBoxName: '내 친구들',
-    hostName: '조대성MM',
-    gifticonCount: 12,
-  },
-  {
-    shareBoxName: '자율 PJT',
-    hostName: '안수진짜',
-    gifticonCount: 15,
-  },
-  {
-    shareBoxName: '잘 사용하세요',
-    hostName: '류잼문',
-    gifticonCount: 30,
-  },
-  {
-    shareBoxName: '대학동기들',
-    hostName: '스티치짱',
-    gifticonCount: 34,
-  },
-  {
-    shareBoxName: '배고파요',
-    hostName: '정주은갈치',
-    gifticonCount: 7,
-  },
-  {
-    shareBoxName: '우리만의 쉐어박스',
-    hostName: '김철수',
-    gifticonCount: 212,
-  },
-  {
-    shareBoxName: '쉐박쉐박',
-    hostName: '김민수',
-    gifticonCount: 1,
-  },
-];
+
 
 // 배경색 배열 - Theme에서 가져온 색상에 30% 투명도 적용
 const BACKGROUND_COLORS = [
@@ -117,8 +76,8 @@ const BoxMainScreen = () => {
       const data = await fetchShareBoxes();
       setShareBoxes(data.shareBoxes || []);
     } catch (e) {
-      setShareBoxes(DUMMY_DATA);
-      Alert.alert('목록 불러오기 실패', '임시 데이터로 대체합니다.');
+      setShareBoxes([]);
+      Alert.alert('목록 불러오기 실패', '쉐어박스 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
@@ -256,7 +215,7 @@ const BoxMainScreen = () => {
                   containerStyle={styles.personIconContainer}
                 />
                 <Text variant="body2" weight="semibold" style={styles.boxRole}>
-                  {item.hostName}
+                  {item.shareBoxUserName}
                 </Text>
               </View>
             </View>
@@ -325,7 +284,9 @@ const BoxMainScreen = () => {
 
         <View style={styles.boxesContainer}>
           {loading ? (
-            <Text>로딩 중...</Text>
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', paddingVertical: 40 }}>
+              <ActivityIndicator size="large" color={theme.colors.primary || '#56AEE9'} />
+            </View>
           ) : (
             shareBoxes.map((item, index) => renderShareBox(item, index))
           )}
