@@ -96,11 +96,11 @@ const MATERIAL_ICONS = {
 // 기프티콘 수에 따른 아이콘 선택 함수
 const getShareBoxIcon = count => {
   if (count <= 10) {
-    return require('../../assets/images/share-box-icon1.png');
+    return require('../../assets/images/share_box_icon1.png');
   } else if (count <= 20) {
-    return require('../../assets/images/share-box-icon2.png');
+    return require('../../assets/images/share_box_icon2.png');
   } else {
-    return require('../../assets/images/share-box-icon3.png');
+    return require('../../assets/images/share_box_icon3.png');
   }
 };
 

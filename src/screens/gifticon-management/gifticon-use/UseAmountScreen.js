@@ -10,12 +10,16 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Orientation from 'react-native-orientation-locker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../../components/ui';
+import gifticonService from '../../../api/gifticonService';
+import { BASE_URL } from '../../../api/config';
 
 const UseAmountScreen = () => {
   const navigation = useNavigation();
@@ -23,17 +27,21 @@ const UseAmountScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [amount, setAmount] = useState('');
   const insets = useSafeAreaInsets();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [barcodeData, setBarcodeData] = useState(null);
 
   // route.params에서 정보 가져오기
-  const { barcodeNumber } = route.params || {};
+  const { id, gifticonId, barcodeNumber, remainingAmount, brandName, gifticonName } =
+    route.params || {};
+  const actualGifticonId = id || gifticonId;
 
-  // 기본 상품 정보
+  // 기본 상품 정보 - 이후 API에서 가져온 데이터로 대체될 변수들
   const productInfo = {
-    name: '스타벅스 | APP전용 e카드 3만원 교환권',
+    name: brandName && gifticonName ? `${brandName} | ${gifticonName}` : '상품권',
     barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
-    barcodeImage: require('../../../assets/images/barcode.png'),
     originalAmount: 30000,
-    remainingAmount: 8000,
+    remainingAmount: remainingAmount || 8000,
   };
 
   // 화면 로드 시 가로 모드로 설정
@@ -46,6 +54,61 @@ const UseAmountScreen = () => {
       Orientation.lockToPortrait();
     };
   }, []);
+
+  // 바코드 데이터 로드
+  useEffect(() => {
+    const loadBarcodeData = async () => {
+      if (!actualGifticonId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // route.params에서 isUsed 값을 확인하여 사용완료 기프티콘인지 확인
+        const isUsedGifticon = route.params?.isUsed || false;
+
+        let response;
+        if (isUsedGifticon) {
+          // 사용완료 기프티콘 바코드 조회
+          response = await gifticonService.getUsedGifticonBarcode(actualGifticonId);
+        } else {
+          // 사용 가능 기프티콘 바코드 조회
+          response = await gifticonService.getAvailableGifticonBarcode(actualGifticonId);
+        }
+
+        setBarcodeData(response);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('바코드 로드 에러:', err);
+        setError(err);
+        setIsLoading(false);
+
+        // 에러 메시지 표시
+        if (err.response) {
+          const errorMessage = err.response.data?.message || '바코드 로드 중 오류가 발생했습니다.';
+
+          Alert.alert('오류', errorMessage, [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        } else {
+          Alert.alert('오류', '네트워크 연결을 확인해주세요.', [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        }
+      }
+    };
+
+    loadBarcodeData();
+  }, [actualGifticonId, navigation, route.params]);
 
   // 뒤로가기
   const handleGoBack = () => {
@@ -88,31 +151,92 @@ const UseAmountScreen = () => {
   };
 
   // 금액 입력 완료 및 사용완료 처리
-  const handleUseComplete = () => {
+  const handleUseComplete = async () => {
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      // 알림 처리 (예: 토스트 메시지)
+      Alert.alert('알림', '유효한 금액을 입력해주세요.');
       return;
     }
 
-    // 사용완료 처리 로직 - API 호출 등
+    try {
+      setIsLoading(true);
+      setModalVisible(false);
 
-    // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-    // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-    navigation.reset({
-      index: 0,
-      routes: [
+      // 금액형 기프티콘 사용 API 호출
+      await gifticonService.useAmountGifticon(actualGifticonId, Number(amount));
+
+      setIsLoading(false);
+
+      // 성공 메시지 표시
+      Alert.alert('성공', '기프티콘이 성공적으로 사용되었습니다.', [
         {
-          name: 'Main',
-          params: { screen: 'TabGifticonManage', initialTab: 'used' },
+          text: '확인',
+          onPress: () => {
+            // 사용 기록 화면 또는 목록 화면으로 이동
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'Main',
+                  params: {
+                    screen: 'TabGifticonManage',
+                    params: {
+                      screen: 'GifticonManage',
+                      params: {
+                        refresh: true,
+                        initialTab: 'myBox',
+                      },
+                    },
+                  },
+                },
+              ],
+            });
+          },
         },
-      ],
-    });
+      ]);
+    } catch (err) {
+      setIsLoading(false);
+      console.error('기프티콘 사용 오류:', err);
+
+      // 에러 메시지 표시
+      Alert.alert(
+        '오류',
+        err.response?.data?.message || '기프티콘 사용 처리 중 오류가 발생했습니다.',
+        [{ text: '확인' }]
+      );
+    }
   };
 
   // 취소 처리
   const handleCancel = () => {
     navigation.goBack();
   };
+
+  // 로딩 중인 경우
+  if (isLoading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <StatusBar hidden />
+        <ActivityIndicator size="large" color="#56AEE9" />
+        <Text style={{ marginTop: 15, fontSize: 16, color: '#333' }}>
+          바코드 정보를 불러오는 중...
+        </Text>
+      </View>
+    );
+  }
+
+  // 에러가 있는 경우 (이미 Alert로 처리했으므로 빈 화면 렌더링)
+  if (error && !barcodeData) {
+    return (
+      <View style={[styles.container, { backgroundColor: 'white' }]}>
+        <StatusBar hidden />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}>
@@ -126,27 +250,49 @@ const UseAmountScreen = () => {
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
             <Icon name="arrow-back-ios" type="material" size={22} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{productInfo.name}</Text>
+          <Text style={styles.headerTitle}>
+            {brandName && gifticonName ? `${brandName} | ${gifticonName}` : '바코드 조회'}
+          </Text>
         </View>
 
         <View style={styles.content}>
           <View style={styles.barcodeSection}>
             <Image
-              source={productInfo.barcodeImage}
+              source={
+                barcodeData?.barcodePath
+                  ? {
+                      uri: barcodeData.barcodePath.startsWith('http')
+                        ? barcodeData.barcodePath
+                        : `${BASE_URL}${barcodeData.barcodePath}`,
+                    }
+                  : require('../../../assets/images/barcode.png')
+              }
               style={styles.barcodeImage}
               resizeMode="contain"
             />
-            <Text style={styles.barcodeNumber}>{productInfo.barcodeNumber}</Text>
+            <Text style={styles.barcodeNumber}>
+              {barcodeData?.gifticonBarcodeNumber || barcodeNumber || '바코드 정보 없음'}
+            </Text>
           </View>
 
           <View style={styles.actionSection}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleShowModal}>
-              <Text style={styles.actionButtonText}>금액 입력</Text>
-            </TouchableOpacity>
+            {!route.params?.isUsed ? (
+              // 일반 사용 가능 기프티콘
+              <>
+                <TouchableOpacity style={styles.actionButton} onPress={handleShowModal}>
+                  <Text style={styles.actionButtonText}>금액 입력</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-              <Text style={styles.cancelButtonText}>취소</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+                  <Text style={styles.cancelButtonText}>취소</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              // 사용완료 기프티콘 - 확인 버튼만 표시
+              <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+                <Text style={styles.cancelButtonText}>확인</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

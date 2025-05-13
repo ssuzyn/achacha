@@ -47,7 +47,7 @@ const PresentScreen = () => {
 
   // 템플릿 배경 이미지 목록 (고정 값이라 상태 변경자는 사용하지 않음)
   const [templates] = useState({
-    1: require('../../assets/images/present/template/template1-1.png'),
+    1: require('../../assets/images/present/template/template1_1.png'),
     2: require('../../assets/images/present/template/template2.png'),
     3: require('../../assets/images/present/template/template3.png'),
     4: require('../../assets/images/present/template/template4.png'),
@@ -58,32 +58,32 @@ const PresentScreen = () => {
   const template1Variants = [
     {
       id: 1,
-      source: require('../../assets/images/present/template/template1-1.png'),
+      source: require('../../assets/images/present/template/template1_1.png'),
       color: '#ED4141',
     },
     {
       id: 2,
-      source: require('../../assets/images/present/template/template1-2.png'),
+      source: require('../../assets/images/present/template/template1_2.png'),
       color: '#FFDC4F',
     },
     {
       id: 3,
-      source: require('../../assets/images/present/template/template1-3.png'),
+      source: require('../../assets/images/present/template/template1_3.png'),
       color: '#FC7BBD',
     },
     {
       id: 4,
-      source: require('../../assets/images/present/template/template1-4.png'),
+      source: require('../../assets/images/present/template/template1_4.png'),
       color: '#68DB7D',
     },
     {
       id: 5,
-      source: require('../../assets/images/present/template/template1-5.png'),
+      source: require('../../assets/images/present/template/template1_5.png'),
       color: '#85D1FF',
     },
     {
       id: 6,
-      source: require('../../assets/images/present/template/template1-6.png'),
+      source: require('../../assets/images/present/template/template1_6.png'),
       color: '#414141',
     },
   ];
@@ -115,7 +115,7 @@ const PresentScreen = () => {
         id: route.params.gifticonId,
         name: '맥도날드 2만원 금액권',
         brandName: '맥도날드',
-        thumbnailPath: require('../../assets/images/dummy-mc.png'),
+        thumbnailPath: require('../../assets/images/dummy_mc.png'),
       });
     }
   }, [route.params]);

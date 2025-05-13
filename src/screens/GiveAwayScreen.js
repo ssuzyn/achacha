@@ -15,7 +15,7 @@ import HeaderBar from '../components/common/HeaderBar';
 import BottomTabBar from '../components/common/BottomTabBar';
 
 const { width, height } = Dimensions.get('window');
-const giveAwayButtonImg = require('../assets/images/giveaway-button.png');
+const giveAwayButtonImg = require('../assets/images/giveaway_button.png');
 const emoji1 = require('../assets/images/emoji1.png');
 const emoji2 = require('../assets/images/emoji2.png');
 const emoji3 = require('../assets/images/emoji3.png');

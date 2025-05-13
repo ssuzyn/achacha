@@ -15,3 +15,4 @@ export { default as ListItem } from './ListItem';
 export { default as CheckBox } from './CheckBox';
 export { default as Divider } from './Divider';
 export { default as Text } from './Text';
+export { default as LoadingOcrModal } from './LoadingOcrModal';

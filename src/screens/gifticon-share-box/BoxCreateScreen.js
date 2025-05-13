@@ -290,7 +290,7 @@ const BoxCreateScreen = () => {
           {/* 이미지 영역 */}
           <View style={styles.imageContainer}>
             <Image
-              source={require('../../assets/images/share-box.png')}
+              source={require('../../assets/images/share_box.png')}
               style={styles.shareImage}
               resizeMode="contain"
             />

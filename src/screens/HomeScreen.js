@@ -13,21 +13,21 @@ const SAMPLE_GIFTICONS = [
     id: '1',
     brand: '맥도날드',
     name: '모바일 금액권 20,000원',
-    image: require('../assets/images/dummy-mc.png'),
+    image: require('../assets/images/dummy_mc.png'),
     expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5일 후
   },
   {
     id: '2',
     brand: '메가MGC커피',
     name: '(핫)아이스라떼',
-    image: require('../assets/images/dummy-mega.png'),
+    image: require('../assets/images/dummy_mega.png'),
     expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3일 후
   },
   {
     id: '3',
     brand: '스타벅스',
     name: '아메리카노 Tall',
-    image: require('../assets/images/dummy-starbucks.png'),
+    image: require('../assets/images/dummy_starbucks.png'),
     expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후
   },
 ];
@@ -149,7 +149,7 @@ const HomeScreen = () => {
             <Card.FeatureCard
               title={`나누면\n즐거움 두배,\n쉐어박스`}
               iconName="inventory-2"
-              imageSource={require('../assets/images/share-box.png')}
+              imageSource={require('../assets/images/share_box.png')}
               onPress={handleShareBoxPress}
               style={styles.interactiveCard}
             />
@@ -157,7 +157,7 @@ const HomeScreen = () => {
             {/* 레이더 카드 */}
             <Card.RadarCard
               text={`쓱 - 뿌리기\n행운의 주인공은?`}
-              image={require('../assets/images/home-radar.png')}
+              image={require('../assets/images/home_radar.png')}
               onPress={handleMapPress}
             />
           </View>
@@ -177,7 +177,7 @@ const HomeScreen = () => {
               </View>
               <View style={styles.giftMessageImageContainer}>
                 <Image
-                  source={require('../assets/images/home-gift.png')}
+                  source={require('../assets/images/home_gift.png')}
                   style={styles.giftMessageImage}
                   resizeMode="contain"
                 />
