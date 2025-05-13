@@ -10,7 +10,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
+import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
@@ -19,6 +19,7 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.response.Parti
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
@@ -291,6 +292,32 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		shareBox.updateName(requestDto.getShareBoxName());
 
 		log.info("쉐어박스 이름 변경 완료 - 쉐어박스 ID: {}", shareBoxId);
+	}
+
+	@Override
+	public ShareBoxSettingsResponseDto getShareBoxSettings(Integer shareBoxId) {
+		log.info("쉐어박스 설정 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
+
+		// 현재 사용자 ID (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 조회
+		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
+
+		// 참여 권한 검증
+		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+		}
+
+		log.info("쉐어박스 설정 조회 완료 - 쉐어박스 ID: {}", shareBoxId);
+
+		// 응답 DTO 생성
+		return ShareBoxSettingsResponseDto.builder()
+			.shareBoxId(shareBox.getId())
+			.shareBoxName(shareBox.getName())
+			.shareBoxAllowParticipation(shareBox.getAllowParticipation())
+			.shareBoxInviteCode(shareBox.getInviteCode())
+			.build();
 	}
 
 	@Override

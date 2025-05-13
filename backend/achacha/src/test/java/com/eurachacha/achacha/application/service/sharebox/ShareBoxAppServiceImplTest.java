@@ -15,6 +15,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
@@ -397,6 +398,60 @@ class ShareBoxAppServiceImplTest {
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS);
 
 		verify(shareBox, never()).updateAllowParticipation(any());
+	}
+
+	@DisplayName("쉐어박스 설정 조회 - 참여 중인 쉐어박스의 설정을 조회할 수 있어야 한다")
+	@Test
+	void getShareBoxSettings_WhenUserParticipating_ThenReturnSettings() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+
+		ShareBox shareBox = ShareBox.builder()
+			.id(shareBoxId)
+			.name("테스트 쉐어박스")
+			.allowParticipation(true)
+			.inviteCode("ACHACHA205")
+			.build();
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		given(participationRepository.checkParticipation(userId, shareBoxId)).willReturn(true);
+
+		// when
+		ShareBoxSettingsResponseDto result = shareBoxAppService.getShareBoxSettings(shareBoxId);
+
+		// then
+		assertThat(result.getShareBoxId()).isEqualTo(shareBoxId);
+		assertThat(result.getShareBoxName()).isEqualTo("테스트 쉐어박스");
+		assertThat(result.getShareBoxAllowParticipation()).isTrue();
+		assertThat(result.getShareBoxInviteCode()).isEqualTo("ACHACHA205");
+	}
+
+	@DisplayName("쉐어박스 설정 조회 - 참여하지 않은 쉐어박스의 설정을 조회하면 예외가 발생해야 한다")
+	@Test
+	void getShareBoxSettings_WhenUserNotParticipating_ThenThrowException() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+
+		ShareBox shareBox = ShareBox.builder()
+			.id(shareBoxId)
+			.name("테스트 쉐어박스")
+			.allowParticipation(true)
+			.inviteCode("ACHACHA205")
+			.build();
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		given(participationRepository.checkParticipation(userId, shareBoxId)).willReturn(false);
+
+		// when
+		Throwable thrown = catchThrowable(() ->
+			shareBoxAppService.getShareBoxSettings(shareBoxId));
+
+		// then
+		assertThat(thrown)
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
 	}
 
 	@DisplayName("쉐어박스 이름 변경 - 방장이 요청하면 성공적으로 변경되어야 한다")
