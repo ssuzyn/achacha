@@ -3,9 +3,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { PermissionsAndroid, Platform, Alert, AppState } from 'react-native';
 import BleManager from 'react-native-ble-manager';
 import { NativeEventEmitter, NativeModules } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiClient from '../api/apiClient';
 
 // BLE 서비스 및 특성 UUID
-const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
+const SERVICE_UUID_KEY = '@ble_service_uuid';
 const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
 
 class NearbyUsersService {
@@ -17,6 +19,7 @@ class NearbyUsersService {
     this.discoveryListener = null;
     this.appStateListener = null;
     this.isAdvertising = false;
+    this.serviceUUID = null;
 
     // BleManager 초기화
     BleManager.start({ showAlert: false });
@@ -169,6 +172,39 @@ class NearbyUsersService {
     return true; // iOS는 항상 true 반환 (권한은 앱 설치 시 요청)
   }
 
+  // BLE 토큰 생성 API 호출
+  async generateBleToken(bleTokenValue = null) {
+    try {
+      const response = await apiClient.post('/api/ble', {
+        bleTokenValue,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('BLE 토큰 생성 중 오류:', error);
+      throw error;
+    }
+  }
+
+  // 서비스 UUID 가져오기 또는 생성
+  async getServiceUUID() {
+    try {
+      // 저장된 UUID 확인
+      let uuid = await AsyncStorage.getItem(SERVICE_UUID_KEY);
+
+      // 저장된 UUID가 없으면 새로 생성
+      if (!uuid) {
+        uuid = uuidv4().substring(0, 11);
+        await AsyncStorage.setItem(SERVICE_UUID_KEY, uuid);
+      }
+
+      this.serviceUUID = uuid;
+      return uuid;
+    } catch (error) {
+      console.error('서비스 UUID 가져오기 실패:', error);
+      return null;
+    }
+  }
+
   // 블루투스 초기화 및 권한 설정
   async initialize() {
     // 앱이 포그라운드인지 확인
@@ -176,6 +212,11 @@ class NearbyUsersService {
       console.log('앱이 포그라운드 상태가 아닙니다. BLE 초기화를 건너뜁니다.');
       return false;
     }
+
+    // 서비스 UUID 조회
+    const serviceUUID = await this.getServiceUUID();
+    console.log('BLE 서비스 UUID:', serviceUUID);
+    console.log('BLE 특성 UUID:', CHARACTERISTIC_UUID);
 
     const hasPermissions = await this.requestBluetoothPermissions();
     if (!hasPermissions) {
@@ -186,6 +227,16 @@ class NearbyUsersService {
     const isBluetoothOn = await this.checkBluetoothState();
     if (!isBluetoothOn) {
       console.log('블루투스가 꺼져 있습니다.');
+      return false;
+    }
+
+    try {
+      // BLE 토큰 생성
+      const bleToken = await this.generateBleToken();
+      this.deviceId = bleToken.bleTokenValue; // 서버에서 받은 토큰으로 deviceId 업데이트
+      console.log('생성된 앱 UUID:', this.deviceId); // 앱 UUID 로깅 추가
+    } catch (error) {
+      console.error('BLE 토큰 생성 실패:', error);
       return false;
     }
 
@@ -312,7 +363,7 @@ class NearbyUsersService {
       });
 
       // 스캔 시작
-      await BleManager.scan([SERVICE_UUID], 5, true);
+      await BleManager.scan([serviceUUID], 5, true);
     } catch (error) {
       this.isScanning = false;
       console.error('스캔 시작 실패:', error);
@@ -364,12 +415,12 @@ class NearbyUsersService {
 
       if (
         peripheralInfo.services &&
-        peripheralInfo.services.some(service => service.uuid === SERVICE_UUID)
+        peripheralInfo.services.some(service => service.uuid === serviceUUID)
       ) {
         // 앱 UUID 읽기 시도
         try {
           const serviceUUID = peripheralInfo.services.find(
-            service => service.uuid === SERVICE_UUID
+            service => service.uuid === serviceUUID
           ).uuid;
           const characteristic = await BleManager.read(
             peripheral.id,
@@ -416,32 +467,28 @@ class NearbyUsersService {
     }
   }
 
-  // UUID 디코딩 (바이트 배열 -> 문자열)
+  // UUID를 UTF-8로 인코딩
+  encodeUUID(uuid) {
+    try {
+      const encoder = new TextEncoder();
+      return Array.from(encoder.encode(uuid));
+    } catch (error) {
+      console.error('UUID 인코딩 실패:', error);
+      return [];
+    }
+  }
+
+  // UTF-8 데이터를 UUID로 디코딩
   decodeUUID(data) {
     try {
-      // 데이터가 바이트 배열이면 문자열로 변환
       if (Array.isArray(data)) {
-        return String.fromCharCode.apply(null, data);
+        const decoder = new TextDecoder('utf-8');
+        return decoder.decode(new Uint8Array(data));
       }
       return String(data);
     } catch (error) {
       console.error('UUID 디코딩 실패:', error);
       return 'unknown';
-    }
-  }
-
-  // 문자열을 바이트 배열로 변환
-  encodeUUID(uuid) {
-    try {
-      // 문자열을 바이트 배열로 변환
-      const bytes = [];
-      for (let i = 0; i < uuid.length; i++) {
-        bytes.push(uuid.charCodeAt(i));
-      }
-      return bytes;
-    } catch (error) {
-      console.error('UUID 인코딩 실패:', error);
-      return [];
     }
   }
 

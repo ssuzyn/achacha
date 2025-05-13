@@ -425,11 +425,29 @@ const GiveAwayScreen = ({ onClose }) => {
             await bleServiceRef.current.startScan(
               user => {
                 // 새 사용자가 발견될 때마다 호출되는 콜백
-                console.log('새 사용자 발견:', user);
+                console.log('새 사용자 발견:', {
+                  id: user.id,
+                  name: user.name,
+                  deviceUUID: user.deviceUUID,
+                  rssi: user.rssi,
+                  distance: user.distance,
+                  timestamp: new Date(user.timestamp).toLocaleString(),
+                });
               },
               allUsers => {
                 // 스캔 완료 후 호출되는 콜백
-                console.log('스캔 완료, 발견된 사용자:', allUsers.length);
+                console.log('스캔 완료, 발견된 사용자 수:', allUsers.length);
+                console.log(
+                  '발견된 모든 사용자:',
+                  allUsers.map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    deviceUUID: user.deviceUUID,
+                    rssi: user.rssi,
+                    distance: user.distance,
+                    timestamp: new Date(user.timestamp).toLocaleString(),
+                  }))
+                );
                 foundUsers = allUsers;
               }
             );
