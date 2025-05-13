@@ -16,6 +16,4 @@ public interface ShareBoxAppService {
 	void unshareGifticon(Integer shareBoxId, Integer gifticonId);
 
 	ShareBoxesResponseDto getShareBoxes(ShareBoxSortType sort, Integer page, Integer size);
-
-	ShareBoxesResponseDto getShareBoxes(String sort, Integer page, Integer size);
 }
