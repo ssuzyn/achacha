@@ -898,12 +898,27 @@ const RegisterDetailScreen = () => {
           text: '확인',
           onPress: () => {
             // 기프티콘 타입에 따라 다른 상세 화면으로 이동
-            const targetScreen = gifticonType === 'PRODUCT' ? 'DetailProduct' : 'DetailAmount';
-            navigation.navigate(targetScreen, {
-              gifticonId: response.gifticonId,
-              scope: 'MY_BOX',
-              shareBoxId: shareBoxId,
-              refresh: true,
+            const targetScreen =
+              gifticonType === 'PRODUCT' ? 'DetailProductScreen' : 'DetailAmountScreen';
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'Main',
+                  params: {
+                    screen: 'TabGifticonManage',
+                    params: {
+                      screen: targetScreen,
+                      params: {
+                        gifticonId: response.gifticonId,
+                        scope: boxType === 'SHARE_BOX' ? 'SHARE_BOX' : 'MY_BOX',
+                        shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,
+                        refresh: true,
+                      },
+                    },
+                  },
+                },
+              ],
             });
           },
         },
