@@ -94,8 +94,8 @@ public enum ErrorCode {
 	GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX(HttpStatus.BAD_REQUEST, "SHAREBOX_011", "이 쉐어박스에 공유되지 않은 기프티콘입니다."),
 
 	// BLE 관련 에러코드
-	BLE_NO_NEARBY_DEVICES(HttpStatus.NOT_FOUND, "BLE_002", "주변에 BLE 장치가 없습니다.");
-	
+	NO_NEARBY_PEOPLES(HttpStatus.NOT_FOUND, "GIVEAWAY_001", "주변에 감지된 사용자가 없습니다.");
+
 	// http 상태 코드
 	private final HttpStatus status;
 	// 커스텀 에러 코드

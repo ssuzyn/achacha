@@ -53,7 +53,7 @@ public class GifticonSharingAppServiceImpl implements GifticonSharingAppService 
 
 		// 유효한 UUID가 있는지 확인
 		if (validUuids.isEmpty()) {
-			throw new CustomException(ErrorCode.BLE_NO_NEARBY_DEVICES);
+			throw new CustomException(ErrorCode.NO_NEARBY_PEOPLES);
 		}
 
 		String selectedUuid = getRandomUuid(validUuids);
