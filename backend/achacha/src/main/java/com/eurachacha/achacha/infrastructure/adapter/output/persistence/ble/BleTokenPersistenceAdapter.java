@@ -27,4 +27,9 @@ public class BleTokenPersistenceAdapter implements BleTokenRepository {
 	public boolean existsByValue(String value) {
 		return bleTokenJpaRepository.existsByValue(value);
 	}
+
+	@Override
+	public BleToken findByValue(String value) {
+		return bleTokenJpaRepository.findByValue(value);
+	}
 }

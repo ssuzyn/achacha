@@ -10,4 +10,6 @@ public interface BleTokenJpaRepository extends JpaRepository<BleToken, Integer> 
 	void deleteByUserIdAndValue(Integer userId, String value);
 
 	boolean existsByValue(String value);
+
+	BleToken findByValue(String value);
 }

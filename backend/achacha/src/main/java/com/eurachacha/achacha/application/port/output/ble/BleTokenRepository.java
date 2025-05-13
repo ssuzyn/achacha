@@ -8,4 +8,6 @@ public interface BleTokenRepository {
 	BleToken save(BleToken bleToken);
 
 	boolean existsByValue(String value);
+
+	BleToken findByValue(String value);
 }
