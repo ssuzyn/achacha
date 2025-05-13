@@ -14,6 +14,7 @@ import { Shadow } from 'react-native-shadow-2';
 import NavigationService from '../navigation/NavigationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Carousel from 'react-native-reanimated-carousel';
+import Animated from 'react-native-reanimated';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -135,51 +136,57 @@ const HomeScreen = () => {
   const renderCarouselItem = ({ item, index }) => {
     if (item.type === 'sharebox') {
       return (
-        <TouchableOpacity onPress={item.onPress} style={styles.carouselCard}>
-          <View style={[styles.giftMessageCard, { backgroundColor: '#E8F1EA' }]}>
-            <View style={styles.giftMessageTextContainer}>
-              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
-                {item.title}
-              </Text>
+        <Animated.View style={styles.carouselCard}>
+          <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
+            <View style={[styles.giftMessageCard, { backgroundColor: '#E8F1EA' }]}>
+              <View style={styles.giftMessageTextContainer}>
+                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                  {item.title}
+                </Text>
+              </View>
+              <View style={styles.giftMessageImageContainer}>
+                <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+              </View>
             </View>
-            <View style={styles.giftMessageImageContainer}>
-              <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
-            </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Animated.View>
       );
     } else if (item.type === 'radar') {
       return (
-        <TouchableOpacity onPress={item.onPress} style={styles.carouselCard}>
-          <View style={[styles.giftMessageCard, { backgroundColor: '#FDF3E3' }]}>
-            <View style={styles.giftMessageTextContainer}>
-              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
-                {item.title}
-              </Text>
+        <Animated.View style={styles.carouselCard}>
+          <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
+            <View style={[styles.giftMessageCard, { backgroundColor: '#FDF3E3' }]}>
+              <View style={styles.giftMessageTextContainer}>
+                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                  {item.title}
+                </Text>
+              </View>
+              <View style={styles.giftMessageImageContainer}>
+                <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+              </View>
             </View>
-            <View style={styles.giftMessageImageContainer}>
-              <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
-            </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Animated.View>
       );
     } else if (item.type === 'gift') {
       return (
-        <TouchableOpacity onPress={item.onPress} style={styles.carouselCard}>
-          <View style={styles.giftMessageCard}>
-            <View style={styles.giftMessageTextContainer}>
-              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
-                {item.title}
-              </Text>
-              <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
-                {item.subtitle}
-              </Text>
+        <Animated.View style={styles.carouselCard}>
+          <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
+            <View style={styles.giftMessageCard}>
+              <View style={styles.giftMessageTextContainer}>
+                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                  {item.title}
+                </Text>
+                <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
+                  {item.subtitle}
+                </Text>
+              </View>
+              <View style={styles.giftMessageImageContainer}>
+                <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+              </View>
             </View>
-            <View style={styles.giftMessageImageContainer}>
-              <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
-            </View>
-          </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </Animated.View>
       );
     }
     return null;
@@ -233,9 +240,27 @@ const HomeScreen = () => {
             onSnapToItem={setActiveIndex}
             loop
             autoPlay={true}
-            autoPlayInterval={5000}
+            autoPlayInterval={4000}
             style={{ borderRadius: 15, overflow: 'hidden' }}
-            scrollAnimationDuration={800}
+            defaultIndex={0}
+            enabled={true}
+            snapEnabled
+            pagingEnabled
+            mode="default"
+            modeConfig={{
+              snapDirection: 'left',
+              stackInterval: 0,
+              moveSize: undefined,
+            }}
+            panGestureHandlerProps={{
+              activeOffsetX: [-10, 10],
+            }}
+            withAnimation={{
+              type: 'timing',
+              config: {
+                duration: 600,
+              },
+            }}
           />
           {renderPagination()}
         </View>
