@@ -459,6 +459,57 @@ const gifticonService = {
       throw error;
     }
   },
+
+  // 기프티콘 바코드 조회 API 함수 추가
+  // 주어진 gifticonId에 대한 바코드 정보를 가져옵니다.
+  async getGifticonBarcode(gifticonId) {
+    try {
+      console.log('[GifticonService] 기프티콘 바코드 조회 요청:', gifticonId);
+
+      // 사용 가능/사용 완료 여부에 따라 다른 엔드포인트 사용
+      const scope = gifticonId.toString().startsWith('used-') ? 'used' : 'available';
+      const realGifticonId = gifticonId.toString().startsWith('used-')
+        ? gifticonId.toString().substring(5)
+        : gifticonId;
+
+      const endpoint =
+        scope === 'used'
+          ? `/api/used-gifticons/${realGifticonId}/barcode`
+          : `/api/available-gifticons/${realGifticonId}/barcode`;
+
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      console.log('[GifticonService] 기프티콘 바코드 조회 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[GifticonService] 기프티콘 바코드 조회 실패:', error);
+
+      // 에러 응답이 있는 경우 처리
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+
+        if (status === 403) {
+          throw new Error('해당 기프티콘에 접근 권한이 없습니다.');
+        } else if (status === 404) {
+          if (errorData.errorCode === 'GIFTICON_004') {
+            throw new Error('이미 사용된 기프티콘입니다.');
+          } else if (errorData.errorCode === 'GIFTICON_005') {
+            throw new Error('삭제된 기프티콘입니다.');
+          } else if (errorData.errorCode === 'FILE_008') {
+            throw new Error('바코드 파일을 찾을 수 없습니다.');
+          } else {
+            throw new Error('기프티콘을 찾을 수 없습니다.');
+          }
+        } else {
+          throw new Error(
+            errorData?.message || '기프티콘 바코드 정보를 불러오는 중 오류가 발생했습니다.'
+          );
+        }
+      }
+
+      throw new Error('기프티콘 바코드 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+  },
 };
 
 export default gifticonService;

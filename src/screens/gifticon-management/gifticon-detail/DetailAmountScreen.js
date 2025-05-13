@@ -63,6 +63,9 @@ const DetailAmountScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   // 기프티콘 데이터 상태
   const [gifticonData, setGifticonData] = useState(null);
+  // 바코드 정보 상태 추가
+  const [barcodeInfo, setBarcodeInfo] = useState(null);
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
   // 금액 입력 모달 표시 상태
   const [modalVisible, setModalVisible] = useState(false);
   // 입력된 금액 상태
@@ -163,6 +166,30 @@ const DetailAmountScreen = () => {
     }
   };
 
+  // 바코드 정보 로드 함수 추가
+  const loadBarcodeInfo = async () => {
+    if (!gifticonId) return;
+
+    setBarcodeLoading(true);
+    try {
+      // API 호출로 바코드 정보 가져오기
+      const response = await gifticonService.getGifticonBarcode(gifticonId);
+      console.log('바코드 정보 응답:', response);
+
+      if (response) {
+        setBarcodeInfo({
+          barcodeNumber: response.gifticonBarcodeNumber,
+          barcodePath: response.barcodePath,
+        });
+      }
+    } catch (error) {
+      console.error('바코드 정보 로드 실패:', error);
+      Alert.alert('오류', '바코드 정보를 불러오는데 실패했습니다.');
+    } finally {
+      setBarcodeLoading(false);
+    }
+  };
+
   // 날짜 포맷 함수 (YYYY.MM.DD)
   const formatDate = dateString => {
     const date = new Date(dateString);
@@ -260,7 +287,7 @@ const DetailAmountScreen = () => {
   };
 
   // 사용하기 버튼 클릭
-  const handleUse = () => {
+  const handleUse = async () => {
     // 만료된 경우 바로 사용완료 처리
     const isExpired = calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨';
 
@@ -283,6 +310,8 @@ const DetailAmountScreen = () => {
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
       setIsUsing(true);
+      // 바코드 정보 불러오기
+      await loadBarcodeInfo();
     }
   };
 
@@ -510,21 +539,35 @@ const DetailAmountScreen = () => {
               {isUsing ? (
                 // 사용 모드일 때 바코드 표시
                 <View style={styles.barcodeContainer}>
-                  <Image
-                    source={
-                      gifticonData.barcodeImageUrl
-                        ? { uri: gifticonData.barcodeImageUrl }
-                        : require('../../../assets/images/barcode.png')
-                    }
-                    style={styles.barcodeImage}
-                    resizeMode="contain"
-                  />
-                  <View style={styles.barcodeNumberContainer}>
-                    <Text style={styles.barcodeNumberText}>{gifticonData.barcodeNumber}</Text>
-                    <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
-                      <Icon name="search" type="material" size={24} color="#4A90E2" />
-                    </TouchableOpacity>
-                  </View>
+                  {barcodeLoading ? (
+                    <View style={styles.barcodeLoadingContainer}>
+                      <Text style={styles.barcodeLoadingText}>바코드 불러오는 중...</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Image
+                        source={
+                          barcodeInfo && barcodeInfo.barcodePath
+                            ? getImageSource(barcodeInfo.barcodePath)
+                            : gifticonData.barcodeImageUrl
+                              ? { uri: gifticonData.barcodeImageUrl }
+                              : require('../../../assets/images/barcode.png')
+                        }
+                        style={styles.barcodeImage}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.barcodeNumberContainer}>
+                        <Text style={styles.barcodeNumberText}>
+                          {barcodeInfo
+                            ? barcodeInfo.barcodeNumber
+                            : gifticonData.barcodeNumber || ''}
+                        </Text>
+                        <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
+                          <Icon name="search" type="material" size={24} color="#4A90E2" />
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
                 </View>
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
@@ -1456,10 +1499,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     fontWeight: '500',
+    marginRight: 2,
+  },
+  barcodeLoadingContainer: {
+    height: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  barcodeLoadingText: {
+    fontSize: 16,
+    color: '#666',
   },
   magnifyButton: {
-    marginLeft: 12,
-    padding: 8,
+    padding: 5,
   },
   shareButton: {
     flex: 1,
