@@ -2,7 +2,7 @@ import apiClient from './apiClient';
 import { API_CONFIG } from './config';
 
 // 쉐어박스 목록 조회 API
-export const fetchShareBoxes = async ({ sort = 'CREATED_DESC', page, size = 6 } = {}) => {
+export const fetchShareBoxes = async ({ sort = 'CREATED_DESC', page, size = 8 } = {}) => {
   const params = { sort, size };
   if (page) params.page = page;
   const response = await apiClient.get(API_CONFIG.ENDPOINTS.SHARE_BOXES, { params });

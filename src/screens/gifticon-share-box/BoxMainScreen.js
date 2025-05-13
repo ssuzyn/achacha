@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   Image,
   Modal,
@@ -69,31 +69,41 @@ const BoxMainScreen = () => {
   const navigation = useNavigation();
   const [shareBoxes, setShareBoxes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(true);
 
-  // 1. 함수 선언 위치를 바깥으로!
-  const loadShareBoxes = async () => {
+  // 무한스크롤용 데이터 로딩
+  const loadShareBoxes = async (nextPage = 0) => {
+    if (loading || (!hasNextPage && nextPage !== 0)) return;
     setLoading(true);
     try {
-      const data = await fetchShareBoxes();
-      setShareBoxes(data.shareBoxes || []);
+      const data = await fetchShareBoxes({ page: nextPage, size: 8 });
+      setShareBoxes(prev => nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]);
+      setHasNextPage(data.hasNextPage);
+      setPage(data.nextPage);
     } catch (e) {
-      setShareBoxes([]);
+      if (nextPage === 0) setShareBoxes([]);
       Alert.alert('목록 불러오기 실패', '쉐어박스 목록을 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 2. useEffect/useFocusEffect에서 호출
   useEffect(() => {
-    loadShareBoxes();
+    loadShareBoxes(0);
   }, []);
 
   useFocusEffect(
     React.useCallback(() => {
-      loadShareBoxes();
+      loadShareBoxes(0);
     }, [])
   );
+
+  const handleEndReached = () => {
+    if (hasNextPage && !loading) {
+      loadShareBoxes(page);
+    }
+  };
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
@@ -237,46 +247,51 @@ const BoxMainScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* 쉐어박스 목록 */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="h2" weight="bold" style={styles.headerTitle}>
-            쉐어박스
-          </Text>
-
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={styles.joinButton}
-              onPress={handleJoinPress}
-              activeOpacity={0.7}
-            >
-              <Text variant="body2" weight="medium" style={styles.joinButtonText}>
-                참여
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreatePress}
-              activeOpacity={0.7}
-            >
-              <Text variant="body2" weight="medium" style={styles.createButtonText}>
-                생성
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.boxesContainer}>
-          {loading ? (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', paddingVertical: 40 }}>
-              <ActivityIndicator size="large" color={theme.colors.primary || '#56AEE9'} />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>  
+      <FlatList
+        data={shareBoxes}
+        renderItem={({ item, index }) => renderShareBox(item, index)}
+        keyExtractor={(item, index) => item.shareBoxId?.toString() || index.toString()}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 0 }}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.7}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text variant="h2" weight="bold" style={styles.headerTitle}>
+              쉐어박스
+            </Text>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                style={styles.joinButton}
+                onPress={handleJoinPress}
+                activeOpacity={0.7}
+              >
+                <Text variant="body2" weight="medium" style={styles.joinButtonText}>
+                  참여
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={handleCreatePress}
+                activeOpacity={0.7}
+              >
+                <Text variant="body2" weight="medium" style={styles.createButtonText}>
+                  생성
+                </Text>
+              </TouchableOpacity>
             </View>
-          ) : (
-            shareBoxes.map((item, index) => renderShareBox(item, index))
-          )}
-        </View>
-      </ScrollView>
+          </View>
+        }
+        ListFooterComponent={loading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', paddingVertical: 40 }}>
+            <ActivityIndicator size="large" color={theme.colors.primary || '#56AEE9'} />
+          </View>
+        ) : null}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
+      />
 
       {/* 초대코드 입력 모달 */}
       <Modal
@@ -291,7 +306,8 @@ const BoxMainScreen = () => {
               초대코드 입력하기
             </Text>
             <Text variant="body2" style={styles.modalSubtitle}>
-              초대받은 쉐어박스에 참여하려면{'\n'}공유받은 초대코드를 입력해 주세요.
+              {`초대받은 쉐어박스에 참여하려면
+공유받은 초대코드를 입력해 주세요.`}
             </Text>
 
             <TextInput

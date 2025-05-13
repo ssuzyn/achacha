@@ -307,7 +307,7 @@ const SettingScreen = () => {
             닉네임
           </Text>
           <Text variant="body1" style={styles.infoValue}>
-            {nickname || '으라차차'}
+            {nickname || '-'}
           </Text>
         </View>
       </View>
