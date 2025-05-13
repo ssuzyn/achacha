@@ -149,6 +149,11 @@ const HomeScreen = () => {
               <View style={styles.giftMessageImageContainer}>
                 <Image source={item.image} style={styles.giftMessageImage1} resizeMode="contain" />
               </View>
+              <View style={styles.carouselPaginationOverlay}>
+                <Text variant="caption" weight="semiBold" style={styles.paginationText}>
+                  {activeIndex + 1} / {CAROUSEL_CARDS.length}
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         </Animated.View>
@@ -165,6 +170,11 @@ const HomeScreen = () => {
               </View>
               <View style={styles.giftMessageImageContainer}>
                 <Image source={item.image} style={styles.giftMessageImage2} resizeMode="contain" />
+              </View>
+              <View style={styles.carouselPaginationOverlay}>
+                <Text variant="caption" weight="bold" style={styles.paginationText}>
+                  {activeIndex + 1} / {CAROUSEL_CARDS.length}
+                </Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -186,29 +196,17 @@ const HomeScreen = () => {
               <View style={styles.giftMessageImageContainer}>
                 <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
               </View>
+              <View style={styles.carouselPaginationOverlay}>
+                <Text variant="caption" weight="bold" style={styles.paginationText}>
+                  {activeIndex + 1} / {CAROUSEL_CARDS.length}
+                </Text>
+              </View>
             </View>
           </TouchableOpacity>
         </Animated.View>
       );
     }
     return null;
-  };
-
-  // 인디케이터 렌더링
-  const renderPagination = () => {
-    return (
-      <View style={styles.paginationContainer}>
-        {CAROUSEL_CARDS.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.paginationDot,
-              { backgroundColor: activeIndex === index ? theme.colors.primary : '#D9D9D9' },
-            ]}
-          />
-        ))}
-      </View>
-    );
   };
 
   return (
@@ -264,7 +262,6 @@ const HomeScreen = () => {
               },
             }}
           />
-          {renderPagination()}
         </View>
 
         {/* 만료 임박 기프티콘 섹션 */}
@@ -369,21 +366,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     overflow: 'hidden',
   },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 3,
-    marginVertical: 3,
-  },
   giftListContainer: {
-    marginBottom: 15,
+    marginBottom: 10,
     paddingHorizontal: 2,
   },
   giftListContent: {
@@ -598,6 +582,19 @@ const styles = StyleSheet.create({
   watchGuideImage: {
     width: 75,
     height: 75,
+  },
+  carouselPaginationOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  paginationText: {
+    color: 'white',
+    fontSize: 12,
   },
 });
 
