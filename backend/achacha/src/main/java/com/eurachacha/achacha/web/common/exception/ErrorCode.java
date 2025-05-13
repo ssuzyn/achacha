@@ -39,7 +39,7 @@ public enum ErrorCode {
 	GIFTICON_DELETED(HttpStatus.NOT_FOUND, "GIFTICON_005", "삭제된 기프티콘입니다."),
 	INVALID_AMOUNT_GIFTICON_VALUE(HttpStatus.BAD_REQUEST, "GIFTICON_006", "금액형 기프티콘은 금액을 입력해야 합니다."),
 	GIFTICON_BARCODE_DUPLICATE(HttpStatus.CONFLICT, "GIFTICON_007", "이미 등록된 바코드 번호입니다."),
-	GIFTICON_AVAILABLE(HttpStatus.BAD_REQUEST, "GIFTICON_008", "기프티콘이 사용되지 않은 상태입니다. "),
+	GIFTICON_AVAILABLE(HttpStatus.BAD_REQUEST, "GIFTICON_008", "기프티콘이 사용되지 않은 상태입니다."),
 	GIFTICON_NO_USAGE_HISTORY(HttpStatus.NOT_FOUND, "GIFTICON_009", "해당 기프티콘에 대한 사용내역이 없습니다."),
 	GIFTICON_INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "GIFTICON_010", "기프티콘 잔액이 부족합니다."),
 	INVALID_GIFTICON_TYPE(HttpStatus.BAD_REQUEST, "GIFTICON_011", "기프티콘 타입이 올바르지 않습니다."),
