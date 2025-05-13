@@ -19,7 +19,7 @@ const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
       onPress={handleItemPress}
       activeOpacity={0.7}
     >
-      <Image source={{ uri: `https://example.com${thumbnailPath}` }} style={styles.image} />
+      <Image source={{ uri: thumbnailPath }} style={styles.image} />
       {/* 기프티콘 정보 */}
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>
