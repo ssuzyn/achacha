@@ -77,6 +77,10 @@ const HomeScreen = () => {
   const username = '으라차차'; // 실제 앱에서는 로그인된 사용자 이름을 가져옵니다
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef(null);
+
+  // 무한 스크롤을 위해 데이터 복제
+  const duplicatedGifticons = [...SAMPLE_GIFTICONS, ...SAMPLE_GIFTICONS, ...SAMPLE_GIFTICONS];
 
   useEffect(() => {
     const printTokens = async () => {
@@ -87,6 +91,28 @@ const HomeScreen = () => {
     };
     printTokens();
   }, []);
+
+  // 자동 스크롤 제거, 무한 스크롤만 구현
+  const handleScroll = event => {
+    const scrollPos = event.nativeEvent.contentOffset.x;
+    const itemWidth = 190; // 아이템 너비 + 마진
+    const firstSetWidth = itemWidth * SAMPLE_GIFTICONS.length;
+
+    // 첫 번째 세트 이전으로 스크롤되면 중간 세트로 점프
+    if (scrollPos < itemWidth) {
+      flatListRef.current?.scrollToOffset({
+        offset: firstSetWidth + scrollPos,
+        animated: false,
+      });
+    }
+    // 마지막 세트 이후로 스크롤되면 중간 세트로 점프
+    else if (scrollPos > firstSetWidth * 2 - itemWidth) {
+      flatListRef.current?.scrollToOffset({
+        offset: scrollPos - firstSetWidth,
+        animated: false,
+      });
+    }
+  };
 
   // 날짜 간격 계산 함수
   const calculateDaysLeft = expiryDate => {
@@ -267,12 +293,21 @@ const HomeScreen = () => {
         {/* 만료 임박 기프티콘 섹션 */}
         <View style={styles.giftListContainer}>
           <FlatList
-            data={SAMPLE_GIFTICONS}
+            ref={flatListRef}
+            data={duplicatedGifticons}
             renderItem={renderGiftItem}
-            keyExtractor={item => item.id}
+            keyExtractor={(item, index) => `${item.id}-${index}`}
             horizontal={true}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.giftListContent}
+            initialScrollIndex={SAMPLE_GIFTICONS.length}
+            getItemLayout={(data, index) => ({
+              length: 190,
+              offset: 190 * index,
+              index,
+            })}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
           />
         </View>
 
