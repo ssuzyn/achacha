@@ -48,4 +48,8 @@ public class ShareBox extends TimeStampEntity {
 	public void updateAllowParticipation(Boolean allowParticipation) {
 		this.allowParticipation = allowParticipation;
 	}
+
+	public void updateName(String name) {
+		this.name = name;
+	}
 }
