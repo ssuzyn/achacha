@@ -18,13 +18,13 @@ import UseProductScreen from '../screens/gifticon-management/gifticon-use/UsePro
 import UseAmountScreen from '../screens/gifticon-management/gifticon-use/UseAmountScreen';
 import PresentScreen from '../screens/gifticon-management/PresentScreen';
 // 쉐어박스 스크린 추가
-import BoxMainScreen from '../screens/gifticon-share_box/BoxMainScreen';
-import BoxCreateScreen from '../screens/gifticon-share_box/BoxCreateScreen';
-import BoxListScreen from '../screens/gifticon-share_box/BoxListScreen';
-import BoxDetailProductScreen from '../screens/gifticon-share_box/BoxDetailProductScreen';
-import BoxDetailAmountScreen from '../screens/gifticon-share_box/BoxDetailAmountScreen';
-import BoxDetailAmountHistoryScreen from '../screens/gifticon-share_box/BoxDetailAmountHistoryScreen';
-import BoxSettingScreen from '../screens/gifticon-share_box/BoxSettingScreen';
+import BoxMainScreen from '../screens/gifticon-share-box/BoxMainScreen';
+import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
+import BoxListScreen from '../screens/gifticon-share-box/BoxListScreen';
+import BoxDetailProductScreen from '../screens/gifticon-share-box/BoxDetailProductScreen';
+import BoxDetailAmountScreen from '../screens/gifticon-share-box/BoxDetailAmountScreen';
+import BoxDetailAmountHistoryScreen from '../screens/gifticon-share-box/BoxDetailAmountHistoryScreen';
+import BoxSettingScreen from '../screens/gifticon-share-box/BoxSettingScreen';
 
 const Stack = createNativeStackNavigator();
 
