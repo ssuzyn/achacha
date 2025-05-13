@@ -293,7 +293,7 @@ const HomeScreen = () => {
                         style={styles.mapMarkerImage}
                         resizeMode="contain"
                       />
-                      <Text variant="h4" weight="bold" style={styles.mapMessageTitle}>
+                      <Text variant="h3" weight="semiBold" style={styles.mapMessageTitle}>
                         MAP
                       </Text>
                     </View>
