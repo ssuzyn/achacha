@@ -23,8 +23,8 @@ const WatchGuideScreen = () => {
 
   // 워치 연동 시작하기 버튼 처리
   const handleStartWatchConnection = useCallback(() => {
-    // SettingScreen으로 이동
-    navigation.navigate('SettingScreen');
+    // Settings 화면으로 이동 (SettingScreen이 아닌 Settings로 수정)
+    navigation.navigate('Settings');
   }, [navigation]);
 
   return (
@@ -62,7 +62,7 @@ const WatchGuideScreen = () => {
             스마트워치에서도,{'\n'}기프티콘은 자유롭게
           </Text>
           <Text variant="body1" style={styles.subText}>
-            폰 없이도 확인하고, 선물하고, 관리하세요.{'\n'}당신의 손목에서 기프티콘이 살아납니다.
+            폰 없이도 확인하고, 선물하고, 관리하세요.{'\n'}당신의 손목에서 기프티콘을 간편하게.{' '}
           </Text>
           <Image
             source={require('../assets/images/watch.png')}
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     color: '#737373',
   },
   mainImage: {
-    width: width - 40,
+    width: width - 50,
     height: 150,
     alignSelf: 'center',
     marginTop: 5,
