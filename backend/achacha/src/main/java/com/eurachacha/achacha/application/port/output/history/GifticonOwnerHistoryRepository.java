@@ -4,4 +4,6 @@ import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 
 public interface GifticonOwnerHistoryRepository {
 	GifticonOwnerHistory getGifticonOwnerHistoryDetail(Integer userId, Integer gifticonId);
+
+	GifticonOwnerHistory save(GifticonOwnerHistory gifticonOwnerHistory);
 }
