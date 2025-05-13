@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 
 @Repository
-public interface ShareBoxJpaRepository extends JpaRepository<ShareBox, Integer> {
+public interface ShareBoxJpaRepository extends JpaRepository<ShareBox, Integer>, ShareBoxRepositoryCustom {
 	boolean existsByInviteCode(String inviteCode);
 
 	Optional<ShareBox> findByInviteCode(String inviteCode);
