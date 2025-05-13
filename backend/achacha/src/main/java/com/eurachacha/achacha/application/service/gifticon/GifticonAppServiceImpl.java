@@ -263,7 +263,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		 * 사용가능 기프티콘 검증 로직
 		 *  1. 삭제 여부 판단
 		 *  2. 사용 여부 판단
-		 *  3. 유효기간 여부 판단
 		 */
 		gifticonDomainService.validateGifticonIsAvailable(findGifticon);
 
