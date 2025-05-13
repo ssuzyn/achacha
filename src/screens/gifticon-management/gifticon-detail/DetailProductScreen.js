@@ -163,7 +163,7 @@ const DetailProductScreen = () => {
     setIsLoading(true);
     try {
       // 실제 구현에서는 API 호출로 대체
-      const response = await gifticonService.getGifticonDetail(id);
+      const response = await gifticonService.getGifticonDetail(id, scope);
       console.log(
         '[DetailProductScreen] loadGifticonData API 응답:',
         JSON.stringify(response, null, 2)
@@ -177,9 +177,10 @@ const DetailProductScreen = () => {
       setIsSharer(response.isSharer);
       setIsLoading(false);
     } catch (error) {
-      // console.error('기프티콘 데이터 로드 실패:', error);
+      console.error('[DetailProductScreen] 기프티콘 데이터 로드 실패:', error);
       setIsLoading(false);
       // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
+      Alert.alert('오류', '기프티콘 정보를 불러오는데 실패했습니다.');
     }
   };
 
@@ -275,7 +276,7 @@ const DetailProductScreen = () => {
     setBarcodeLoading(true);
     try {
       // API 호출로 바코드 정보 가져오기
-      const response = await gifticonService.getGifticonBarcode(gifticonId);
+      const response = await gifticonService.getGifticonBarcode(gifticonId, scope);
       console.log('[DetailProductScreen] 바코드 정보 응답:', response);
 
       if (response) {
@@ -286,7 +287,19 @@ const DetailProductScreen = () => {
       }
     } catch (error) {
       console.error('[DetailProductScreen] 바코드 정보 로드 실패:', error);
-      Alert.alert('오류', '바코드 정보를 불러오는데 실패했습니다.');
+
+      // 오류 메시지 처리
+      let errorMessage = '바코드 정보를 불러오는데 실패했습니다.';
+
+      // 선물/뿌리기 완료된 기프티콘인 경우 바코드 정보가 없음을 알림
+      if (
+        isUsed &&
+        (gifticonData.usageType === 'PRESENT' || gifticonData.usageType === 'GIVE_AWAY')
+      ) {
+        errorMessage = '선물/뿌리기로 사용된 기프티콘은 바코드 정보를 확인할 수 없습니다.';
+      }
+
+      Alert.alert('알림', errorMessage);
     } finally {
       setBarcodeLoading(false);
     }
@@ -329,26 +342,38 @@ const DetailProductScreen = () => {
   };
 
   // 돋보기 기능 - 확대 화면으로 이동
-  const handleMagnify = () => {
-    // 사용 완료 상태이고 (SELF_USE 유형만 바코드 있음)
+  const handleMagnify = async () => {
+    // 바코드 정보가 없으면 먼저 로드
+    if (!barcodeInfo) {
+      await loadBarcodeInfo();
+      // 로드 실패 시 리턴
+      if (!barcodeInfo) return;
+    }
+
+    // 사용 완료 상태인 경우 (SELF_USE 유형만 바코드 있음)
     if (isUsed && gifticonData.usageType === 'SELF_USE') {
       navigation.navigate('UseProductScreen', {
         id: gifticonData.gifticonId,
         gifticonId: gifticonData.gifticonId,
         isUsed: true,
-        barcodeNumber: gifticonData.barcodeNumber,
+        barcodeNumber: barcodeInfo?.barcodeNumber,
+        barcodePath: barcodeInfo?.barcodePath,
         brandName: gifticonData.brandName,
         gifticonName: gifticonData.gifticonName,
       });
-    } else {
+    } else if (!isUsed) {
       // 일반 사용 모드
       navigation.navigate('UseProductScreen', {
         id: gifticonData.gifticonId,
         gifticonId: gifticonData.gifticonId,
-        barcodeNumber: gifticonData.barcodeNumber,
+        barcodeNumber: barcodeInfo?.barcodeNumber,
+        barcodePath: barcodeInfo?.barcodePath,
         brandName: gifticonData.brandName,
         gifticonName: gifticonData.gifticonName,
       });
+    } else {
+      // 선물/뿌리기로 사용완료된 경우 알림
+      Alert.alert('알림', '선물/뿌리기로 사용된 기프티콘은 바코드를 확인할 수 없습니다.');
     }
   };
 

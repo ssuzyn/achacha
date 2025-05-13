@@ -432,6 +432,21 @@ const ManageListScreen = () => {
       const newGifticons = response.gifticons || [];
       console.log(`[ManageListScreen] 조회된 기프티콘 수: ${newGifticons.length}`);
 
+      // 사용완료 기프티콘인 경우 scope 필드를 'USED'로 설정
+      if (selectedCategory === 'used') {
+        newGifticons.forEach(gifticon => {
+          gifticon.scope = 'USED';
+          // usedAt 필드가 없는 경우 오늘 날짜를 기본값으로 설정
+          if (!gifticon.usedAt) {
+            gifticon.usedAt = new Date().toISOString();
+            console.log(
+              `[ManageListScreen] ${gifticon.gifticonId} 기프티콘에 usedAt 필드 추가:`,
+              gifticon.usedAt
+            );
+          }
+        });
+      }
+
       setFilteredGifticons(prev => (reset ? newGifticons : [...prev, ...newGifticons]));
       setHasNextPage(response.hasNextPage || false);
       setNextPage(response.nextPage || null);
@@ -1007,8 +1022,8 @@ const ManageListScreen = () => {
     // 내가 공유한 기프티콘인지 확인
     const isSharer = item.scope === 'SHARE_BOX' && item.userId === currentUserId;
 
-    // 사용 완료 기프티콘인 경우 'used-' 접두사 추가
-    const gifticonId = item.scope === 'USED' ? `used-${item.gifticonId}` : item.gifticonId;
+    // 기프티콘 ID 설정 - 사용완료는 접두사 없이 그대로 사용
+    const gifticonId = item.gifticonId;
 
     // 기프티콘 유형에 따라 다른 상세 페이지로 이동
     if (item.gifticonType === 'PRODUCT') {

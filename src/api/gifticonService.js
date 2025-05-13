@@ -274,21 +274,19 @@ const gifticonService = {
   /**
    * 기프티콘 상세 정보 조회
    * @param {number} gifticonId - 기프티콘 ID
+   * @param {string} scope - 조회 범위 ('MY_BOX', 'SHARE_BOX', 'USED')
    * @returns {Promise<Object>} - 기프티콘 상세 정보
    */
-  async getGifticonDetail(gifticonId) {
+  async getGifticonDetail(gifticonId, scope = '') {
     try {
       // 사용 가능/사용 완료 여부에 따라 다른 엔드포인트 사용
-      const scope = gifticonId.toString().startsWith('used-') ? 'used' : 'available';
-      const realGifticonId = gifticonId.toString().startsWith('used-')
-        ? gifticonId.toString().substring(5)
-        : gifticonId;
+      const isUsed = scope === 'USED';
 
-      const endpoint =
-        scope === 'used'
-          ? `/api/used-gifticons/${realGifticonId}`
-          : `/api/available-gifticons/${realGifticonId}`;
+      const endpoint = isUsed
+        ? `/api/used-gifticons/${gifticonId}`
+        : `/api/available-gifticons/${gifticonId}`;
 
+      console.log('[API] 기프티콘 상세 정보 조회 요청:', endpoint, '(scope:', scope, ')');
       const response = await axios.get(`${API_BASE_URL}${endpoint}`);
       console.log('[API] 기프티콘 상세 정보 조회 성공:', response.data);
       return response.data;
@@ -349,14 +347,11 @@ const gifticonService = {
   async getUsedGifticonBarcode(gifticonId) {
     try {
       console.log('[API] 사용 완료 기프티콘 바코드 조회 요청:', gifticonId);
-      // gifticonId에서 'used-' 접두사 제거
-      const realGifticonId = gifticonId.toString().startsWith('used-')
-        ? gifticonId.toString().substring(5)
-        : gifticonId;
 
-      const response = await axios.get(
-        `${API_BASE_URL}/api/used-gifticons/${realGifticonId}/barcode`
-      );
+      const endpoint = `/api/used-gifticons/${gifticonId}/barcode`;
+      console.log('[API] 사용 완료 기프티콘 바코드 조회 요청 URL:', `${API_BASE_URL}${endpoint}`);
+
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
       console.log('[API] 사용 완료 기프티콘 바코드 조회 성공:', response.data);
       return response.data;
     } catch (error) {
@@ -369,8 +364,18 @@ const gifticonService = {
 
         if (status === 403) {
           console.error('기프티콘 접근 권한 없음:', data);
+          throw new Error('해당 기프티콘에 접근 권한이 없습니다.');
         } else if (status === 404) {
           console.error('기프티콘을 찾을 수 없음:', data);
+          if (data.errorCode === 'GIFTICON_005') {
+            throw new Error('삭제된 기프티콘입니다.');
+          } else if (data.errorCode === 'GIFTICON_009') {
+            throw new Error('해당 기프티콘에 대한 사용내역이 없습니다.');
+          } else if (data.errorCode === 'FILE_008') {
+            throw new Error('파일을 찾을 수 없습니다.');
+          } else {
+            throw new Error('기프티콘을 찾을 수 없습니다.');
+          }
         }
       }
 
@@ -462,52 +467,26 @@ const gifticonService = {
 
   // 기프티콘 바코드 조회 API 함수 추가
   // 주어진 gifticonId에 대한 바코드 정보를 가져옵니다.
-  async getGifticonBarcode(gifticonId) {
+  async getGifticonBarcode(gifticonId, scope = '') {
     try {
-      console.log('[GifticonService] 기프티콘 바코드 조회 요청:', gifticonId);
+      console.log(
+        '[GifticonService] 기프티콘 바코드 조회 요청:',
+        gifticonId,
+        '(scope:',
+        scope,
+        ')'
+      );
 
-      // 사용 가능/사용 완료 여부에 따라 다른 엔드포인트 사용
-      const scope = gifticonId.toString().startsWith('used-') ? 'used' : 'available';
-      const realGifticonId = gifticonId.toString().startsWith('used-')
-        ? gifticonId.toString().substring(5)
-        : gifticonId;
-
-      const endpoint =
-        scope === 'used'
-          ? `/api/used-gifticons/${realGifticonId}/barcode`
-          : `/api/available-gifticons/${realGifticonId}/barcode`;
-
-      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
-      console.log('[GifticonService] 기프티콘 바코드 조회 성공:', response.data);
-      return response.data;
-    } catch (error) {
-      console.error('[GifticonService] 기프티콘 바코드 조회 실패:', error);
-
-      // 에러 응답이 있는 경우 처리
-      if (error.response) {
-        const status = error.response.status;
-        const errorData = error.response.data;
-
-        if (status === 403) {
-          throw new Error('해당 기프티콘에 접근 권한이 없습니다.');
-        } else if (status === 404) {
-          if (errorData.errorCode === 'GIFTICON_004') {
-            throw new Error('이미 사용된 기프티콘입니다.');
-          } else if (errorData.errorCode === 'GIFTICON_005') {
-            throw new Error('삭제된 기프티콘입니다.');
-          } else if (errorData.errorCode === 'FILE_008') {
-            throw new Error('바코드 파일을 찾을 수 없습니다.');
-          } else {
-            throw new Error('기프티콘을 찾을 수 없습니다.');
-          }
-        } else {
-          throw new Error(
-            errorData?.message || '기프티콘 바코드 정보를 불러오는 중 오류가 발생했습니다.'
-          );
-        }
+      // 사용 완료 기프티콘인 경우 별도 함수 호출
+      if (scope === 'USED') {
+        return this.getUsedGifticonBarcode(gifticonId);
       }
 
-      throw new Error('기프티콘 바코드 정보를 불러오는 중 오류가 발생했습니다.');
+      // 사용 가능 기프티콘 바코드 조회
+      return this.getAvailableGifticonBarcode(gifticonId);
+    } catch (error) {
+      console.error('[GifticonService] 기프티콘 바코드 조회 실패:', error);
+      throw error;
     }
   },
 
