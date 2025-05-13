@@ -367,7 +367,13 @@ const gifticonService = {
           throw new Error('해당 기프티콘에 접근 권한이 없습니다.');
         } else if (status === 404) {
           console.error('기프티콘을 찾을 수 없음:', data);
-          if (data.errorCode === 'GIFTICON_005') {
+          if (data.errorCode === 'GIFTICON_004') {
+            // 이미 사용된 기프티콘인 경우, 빈 바코드 정보를 반환하여 UI가 정상적으로 표시되도록 함
+            return {
+              gifticonBarcodeNumber: '0000000000000',
+              barcodePath: '/images/barcode/default-barcode.jpg',
+            };
+          } else if (data.errorCode === 'GIFTICON_005') {
             throw new Error('삭제된 기프티콘입니다.');
           } else if (data.errorCode === 'GIFTICON_009') {
             throw new Error('해당 기프티콘에 대한 사용내역이 없습니다.');

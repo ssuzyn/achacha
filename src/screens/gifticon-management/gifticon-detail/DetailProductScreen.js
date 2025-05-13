@@ -288,18 +288,19 @@ const DetailProductScreen = () => {
     } catch (error) {
       console.error('[DetailProductScreen] 바코드 정보 로드 실패:', error);
 
-      // 오류 메시지 처리
-      let errorMessage = '바코드 정보를 불러오는데 실패했습니다.';
+      // 오류 발생 시에도 기본 바코드 정보 설정
+      setBarcodeInfo({
+        barcodeNumber: '0000000000000',
+        barcodePath: '/images/barcode/default-barcode.jpg',
+      });
 
       // 선물/뿌리기 완료된 기프티콘인 경우 바코드 정보가 없음을 알림
       if (
         isUsed &&
         (gifticonData.usageType === 'PRESENT' || gifticonData.usageType === 'GIVE_AWAY')
       ) {
-        errorMessage = '선물/뿌리기로 사용된 기프티콘은 바코드 정보를 확인할 수 없습니다.';
+        Alert.alert('알림', '선물/뿌리기로 사용된 기프티콘은 바코드 정보를 확인할 수 없습니다.');
       }
-
-      Alert.alert('알림', errorMessage);
     } finally {
       setBarcodeLoading(false);
     }
