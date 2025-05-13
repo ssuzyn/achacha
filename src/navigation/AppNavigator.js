@@ -44,16 +44,20 @@ const AppNavigator = () => {
         name="Notification"
         component={NotificationScreen}
         options={{
-          animation: 'slide_from_right',
-          animationDuration: 200,
+          animation: 'fade_from_bottom',
+          animationDuration: 150,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
         }}
       />
       <Stack.Screen
         name="Settings"
         component={SettingScreen}
         options={{
-          animation: 'slide_from_right',
-          animationDuration: 200,
+          animation: 'fade_from_bottom',
+          animationDuration: 150,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
         }}
       />
       <Stack.Screen

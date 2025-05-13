@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  InteractionManager,
 } from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, ListItem, Text } from '../components/ui';
@@ -64,37 +65,35 @@ const dummyNotifications = [
 
 const NotificationScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
   const { theme } = useTheme();
   const { hideTabBar, showTabBar } = useTabBar();
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
   const [isLoading, setIsLoading] = useState(true);
   const [notifications, setNotifications] = useState([]);
 
-  // 화면 진입 시 탭바 숨기기 및 데이터 로딩
+  // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
+  const keepTabBarVisible = route.params?.keepTabBarVisible || false;
+
+  // 화면 진입 시 데이터 로딩 및 탭바 처리
   useEffect(() => {
-    hideTabBar();
+    // 데이터 로딩 시뮬레이션 - 지연 없이 바로 데이터 설정
+    setNotifications(dummyNotifications);
+    setIsLoading(false);
 
-    // 데이터 로딩 시뮬레이션 - 실제로는 API 호출 등으로 대체
-    const loadData = async () => {
-      try {
-        // 잠시 대기 후 데이터 설정 (네트워크 요청 시뮬레이션)
-        await new Promise(resolve => setTimeout(resolve, 100));
-        setNotifications(dummyNotifications);
-      } catch (error) {
-        // console.error('알림 데이터 로드 실패:', error);
-        // 에러 처리 로직이 필요하면 여기에 추가 (로깅 없이)
-      } finally {
-        setIsLoading(false);
+    // 애니메이션이 완료된 후에 탭바 숨기기
+    const interactionComplete = InteractionManager.runAfterInteractions(() => {
+      if (!keepTabBarVisible) {
+        hideTabBar();
       }
-    };
+    });
 
-    loadData();
-
-    // 화면 이탈 시 탭바 복원
+    // 화면 이탈 시 탭바 복원 및 리소스 정리
     return () => {
+      interactionComplete.cancel();
       showTabBar();
     };
-  }, [hideTabBar, showTabBar]);
+  }, [hideTabBar, showTabBar, keepTabBarVisible]);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {

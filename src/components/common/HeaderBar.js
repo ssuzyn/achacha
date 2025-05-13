@@ -4,7 +4,7 @@ import { useTabBar } from '../../context/TabBarContext';
 import { Icon, useTheme } from 'react-native-elements';
 import { Badge } from '../ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import NavigationService from '../../navigation/NavigationService';
+import { useNavigation } from '@react-navigation/native';
 
 // 화면 크기 계산
 const { width } = Dimensions.get('window');
@@ -15,17 +15,19 @@ const HeaderBar = ({ notificationCount = 3 }) => {
   const { isTabBarVisible } = useTabBar();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
+  const navigation = useNavigation(); // 네비게이션 훅 사용
 
-  // 알림 버튼 클릭 핸들러 - 성능 최적화
+  // 알림 버튼 클릭 핸들러 - 직접 네비게이션 사용
   const handleNotificationPress = useCallback(() => {
-    // NavigationService를 사용하여 성능 최적화
-    NavigationService.navigate('Notification', {}, true);
-  }, []);
+    // 화면 전환 시 탭바를 자동으로 숨기지 않도록 파라미터 전달
+    navigation.navigate('Notification', { keepTabBarVisible: true });
+  }, [navigation]);
 
   // 설정 버튼 클릭 핸들러
   const handleSettingsPress = useCallback(() => {
-    NavigationService.navigate('Settings', {}, true);
-  }, []);
+    // 화면 전환 시 탭바를 자동으로 숨기지 않도록 파라미터 전달
+    navigation.navigate('Settings', { keepTabBarVisible: true });
+  }, [navigation]);
 
   // 메모이제이션된 뱃지 카운트 컴포넌트
   const BadgeComponent = useMemo(() => {

@@ -13,10 +13,12 @@ import {
   NativeEventEmitter,
   NativeModules,
   StatusBar,
+  InteractionManager,
 } from 'react-native';
 import { useTheme, Icon } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTabBar } from '../context/TabBarContext';
 import Slider from '../components/ui/Slider';
 import { Divider, Text, Button } from '../components/ui';
 import Switch from '../components/ui/Switch';
@@ -26,7 +28,12 @@ const SettingScreen = () => {
   const { theme } = useTheme();
   const { WearSyncModule } = NativeModules;
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
+  const { hideTabBar, showTabBar } = useTabBar();
+
+  // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
+  const keepTabBarVisible = route.params?.keepTabBarVisible || false;
 
   // 상태 관리
   const [expiryNotification, setExpiryNotification] = useState(true);
@@ -247,6 +254,22 @@ const SettingScreen = () => {
       return () => subscription.remove();
     }
   }, []);
+
+  // 탭바 처리 - 화면 진입 시 및 이탈 시
+  useEffect(() => {
+    // 애니메이션이 완료된 후에 탭바 숨기기
+    const interactionComplete = InteractionManager.runAfterInteractions(() => {
+      if (!keepTabBarVisible) {
+        hideTabBar();
+      }
+    });
+
+    // 화면 이탈 시 탭바 복원 및 리소스 정리
+    return () => {
+      interactionComplete.cancel();
+      showTabBar();
+    };
+  }, [hideTabBar, showTabBar, keepTabBarVisible]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
