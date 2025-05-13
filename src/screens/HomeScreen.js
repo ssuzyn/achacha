@@ -148,22 +148,33 @@ const HomeScreen = () => {
   const renderCarouselItem = ({ item, index }) => {
     if (item.type === 'sharebox') {
       return (
-        <Card.FeatureCard
-          title={item.title}
-          iconName={item.iconName}
-          imageSource={item.image}
-          onPress={item.onPress}
-          style={styles.carouselCard}
-        />
+        <TouchableOpacity onPress={item.onPress} style={styles.carouselCard}>
+          <View style={[styles.giftMessageCard, { backgroundColor: '#E8F1EA' }]}>
+            <View style={styles.giftMessageTextContainer}>
+              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                {item.title}
+              </Text>
+            </View>
+            <View style={styles.giftMessageImageContainer}>
+              <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+            </View>
+          </View>
+        </TouchableOpacity>
       );
     } else if (item.type === 'radar') {
       return (
-        <Card.RadarCard
-          text={item.title}
-          image={item.image}
-          onPress={item.onPress}
-          style={styles.carouselCard}
-        />
+        <TouchableOpacity onPress={item.onPress} style={styles.carouselCard}>
+          <View style={[styles.giftMessageCard, { backgroundColor: '#FDF3E3' }]}>
+            <View style={styles.giftMessageTextContainer}>
+              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                {item.title}
+              </Text>
+            </View>
+            <View style={styles.giftMessageImageContainer}>
+              <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+            </View>
+          </View>
+        </TouchableOpacity>
       );
     } else if (item.type === 'gift') {
       return (
