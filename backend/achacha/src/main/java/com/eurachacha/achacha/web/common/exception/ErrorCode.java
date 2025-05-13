@@ -20,7 +20,7 @@ public enum ErrorCode {
 	AUTH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH_005", "토큰 정보가 일치하지 않습니다."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "유효하지 않은 리프레시 토큰입니다."),
 	NOT_AUTHENTICATED_USER(HttpStatus.UNAUTHORIZED, "AUTH_007", "인증 되지 않은 사용자입니다."),
-	FORBIDDEN_ACCESS(HttpStatus.FORBIDDEN, "AUTH_008", "해당 사용자 정보에 접근할 권한이 없습니다."),
+	UNAUTHORIZED_USER_ACCESS(HttpStatus.FORBIDDEN, "AUTH_008", "해당 사용자 정보에 접근할 권한이 없습니다."),
 
 	// FCM 토큰 관련 에러 코드
 	FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_001", "FCM 토큰을 찾을 수 없습니다."),
