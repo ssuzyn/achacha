@@ -21,6 +21,30 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
 import AlertDialog from '../../../components/ui/AlertDialog';
+import gifticonService from '../../../api/gifticonService';
+import { BASE_URL } from '../../../api/config';
+
+// 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
+const getImageSource = path => {
+  if (!path) {
+    return require('../../../assets/images/adaptive_icon.png');
+  }
+  if (path.startsWith('http')) {
+    return { uri: path };
+  }
+  // BASE_URL이 유효한지 확인하고 결합
+  if (BASE_URL && typeof BASE_URL === 'string' && BASE_URL.length > 0) {
+    // BASE_URL 끝에 슬래시가 없고, path 시작에 슬래시가 없으면 추가
+    const separator = !BASE_URL.endsWith('/') && !path.startsWith('/') ? '/' : '';
+    // BASE_URL 끝에 슬래시가 있고, path 시작에 슬래시가 있으면 중복 제거
+    if (BASE_URL.endsWith('/') && path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    return { uri: `${BASE_URL}${separator}${path}` };
+  }
+  // BASE_URL이 유효하지 않으면 기본 이미지 반환
+  return require('../../../assets/images/adaptive_icon.png');
+};
 
 const DetailAmountScreen = () => {
   const insets = useSafeAreaInsets();
@@ -33,16 +57,15 @@ const DetailAmountScreen = () => {
   const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX', 'SHARE_BOX' 또는 'USED'
   // 기프티콘 ID 관리
   const [gifticonId, setGifticonId] = useState(null);
-  // 사용 유형 관리 (사용완료 경우에만)
-  const [usageType, setUsageType] = useState(null);
-  // 사용일시 관리 (사용완료 경우에만)
-  const [usedAt, setUsedAt] = useState(null);
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
   // 로딩 상태
   const [isLoading, setIsLoading] = useState(true);
   // 기프티콘 데이터 상태
   const [gifticonData, setGifticonData] = useState(null);
+  // 바코드 정보 상태 추가
+  const [barcodeInfo, setBarcodeInfo] = useState(null);
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
   // 금액 입력 모달 표시 상태
   const [modalVisible, setModalVisible] = useState(false);
   // 입력된 금액 상태
@@ -57,6 +80,8 @@ const DetailAmountScreen = () => {
   // 공유 위치 선택 상태
   const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+  // 이미지 확대 보기 상태
+  const [isImageViewVisible, setImageViewVisible] = useState(false);
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -70,7 +95,7 @@ const DetailAmountScreen = () => {
     return unsubscribe;
   }, [navigation, showTabBar]);
 
-  // route.params에서 scope, gifticonId, usageType, usedAt을 가져오는 부분
+  // route.params에서 scope, gifticonId를 가져오는 부분
   useEffect(() => {
     if (route.params) {
       if (route.params.scope) {
@@ -79,24 +104,19 @@ const DetailAmountScreen = () => {
       if (route.params.gifticonId) {
         setGifticonId(route.params.gifticonId);
       }
-      if (route.params.usageType) {
-        setUsageType(route.params.usageType);
-      }
-      if (route.params.usedAt) {
-        setUsedAt(route.params.usedAt);
-      }
       // 공유박스에서 내가 공유한 것인지 확인
       if (route.params.isSharer) {
         setIsSharer(route.params.isSharer);
       }
       // refresh 플래그가 true이면 데이터 다시 로드
       if (route.params.refresh && gifticonId) {
-        loadGifticonData(gifticonId);
+        console.log('[DetailAmountScreen] 데이터 새로고침 요청 - 기프티콘 ID:', gifticonId);
+        loadGifticonData(route.params.gifticonId || gifticonId);
         // 사용하기 모드 종료
         setIsUsing(false);
       }
     }
-  }, [route.params, gifticonId]);
+  }, [route.params]);
 
   // 기프티콘 ID가 있으면 데이터 로드
   useEffect(() => {
@@ -114,100 +134,98 @@ const DetailAmountScreen = () => {
   const loadGifticonData = async id => {
     setIsLoading(true);
     try {
-      // 실제 구현에서는 API 호출로 대체
-      // const response = await api.getGifticonDetail(id);
-      // setGifticonData(response.data);
+      // API 호출로 기프티콘 상세 정보 가져오기
+      const response = await gifticonService.getGifticonDetail(id, scope);
+      const responseData = response;
 
-      // 더미 데이터 예시 (테스트용)
-      setTimeout(() => {
-        let dummyData;
+      setGifticonData(responseData);
+      setIsSharer(responseData.isSharer);
 
-        if (scope === 'USED') {
-          // 사용완료된 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id,
-            gifticonName: 'APP전용 e카드 3만원 교환권',
-            gifticonType: 'AMOUNT',
-            gifticonExpiryDate: '2025-03-31',
-            brandId: 46,
-            brandName: '스타벅스',
-            scope: scope,
-            usageType: usageType || 'SELF_USE', // 사용유형
-            usageHistoryCreatedAt: usedAt || '2025-01-25T16:45:00', // 사용일시
-            thumbnailPath: require('../../../assets/images/dummy-starbuckscard.png'),
-            originalImagePath:
-              usageType === 'SELF_USE'
-                ? require('../../../assets/images/dummy-starbuckscard.png')
-                : null,
-            gifticonCreatedAt: '2024-12-20T11:30:00',
-            gifticonOriginalAmount: 10000,
-            // 더미 데이터에 공유자 ID 추가
-            userId: 78, // 사용자 ID
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-            // 사용 내역 추가
-            transactions: [
-              {
-                id: '1',
-                date: '2025-01-10',
-                time: '14:30',
-                userName: '홍길동',
-                amount: 3000,
-                type: 'payment',
-                timestamp: new Date('2025-01-10T14:30:00').getTime(),
-              },
-              {
-                id: '2',
-                date: '2025-01-20',
-                time: '16:45',
-                userName: '김철수',
-                amount: 5000,
-                type: 'payment',
-                timestamp: new Date('2025-01-20T16:45:00').getTime(),
-              },
-              {
-                id: '3',
-                date: '2025-01-25',
-                time: '10:15',
-                userName: '박지민',
-                amount: 2000,
-                type: 'payment',
-                timestamp: new Date('2025-01-25T10:15:00').getTime(),
-              },
-            ].sort((a, b) => b.timestamp - a.timestamp), // 날짜 내림차순 정렬 (최신순)
-          };
+      // 사용완료 기프티콘인 경우 바코드 정보도 함께 로드
+      if (scope === 'USED' && responseData.usageType === 'SELF_USE') {
+        try {
+          const barcodeResponse = await gifticonService.getUsedGifticonBarcode(id);
+          if (barcodeResponse) {
+            setBarcodeInfo({
+              barcodeNumber: barcodeResponse.gifticonBarcodeNumber,
+              barcodePath: barcodeResponse.barcodePath,
+            });
+          }
+        } catch (barcodeError) {
+          console.error('[DetailAmountScreen] 바코드 정보 로드 실패:', barcodeError);
+        }
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error('[DetailAmountScreen] 기프티콘 데이터 로드 실패:', error);
+      setIsLoading(false);
+
+      // 에러 처리
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+
+        if (status === 403) {
+          Alert.alert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
+        } else if (status === 404) {
+          Alert.alert('기프티콘 없음', '기프티콘을 찾을 수 없습니다.');
         } else {
-          // 일반 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id || 124,
-            gifticonName: 'APP전용 e카드 3만원 교환권',
-            gifticonType: 'AMOUNT',
-            gifticonExpiryDate: '2025-01-31',
-            brandId: 46,
-            brandName: '스타벅스',
-            scope: scope,
-            userId: 78,
-            userName: '홍길동',
-            shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
-            shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
-            thumbnailPath: require('../../../assets/images/dummy-starbuckscard.png'),
-            originalImagePath: require('../../../assets/images/dummy-starbuckscard.png'),
-            gifticonCreatedAt: '2025-01-15T10:30:00',
-            gifticonOriginalAmount: 30000,
-            gifticonRemainingAmount: 8000,
-            barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
-            barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
-            // 더미 데이터에 공유자 ID 추가
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-          };
+          Alert.alert(
+            '오류',
+            `기프티콘을 불러오는 중 오류가 발생했습니다. ${errorData?.message || ''}`
+          );
         }
 
-        setGifticonData(dummyData);
-        setIsSharer(dummyData.isSharer);
-        setIsLoading(false);
-      }, 500);
+        // 오류 발생 시 이전 화면으로 돌아가기
+        NavigationService.goBack();
+      }
+    }
+  };
+
+  // 바코드 정보 로드 함수 추가
+  const loadBarcodeInfo = async () => {
+    if (!gifticonId) return;
+
+    setBarcodeLoading(true);
+    try {
+      // API 호출로 바코드 정보 가져오기
+      console.log(
+        '[DetailAmountScreen] 바코드 정보 요청:',
+        gifticonId,
+        '사용완료 여부:',
+        isUsed,
+        'scope:',
+        scope
+      );
+      const response = await gifticonService.getGifticonBarcode(gifticonId, scope);
+      console.log('[DetailAmountScreen] 바코드 정보 응답:', response);
+
+      if (response) {
+        setBarcodeInfo({
+          barcodeNumber: response.gifticonBarcodeNumber,
+          barcodePath: response.barcodePath,
+        });
+      }
     } catch (error) {
-      // console.error('기프티콘 데이터 로드 실패:', error);
-      setIsLoading(false);
+      console.error('[DetailAmountScreen] 바코드 정보 로드 실패:', error);
+
+      // 오류 메시지 처리
+      let errorMessage = '바코드 정보를 불러오는데 실패했습니다.';
+
+      // 선물/뿌리기 완료된 기프티콘인 경우 바코드 정보가 없음을 알림
+      if (
+        isUsed &&
+        (gifticonData.usageType === 'PRESENT' || gifticonData.usageType === 'GIVE_AWAY')
+      ) {
+        errorMessage = '선물/뿌리기로 사용된 기프티콘은 바코드 정보를 확인할 수 없습니다.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert('알림', errorMessage);
+    } finally {
+      setBarcodeLoading(false);
     }
   };
 
@@ -308,29 +326,35 @@ const DetailAmountScreen = () => {
   };
 
   // 사용하기 버튼 클릭
-  const handleUse = () => {
+  const handleUse = async () => {
     // 만료된 경우 바로 사용완료 처리
     const isExpired = calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨';
 
     if (isExpired) {
-      // 만료된 경우 바로 사용완료 처리
-      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
-      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
-
-      // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'Main',
-            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+      // 만료된 경우 바로 사용완료 처리 (모달 표시 후 이동)
+      Alert.alert('사용 완료', '만료된 기프티콘은 자동으로 사용완료 처리됩니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+            // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'Main',
+                  params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                },
+              ],
+            });
           },
-        ],
-      });
+        },
+      ]);
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
       setIsUsing(true);
+      // 바코드 정보 불러오기
+      await loadBarcodeInfo();
     }
   };
 
@@ -339,40 +363,98 @@ const DetailAmountScreen = () => {
     setModalVisible(true);
   };
 
+  // 사용내역 기능
+  const handleHistory = () => {
+    // 사용내역 조회 로직
+    navigation.navigate('DetailAmountHistoryScreen', {
+      id: gifticonData.gifticonId,
+      gifticonId: gifticonData.gifticonId,
+      brandName: gifticonData.brandName,
+      gifticonName: gifticonData.gifticonName,
+    });
+  };
+
   // 금액 입력 완료 처리
-  const handleConfirmAmount = () => {
+  const handleConfirmAmount = async () => {
     // 금액 입력 값 검증
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      // 실제 구현에서는 오류 메시지 표시
-      // console.log('유효한 금액을 입력해주세요');
+      Alert.alert('알림', '유효한 금액을 입력해주세요.');
       return;
     }
 
     // 입력한 금액이 잔액보다 크면 오류
     if (Number(amount) > gifticonData.gifticonRemainingAmount) {
-      // 실제 구현에서는 오류 메시지 표시
-      // console.log('잔액보다 큰 금액을 사용할 수 없습니다');
+      Alert.alert('알림', '잔액보다 큰 금액을 사용할 수 없습니다.');
       return;
     }
 
-    // console.log(`사용 금액: ${amount}원 사용 완료`);
+    try {
+      // 모달 닫기
+      setModalVisible(false);
+      // 로딩 표시
+      setIsLoading(true);
 
-    // API 호출로 기프티콘 사용 처리 (실제 구현 시 주석 해제)
-    // 예: await api.useGifticon(gifticonId, amount);
+      // API 호출로 기프티콘 사용 처리
+      const response = await gifticonService.useAmountGifticon(gifticonId, Number(amount));
 
-    // 모달 닫기
-    setModalVisible(false);
-    setAmount('');
+      // 사용 모드 종료
+      setIsUsing(false);
+      setIsLoading(false);
+      setAmount('');
 
-    // 사용 모드 종료
-    setIsUsing(false);
+      // API 응답에서 남은 잔액 확인 (API 응답 형식에 따라 조정 필요)
+      // 만약 API 응답에 잔액 정보가 포함되어 있지 않다면 기존 로직 유지
+      const remainingAmount =
+        response.gifticonRemainingAmount !== undefined
+          ? response.gifticonRemainingAmount
+          : gifticonData.gifticonRemainingAmount - Number(amount);
 
-    // 사용내역 화면으로 이동
-    navigation.navigate('DetailAmountHistoryScreen', {
-      id: gifticonId,
-      usedAmount: amount,
-      isFromDetailScreen: true,
-    });
+      // 잔액이 0원이면 사용완료 처리
+      if (remainingAmount === 0) {
+        // 사용 완료 모달 표시
+        Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // ManageListScreen으로 이동
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'Main',
+                    params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                  },
+                ],
+              });
+            },
+          },
+        ]);
+      } else {
+        // 일반 사용인 경우 - 사용내역 화면으로 이동
+        navigation.navigate('DetailAmountHistoryScreen', {
+          id: gifticonId,
+          gifticonId: gifticonId,
+          usedAmount: amount,
+          brandName: gifticonData.brandName,
+          gifticonName: gifticonData.gifticonName,
+        });
+      }
+    } catch (error) {
+      setIsLoading(false);
+      setAmount('');
+      setModalVisible(false);
+
+      console.error('기프티콘 사용 오류:', error);
+
+      // 에러 메시지 처리
+      if (error.response) {
+        const errorMessage =
+          error.response.data?.message || '기프티콘 사용 중 오류가 발생했습니다.';
+        Alert.alert('오류', errorMessage);
+      } else {
+        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+      }
+    }
   };
 
   // 모달 취소
@@ -406,11 +488,41 @@ const DetailAmountScreen = () => {
   };
 
   // 돋보기 기능 - 확대 화면으로 이동
-  const handleMagnify = () => {
-    navigation.navigate('UseAmountScreen', {
-      id: gifticonData.gifticonId,
-      barcodeNumber: gifticonData.barcodeNumber,
-    });
+  const handleMagnify = async () => {
+    // 바코드 정보가 없으면 먼저 로드
+    if (!barcodeInfo) {
+      await loadBarcodeInfo();
+      // 로드 실패 시 리턴
+      if (!barcodeInfo) return;
+    }
+
+    // 사용 완료 상태인 경우 (SELF_USE 유형만 바코드 있음)
+    if (isUsed && gifticonData.usageType === 'SELF_USE') {
+      navigation.navigate('UseAmountScreen', {
+        id: gifticonData.gifticonId,
+        gifticonId: gifticonData.gifticonId,
+        isUsed: true,
+        barcodeNumber: barcodeInfo?.barcodeNumber,
+        barcodePath: barcodeInfo?.barcodePath,
+        brandName: gifticonData.brandName,
+        gifticonName: gifticonData.gifticonName,
+        remainingAmount: gifticonData.gifticonOriginalAmount || 0,
+      });
+    } else if (!isUsed) {
+      // 일반 사용 모드
+      navigation.navigate('UseAmountScreen', {
+        id: gifticonData.gifticonId,
+        gifticonId: gifticonData.gifticonId,
+        barcodeNumber: barcodeInfo?.barcodeNumber,
+        barcodePath: barcodeInfo?.barcodePath,
+        brandName: gifticonData.brandName,
+        gifticonName: gifticonData.gifticonName,
+        remainingAmount: gifticonData.gifticonRemainingAmount,
+      });
+    } else {
+      // 선물/뿌리기로 사용완료된 경우 알림
+      Alert.alert('알림', '선물/뿌리기로 사용된 기프티콘은 바코드를 확인할 수 없습니다.');
+    }
   };
 
   // 선물하기 기능
@@ -419,13 +531,6 @@ const DetailAmountScreen = () => {
     navigation.navigate('PresentScreen', {
       gifticonId: gifticonData.gifticonId,
     });
-  };
-
-  // 사용내역 기능
-  const handleHistory = () => {
-    // 사용내역 조회 로직
-    // console.log('사용내역 조회');
-    navigation.navigate('DetailAmountHistoryScreen', { id: gifticonData.gifticonId });
   };
 
   // 기프티콘 삭제 다이얼로그 표시
@@ -441,29 +546,103 @@ const DetailAmountScreen = () => {
   };
 
   // 다이얼로그 확인 버튼 처리
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setAlertVisible(false);
 
-    if (alertType === 'delete') {
-      // 삭제 처리 로직
-      // 실제 구현에서는 API 호출로 기프티콘 삭제
-      // console.log('기프티콘 삭제:', gifticonId);
+    try {
+      if (alertType === 'delete') {
+        // 자신 소유의 기프티콘만 삭제 가능 (쉐어박스에 공유되지 않은 것만)
+        if (scope !== 'MY_BOX') {
+          Alert.alert('알림', '마이박스의 기프티콘만 삭제할 수 있습니다.');
+          return;
+        }
 
-      // 리스트 화면으로 이동
-      navigation.goBack();
-    } else if (alertType === 'cancelShare') {
-      // 공유 취소 처리 로직
-      // 실제 구현에서는 API 호출로 공유 취소
-      // console.log('공유 취소:', gifticonId);
+        // 삭제 처리 API 호출
+        await gifticonService.deleteGifticon(gifticonId);
+        console.log('[DetailAmountScreen] 기프티콘 삭제 성공:', gifticonId);
 
-      // 리스트 화면으로 이동
-      navigation.goBack();
+        // 성공 메시지
+        Alert.alert('성공', '기프티콘이 성공적으로 삭제되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 리스트 화면으로 이동
+              navigation.goBack();
+            },
+          },
+        ]);
+      } else if (alertType === 'cancelShare') {
+        // 공유 취소 처리 API 호출
+        await gifticonService.cancelShareGifticon(gifticonId);
+        console.log('[DetailAmountScreen] 기프티콘 공유 취소 성공:', gifticonId);
+
+        // 성공 메시지
+        Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 리스트 화면으로 이동
+              navigation.goBack();
+            },
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error(
+        `[DetailAmountScreen] ${alertType === 'delete' ? '삭제' : '공유 취소'} 실패:`,
+        error
+      );
+
+      // 에러 메시지 처리
+      let errorMessage = `기프티콘 ${alertType === 'delete' ? '삭제' : '공유 취소'} 중 오류가 발생했습니다.`;
+
+      if (error.response) {
+        const { status, data } = error.response;
+
+        if (status === 400 && data.errorCode === 'SHAREBOX_010') {
+          errorMessage = '이미 공유된 기프티콘은 삭제할 수 없습니다.';
+        } else if (status === 403 && data.errorCode === 'GIFTICON_002') {
+          errorMessage = '해당 기프티콘에 접근 권한이 없습니다.';
+        } else if (status === 404) {
+          if (data.errorCode === 'GIFTICON_001') {
+            errorMessage = '기프티콘 정보를 찾을 수 없습니다.';
+          } else if (data.errorCode === 'GIFTICON_005') {
+            errorMessage = '이미 삭제된 기프티콘입니다.';
+          }
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+      }
+
+      Alert.alert('오류', errorMessage);
     }
   };
 
   // 다이얼로그 취소 버튼 처리
   const handleCancelDialog = () => {
     setAlertVisible(false);
+  };
+
+  // 사용완료된 상품일 경우 다른 UI 표시
+  const isUsed = scope === 'USED';
+
+  // 사용 방식에 따른 텍스트 결정
+  const getUsageTypeText = () => {
+    switch (gifticonData.usageType) {
+      case 'SELF_USE':
+        return '사용완료';
+      case 'PRESENT':
+        return '선물완료';
+      case 'GIVE_AWAY':
+        return '뿌리기 완료';
+      default:
+        return '사용완료';
+    }
+  };
+
+  // 이미지 확대 보기 토글
+  const toggleImageView = () => {
+    setImageViewVisible(!isImageViewVisible);
   };
 
   // 로딩 중이거나 데이터가 없는 경우 로딩 화면 표시
@@ -487,23 +666,6 @@ const DetailAmountScreen = () => {
       </View>
     );
   }
-
-  // 사용완료된 상품일 경우 다른 UI 표시
-  const isUsed = scope === 'USED';
-
-  // 사용 방식에 따른 텍스트 결정
-  const getUsageTypeText = () => {
-    switch (gifticonData.usageType) {
-      case 'SELF_USE':
-        return '사용완료';
-      case 'PRESENT':
-        return '선물완료';
-      case 'GIVE_AWAY':
-        return '뿌리기 완료';
-      default:
-        return '사용완료';
-    }
-  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -536,32 +698,52 @@ const DetailAmountScreen = () => {
               {isUsing ? (
                 // 사용 모드일 때 바코드 표시
                 <View style={styles.barcodeContainer}>
-                  <Image
-                    source={gifticonData.barcodeImageUrl}
-                    style={styles.barcodeImage}
-                    resizeMode="contain"
-                  />
-                  <View style={styles.barcodeNumberContainer}>
-                    <Text style={styles.barcodeNumberText}>{gifticonData.barcodeNumber}</Text>
-                    <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
-                      <Icon name="search" type="material" size={24} color="#4A90E2" />
-                    </TouchableOpacity>
-                  </View>
+                  {barcodeLoading ? (
+                    <View style={styles.barcodeLoadingContainer}>
+                      <Text style={styles.barcodeLoadingText}>바코드 불러오는 중...</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Image
+                        source={
+                          barcodeInfo && barcodeInfo.barcodePath
+                            ? getImageSource(barcodeInfo.barcodePath)
+                            : gifticonData.barcodeImageUrl
+                              ? { uri: gifticonData.barcodeImageUrl }
+                              : require('../../../assets/images/barcode.png')
+                        }
+                        style={styles.barcodeImage}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.barcodeNumberContainer}>
+                        <Text style={styles.barcodeNumberText}>
+                          {barcodeInfo
+                            ? barcodeInfo.barcodeNumber
+                            : gifticonData.barcodeNumber || ''}
+                        </Text>
+                        <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
+                          <Icon name="search" type="material" size={24} color="#4A90E2" />
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
                 </View>
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={gifticonData.thumbnailPath}
-                    style={[
-                      styles.gifticonImage,
-                      isUsed && styles.grayScaleImage,
-                      isUsed &&
-                        gifticonData.usageType === 'SELF_USE' &&
-                        styles.smallerGifticonImage,
-                    ]}
-                    resizeMode="contain"
-                  />
+                  <TouchableOpacity onPress={toggleImageView} activeOpacity={0.9}>
+                    <Image
+                      source={getImageSource(gifticonData.thumbnailPath)}
+                      style={[
+                        styles.gifticonImage,
+                        isUsed && styles.grayScaleImage,
+                        isUsed &&
+                          gifticonData.usageType === 'SELF_USE' &&
+                          styles.smallerGifticonImage,
+                      ]}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
 
                   {/* 상단 액션 아이콘 */}
                   {!isUsed && (
@@ -590,14 +772,17 @@ const DetailAmountScreen = () => {
                     <View style={styles.usedBarcodeContainer}>
                       <Image
                         source={
-                          gifticonData.barcodeImageUrl ||
-                          require('../../../assets/images/barcode.png')
+                          barcodeInfo && barcodeInfo.barcodePath
+                            ? getImageSource(barcodeInfo.barcodePath)
+                            : gifticonData.barcodeImageUrl
+                              ? { uri: gifticonData.barcodeImageUrl }
+                              : require('../../../assets/images/barcode.png')
                         }
                         style={styles.usedBarcodeImage}
                         resizeMode="contain"
                       />
                       <Text style={styles.usedBarcodeNumberText}>
-                        {gifticonData.barcodeNumber || '8013-7621-1234-5678'}
+                        {barcodeInfo ? barcodeInfo.barcodeNumber : gifticonData.barcodeNumber || ''}
                       </Text>
                     </View>
                   )}
@@ -955,6 +1140,38 @@ const DetailAmountScreen = () => {
         </View>
       </ScrollView>
 
+      {/* 이미지 확대 보기 모달 */}
+      <Modal
+        visible={isImageViewVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleImageView}
+      >
+        <View style={styles.imageViewModal}>
+          <TouchableOpacity
+            style={styles.imageViewCloseButton}
+            onPress={toggleImageView}
+            activeOpacity={0.7}
+          >
+            <Icon name="close" type="material" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.imageViewContainer}
+            activeOpacity={1}
+            onPress={toggleImageView}
+          >
+            <Image
+              source={
+                // 원본 이미지 경로 우선 사용, 없으면 썸네일 경로 사용
+                getImageSource(gifticonData?.originalImagePath || gifticonData?.thumbnailPath)
+              }
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       {/* 금액 입력 모달 */}
       <Modal
         animationType="fade"
@@ -1154,7 +1371,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     padding: 16,
     paddingTop: 0,
     borderBottomWidth: 1,
@@ -1165,9 +1382,11 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   gifticonImage: {
-    width: '60%',
-    height: '90%',
+    width: 200,
+    height: 200,
     borderRadius: 8,
+    resizeMode: 'cover',
+    marginBottom: 20,
   },
   infoContainer: {
     padding: 16,
@@ -1280,9 +1499,11 @@ const styles = StyleSheet.create({
     // 투명도를 낮춰 흑백처럼 보이게 합니다.
   },
   smallerGifticonImage: {
-    height: '50%',
+    width: 160,
+    height: 160,
     marginBottom: 5,
     marginTop: 20,
+    resizeMode: 'cover',
   },
   usedOverlay: {
     position: 'absolute',
@@ -1439,10 +1660,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     fontWeight: '500',
+    marginRight: 2,
+  },
+  barcodeLoadingContainer: {
+    height: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  barcodeLoadingText: {
+    fontSize: 16,
+    color: '#666',
   },
   magnifyButton: {
-    marginLeft: 12,
-    padding: 8,
+    padding: 5,
   },
   shareButton: {
     flex: 1,
@@ -1656,6 +1886,35 @@ const styles = StyleSheet.create({
   },
   confirmShareButtonText: {
     color: '#FFFFFF',
+  },
+  // 이미지 확대 모달 스타일
+  imageViewModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
+  },
+  imageViewCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

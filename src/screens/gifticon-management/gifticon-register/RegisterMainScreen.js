@@ -12,8 +12,9 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
+  NativeModules,
 } from 'react-native';
-import { Text } from '../../../components/ui';
+import { Text, LoadingOcrModal } from '../../../components/ui';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useTheme } from '../../../hooks/useTheme';
@@ -22,6 +23,9 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+
+// 네이티브 모듈 가져오기
+const { BarcodeNativeModule } = NativeModules;
 
 const RegisterMainScreen = () => {
   const { theme } = useTheme();
@@ -32,6 +36,7 @@ const RegisterMainScreen = () => {
   const [gifticonType, setGifticonType] = useState('PRODUCT'); // 'PRODUCT' 또는 'AMOUNT'
   const [boxType, setBoxType] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+  const [isOcrLoading, setIsOcrLoading] = useState(false); // OCR 로딩 상태 추가
 
   // 더미 데이터: 쉐어박스 목록
   const shareBoxes = [
@@ -45,9 +50,9 @@ const RegisterMainScreen = () => {
     navigation.goBack();
   }, [navigation]);
 
-  // 업로드 버튼 클릭 시 이미지 옵션 모달 바로 표시
+  // 업로드 버튼 클릭 시 타입 및 위치 모달 먼저 표시
   const handleUploadPress = useCallback(() => {
-    setImageOptionVisible(true);
+    setTypeModalVisible(true);
   }, []);
 
   // 안드로이드 카메라 권한 요청
@@ -88,7 +93,7 @@ const RegisterMainScreen = () => {
       };
 
       // 이미지 라이브러리 호출
-      launchImageLibrary(options, response => {
+      launchImageLibrary(options, async response => {
         console.log('이미지 선택 응답:', JSON.stringify(response));
 
         if (response.didCancel) {
@@ -107,11 +112,202 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 크롭 과정 없이 바로 상세 화면으로 이동
-            navigation.navigate('RegisterDetail', {
-              selectedImage: { uri: imageAsset.uri },
-            });
-            setImageOptionVisible(false);
+            try {
+              // 바코드 인식 먼저 시도
+              console.log('[메인] 바코드 인식 시도 시작');
+
+              // 바코드 인식 유틸리티 불러오기
+              const {
+                detectBarcode,
+                detectAndCropBarcode,
+              } = require('../../../utils/BarcodeUtils');
+
+              let barcodeResult;
+              let croppedBarcodeResult;
+
+              // BarcodeNativeModule을 사용하여 바코드 감지 (네이티브 모듈이 있는 경우)
+              if (BarcodeNativeModule) {
+                console.log('[메인] 네이티브 모듈로 바코드 감지 시도');
+                try {
+                  // 1. 바코드 감지 (네이티브)
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  console.log('[메인] 네이티브 바코드 감지 결과:', JSON.stringify(barcodeResult));
+
+                  // 2. 바코드 크롭 (네이티브)
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    console.log('[메인] 네이티브 바코드 크롭 시도');
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                } catch (nativeError) {
+                  console.error('[메인] 네이티브 바코드 처리 오류:', nativeError);
+                  // 오류 발생 시 JS 방식으로 전환
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                }
+              } else {
+                // 네이티브 모듈이 없는 경우 JS 방식 사용
+                console.log('[메인] JS 방식으로 바코드 감지 시도');
+                // 1. 바코드 인식 (JS)
+                barcodeResult = await detectBarcode(imageAsset.uri);
+                console.log('[메인] 바코드 인식 결과:', JSON.stringify(barcodeResult));
+
+                // 2. 바코드 영역 크롭 시도 (JS)
+                if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                  croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                }
+              }
+
+              let barcodeValue = null;
+              let barcodeFormat = null;
+              let barcodeBoundingBox = null;
+              let barcodeImageUri = null;
+
+              if (barcodeResult && barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                // 바코드 인식 성공
+                const firstBarcode = barcodeResult.barcodes[0];
+                barcodeValue = firstBarcode.value;
+                barcodeFormat = firstBarcode.format;
+                barcodeBoundingBox = firstBarcode.boundingBox;
+
+                // 코너 포인트 정보 추출 (더 정확한 바코드 영역 감지를 위해)
+                const cornerPoints = firstBarcode.cornerPoints;
+                console.log('[메인] 바코드 코너 포인트:', cornerPoints);
+
+                console.log('[메인] 바코드 인식 성공:', barcodeValue, barcodeFormat);
+
+                // 바코드 영역 크롭 성공했는지 확인
+                if (
+                  croppedBarcodeResult &&
+                  croppedBarcodeResult.success &&
+                  croppedBarcodeResult.croppedImageUri
+                ) {
+                  barcodeImageUri = croppedBarcodeResult.croppedImageUri;
+                  console.log('[메인] 바코드 이미지 크롭 성공:', barcodeImageUri);
+
+                  // 크롭 정보 로깅 (디버깅용)
+                  if (croppedBarcodeResult.cropInfo) {
+                    console.log(
+                      '[메인] 바코드 크롭 정보:',
+                      JSON.stringify(croppedBarcodeResult.cropInfo)
+                    );
+                  }
+                } else {
+                  console.warn(
+                    '[메인] 바코드 크롭 실패:',
+                    croppedBarcodeResult ? croppedBarcodeResult.message : '크롭 결과 없음'
+                  );
+                }
+              }
+
+              // 이미지 메타데이터 처리 추가
+              try {
+                console.log('[메인] 이미지 메타데이터 조회 시작');
+                // gifticonService import 확인
+                const gifticonService = require('../../../api/gifticonService').default;
+
+                // OCR 로딩 모달 표시
+                setIsOcrLoading(true);
+
+                // 메타데이터 조회 요청
+                const imageMetadata = await gifticonService.getGifticonImageMetadata(
+                  {
+                    uri: imageAsset.uri,
+                    type: imageAsset.type || 'image/jpeg',
+                    fileName: imageAsset.fileName || 'image.jpg',
+                  },
+                  gifticonType
+                );
+
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
+
+                console.log('[메인] 이미지 메타데이터 조회 결과:', imageMetadata);
+
+                // 바코드 정보와 함께 바로 상세 화면으로 이동
+                setImageOptionVisible(false);
+
+                // 메타데이터 및 바코드 인식 결과 정보와 함께 상세 화면으로 이동
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: imageAsset.uri },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                  // 바코드 정보 추가
+                  barcodeValue: barcodeValue,
+                  barcodeFormat: barcodeFormat,
+                  barcodeBoundingBox: barcodeBoundingBox,
+                  barcodeImageUri: barcodeImageUri,
+                  // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
+                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                  // 크롭 정보 추가 (디버깅 및 UI 표시용)
+                  cropInfo: croppedBarcodeResult?.cropInfo || null,
+                  // 메타데이터 정보 추가
+                  gifticonMetadata: imageMetadata || null,
+                  // OCR 학습 데이터 ID 추가
+                  ocrTrainingDataId: imageMetadata?.ocrTrainingDataId || null,
+                  // 기타 메타데이터 정보들
+                  brandName: imageMetadata?.brandName || null,
+                  brandId: imageMetadata?.brandId || null,
+                  gifticonName: imageMetadata?.gifticonName || null,
+                  gifticonExpiryDate: imageMetadata?.gifticonExpiryDate || null,
+                  gifticonOriginalAmount: imageMetadata?.gifticonOriginalAmount || null,
+                  gifticonBarcodeNumber:
+                    imageMetadata?.gifticonBarcodeNumber || barcodeValue || null,
+                  // API 요청을 위한 추가 정보
+                  thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용 (추후 리사이징 필요)
+                });
+              } catch (metadataError) {
+                console.error('[메인] 이미지 메타데이터 조회 오류:', metadataError);
+
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
+
+                // 네트워크 오류 확인
+                const errorMessage =
+                  metadataError.message.includes('네트워크') ||
+                  metadataError.message.includes('Network')
+                    ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+                    : '기프티콘 정보 인식 중 오류가 발생했습니다.';
+
+                // 사용자에게 알림
+                Alert.alert('메타데이터 조회 실패', errorMessage, [
+                  {
+                    text: '직접 입력하기',
+                    onPress: () => {
+                      // 메타데이터 조회 실패해도 기본 정보만이라도 전달
+                      setImageOptionVisible(false);
+                      navigation.navigate('RegisterDetail', {
+                        selectedImage: { uri: imageAsset.uri },
+                        originalImage: { uri: imageAsset.uri },
+                        gifticonType: gifticonType,
+                        boxType: boxType,
+                        shareBoxId: selectedShareBoxId,
+                        // 바코드 정보만 추가
+                        barcodeValue: barcodeValue,
+                        barcodeFormat: barcodeFormat,
+                        barcodeBoundingBox: barcodeBoundingBox,
+                        barcodeImageUri: barcodeImageUri,
+                        cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                        cropInfo: croppedBarcodeResult?.cropInfo || null,
+                        // API 요청을 위한 추가 정보
+                        brandId: null,
+                        thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용
+                      });
+                    },
+                  },
+                  {
+                    text: '취소',
+                    style: 'cancel',
+                  },
+                ]);
+              }
+            } catch (processingError) {
+              console.error('이미지 처리 중 오류:', processingError);
+              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
+            }
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
@@ -124,7 +320,7 @@ const RegisterMainScreen = () => {
       console.error('이미지 선택 예외 발생:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
-  }, [navigation]);
+  }, [navigation, gifticonType, boxType, selectedShareBoxId]);
 
   // 카메라로 촬영
   const handleOpenCamera = useCallback(async () => {
@@ -153,7 +349,7 @@ const RegisterMainScreen = () => {
       console.log('카메라 호출 전');
 
       // 카메라 호출
-      launchCamera(options, response => {
+      launchCamera(options, async response => {
         console.log('카메라 응답:', JSON.stringify(response));
 
         if (response.didCancel) {
@@ -172,11 +368,205 @@ const RegisterMainScreen = () => {
           console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
-            // 크롭 과정 없이 바로 상세 화면으로 이동
-            navigation.navigate('RegisterDetail', {
-              selectedImage: { uri: imageAsset.uri },
-            });
-            setImageOptionVisible(false);
+            try {
+              // 바코드 인식 먼저 시도
+              console.log('[메인] 카메라 바코드 인식 시도 시작');
+
+              // 바코드 인식 유틸리티 불러오기
+              const {
+                detectBarcode,
+                detectAndCropBarcode,
+              } = require('../../../utils/BarcodeUtils');
+
+              let barcodeResult;
+              let croppedBarcodeResult;
+
+              // BarcodeNativeModule을 사용하여 바코드 감지 (네이티브 모듈이 있는 경우)
+              if (BarcodeNativeModule) {
+                console.log('[메인] 네이티브 모듈로 카메라 바코드 감지 시도');
+                try {
+                  // 1. 바코드 감지 (네이티브)
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  console.log(
+                    '[메인] 네이티브 카메라 바코드 감지 결과:',
+                    JSON.stringify(barcodeResult)
+                  );
+
+                  // 2. 바코드 크롭 (네이티브)
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    console.log('[메인] 네이티브 카메라 바코드 크롭 시도');
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                } catch (nativeError) {
+                  console.error('[메인] 네이티브 카메라 바코드 처리 오류:', nativeError);
+                  // 오류 발생 시 JS 방식으로 전환
+                  barcodeResult = await detectBarcode(imageAsset.uri);
+                  if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                    croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                  }
+                }
+              } else {
+                // 네이티브 모듈이 없는 경우 JS 방식 사용
+                console.log('[메인] JS 방식으로 카메라 바코드 감지 시도');
+                // 1. 바코드 인식 (JS)
+                barcodeResult = await detectBarcode(imageAsset.uri);
+                console.log('[메인] 카메라 바코드 인식 결과:', JSON.stringify(barcodeResult));
+
+                // 2. 바코드 영역 크롭 시도 (JS)
+                if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                  croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+                }
+              }
+
+              let barcodeValue = null;
+              let barcodeFormat = null;
+              let barcodeBoundingBox = null;
+              let barcodeImageUri = null;
+
+              if (barcodeResult && barcodeResult.success && barcodeResult.barcodes.length > 0) {
+                // 바코드 인식 성공
+                const firstBarcode = barcodeResult.barcodes[0];
+                barcodeValue = firstBarcode.value;
+                barcodeFormat = firstBarcode.format;
+                barcodeBoundingBox = firstBarcode.boundingBox;
+
+                // 코너 포인트 정보 추출 (더 정확한 바코드 영역 감지를 위해)
+                const cornerPoints = firstBarcode.cornerPoints;
+                console.log('[메인] 카메라 바코드 코너 포인트:', cornerPoints);
+
+                console.log('[메인] 카메라 바코드 인식 성공:', barcodeValue, barcodeFormat);
+
+                // 바코드 영역 크롭 성공했는지 확인
+                if (
+                  croppedBarcodeResult &&
+                  croppedBarcodeResult.success &&
+                  croppedBarcodeResult.croppedImageUri
+                ) {
+                  barcodeImageUri = croppedBarcodeResult.croppedImageUri;
+                  console.log('[메인] 카메라 바코드 이미지 크롭 성공:', barcodeImageUri);
+
+                  // 크롭 정보 로깅 (디버깅용)
+                  if (croppedBarcodeResult.cropInfo) {
+                    console.log(
+                      '[메인] 카메라 바코드 크롭 정보:',
+                      JSON.stringify(croppedBarcodeResult.cropInfo)
+                    );
+                  }
+                } else {
+                  console.warn(
+                    '[메인] 바코드 크롭 실패:',
+                    croppedBarcodeResult ? croppedBarcodeResult.message : '크롭 결과 없음'
+                  );
+                }
+              }
+
+              // 이미지 메타데이터 처리 추가
+              try {
+                console.log('[메인] 카메라 이미지 메타데이터 조회 시작');
+                // gifticonService import 확인
+                const gifticonService = require('../../../api/gifticonService').default;
+
+                // OCR 로딩 모달 표시
+                setIsOcrLoading(true);
+
+                // 메타데이터 조회 요청
+                const imageMetadata = await gifticonService.getGifticonImageMetadata(
+                  {
+                    uri: imageAsset.uri,
+                    type: imageAsset.type || 'image/jpeg',
+                    fileName: imageAsset.fileName || 'image.jpg',
+                  },
+                  gifticonType
+                );
+
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
+
+                console.log('[메인] 카메라 이미지 메타데이터 조회 결과:', imageMetadata);
+
+                // 바코드 정보와 함께 바로 상세 화면으로 이동
+                setImageOptionVisible(false);
+
+                // 메타데이터 및 바코드 인식 결과 정보와 함께 상세 화면으로 이동
+                navigation.navigate('RegisterDetail', {
+                  selectedImage: { uri: imageAsset.uri },
+                  originalImage: { uri: imageAsset.uri },
+                  gifticonType: gifticonType,
+                  boxType: boxType,
+                  shareBoxId: selectedShareBoxId,
+                  // 바코드 정보 추가
+                  barcodeValue: barcodeValue,
+                  barcodeFormat: barcodeFormat,
+                  barcodeBoundingBox: barcodeBoundingBox,
+                  barcodeImageUri: barcodeImageUri,
+                  // 코너 포인트 정보 추가 (더 정확한 바코드 영역 정보)
+                  cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                  // 크롭 정보 추가 (디버깅 및 UI 표시용)
+                  cropInfo: croppedBarcodeResult?.cropInfo || null,
+                  // 메타데이터 정보 추가
+                  gifticonMetadata: imageMetadata || null,
+                  // OCR 학습 데이터 ID 추가
+                  ocrTrainingDataId: imageMetadata?.ocrTrainingDataId || null,
+                  // 기타 메타데이터 정보들
+                  brandName: imageMetadata?.brandName || null,
+                  brandId: imageMetadata?.brandId || null,
+                  gifticonName: imageMetadata?.gifticonName || null,
+                  gifticonExpiryDate: imageMetadata?.gifticonExpiryDate || null,
+                  gifticonOriginalAmount: imageMetadata?.gifticonOriginalAmount || null,
+                  gifticonBarcodeNumber:
+                    imageMetadata?.gifticonBarcodeNumber || barcodeValue || null,
+                  // API 요청을 위한 추가 정보
+                  thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용 (추후 리사이징 필요)
+                });
+              } catch (metadataError) {
+                console.error('[메인] 카메라 이미지 메타데이터 조회 오류:', metadataError);
+
+                // OCR 로딩 모달 숨김
+                setIsOcrLoading(false);
+
+                // 네트워크 오류 확인
+                const errorMessage =
+                  metadataError.message.includes('네트워크') ||
+                  metadataError.message.includes('Network')
+                    ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+                    : '기프티콘 정보 인식 중 오류가 발생했습니다.';
+
+                // 사용자에게 알림
+                Alert.alert('메타데이터 조회 실패', errorMessage, [
+                  {
+                    text: '직접 입력하기',
+                    onPress: () => {
+                      // 메타데이터 조회 실패해도 기본 정보만이라도 전달
+                      setImageOptionVisible(false);
+                      navigation.navigate('RegisterDetail', {
+                        selectedImage: { uri: imageAsset.uri },
+                        originalImage: { uri: imageAsset.uri },
+                        gifticonType: gifticonType,
+                        boxType: boxType,
+                        shareBoxId: selectedShareBoxId,
+                        // 바코드 정보만 추가
+                        barcodeValue: barcodeValue,
+                        barcodeFormat: barcodeFormat,
+                        barcodeBoundingBox: barcodeBoundingBox,
+                        barcodeImageUri: barcodeImageUri,
+                        cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                        cropInfo: croppedBarcodeResult?.cropInfo || null,
+                        // API 요청을 위한 추가 정보
+                        brandId: null,
+                        thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용
+                      });
+                    },
+                  },
+                  {
+                    text: '취소',
+                    style: 'cancel',
+                  },
+                ]);
+              }
+            } catch (processingError) {
+              console.error('카메라 이미지 처리 중 오류:', processingError);
+              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
+            }
           } else {
             console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다시 촬영해주세요.');
@@ -189,7 +579,7 @@ const RegisterMainScreen = () => {
       console.error('카메라 촬영 예외 발생:', error);
       Alert.alert('오류', '카메라를 사용하는 중 문제가 발생했습니다.');
     }
-  }, [navigation, requestCameraPermission]);
+  }, [navigation, requestCameraPermission, gifticonType, boxType, selectedShareBoxId]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -197,6 +587,9 @@ const RegisterMainScreen = () => {
 
       {/* 안전 영역 고려한 상단 여백 */}
       <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+
+      {/* OCR 로딩 모달 */}
+      <LoadingOcrModal visible={isOcrLoading} message="이미지 분석 중입니다..." />
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
@@ -229,7 +622,7 @@ const RegisterMainScreen = () => {
             <Card style={styles.uploadCard}>
               <View style={styles.uploadContent}>
                 <Image
-                  source={require('../../../assets/images/gifticon-upload.png')}
+                  source={require('../../../assets/images/gifticon_upload.png')}
                   style={styles.uploadIcon}
                   resizeMode="contain"
                 />

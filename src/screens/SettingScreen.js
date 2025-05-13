@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -7,6 +7,11 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Platform,
+  PermissionsAndroid,
+  Alert,
+  NativeEventEmitter,
+  NativeModules,
 } from 'react-native';
 import { useTheme } from 'react-native-elements';
 import Slider from '../components/ui/Slider';
@@ -16,6 +21,7 @@ import { Svg, Path } from 'react-native-svg';
 
 const SettingScreen = () => {
   const { theme } = useTheme();
+  const { WearSyncModule } = NativeModules;
 
   // 상태 관리
   const [expiryNotification, setExpiryNotification] = useState(true);
@@ -62,20 +68,68 @@ const SettingScreen = () => {
     setConnectionStep(0);
   };
 
-  // 워치 연결 모달 닫기
-  const closeWatchModal = () => {
-    setWatchModalVisible(false);
-    setConnectionStep(0);
-  };
-
   // 워치 연결 시작
-  const startConnection = () => {
+  const startConnection = async () => {
     setConnectionStep(1);
 
-    // 워치 연결 시뮬레이션 (3초 후 연결 완료)
-    setTimeout(() => {
-      setConnectionStep(2);
-    }, 3000);
+    if (Platform.OS !== 'android') {
+      Alert.alert('미지원', 'Nearby Advertising은 안드로이드에서만 사용 가능합니다.');
+      setConnectionStep(0);
+      return;
+    }
+
+    try {
+      // 필요한 권한 목록 정의
+      const permissionsToRequest = [
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      ];
+
+      const granted = await PermissionsAndroid.requestMultiple(permissionsToRequest);
+
+      // 모든 필수 권한이 승인되었는지 확인
+      const allPermissionsGranted = 
+        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT] === PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+
+      if (allPermissionsGranted) {
+        const result = await WearSyncModule.startNearbyAdvertising();
+        console.log('[Nearby] Advertising started:', result);
+      } else {
+        Alert.alert('권한 거부됨', '워치 연결을 시작하려면 필요한 모든 권한이 필요합니다.');
+        setConnectionStep(0);
+      }
+    } catch (error) {
+      console.error('[Nearby] Failed to start advertising:', error);
+      Alert.alert('오류', '워치 연결 중 오류가 발생했습니다: ' + error.message);
+      setConnectionStep(0);
+    }
+  };
+
+  // 워치 연결 모달 닫기
+  const closeWatchModal = async () => {
+    if (connectionStep === 2) {
+      try {
+        await WearSyncModule.stopNearbyAdvertising();
+        console.log('[Nearby] Advertising stopped');
+      } catch (error) {
+        console.error('[Nearby] Failed to stop advertising:', error);
+      }
+    } else if (connectionStep === 1) {
+      // 연결 중 상태에서 취소 시에도 광고 중지
+      try {
+        await WearSyncModule.stopNearbyAdvertising();
+        console.log('[Nearby] Advertising stopped');
+      } catch (error) {
+        console.error('[Nearby] Failed to stop advertising:', error);
+      }
+    }
+    setWatchModalVisible(false);
+    setConnectionStep(0);
   };
 
   // 모달 내용 렌더링
@@ -125,6 +179,14 @@ const SettingScreen = () => {
               <Text style={styles.loadingText}>연결 중입니다...</Text>
             </View>
           </View>
+          <View style={styles.modalFooter}>
+            <TouchableOpacity
+              style={[styles.confirmButton, { marginTop: 10 }]}
+              onPress={closeWatchModal}
+            >
+              <Text style={styles.buttonText}>취소</Text>
+            </TouchableOpacity>
+          </View>
         </>
       );
     }
@@ -155,6 +217,22 @@ const SettingScreen = () => {
     }
   };
 
+  useEffect(() => {
+    if (Platform.OS === 'android' && WearSyncModule) {
+      const eventEmitter = new NativeEventEmitter(WearSyncModule);
+      const subscription = eventEmitter.addListener('NearbyConnected', (event) => {
+        // event.endpointId가 특정 값이어야만 성공 처리 등 추가 검증 가능
+        if (event && event.endpointId) {
+          setConnectionStep(2);
+        } else {
+          // 연결 실패 처리
+          Alert.alert('연결 실패', '실제 연결이 성립되지 않았습니다.');
+        }
+      });
+      return () => subscription.remove();
+    }
+  }, []);
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
@@ -180,7 +258,7 @@ const SettingScreen = () => {
             {loginType === 'kakao' ? (
               <>
                 <Image
-                  source={require('../assets/images/login-kakaotalk.png')}
+                  source={require('../assets/images/login_kakaotalk.png')}
                   style={styles.socialIcon}
                   resizeMode="contain"
                 />

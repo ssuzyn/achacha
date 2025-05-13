@@ -15,6 +15,8 @@ import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
 import { useNavigation } from '@react-navigation/native';
+import { API_CONFIG } from '../../api/config';
+import apiClient from '../../api/apiClient';
 
 // 샘플 데이터
 const DUMMY_DATA = {
@@ -94,11 +96,11 @@ const MATERIAL_ICONS = {
 // 기프티콘 수에 따른 아이콘 선택 함수
 const getShareBoxIcon = count => {
   if (count <= 10) {
-    return require('../../assets/images/share-box-icon1.png');
+    return require('../../assets/images/share_box_icon1.png');
   } else if (count <= 20) {
-    return require('../../assets/images/share-box-icon2.png');
+    return require('../../assets/images/share_box_icon2.png');
   } else {
-    return require('../../assets/images/share-box-icon3.png');
+    return require('../../assets/images/share_box_icon3.png');
   }
 };
 
@@ -125,13 +127,25 @@ const BoxMainScreen = () => {
   };
 
   // 확인 버튼 핸들러
-  const handleConfirmPress = () => {
+  const handleConfirmPress = async () => {
     if (!inviteCode.trim()) {
       return;
     }
 
-    // TODO: 초대코드 검증 및 참여 로직 구현
-    handleCloseModal();
+    try {
+      // TODO: 실제로는 inviteCode로 shareBoxId를 서버에서 조회하거나, 사용자가 박스를 선택해야 함
+      // 여기서는 예시로 shareBoxId를 inviteCode에서 추출했다고 가정 (실제 로직에 맞게 수정 필요)
+      const shareBoxId = inviteCode.trim(); // 실제로는 올바른 shareBoxId를 사용해야 함
+      const response = await apiClient.post(
+        API_CONFIG.ENDPOINTS.JOIN_SHARE_BOX(shareBoxId),
+        { shareBoxInviteCode: inviteCode.trim() }
+      );
+      alert('쉐어박스에 성공적으로 참여하였습니다!');
+      handleCloseModal();
+      // TODO: 필요하다면 목록 새로고침 등 추가
+    } catch (error) {
+      alert('참여에 실패했습니다. 초대코드를 확인해 주세요.');
+    }
   };
 
   // 쉐어박스 생성 버튼 클릭 핸들러

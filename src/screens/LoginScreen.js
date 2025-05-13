@@ -40,7 +40,7 @@ const LoginScreen = () => {
             {/* 로고 영역
             <View style={styles.logoContainer}>
               <Image
-                source={require('../assets/images/splash-icon.png')}
+                source={require('../assets/images/splash_icon.png')}
                 style={styles.logo}
                 resizeMode="contain"
               />
@@ -82,7 +82,7 @@ const LoginScreen = () => {
               >
                 <View style={styles.buttonContentContainer}>
                   <Image
-                    source={require('../assets/images/login-kakaotalk.png')}
+                    source={require('../assets/images/login_kakaotalk.png')}
                     style={styles.buttonIcon}
                     resizeMode="contain"
                   />

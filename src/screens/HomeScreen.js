@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StyleSheet, ScrollView, View, FlatList, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
 import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import NavigationService from '../navigation/NavigationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -12,21 +13,21 @@ const SAMPLE_GIFTICONS = [
     id: '1',
     brand: '맥도날드',
     name: '모바일 금액권 20,000원',
-    image: require('../assets/images/dummy-mc.png'),
+    image: require('../assets/images/dummy_mc.png'),
     expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5일 후
   },
   {
     id: '2',
     brand: '메가MGC커피',
     name: '(핫)아이스라떼',
-    image: require('../assets/images/dummy-mega.png'),
+    image: require('../assets/images/dummy_mega.png'),
     expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3일 후
   },
   {
     id: '3',
     brand: '스타벅스',
     name: '아메리카노 Tall',
-    image: require('../assets/images/dummy-starbucks.png'),
+    image: require('../assets/images/dummy_starbucks.png'),
     expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후
   },
 ];
@@ -34,6 +35,16 @@ const SAMPLE_GIFTICONS = [
 const HomeScreen = () => {
   const { theme } = useTheme();
   const username = '으라차차'; // 실제 앱에서는 로그인된 사용자 이름을 가져옵니다
+
+  useEffect(() => {
+    const printTokens = async () => {
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+      console.log('Access Token:', accessToken);
+      console.log('Refresh Token:', refreshToken);
+    };
+    printTokens();
+  }, []);
 
   // 날짜 간격 계산 함수
   const calculateDaysLeft = expiryDate => {
@@ -138,7 +149,7 @@ const HomeScreen = () => {
             <Card.FeatureCard
               title={`나누면\n즐거움 두배,\n쉐어박스`}
               iconName="inventory-2"
-              imageSource={require('../assets/images/share-box.png')}
+              imageSource={require('../assets/images/share_box.png')}
               onPress={handleShareBoxPress}
               style={styles.interactiveCard}
             />
@@ -146,7 +157,7 @@ const HomeScreen = () => {
             {/* 레이더 카드 */}
             <Card.RadarCard
               text={`쓱 - 뿌리기\n행운의 주인공은?`}
-              image={require('../assets/images/home-radar.png')}
+              image={require('../assets/images/home_radar.png')}
               onPress={handleMapPress}
             />
           </View>
@@ -166,7 +177,7 @@ const HomeScreen = () => {
               </View>
               <View style={styles.giftMessageImageContainer}>
                 <Image
-                  source={require('../assets/images/home-gift.png')}
+                  source={require('../assets/images/home_gift.png')}
                   style={styles.giftMessageImage}
                   resizeMode="contain"
                 />

@@ -132,9 +132,9 @@ const BoxDetailProductScreen = () => {
             usageHistoryCreatedAt: usedAt || '2025-01-15T14:30:00', // 사용일시
             usedBy: '김철수', // 사용한 사람 정보 추가
             userName: '홍길동', // 등록자 정보 추가
-            thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
+            thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
             originalImagePath:
-              usageType === 'SELF_USE' ? require('../../assets/images/dummy-starbucks.png') : null,
+              usageType === 'SELF_USE' ? require('../../assets/images/dummy_starbucks.png') : null,
             gifticonCreatedAt: '2025-01-01T10:30:00',
             // 더미 데이터에 공유자 ID 추가
             userId: 78, // 사용자 ID
@@ -154,8 +154,8 @@ const BoxDetailProductScreen = () => {
             userName: '홍길동',
             shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
             shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
-            thumbnailPath: require('../../assets/images/dummy-starbucks.png'),
-            originalImagePath: require('../../assets/images/dummy-starbucks.png'),
+            thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
+            originalImagePath: require('../../assets/images/dummy_starbucks.png'),
             gifticonCreatedAt: '2025-01-15T10:30:00',
             barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
             barcodeImageUrl: require('../../assets/images/barcode.png'), // 바코드 이미지 (더미)

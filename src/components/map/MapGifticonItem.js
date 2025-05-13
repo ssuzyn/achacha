@@ -21,8 +21,7 @@ const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
       onPress={handleItemPress}
       activeOpacity={0.7}
     >
-      {/* 기프티콘 이미지 */}
-      <Image source={StarbucksImg} style={styles.image} />
+      <Image source={{ uri: thumbnailPath }} style={styles.image} />
       {/* 기프티콘 정보 */}
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>
