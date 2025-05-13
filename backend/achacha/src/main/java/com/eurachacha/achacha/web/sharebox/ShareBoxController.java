@@ -2,6 +2,7 @@ package com.eurachacha.achacha.web.sharebox;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +13,7 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppSer
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -60,5 +62,12 @@ public class ShareBoxController {
 
 		shareBoxAppService.unshareGifticon(shareBoxId, gifticonId);
 		return ResponseEntity.ok("공유 해제 완료했습니다.");
+	}
+
+	// 쉐어박스 참여자 조회
+	@GetMapping("/{shareBoxId}/users")
+	public ResponseEntity<ShareBoxParticipantsResponseDto> getShareBoxParticipants(
+		@PathVariable Integer shareBoxId) {
+		return ResponseEntity.ok(shareBoxAppService.getShareBoxParticipants(shareBoxId));
 	}
 }
