@@ -117,8 +117,7 @@ const BoxMainScreen = () => {
     }
 
     try {
-      const shareBoxId = inviteCode.trim();
-      await joinShareBox(shareBoxId, inviteCode.trim());
+      await joinShareBox(inviteCode.trim());
       alert('쉐어박스에 성공적으로 참여하였습니다!');
       handleCloseModal();
       // TODO: 필요하다면 목록 새로고침 등 추가

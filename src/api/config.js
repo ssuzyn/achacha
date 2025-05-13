@@ -14,7 +14,7 @@ export const API_CONFIG = {
     // 쉐어박스 관련
     SHARE_BOXES: '/api/share-boxes', // 목록 조회(GET), 생성(POST) 모두 사용
     CREATE_SHARE_BOX: '/api/share-boxes', // (생성용 별칭, 실제 경로는 동일)
-    JOIN_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/join`,
+    JOIN_SHARE_BOX: '/api/share-boxes/join',
     LEAVE_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/leave`,
     SHARE_BOX_SETTINGS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/settings`,
     SHARE_BOX_USERS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/users`,

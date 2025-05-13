@@ -38,7 +38,17 @@ const BoxSettingScreen = () => {
         setMemberEntryEnabled(data.shareBoxAllowParticipation);
         setShareBoxCode(data.shareBoxInviteCode);
       } catch (e) {
-        Alert.alert('오류', '쉐어박스 설정 정보를 불러오지 못했습니다.');
+        const errorCode = e?.response?.data?.errorCode;
+        if (errorCode === 'SHAREBOX_008') {
+          Alert.alert('접근 불가', '해당 쉐어박스에 접근 권한이 없습니다.');
+          // 필요하다면 BoxMainScreen 등으로 이동 처리
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'BoxMain' }],
+          });
+        } else {
+          Alert.alert('오류', '쉐어박스 설정 정보를 불러오지 못했습니다.');
+        }
       }
     };
     loadSettings();
