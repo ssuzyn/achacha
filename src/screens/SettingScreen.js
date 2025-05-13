@@ -20,6 +20,7 @@ import Switch from '../components/ui/Switch';
 import { Svg, Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserById } from '../api/userInfo';
+import { ERROR_MESSAGES } from '../constants/errorMessages';
 
 const SettingScreen = () => {
   const { theme } = useTheme();
@@ -244,6 +245,14 @@ const SettingScreen = () => {
         const user = await fetchUserById(userId);
         setNickname(user.userName);
       } catch (e) {
+        const errorCode = e?.response?.data?.errorCode;
+        let message = '유저 정보 조회에 실패했습니다.';
+        if (errorCode && ERROR_MESSAGES[errorCode]) {
+          message = ERROR_MESSAGES[errorCode];
+        } else if (e?.response?.data?.message) {
+          message = e.response.data.message;
+        }
+        Alert.alert('오류', message);
         console.error('유저 정보 조회 실패:', e);
       }
     };

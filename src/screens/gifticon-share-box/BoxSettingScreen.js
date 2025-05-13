@@ -17,6 +17,7 @@ import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
 import { leaveShareBox, fetchShareBoxSettings, fetchShareBoxUsers } from '../../api/shareBoxApi';
+import { ERROR_MESSAGES } from '../../constants/errorMessages';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -39,15 +40,19 @@ const BoxSettingScreen = () => {
         setShareBoxCode(data.shareBoxInviteCode);
       } catch (e) {
         const errorCode = e?.response?.data?.errorCode;
+        let message = '쉐어박스 설정 정보를 불러오지 못했습니다.';
+        if (errorCode && ERROR_MESSAGES[errorCode]) {
+          message = ERROR_MESSAGES[errorCode];
+        } else if (e?.response?.data?.message) {
+          message = e.response.data.message;
+        }
+        Alert.alert('접근 불가', message);
         if (errorCode === 'SHAREBOX_008') {
-          Alert.alert('접근 불가', '해당 쉐어박스에 접근 권한이 없습니다.');
           // 필요하다면 BoxMainScreen 등으로 이동 처리
           navigation.reset({
             index: 0,
             routes: [{ name: 'BoxMain' }],
           });
-        } else {
-          Alert.alert('오류', '쉐어박스 설정 정보를 불러오지 못했습니다.');
         }
       }
     };
@@ -67,7 +72,14 @@ const BoxSettingScreen = () => {
         }));
         setMembers(membersList);
       } catch (e) {
-        Alert.alert('오류', '참가자 목록을 불러오지 못했습니다.');
+        const errorCode = e?.response?.data?.errorCode;
+        let message = '참가자 목록을 불러오지 못했습니다.';
+        if (errorCode && ERROR_MESSAGES[errorCode]) {
+          message = ERROR_MESSAGES[errorCode];
+        } else if (e?.response?.data?.message) {
+          message = e.response.data.message;
+        }
+        Alert.alert('오류', message);
       }
     };
     loadUsers();

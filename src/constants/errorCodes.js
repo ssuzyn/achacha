@@ -6,6 +6,7 @@ export const AUTH_ERRORS = {
   AUTH_04: 'AUTH_04', // 카카오 API 호출 중 오류
   AUTH_05: 'AUTH_05', // 토큰 정보 불일치
   AUTH_06: 'AUTH_06', // 유효하지 않은 리프레시 토큰
+  AUTH_08: 'AUTH_08', // 해당 사용자 정보에 접근할 권한이 없습니다 (신규 추가)
 };
 
 // 파일 관련 에러 코드
@@ -47,6 +48,18 @@ export const RESOURCE_ERRORS = {
   SHAREBOX_001: 'SHAREBOX_001', // 쉐어박스를 찾을 수 없음
 };
 
+// 쉐어박스 관련 에러 코드 (생성/참여 등)
+export const SHAREBOX_ERRORS = {
+  SHAREBOX_001: 'SHAREBOX_001', // 쉐어박스를 찾을 수 없음
+  SHAREBOX_002: 'SHAREBOX_002', // 쉐어박스 생성에 실패했습니다.
+  SHAREBOX_003: 'SHAREBOX_003', // 유효하지 않은 초대 코드입니다.
+  SHAREBOX_004: 'SHAREBOX_004', // 참여가 비활성화된 쉐어박스입니다.
+  SHAREBOX_005: 'SHAREBOX_005', // 이미 참여 중인 쉐어박스입니다.
+  SHAREBOX_006: 'SHAREBOX_006', // 최대 참여자 수(10명)에 도달했습니다.
+  SHAREBOX_007: 'SHAREBOX_007', // 유효하지 않은 쉐어박스 이름입니다.
+  SHAREBOX_008: 'SHAREBOX_008', // 접근 권한 없음 (신규 추가)
+};
+
 // S3 및 서버 관련 에러 코드
 export const SERVER_ERRORS = {
   S3_001: 'S3_001', // 파일 업로드 중 오류
@@ -62,6 +75,7 @@ export const ERROR_CODES = {
   ...AI_ERRORS,
   ...GIFTICON_ERRORS,
   ...RESOURCE_ERRORS,
+  ...SHAREBOX_ERRORS,
   ...SERVER_ERRORS,
 };
 

@@ -6,6 +6,7 @@ export const AUTH_ERROR_MESSAGES = {
   AUTH_04: '카카오 API 호출 중 오류가 발생했습니다.',
   AUTH_05: '토큰 정보가 일치하지 않습니다.',
   AUTH_06: '유효하지 않은 리프레시 토큰입니다.',
+  AUTH_08: '해당 사용자 정보에 접근할 권한이 없습니다.',
 };
 
 // 파일 관련 에러 메시지
@@ -54,6 +55,18 @@ export const SERVER_ERROR_MESSAGES = {
   X003: '서버 에러가 발생했습니다.',
 };
 
+// 쉐어박스 관련 에러 메시지 (생성/참여 등)
+export const SHAREBOX_ERROR_MESSAGES = {
+  SHAREBOX_001: '쉐어박스를 찾을 수 없습니다.',
+  SHAREBOX_002: '쉐어박스 생성에 실패했습니다.',
+  SHAREBOX_003: '유효하지 않은 초대 코드입니다.',
+  SHAREBOX_004: '참여가 비활성화된 쉐어박스입니다.',
+  SHAREBOX_005: '이미 참여 중인 쉐어박스입니다.',
+  SHAREBOX_006: '최대 참여자 수(10명)에 도달했습니다.',
+  SHAREBOX_007: '유효하지 않은 쉐어박스 이름입니다.',
+  SHAREBOX_008: '해당 쉐어박스에 접근 권한이 없습니다.',
+};
+
 // 모든 에러 메시지를 하나의 객체로 합침
 export const ERROR_MESSAGES = {
   ...AUTH_ERROR_MESSAGES,
@@ -62,6 +75,7 @@ export const ERROR_MESSAGES = {
   ...AI_ERROR_MESSAGES,
   ...GIFTICON_ERROR_MESSAGES,
   ...RESOURCE_ERROR_MESSAGES,
+  ...SHAREBOX_ERROR_MESSAGES,
   ...SERVER_ERROR_MESSAGES,
 };
 
