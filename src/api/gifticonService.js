@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * 기프티콘 API 서비스
@@ -551,20 +552,76 @@ const gifticonService = {
    */
   async updateAmountGifticonUsageHistory(gifticonId, usageHistoryId, usageAmount) {
     try {
+      // 입력값을 명시적으로 숫자 타입으로 변환
+      const gId = parseInt(gifticonId, 10);
+      const hId = parseInt(usageHistoryId, 10);
+      const amount = parseInt(usageAmount, 10);
+
+      // 숫자 타입 검증
+      if (isNaN(gId) || isNaN(hId) || isNaN(amount)) {
+        throw new Error('인자 값이 유효한 숫자가 아닙니다.');
+      }
+
       console.log(
         '[API] 금액형 기프티콘 사용내역 수정 요청:',
-        gifticonId,
-        usageHistoryId,
-        usageAmount
+        '기프티콘ID:',
+        gId,
+        '사용내역ID:',
+        hId,
+        '사용금액:',
+        amount,
+        '타입:',
+        typeof amount
       );
-      const response = await apiClient.put(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history/${usageHistoryId}`,
-        { usageAmount }
-      );
+
+      // API 요청 URL
+      const url = `${API_BASE_URL}${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gId}/usage-history/${hId}`;
+      console.log('[API] 요청 URL:', url);
+
+      // 요청 데이터 생성 - 숫자형으로 전송
+      const requestData = { usageAmount: amount };
+      console.log('[API] 요청 데이터:', JSON.stringify(requestData));
+
+      // 인증 토큰 가져오기
+      const accessToken = await AsyncStorage.getItem('accessToken');
+
+      // 헤더 설정
+      const headers = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+
+      // 인증 토큰이 있으면 헤더에 추가
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
+      // 직접 axios 호출로 요청 수행
+      const response = await axios.put(url, requestData, { headers });
+
       console.log('[API] 금액형 기프티콘 사용내역 수정 성공:', response.data);
       return response.data;
     } catch (error) {
       console.error('[API] 금액형 기프티콘 사용내역 수정 실패:', error);
+
+      // 에러 상세 정보 기록
+      if (error.response) {
+        const status = error.response.status;
+        console.error('상태 코드:', status);
+        console.error('응답 데이터:', error.response.data);
+        console.error('응답 헤더:', error.response.headers);
+
+        // 서버 오류 메시지 확인
+        if (status === 500) {
+          console.error('서버 내부 오류가 발생했습니다. 서버 로그를 확인하세요.');
+          console.error('요청 데이터:', JSON.stringify({ usageAmount: parseInt(usageAmount, 10) }));
+        }
+      } else if (error.request) {
+        console.error('요청은 전송되었으나 응답이 없음:', error.request);
+      } else {
+        console.error('에러 메시지:', error.message);
+      }
+
       throw error;
     }
   },

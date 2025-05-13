@@ -109,8 +109,9 @@ const DetailAmountScreen = () => {
         setIsSharer(route.params.isSharer);
       }
       // refresh 플래그가 true이면 데이터 다시 로드
-      if (route.params.refresh && route.params.gifticonId) {
-        loadGifticonData(route.params.gifticonId);
+      if (route.params.refresh && gifticonId) {
+        console.log('[DetailAmountScreen] 데이터 새로고침 요청 - 기프티콘 ID:', gifticonId);
+        loadGifticonData(route.params.gifticonId || gifticonId);
         // 사용하기 모드 종료
         setIsUsing(false);
       }

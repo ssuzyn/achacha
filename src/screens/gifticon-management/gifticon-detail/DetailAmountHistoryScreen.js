@@ -188,14 +188,34 @@ const DetailAmountHistoryScreen = () => {
 
   // 수정 저장 함수
   const handleSaveEdit = async transactionId => {
+    // 입력값 검증
+    if (!editValue || editValue.trim() === '') {
+      Alert.alert('알림', '금액을 입력해주세요.');
+      return;
+    }
+
+    // 숫자 변환 전 입력값 검증 (숫자만 허용)
+    if (!/^\d+$/.test(editValue)) {
+      Alert.alert('알림', '금액은 숫자만 입력 가능합니다.');
+      return;
+    }
+
+    // 숫자로 변환
     const amount = parseInt(editValue, 10);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('알림', '올바른 금액을 입력하세요.');
+      Alert.alert('알림', '올바른 금액을 입력하세요. (0보다 큰 숫자)');
       return;
     }
 
     try {
       setLoading(true);
+
+      console.log('[DetailAmountHistoryScreen] 사용내역 수정 요청:', {
+        gifticonId,
+        transactionId,
+        amount,
+        inputType: typeof amount,
+      });
 
       // API 호출로 사용내역 수정
       await gifticonService.updateAmountGifticonUsageHistory(
@@ -220,19 +240,49 @@ const DetailAmountHistoryScreen = () => {
       await loadUsageHistory();
 
       // 성공 메시지 표시
-      Alert.alert('성공', '기프티콘 사용금액이 변경되었습니다.');
+      Alert.alert('성공', '기프티콘 사용금액이 변경되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
+            NavigationService.goBack({ refresh: true });
+          },
+        },
+      ]);
     } catch (error) {
       console.error('사용내역 수정 오류:', error);
 
       // 에러 메시지 표시
+      let errorMessage = '사용내역 수정 중 오류가 발생했습니다.';
+
       if (error.response) {
-        const errorMessage =
-          error.response.data?.message || '사용내역 수정 중 오류가 발생했습니다.';
-        Alert.alert('오류', errorMessage);
+        console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
+
+        const status = error.response.status;
+
+        // 특정 에러 코드에 따른 메시지 처리
+        if (status === 400) {
+          errorMessage = '잘못된 요청입니다. 금액을 확인해주세요.';
+        } else if (status === 403) {
+          errorMessage = '권한이 없습니다.';
+        } else if (status === 404) {
+          errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+        } else if (status === 500) {
+          errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        }
+
+        // 서버에서 온 메시지가 있으면 이를 우선 사용
+        if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
       } else {
-        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+        errorMessage = `오류: ${error.message}`;
       }
 
+      Alert.alert('오류', errorMessage);
+    } finally {
       setLoading(false);
     }
   };
@@ -250,6 +300,11 @@ const DetailAmountHistoryScreen = () => {
           try {
             setLoading(true);
 
+            console.log('[DetailAmountHistoryScreen] 사용내역 삭제 요청:', {
+              gifticonId,
+              transactionId,
+            });
+
             // API 호출로 사용내역 삭제
             await gifticonService.deleteAmountGifticonUsageHistory(
               gifticonId,
@@ -266,18 +321,48 @@ const DetailAmountHistoryScreen = () => {
             await loadUsageHistory();
 
             // 성공 메시지 표시
-            Alert.alert('성공', '기프티콘 사용내역이 삭제되었습니다.');
+            Alert.alert('성공', '기프티콘 사용내역이 삭제되었습니다.', [
+              {
+                text: '확인',
+                onPress: () => {
+                  // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
+                  NavigationService.goBack({ refresh: true });
+                },
+              },
+            ]);
           } catch (error) {
             console.error('사용내역 삭제 오류:', error);
 
             // 에러 메시지 표시
+            let errorMessage = '사용내역 삭제 중 오류가 발생했습니다.';
+
             if (error.response) {
-              const errorMessage =
-                error.response.data?.message || '사용내역 삭제 중 오류가 발생했습니다.';
-              Alert.alert('오류', errorMessage);
+              console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
+
+              const status = error.response.status;
+
+              // 특정 에러 코드에 따른 메시지 처리
+              if (status === 400) {
+                errorMessage = '잘못된 요청입니다.';
+              } else if (status === 403) {
+                errorMessage = '권한이 없습니다.';
+              } else if (status === 404) {
+                errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+              } else if (status === 500) {
+                errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+              }
+
+              // 서버에서 온 메시지가 있으면 이를 우선 사용
+              if (error.response.data?.message) {
+                errorMessage = error.response.data.message;
+              }
+            } else if (error.request) {
+              errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
             } else {
-              Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+              errorMessage = `오류: ${error.message}`;
             }
+
+            Alert.alert('오류', errorMessage);
           } finally {
             setLoading(false);
           }

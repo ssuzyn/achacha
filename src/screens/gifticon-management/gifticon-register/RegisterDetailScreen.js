@@ -900,6 +900,8 @@ const RegisterDetailScreen = () => {
             // 기프티콘 타입에 따라 다른 상세 화면으로 이동
             const targetScreen =
               gifticonType === 'PRODUCT' ? 'DetailProductScreen' : 'DetailAmountScreen';
+
+            // 탭 네비게이션을 먼저 설정하고 그 안에 있는 스택 네비게이션을 설정
             navigation.reset({
               index: 0,
               routes: [
@@ -913,7 +915,6 @@ const RegisterDetailScreen = () => {
                         gifticonId: response.gifticonId,
                         scope: boxType === 'SHARE_BOX' ? 'SHARE_BOX' : 'MY_BOX',
                         shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,
-                        refresh: true,
                       },
                     },
                   },
