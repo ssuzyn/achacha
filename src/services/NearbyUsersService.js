@@ -19,7 +19,7 @@ class NearbyUsersService {
     this.discoveryListener = null;
     this.appStateListener = null;
     this.isAdvertising = false;
-    this.serviceUUID = null;
+    this.serviceUUID = SERVICE_UUID; // 항상 고정된 SERVICE_UUID 사용
 
     // BleManager 초기화
     BleManager.start({ showAlert: false });
@@ -185,24 +185,10 @@ class NearbyUsersService {
     }
   }
 
-  // 서비스 UUID 가져오기 또는 생성
+  // 서비스 UUID 가져오기
   async getServiceUUID() {
-    try {
-      // 저장된 UUID 확인
-      let uuid = await AsyncStorage.getItem(SERVICE_UUID);
-
-      // 저장된 UUID가 없으면 새로 생성
-      if (!uuid) {
-        uuid = uuidv4(); // 전체 UUID 사용 (substring 제거)
-        await AsyncStorage.setItem(SERVICE_UUID, uuid);
-      }
-
-      this.serviceUUID = uuid;
-      return uuid;
-    } catch (error) {
-      console.error('서비스 UUID 가져오기 실패:', error);
-      return null;
-    }
+    // 항상 고정된 SERVICE_UUID 사용
+    return SERVICE_UUID;
   }
 
   // 블루투스 초기화 및 권한 설정
@@ -363,6 +349,7 @@ class NearbyUsersService {
       });
 
       // 스캔 시작
+      console.log('스캔 시작: SERVICE_UUID =', SERVICE_UUID);
       await BleManager.scan([serviceUUID], 5, true);
     } catch (error) {
       this.isScanning = false;
