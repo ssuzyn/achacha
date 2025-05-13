@@ -13,7 +13,7 @@ import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 public interface ShareBoxAppService {
 	ShareBoxCreateResponseDto createShareBox(ShareBoxCreateRequestDto requestDto);
 
-	void joinShareBox(Integer shareBoxId, ShareBoxJoinRequestDto requestDto);
+	void joinShareBox(ShareBoxJoinRequestDto requestDto);
 
 	void shareGifticon(Integer shareBoxId, Integer gifticonId);
 
