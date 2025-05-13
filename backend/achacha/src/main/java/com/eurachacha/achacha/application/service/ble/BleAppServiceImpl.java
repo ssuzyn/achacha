@@ -7,7 +7,7 @@ import com.eurachacha.achacha.application.port.input.ble.BleAppService;
 import com.eurachacha.achacha.application.port.input.ble.dto.response.BleTokenResponseDto;
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
-import com.eurachacha.achacha.domain.ble.BleToken;
+import com.eurachacha.achacha.domain.model.ble.BleToken;
 import com.eurachacha.achacha.domain.service.ble.BleTokenDomainService;
 
 import lombok.RequiredArgsConstructor;

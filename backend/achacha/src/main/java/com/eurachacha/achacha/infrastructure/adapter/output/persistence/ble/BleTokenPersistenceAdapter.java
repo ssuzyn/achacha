@@ -3,7 +3,7 @@ package com.eurachacha.achacha.infrastructure.adapter.output.persistence.ble;
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
-import com.eurachacha.achacha.domain.ble.BleToken;
+import com.eurachacha.achacha.domain.model.ble.BleToken;
 
 import lombok.RequiredArgsConstructor;
 

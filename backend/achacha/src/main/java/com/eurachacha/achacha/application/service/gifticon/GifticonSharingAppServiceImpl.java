@@ -12,7 +12,7 @@ import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
-import com.eurachacha.achacha.domain.ble.BleToken;
+import com.eurachacha.achacha.domain.model.ble.BleToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
