@@ -1,5 +1,8 @@
 package com.eurachacha.achacha.application.port.output.gifticon;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
@@ -22,4 +25,7 @@ public interface GifticonRepository {
 	Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable);
 
 	Gifticon findById(Integer gifticonId);
+
+	// ShareBox의 기프티콘 갯수 조회
+	Map<Integer, Long> countGifticonsByShareBoxIds(List<Integer> shareBoxIds);
 }

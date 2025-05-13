@@ -1,7 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.sharebox;
 
-import java.util.Optional;
-
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
@@ -29,17 +29,23 @@ public class ShareBoxPersistenceAdapter implements ShareBoxRepository {
 
 	@Override
 	public ShareBox findById(Integer id) {
-		return shareBoxJpaRepository.findById(id)
-			.orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+		return shareBoxJpaRepository.findByIdWithUser(id)
+			.orElseThrow(() -> new CustomException(ErrorCode.SHAREBOX_NOT_FOUND));
 	}
 
 	@Override
-	public Optional<ShareBox> findByInviteCode(String inviteCode) {
-		return shareBoxJpaRepository.findByInviteCode(inviteCode);
+	public ShareBox findByInviteCode(String inviteCode) {
+		return shareBoxJpaRepository.findByInviteCode(inviteCode)
+			.orElseThrow(() -> new CustomException(ErrorCode.SHAREBOX_NOT_FOUND));
 	}
 
 	@Override
 	public boolean existsById(Integer shareBoxId) {
 		return shareBoxJpaRepository.existsById(shareBoxId);
+	}
+
+	@Override
+	public Slice<ShareBox> findParticipatedShareBoxes(Integer userId, Pageable pageable) {
+		return shareBoxJpaRepository.findParticipatedShareBoxes(userId, pageable);
 	}
 }

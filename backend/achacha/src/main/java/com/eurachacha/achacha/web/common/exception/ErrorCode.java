@@ -20,6 +20,7 @@ public enum ErrorCode {
 	AUTH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH_005", "토큰 정보가 일치하지 않습니다."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "유효하지 않은 리프레시 토큰입니다."),
 	NOT_AUTHENTICATED_USER(HttpStatus.UNAUTHORIZED, "AUTH_007", "인증 되지 않은 사용자입니다."),
+	UNAUTHORIZED_USER_ACCESS(HttpStatus.FORBIDDEN, "AUTH_008", "해당 사용자 정보에 접근할 권한이 없습니다."),
 
 	// FCM 토큰 관련 에러 코드
 	FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_001", "FCM 토큰을 찾을 수 없습니다."),
@@ -83,7 +84,6 @@ public enum ErrorCode {
 	// ShareBox 관련 에러 코드
 	SHAREBOX_NOT_FOUND(HttpStatus.NOT_FOUND, "SHAREBOX_001", "쉐어박스를 찾을 수 없습니다."),
 	INVITE_CODE_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "SHAREBOX_002", "쉐어박스 코드 생성에 실패했습니다."),
-	INVALID_INVITE_CODE(HttpStatus.BAD_REQUEST, "SHAREBOX_003", "유효하지 않은 초대 코드입니다."),
 	SHAREBOX_PARTICIPATION_DISABLED(HttpStatus.FORBIDDEN, "SHAREBOX_004", "참여가 비활성화된 쉐어박스입니다."),
 	ALREADY_PARTICIPATING_SHAREBOX(HttpStatus.CONFLICT, "SHAREBOX_005", "이미 참여 중인 쉐어박스입니다."),
 	SHAREBOX_MAX_PARTICIPANTS_REACHED(HttpStatus.FORBIDDEN, "SHAREBOX_006", "최대 참여자 수(10명)에 도달했습니다."),
@@ -92,8 +92,9 @@ public enum ErrorCode {
 	CANNOT_SHARE_USED_AMOUNT_GIFTICON(HttpStatus.BAD_REQUEST, "SHAREBOX_009", "일부 사용된 금액형 기프티콘은 공유할 수 없습니다."),
 	GIFTICON_ALREADY_SHARED(HttpStatus.BAD_REQUEST, "SHAREBOX_010", "이미 공유된 기프티콘입니다."),
 	GIFTICON_NOT_SHARED_IN_THIS_SHAREBOX(HttpStatus.BAD_REQUEST, "SHAREBOX_011", "이 쉐어박스에 공유되지 않은 기프티콘입니다."),
+	UNAUTHORIZED_SHAREBOX_OWNER_ACCESS(HttpStatus.FORBIDDEN, "SHAREBOX_012", "해당 쉐어박스 방장만 접근 가능합니다.");
 
-	// BLE 관련 에러코드
+	// GIVEAWAY 관련 에러코드
 	NO_NEARBY_PEOPLES(HttpStatus.NOT_FOUND, "GIVEAWAY_001", "주변에 감지된 사용자가 없습니다.");
 
 	// http 상태 코드
