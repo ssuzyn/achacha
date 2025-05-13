@@ -321,39 +321,56 @@ const DetailAmountScreen = () => {
   };
 
   // 금액 입력 완료 처리
-  const handleConfirmAmount = () => {
+  const handleConfirmAmount = async () => {
     // 금액 입력 값 검증
     if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
-      // 실제 구현에서는 오류 메시지 표시
-      // console.log('유효한 금액을 입력해주세요');
+      Alert.alert('알림', '유효한 금액을 입력해주세요.');
       return;
     }
 
     // 입력한 금액이 잔액보다 크면 오류
     if (Number(amount) > gifticonData.gifticonRemainingAmount) {
-      // 실제 구현에서는 오류 메시지 표시
-      // console.log('잔액보다 큰 금액을 사용할 수 없습니다');
+      Alert.alert('알림', '잔액보다 큰 금액을 사용할 수 없습니다.');
       return;
     }
 
-    // console.log(`사용 금액: ${amount}원 사용 완료`);
+    try {
+      // 모달 닫기
+      setModalVisible(false);
+      // 로딩 표시
+      setIsLoading(true);
 
-    // API 호출로 기프티콘 사용 처리 (실제 구현 시 주석 해제)
-    // 예: await api.useGifticon(gifticonId, amount);
+      // API 호출로 기프티콘 사용 처리
+      await gifticonService.useAmountGifticon(gifticonId, Number(amount));
 
-    // 모달 닫기
-    setModalVisible(false);
-    setAmount('');
+      // 사용 모드 종료
+      setIsUsing(false);
+      setIsLoading(false);
+      setAmount('');
 
-    // 사용 모드 종료
-    setIsUsing(false);
+      // 사용내역 화면으로 이동
+      navigation.navigate('DetailAmountHistoryScreen', {
+        id: gifticonId,
+        gifticonId: gifticonId,
+        usedAmount: amount,
+        isFromDetailScreen: true,
+      });
+    } catch (error) {
+      setIsLoading(false);
+      setAmount('');
+      setModalVisible(false);
 
-    // 사용내역 화면으로 이동
-    navigation.navigate('DetailAmountHistoryScreen', {
-      id: gifticonId,
-      usedAmount: amount,
-      isFromDetailScreen: true,
-    });
+      console.error('기프티콘 사용 오류:', error);
+
+      // 에러 메시지 처리
+      if (error.response) {
+        const errorMessage =
+          error.response.data?.message || '기프티콘 사용 중 오류가 발생했습니다.';
+        Alert.alert('오류', errorMessage);
+      } else {
+        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+      }
+    }
   };
 
   // 모달 취소

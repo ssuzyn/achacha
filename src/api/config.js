@@ -34,6 +34,9 @@ export const API_CONFIG = {
     GET_USED_GIFTICONS: '/api/used-gifticons', // 사용 완료 기프티콘 목록 조회
     GET_GIFTICON_DETAIL: '/api/gifticons/', // 기프티콘 상세 조회 (뒤에 ID 붙여서 사용)
 
+    // 금액형 기프티콘 관련 엔드포인트
+    AMOUNT_GIFTICONS: '/api/amount-gifticons', // 금액형 기프티콘 API 기본 경로
+
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
 

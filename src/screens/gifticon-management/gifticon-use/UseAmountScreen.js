@@ -159,29 +159,48 @@ const UseAmountScreen = () => {
 
     try {
       setIsLoading(true);
-      // 사용완료 처리 API 호출
-      await gifticonService.markGifticonAsUsed(actualGifticonId, 'SELF_USE');
+      setModalVisible(false);
+
+      // 금액형 기프티콘 사용 API 호출
+      await gifticonService.useAmountGifticon(actualGifticonId, Number(amount));
+
       setIsLoading(false);
 
-      // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'Main',
-            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+      // 성공 메시지 표시
+      Alert.alert('성공', '기프티콘이 성공적으로 사용되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 사용 기록 화면 또는 목록 화면으로 이동
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'Main',
+                  params: {
+                    screen: 'TabGifticonManage',
+                    params: {
+                      screen: 'GifticonManage',
+                      params: {
+                        refresh: true,
+                        initialTab: 'myBox',
+                      },
+                    },
+                  },
+                },
+              ],
+            });
           },
-        ],
-      });
+        },
+      ]);
     } catch (err) {
       setIsLoading(false);
-      console.error('기프티콘 사용 완료 처리 오류:', err);
+      console.error('기프티콘 사용 오류:', err);
 
       // 에러 메시지 표시
       Alert.alert(
         '오류',
-        err.response?.data?.message || '기프티콘 사용 완료 처리 중 오류가 발생했습니다.',
+        err.response?.data?.message || '기프티콘 사용 처리 중 오류가 발생했습니다.',
         [{ text: '확인' }]
       );
     }

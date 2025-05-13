@@ -510,6 +510,93 @@ const gifticonService = {
       throw new Error('기프티콘 바코드 정보를 불러오는 중 오류가 발생했습니다.');
     }
   },
+
+  /**
+   * 금액형 기프티콘 사용
+   * @param {number} gifticonId - 기프티콘 ID
+   * @param {number} usageAmount - 사용 금액
+   * @returns {Promise<string>} - 응답 메시지
+   */
+  async useAmountGifticon(gifticonId, usageAmount) {
+    try {
+      console.log('[API] 금액형 기프티콘 사용 요청:', gifticonId, usageAmount);
+      const response = await apiClient.post(
+        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/use`,
+        { usageAmount }
+      );
+      console.log('[API] 금액형 기프티콘 사용 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 금액형 기프티콘 사용내역 조회
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 사용내역 정보
+   */
+  async getAmountGifticonUsageHistory(gifticonId) {
+    try {
+      console.log('[API] 금액형 기프티콘 사용내역 조회 요청:', gifticonId);
+      const response = await apiClient.get(
+        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history`
+      );
+      console.log('[API] 금액형 기프티콘 사용내역 조회 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용내역 조회 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 금액형 기프티콘 사용내역 수정
+   * @param {number} gifticonId - 기프티콘 ID
+   * @param {number} usageHistoryId - 사용내역 ID
+   * @param {number} usageAmount - 수정할 사용 금액
+   * @returns {Promise<string>} - 응답 메시지
+   */
+  async updateAmountGifticonUsageHistory(gifticonId, usageHistoryId, usageAmount) {
+    try {
+      console.log(
+        '[API] 금액형 기프티콘 사용내역 수정 요청:',
+        gifticonId,
+        usageHistoryId,
+        usageAmount
+      );
+      const response = await apiClient.put(
+        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history/${usageHistoryId}`,
+        { usageAmount }
+      );
+      console.log('[API] 금액형 기프티콘 사용내역 수정 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용내역 수정 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 금액형 기프티콘 사용내역 삭제
+   * @param {number} gifticonId - 기프티콘 ID
+   * @param {number} usageHistoryId - 삭제할 사용내역 ID
+   * @returns {Promise<string>} - 응답 메시지
+   */
+  async deleteAmountGifticonUsageHistory(gifticonId, usageHistoryId) {
+    try {
+      console.log('[API] 금액형 기프티콘 사용내역 삭제 요청:', gifticonId, usageHistoryId);
+      const response = await apiClient.delete(
+        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history/${usageHistoryId}`
+      );
+      console.log('[API] 금액형 기프티콘 사용내역 삭제 성공:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용내역 삭제 실패:', error);
+      throw error;
+    }
+  },
 };
 
 export default gifticonService;
