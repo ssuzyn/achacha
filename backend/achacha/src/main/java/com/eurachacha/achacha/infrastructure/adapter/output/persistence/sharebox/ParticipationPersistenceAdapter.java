@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.sharebox;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
@@ -26,5 +28,10 @@ public class ParticipationPersistenceAdapter implements ParticipationRepository 
 	@Override
 	public int countByShareboxId(Integer shareBoxId) {
 		return participationJpaRepository.countByShareboxId(shareBoxId);
+	}
+
+	@Override
+	public List<Participation> findByShareBoxId(Integer shareBoxId) {
+		return participationJpaRepository.findByShareboxId(shareBoxId);
 	}
 }
