@@ -320,6 +320,17 @@ const DetailAmountScreen = () => {
     setModalVisible(true);
   };
 
+  // 사용내역 기능
+  const handleHistory = () => {
+    // 사용내역 조회 로직
+    navigation.navigate('DetailAmountHistoryScreen', {
+      id: gifticonData.gifticonId,
+      gifticonId: gifticonData.gifticonId,
+      brandName: gifticonData.brandName,
+      gifticonName: gifticonData.gifticonName,
+    });
+  };
+
   // 금액 입력 완료 처리
   const handleConfirmAmount = async () => {
     // 금액 입력 값 검증
@@ -354,6 +365,8 @@ const DetailAmountScreen = () => {
         gifticonId: gifticonId,
         usedAmount: amount,
         isFromDetailScreen: true,
+        brandName: gifticonData.brandName,
+        gifticonName: gifticonData.gifticonName,
       });
     } catch (error) {
       setIsLoading(false);
@@ -434,13 +447,6 @@ const DetailAmountScreen = () => {
     navigation.navigate('PresentScreen', {
       gifticonId: gifticonData.gifticonId,
     });
-  };
-
-  // 사용내역 기능
-  const handleHistory = () => {
-    // 사용내역 조회 로직
-    // console.log('사용내역 조회');
-    navigation.navigate('DetailAmountHistoryScreen', { id: gifticonData.gifticonId });
   };
 
   // 기프티콘 삭제 다이얼로그 표시

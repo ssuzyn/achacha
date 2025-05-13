@@ -58,8 +58,17 @@ const DetailAmountHistoryScreen = () => {
       if (route.params.isFromDetailScreen) {
         setIsFromDetailScreen(route.params.isFromDetailScreen);
       }
+
+      // 브랜드명이 전달된 경우 이를 미리 설정
+      if (route.params.brandName && !gifticonData) {
+        setGifticonData(prevData => ({
+          ...prevData,
+          brand: route.params.brandName,
+          name: route.params.gifticonName || '',
+        }));
+      }
     }
-  }, [route.params, showTabBar]);
+  }, [route.params, showTabBar, gifticonData]);
 
   // 기프티콘 ID가 변경될 때 사용내역 로드
   useEffect(() => {
@@ -73,11 +82,22 @@ const DetailAmountHistoryScreen = () => {
     try {
       setIsLoading(true);
 
+      // 먼저 기프티콘 상세 정보를 가져와서 브랜드명을 얻습니다.
+      let brandName = '';
+      try {
+        // 먼저 상세 정보를 통해 브랜드명 가져오기 시도
+        const detailResponse = await gifticonService.getGifticonDetail(gifticonId);
+        brandName = detailResponse.brandName || '';
+      } catch (detailError) {
+        console.log('상세 정보 조회 실패, 브랜드명을 가져오지 못했습니다:', detailError);
+      }
+
+      // 사용내역 API 호출
       const response = await gifticonService.getAmountGifticonUsageHistory(gifticonId);
 
       setGifticonData({
         id: response.gifticonId,
-        brand: '', // API 응답에 브랜드명이 없는 경우 빈 문자열로 설정
+        brand: brandName || response.brandName || '', // 브랜드명 설정
         name: response.gifticonName,
         amount: response.gifticonOriginalAmount,
         totalBalance: response.gifticonOriginalAmount,
@@ -447,16 +467,17 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   infoHeaderContainer: {
-    marginVertical: 16,
+    marginVertical: 10,
     alignItems: 'center',
   },
   brandText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 7,
   },
   nameText: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#666',
     marginTop: 4,
     textAlign: 'center',
