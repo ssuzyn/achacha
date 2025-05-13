@@ -1,11 +1,20 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, ScrollView, View, FlatList, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+} from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import Card from '../components/ui/Card';
 import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import NavigationService from '../navigation/NavigationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Carousel from 'react-native-reanimated-carousel';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -32,9 +41,40 @@ const SAMPLE_GIFTICONS = [
   },
 ];
 
+// 캐러셀에 표시할 카드 데이터
+const CAROUSEL_CARDS = [
+  {
+    id: '1',
+    type: 'sharebox',
+    title: '나누면\n즐거움 두배,\n쉐어박스',
+    image: require('../assets/images/share_box.png'),
+    iconName: 'inventory-2',
+    onPress: () => NavigationService.navigate('TabSharebox'),
+  },
+  {
+    id: '2',
+    type: 'radar',
+    title: '쓱 - 뿌리기\n행운의 주인공은?',
+    image: require('../assets/images/home_radar.png'),
+    onPress: () => NavigationService.navigate('TabMap'),
+  },
+  {
+    id: '3',
+    type: 'gift',
+    title: '기프티콘 선물해봐요!',
+    subtitle: '포장은 저희가 해드릴게요.',
+    image: require('../assets/images/home_gift.png'),
+    onPress: () => NavigationService.navigate('TabGifticonManage'),
+  },
+];
+
+const { width: screenWidth } = Dimensions.get('window');
+
 const HomeScreen = () => {
   const { theme } = useTheme();
   const username = '으라차차'; // 실제 앱에서는 로그인된 사용자 이름을 가져옵니다
+  const carouselRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     const printTokens = async () => {
@@ -45,6 +85,18 @@ const HomeScreen = () => {
     };
     printTokens();
   }, []);
+
+  // 자동 스크롤을 위한 타이머 설정
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (carouselRef.current) {
+        const nextIndex = (activeIndex + 1) % CAROUSEL_CARDS.length;
+        carouselRef.current.scrollTo({ index: nextIndex, animated: true });
+      }
+    }, 5000); // 5초마다 자동 스크롤
+
+    return () => clearInterval(interval);
+  }, [activeIndex]);
 
   // 날짜 간격 계산 함수
   const calculateDaysLeft = expiryDate => {
@@ -92,19 +144,64 @@ const HomeScreen = () => {
     );
   };
 
-  // 쉐어박스로 이동하는 함수
-  const handleShareBoxPress = () => {
-    NavigationService.navigate('TabSharebox');
+  // 캐러셀 아이템 렌더링
+  const renderCarouselItem = ({ item, index }) => {
+    if (item.type === 'sharebox') {
+      return (
+        <Card.FeatureCard
+          title={item.title}
+          iconName={item.iconName}
+          imageSource={item.image}
+          onPress={item.onPress}
+          style={styles.carouselCard}
+        />
+      );
+    } else if (item.type === 'radar') {
+      return (
+        <Card.RadarCard
+          text={item.title}
+          image={item.image}
+          onPress={item.onPress}
+          style={styles.carouselCard}
+        />
+      );
+    } else if (item.type === 'gift') {
+      return (
+        <TouchableOpacity onPress={item.onPress} style={styles.carouselCard}>
+          <View style={styles.giftMessageCard}>
+            <View style={styles.giftMessageTextContainer}>
+              <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                {item.title}
+              </Text>
+              <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
+                {item.subtitle}
+              </Text>
+            </View>
+            <View style={styles.giftMessageImageContainer}>
+              <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+            </View>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+    return null;
   };
 
-  // 기프티콘 MAP으로 이동하는 함수
-  const handleMapPress = () => {
-    NavigationService.navigate('TabMap');
-  };
-
-  // 선물 관련 화면으로 이동하는 함수
-  const handleGiftPress = () => {
-    NavigationService.navigate('TabGifticonManage');
+  // 인디케이터 렌더링
+  const renderPagination = () => {
+    return (
+      <View style={styles.paginationContainer}>
+        {CAROUSEL_CARDS.map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.paginationDot,
+              { backgroundColor: activeIndex === index ? theme.colors.primary : '#D9D9D9' },
+            ]}
+          />
+        ))}
+      </View>
+    );
   };
 
   return (
@@ -127,11 +224,32 @@ const HomeScreen = () => {
           </Text>
         </View>
 
+        {/* 캐러셀 섹션 */}
+        <View style={styles.carouselSection}>
+          <Carousel
+            ref={carouselRef}
+            width={screenWidth - 30}
+            height={130}
+            data={CAROUSEL_CARDS}
+            renderItem={renderCarouselItem}
+            onSnapToItem={setActiveIndex}
+            mode="parallax"
+            modeConfig={{
+              parallaxScrollingScale: 0.95,
+              parallaxScrollingOffset: 50,
+            }}
+            loop
+            pagingEnabled
+            snapEnabled
+          />
+          {renderPagination()}
+        </View>
+
         {/* 만료 임박 기프티콘 섹션 */}
         <View style={styles.giftListContainer}>
-          {/* <Text variant="h5" weight="medium" style={styles.giftListText}>
-            만료 임박 기프티콘{' '}
-          </Text> */}
+          <Text variant="h5" weight="medium" style={styles.giftListTitle}>
+            만료 임박 기프티콘
+          </Text>
           <FlatList
             data={SAMPLE_GIFTICONS}
             renderItem={renderGiftItem}
@@ -142,30 +260,9 @@ const HomeScreen = () => {
           />
         </View>
 
-        {/* 중간 카드 섹션 (쉐어박스, 뿌리기) */}
-        <View style={styles.middleCardSection}>
-          <View style={styles.middleCardRow}>
-            {/* 쉐어박스 & 뿌리기 카드 */}
-            <Card.FeatureCard
-              title={`나누면\n즐거움 두배,\n쉐어박스`}
-              iconName="inventory-2"
-              imageSource={require('../assets/images/share_box.png')}
-              onPress={handleShareBoxPress}
-              style={styles.interactiveCard}
-            />
-
-            {/* 레이더 카드 */}
-            <Card.RadarCard
-              text={`쓱 - 뿌리기\n행운의 주인공은?`}
-              image={require('../assets/images/home_radar.png')}
-              onPress={handleMapPress}
-            />
-          </View>
-        </View>
-
-        {/* 하단 선물 카드 */}
+        {/* 선물 카드 */}
         <View style={styles.bottomCardSection}>
-          <TouchableOpacity onPress={handleGiftPress}>
+          <TouchableOpacity onPress={() => NavigationService.navigate('TabGifticonManage')}>
             <View style={styles.giftMessageCard}>
               <View style={styles.giftMessageTextContainer}>
                 <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
@@ -203,36 +300,57 @@ const styles = StyleSheet.create({
   welcomeSection: {
     paddingHorizontal: 8,
     alignItems: 'flex-start',
-    marginBottom: 5,
+    marginBottom: 15,
   },
   welcomeText: {
     letterSpacing: -0.3,
   },
-  // giftListText: {
-  //   paddingHorizontal: 8,
-  //   letterSpacing: -0.3,
-  //   marginLeft: 5,
-  //   marginTop: 10,
-  // },
+  subWelcomeText: {
+    letterSpacing: -0.3,
+  },
+  carouselSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  carouselCard: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 130,
+    width: '100%',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 3,
+  },
   giftListContainer: {
-    marginBottom: 3,
-    paddingHorizontal: 2,
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  giftListTitle: {
+    letterSpacing: -0.3,
+    marginLeft: 5,
+    marginBottom: 10,
   },
   giftListContent: {
-    paddingTop: 10,
-    paddingLeft: 5,
     paddingRight: 10,
-    paddingBottom: 10,
+    paddingBottom: 5,
   },
-  middleCardSection: {
-    marginBottom: 5,
-    paddingHorizontal: 5,
+  shadowContainer: {
+    borderRadius: 12,
+    width: '100%',
   },
-  middleCardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    marginBottom: 8,
+  giftItemContainer: {
+    width: 180,
+    marginRight: 10,
   },
   giftCard: {
     width: '100%',
@@ -281,7 +399,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
   bottomCardSection: {
-    paddingHorizontal: 5,
+    paddingHorizontal: 15,
   },
   giftMessageCard: {
     backgroundColor: '#E5F4FE',
@@ -318,17 +436,6 @@ const styles = StyleSheet.create({
   giftMessageImage: {
     width: 100,
     height: 100,
-  },
-  shadowContainer: {
-    borderRadius: 12,
-    width: '100%',
-  },
-  giftItemContainer: {
-    width: 180,
-    marginRight: 10,
-  },
-  interactiveCard: {
-    // Add any necessary styles for the interactive card
   },
 });
 
