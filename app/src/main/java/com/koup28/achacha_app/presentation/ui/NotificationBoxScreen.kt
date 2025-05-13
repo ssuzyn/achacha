@@ -21,6 +21,22 @@ import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.koup28.achacha_app.data.ApiService
+import com.koup28.achacha_app.data.UserDataStore
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.koup28.achacha_app.data.NotificationDto
+import com.koup28.achacha_app.data.NotificationApiResponse
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // API 응답 형식에 맞춘 알림 데이터 클래스
 data class NotificationData(
@@ -43,42 +59,61 @@ fun getIconForNotificationType(type: String): ImageVector {
 
 @Composable
 fun NotificationBoxScreen(
-    onBackClick: () -> Unit // 시스템 뒤로가기 또는 UI 내 뒤로가기 액션 시 호출됩니다.
+    onBackClick: () -> Unit,
+    apiService: ApiService,
+    userDataStore: UserDataStore
 ) {
     val listState = rememberScalingLazyListState()
+    val context = LocalContext.current
+    var notifications by remember { mutableStateOf<List<NotificationDto>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+    var nextPage by remember { mutableStateOf<String?>(null) }
+    var hasNextPage by remember { mutableStateOf(false) }
 
     // 시스템 뒤로가기 버튼 처리
     BackHandler(enabled = true) {
         onBackClick()
     }
 
-    val dummyNotifications = remember {
-        listOf(
-            NotificationData(
-                notificationId = 1,
-                notificationTitle = "유효기간 만료 알림",
-                notificationContent = "아메리카노의 유효기간이 7일 남았습니다",
-                notificationType = "EXPIRY_DATE"
-            ),
-            NotificationData(
-                notificationId = 2,
-                notificationTitle = "근처 매장 알림",
-                notificationContent = "기프티콘을 사용할 수 있는 '스타벅스' 매장이 있어요",
-                notificationType = "LOCATION_BASED"
-            ),
-            NotificationData(
-                notificationId = 3,
-                notificationTitle = "기프티콘 수신",
-                notificationContent = "\'카페라떼\' 기프티콘을 선물 받았습니다.",
-                notificationType = "RECEIVE_GIFTICON"
-            ),
-            NotificationData(
-                notificationId = 4,
-                notificationTitle = "나눔 알림",
-                notificationContent = "\'내 나눔박스\'에 \'조각케이크\'가 등록되었습니다.",
-                notificationType = "SHAREBOX_GIFTICON"
+    // 알림 불러오기 (최초 1회)
+    LaunchedEffect(Unit) {
+        isLoading = true
+        error = null
+        try {
+            val token = userDataStore.accessTokenFlow.firstOrNull()
+            if (token.isNullOrEmpty()) {
+                error = "인증 토큰이 없습니다."
+                isLoading = false
+                return@LaunchedEffect
+            }
+            val response = apiService.getNotifications(
+                authorization = "Bearer $token",
+                type = null, // 전체
+                page = null,
+                size = 6
             )
-        )
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    // 제외할 타입들
+                    val excludeTypes = setOf(
+                        "SHAREBOX_GIFTICON", "SHAREBOX_USAGE_COMPLETE", "SHAREBOX_MEMBER_JOIN", "SHAREBOX_DELETED"
+                    )
+                    notifications = body.notifications.filter { it.notificationType !in excludeTypes }
+                    hasNextPage = body.hasNextPage
+                    nextPage = body.nextPage
+                } else {
+                    error = "알림 데이터를 불러올 수 없습니다."
+                }
+            } else {
+                error = "알림 API 호출 실패: ${response.code()}"
+            }
+        } catch (e: Exception) {
+            error = "알림 불러오기 오류: ${e.localizedMessage}"
+        } finally {
+            isLoading = false
+        }
     }
 
     Scaffold(
@@ -92,7 +127,7 @@ fun NotificationBoxScreen(
                 .padding(horizontal = 8.dp),
             state = listState,
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top) // 아이템 간 간격 조정
+            verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top)
         ) {
             item {
                 Text(
@@ -102,53 +137,80 @@ fun NotificationBoxScreen(
                     modifier = Modifier.padding(top = 24.dp, bottom = 8.dp)
                 )
             }
-
-            items(dummyNotifications) { notification ->
-                Chip(
-                    onClick = { /* TODO: 알림 클릭 시 동작 구현 */ },
-                    label = {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f) // 텍스트 영역이 남은 공간 차지
-                            ) {
-                                Text(
-                                    text = notification.notificationTitle,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 15.sp, // 이미지와 유사한 폰트 크기
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = notification.notificationContent,
-                                    style = MaterialTheme.typography.body2,
-                                    fontSize = 13.sp, // 이미지와 유사한 폰트 크기
-                                    color = Color.LightGray, // 약간 더 밝은 회색
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(8.dp)) // 텍스트와 아이콘 간 간격
-                            Icon(
-                                imageVector = getIconForNotificationType(notification.notificationType),
-                                contentDescription = "알림 아이콘", // contentDescription 추가
-                                modifier = Modifier.size(ChipDefaults.IconSize) // 기본 아이콘 크기
-                            )
+            when {
+                isLoading -> {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
                         }
-                    },
-                    colors = ChipDefaults.chipColors(
-                        backgroundColor = Color(0xFF3E3E4A), // 이미지와 유사한 배경색
-                        contentColor = Color.White // 내부 콘텐츠 색상
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp) // 내부 패딩 조정
-                )
+                    }
+                }
+                error != null -> {
+                    item {
+                        Text(
+                            text = error ?: "알 수 없는 오류",
+                            color = MaterialTheme.colors.error,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+                notifications.isEmpty() -> {
+                    item {
+                        Text(
+                            text = "알림이 없습니다.",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+                else -> {
+                    items(notifications) { notification ->
+                        Chip(
+                            onClick = { /* TODO: 알림 클릭 시 동작 구현 */ },
+                            label = {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = notification.notificationTitle,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 15.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = notification.notificationContent,
+                                            style = MaterialTheme.typography.body2,
+                                            fontSize = 13.sp,
+                                            color = Color.LightGray,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Icon(
+                                        imageVector = getIconForNotificationType(notification.notificationType),
+                                        contentDescription = "알림 아이콘",
+                                        modifier = Modifier.size(ChipDefaults.IconSize)
+                                    )
+                                }
+                            },
+                            colors = ChipDefaults.chipColors(
+                                backgroundColor = Color(0xFF3E3E4A),
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                        )
+                    }
+                }
             }
-
-            // 뒤로가기 버튼 제거
         }
     }
 } 

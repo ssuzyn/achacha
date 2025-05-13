@@ -29,6 +29,7 @@ import com.koup28.achacha_app.presentation.ui.ConnectPhoneScreen
 import com.koup28.achacha_app.presentation.ui.GifticonListScreen
 import com.koup28.achacha_app.presentation.ui.GifticonDetailScreen
 import com.koup28.achacha_app.presentation.ui.ApiGifticon
+import com.koup28.achacha_app.presentation.ui.NotificationBoxScreen
 import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
@@ -648,11 +649,13 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     ScreenState.NOTIFICATION_BOX -> {
-                        com.koup28.achacha_app.presentation.ui.NotificationBoxScreen(
+                        NotificationBoxScreen(
                             onBackClick = {
                                 addLog("NotificationBoxScreen: Back clicked. Returning to MainMenu.")
                                 _currentScreen.value = ScreenState.MAIN_MENU // 메인 메뉴로 돌아가기
-                            }
+                            },
+                            apiService = apiService,
+                            userDataStore = userDataStore
                         )
                     }
                     ScreenState.ERROR -> {

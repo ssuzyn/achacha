@@ -21,7 +21,26 @@ data class GifticonListApiResponse(
 // BarcodeInfo는 BarcodeInfo.kt 파일에 정의되어 있다고 가정
 // data class BarcodeInfo(...)
 
-data class GiveAwayRequest(val userIds: List<String>)
+data class GiveAwayRequest(val uuids: List<String>)
+
+@Serializable
+data class NotificationApiResponse(
+    val notifications: List<NotificationDto>,
+    val hasNextPage: Boolean,
+    val nextPage: String? = null
+)
+
+@Serializable
+data class NotificationDto(
+    val notificationId: Int,
+    val notificationTitle: String,
+    val notificationContent: String,
+    val notificationCreatedAt: String,
+    val notificationIsRead: Boolean,
+    val notificationType: String,
+    val gifticonId: Int? = null,
+    val gifticonName: String? = null
+)
 
 interface ApiService {
 
@@ -71,6 +90,14 @@ interface ApiService {
         @Path("gifticonId") gifticonId: Int,
         @Body request: GiveAwayRequest
     ): retrofit2.Response<Unit>
+
+    @GET("api/notifications")
+    suspend fun getNotifications(
+        @Header("Authorization") authorization: String,
+        @Query("type") type: String? = null,
+        @Query("page") page: String? = null,
+        @Query("size") size: Int = 6
+    ): Response<NotificationApiResponse>
 }
 
 // 상품권 사용 요청 바디 데이터 클래스
