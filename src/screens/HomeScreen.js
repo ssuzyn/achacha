@@ -46,7 +46,7 @@ const CAROUSEL_CARDS = [
   {
     id: '1',
     type: 'sharebox',
-    title: '나누면\n즐거움 두배,\n쉐어박스',
+    title: '나누면 즐거움이 두배,\n쉐어박스',
     image: require('../assets/images/share_box.png'),
     iconName: 'inventory-2',
     onPress: () => NavigationService.navigate('TabSharebox'),
@@ -61,7 +61,7 @@ const CAROUSEL_CARDS = [
   {
     id: '3',
     type: 'gift',
-    title: '기프티콘 선물해봐요!',
+    title: '기프티콘을 선물해봐요!',
     subtitle: '포장은 저희가 해드릴게요.',
     image: require('../assets/images/home_gift.png'),
     onPress: () => NavigationService.navigate('TabGifticonManage'),
@@ -139,13 +139,13 @@ const HomeScreen = () => {
         <Animated.View style={styles.carouselCard}>
           <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
             <View style={[styles.giftMessageCard, { backgroundColor: '#E8F1EA' }]}>
-              <View style={styles.giftMessageTextContainer}>
-                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+              <View style={styles.giftMessageTextContainerSharebox}>
+                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
                   {item.title}
                 </Text>
               </View>
               <View style={styles.giftMessageImageContainer}>
-                <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+                <Image source={item.image} style={styles.giftMessageImage1} resizeMode="contain" />
               </View>
             </View>
           </TouchableOpacity>
@@ -156,13 +156,13 @@ const HomeScreen = () => {
         <Animated.View style={styles.carouselCard}>
           <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
             <View style={[styles.giftMessageCard, { backgroundColor: '#FDF3E3' }]}>
-              <View style={styles.giftMessageTextContainer}>
-                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+              <View style={styles.giftMessageTextContainerRadar}>
+                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
                   {item.title}
                 </Text>
               </View>
               <View style={styles.giftMessageImageContainer}>
-                <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+                <Image source={item.image} style={styles.giftMessageImage2} resizeMode="contain" />
               </View>
             </View>
           </TouchableOpacity>
@@ -174,10 +174,10 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
             <View style={styles.giftMessageCard}>
               <View style={styles.giftMessageTextContainer}>
-                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
                   {item.title}
                 </Text>
-                <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
+                <Text variant="body1" weight="regular" style={styles.giftMessageSubtitle}>
                   {item.subtitle}
                 </Text>
               </View>
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
   giftMessageCard: {
     backgroundColor: '#E5F4FE',
     borderRadius: 15,
-    padding: 20,
+    padding: 15,
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -437,28 +437,53 @@ const styles = StyleSheet.create({
   },
   giftMessageTextContainer: {
     flex: 1.5,
-    paddingRight: 10,
-    justifyContent: 'flex-end',
+    paddingLeft: 10,
+    paddingRight: 0,
+    justifyContent: 'center',
     height: '100%',
-    paddingBottom: 5,
+  },
+  giftMessageTextContainerRadar: {
+    flex: 1.5,
+    paddingLeft: 25,
+    paddingRight: 10,
+    justifyContent: 'center',
+    height: '100%',
+  },
+  giftMessageTextContainerSharebox: {
+    flex: 1.5,
+    paddingLeft: 25,
+    paddingRight: 10,
+    justifyContent: 'center',
+    height: '100%',
   },
   giftMessageTitle: {
     marginBottom: 2,
-    letterSpacing: -0.5,
+    letterSpacing: -0.2,
+    lineHeight: 30,
   },
   giftMessageSubtitle: {
-    color: '#333',
+    color: '#737373',
     letterSpacing: -0.3,
   },
   giftMessageImageContainer: {
     flex: 1,
     alignItems: 'flex-end',
-    marginTop: -20,
+    marginTop: -10,
     marginBottom: -10,
   },
   giftMessageImage: {
     width: 100,
     height: 100,
+  },
+  giftMessageImage1: {
+    width: 100,
+    height: 100,
+    marginRight: 20,
+  },
+  giftMessageImage2: {
+    width: 150,
+    height: 150,
+    marginRight: 15,
   },
 });
 
