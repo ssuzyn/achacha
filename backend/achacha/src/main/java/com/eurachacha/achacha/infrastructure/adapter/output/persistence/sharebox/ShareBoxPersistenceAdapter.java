@@ -29,8 +29,8 @@ public class ShareBoxPersistenceAdapter implements ShareBoxRepository {
 
 	@Override
 	public ShareBox findById(Integer id) {
-		return shareBoxJpaRepository.findById(id)
-			.orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+		return shareBoxJpaRepository.findByIdWithUser(id)
+			.orElseThrow(() -> new CustomException(ErrorCode.SHAREBOX_NOT_FOUND));
 	}
 
 	@Override
