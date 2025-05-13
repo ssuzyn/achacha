@@ -5,29 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb904452-4e09-4cd1-bcac-a9f38dbb20c3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/app.config.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/api/config.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/config.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/api/gifticonService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/gifticonService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/common/BottomTabBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/common/BottomTabBar.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/components/common/HeaderBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/common/HeaderBar.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/navigation/AppNavigator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/navigation/AppNavigator.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/GiveAwayScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/GiveAwayScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/HomeScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/LoginScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/LoginScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/PermissionScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/PermissionScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/SettingScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SettingScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/SplashScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SplashScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/ManageListScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/ManageListScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/PresentScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/PresentScreen.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-detail/DetailAmountScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-detail/DetailAmountScreen.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-detail/DetailProductScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-detail/DetailProductScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-register/RegisterMainScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-register/RegisterMainScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-register/RegisterDetailScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-register/RegisterDetailScreen.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-use/UseAmountScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-use/UseAmountScreen.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-use/UseProductScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-management/gifticon-use/UseProductScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxCreateScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxCreateScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxMainScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxMainScreen.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

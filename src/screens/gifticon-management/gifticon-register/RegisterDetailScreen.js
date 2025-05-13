@@ -900,9 +900,10 @@ const RegisterDetailScreen = () => {
             // 기프티콘 타입에 따라 다른 상세 화면으로 이동
             const targetScreen = gifticonType === 'PRODUCT' ? 'DetailProduct' : 'DetailAmount';
             navigation.navigate(targetScreen, {
-              id: response.gifticonId || Date.now().toString(), // API 응답에서 ID 추출 또는 임시 ID 사용
-              scope: boxType,
+              gifticonId: response.gifticonId,
+              scope: 'MY_BOX',
               shareBoxId: shareBoxId,
+              refresh: true,
             });
           },
         },

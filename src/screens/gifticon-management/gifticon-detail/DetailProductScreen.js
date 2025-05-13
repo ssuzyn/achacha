@@ -10,6 +10,7 @@ import {
   StatusBar,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -20,8 +21,30 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
 import gifticonService from '../../../api/gifticonService';
-import FastImage from 'react-native-fast-image';
+import shareBoxService from '../../../api/shareBoxService';
 import { BASE_URL } from '../../../api/config';
+
+// 이미지 소스를 안전하게 가져오는 헬퍼 함수
+const getImageSource = path => {
+  if (!path) {
+    return require('../../../assets/images/adaptive_icon.png');
+  }
+  if (path.startsWith('http')) {
+    return { uri: path };
+  }
+  // BASE_URL이 유효한지 확인하고 결합
+  if (BASE_URL && typeof BASE_URL === 'string' && BASE_URL.length > 0) {
+    // BASE_URL 끝에 슬래시가 없고, path 시작에 슬래시가 없으면 추가
+    const separator = !BASE_URL.endsWith('/') && !path.startsWith('/') ? '/' : '';
+    // BASE_URL 끝에 슬래시가 있고, path 시작에 슬래시가 있으면 중복 제거
+    if (BASE_URL.endsWith('/') && path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    return { uri: `${BASE_URL}${separator}${path}` };
+  }
+  // BASE_URL이 유효하지 않으면 기본 이미지 반환
+  return require('../../../assets/images/adaptive_icon.png');
+};
 
 const DetailProductScreen = () => {
   const insets = useSafeAreaInsets();
@@ -50,13 +73,14 @@ const DetailProductScreen = () => {
   // 공유 위치 선택 상태
   const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
-
-  // 더미 데이터: 쉐어박스 목록
-  const shareBoxes = [
-    { id: 1, name: '으라차차 해인네' },
-    { id: 2, name: '으라차차 주은이네' },
-    { id: 3, name: '으라차차 대성이네' },
-  ];
+  // 쉐어박스 목록
+  const [shareBoxes, setShareBoxes] = useState([]);
+  // 쉐어박스 로딩 상태
+  const [isShareBoxLoading, setIsShareBoxLoading] = useState(false);
+  // 쉐어박스 에러 상태
+  const [shareBoxError, setShareBoxError] = useState(null);
+  // 이미지 확대 보기 상태
+  const [isImageViewVisible, setImageViewVisible] = useState(false);
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -83,6 +107,10 @@ const DetailProductScreen = () => {
       if (route.params.isSharer) {
         setIsSharer(route.params.isSharer);
       }
+      // refresh 플래그가 true이면 데이터 다시 로드
+      if (route.params.refresh && route.params.gifticonId) {
+        loadGifticonData(route.params.gifticonId);
+      }
     }
   }, [route.params]);
 
@@ -92,6 +120,35 @@ const DetailProductScreen = () => {
       loadGifticonData(gifticonId);
     }
   }, [gifticonId]);
+
+  // 쉐어박스 목록 로드
+  const loadShareBoxes = async () => {
+    setIsShareBoxLoading(true);
+    setShareBoxError(null);
+
+    try {
+      // API를 통해 쉐어박스 목록 가져오기
+      const response = await shareBoxService.getShareBoxes();
+      console.log('[DetailProductScreen] 쉐어박스 목록 조회 결과:', response);
+
+      if (response && response.shareBoxes) {
+        setShareBoxes(response.shareBoxes);
+        // 첫 번째 쉐어박스 자동 선택
+        if (response.shareBoxes.length > 0) {
+          setSelectedShareBoxId(response.shareBoxes[0].shareBoxId);
+        }
+      } else {
+        setShareBoxError('쉐어박스 목록을 불러올 수 없습니다.');
+        setShareBoxes([]);
+      }
+    } catch (error) {
+      console.error('[DetailProductScreen] 쉐어박스 목록 로드 실패:', error);
+      setShareBoxError('쉐어박스 목록을 불러오는 중 오류가 발생했습니다.');
+      setShareBoxes([]);
+    } finally {
+      setIsShareBoxLoading(false);
+    }
+  };
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
@@ -104,8 +161,17 @@ const DetailProductScreen = () => {
     try {
       // 실제 구현에서는 API 호출로 대체
       const response = await gifticonService.getGifticonDetail(id);
-      setGifticonData(response.data);
-      setIsSharer(response.data.isSharer);
+      console.log(
+        '[DetailProductScreen] loadGifticonData API 응답:',
+        JSON.stringify(response, null, 2)
+      ); // API 응답 전체 확인
+      setGifticonData(response);
+      // gifticonData가 세팅된 후 경로 확인
+      if (response) {
+        console.log('[DetailProductScreen] thumbnailPath:', response.thumbnailPath);
+        console.log('[DetailProductScreen] originalImagePath:', response.originalImagePath);
+      }
+      setIsSharer(response.isSharer);
       setIsLoading(false);
     } catch (error) {
       // console.error('기프티콘 데이터 로드 실패:', error);
@@ -153,51 +219,51 @@ const DetailProductScreen = () => {
   };
 
   // 공유하기 기능 - 모달 표시로 변경
-  const handleShare = () => {
+  const handleShare = async () => {
+    // 쉐어박스 목록 로드
+    await loadShareBoxes();
+
     // 기본 쉐어박스 선택 초기화
     setShareBoxType('SHARE_BOX');
-    if (shareBoxes.length > 0) {
-      setSelectedShareBoxId(shareBoxes[0].id);
-    }
 
     // 공유 모달 표시
     setShareModalVisible(true);
   };
 
   // 공유 완료 처리
-  const handleShareConfirm = () => {
+  const handleShareConfirm = async () => {
     // 공유 위치 선택 확인
     if (shareBoxType === 'SHARE_BOX' && !selectedShareBoxId) {
       Alert.alert('알림', '공유할 쉐어박스를 선택해주세요.');
       return;
     }
 
-    // 공유 API 호출 또는 처리 로직
-    // console.log('기프티콘 공유:', gifticonId, '위치:', shareBoxType, '쉐어박스:', getShareBoxName(selectedShareBoxId));
+    try {
+      // 공유 API 호출
+      await gifticonService.shareGifticon(gifticonId, selectedShareBoxId);
 
-    // 성공 메시지
-    Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
-      {
-        text: '확인',
-        onPress: () => {
-          // 모달 닫기
-          setShareModalVisible(false);
-          // 추가 로직이 필요하면 여기에 구현
+      // 성공 메시지
+      Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 모달 닫기
+            setShareModalVisible(false);
+            // 목록 화면으로 이동
+            navigation.goBack();
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (error) {
+      console.error('[DetailProductScreen] 기프티콘 공유 실패:', error);
+      Alert.alert('오류', '기프티콘 공유 중 오류가 발생했습니다. 다시 시도해주세요.');
+    }
   };
 
   // 공유 모달 닫기
   const handleCloseShareModal = () => {
     setShareModalVisible(false);
   };
-
-  // // 박스명 가져오기
-  // const getShareBoxName = id => {
-  //   const box = shareBoxes.find(item => item.id === id);
-  //   return box ? box.name : '';
-  // };
 
   // 사용하기 기능
   const handleUse = () => {
@@ -235,11 +301,26 @@ const DetailProductScreen = () => {
 
   // 돋보기 기능 - 확대 화면으로 이동
   const handleMagnify = () => {
-    navigation.navigate('UseProductScreen', {
-      id: gifticonData.gifticonId,
-      gifticonId: gifticonData.gifticonId,
-      barcodeNumber: gifticonData.barcodeNumber,
-    });
+    // 사용 완료 상태이고 (SELF_USE 유형만 바코드 있음)
+    if (isUsed && gifticonData.usageType === 'SELF_USE') {
+      navigation.navigate('UseProductScreen', {
+        id: gifticonData.gifticonId,
+        gifticonId: gifticonData.gifticonId,
+        isUsed: true,
+        barcodeNumber: gifticonData.barcodeNumber,
+        brandName: gifticonData.brandName,
+        gifticonName: gifticonData.gifticonName,
+      });
+    } else {
+      // 일반 사용 모드
+      navigation.navigate('UseProductScreen', {
+        id: gifticonData.gifticonId,
+        gifticonId: gifticonData.gifticonId,
+        barcodeNumber: gifticonData.barcodeNumber,
+        brandName: gifticonData.brandName,
+        gifticonName: gifticonData.gifticonName,
+      });
+    }
   };
 
   // 선물하기 기능
@@ -263,23 +344,32 @@ const DetailProductScreen = () => {
   };
 
   // 다이얼로그 확인 버튼 처리
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setAlertVisible(false);
 
-    if (alertType === 'delete') {
-      // 삭제 처리 로직
-      // 실제 구현에서는 API 호출로 기프티콘 삭제
-      // console.log('기프티콘 삭제:', gifticonId);
+    try {
+      if (alertType === 'delete') {
+        // 삭제 처리 API 호출
+        await gifticonService.deleteGifticon(gifticonId);
 
-      // 리스트 화면으로 이동
-      navigation.goBack();
-    } else if (alertType === 'cancelShare') {
-      // 공유 취소 처리 로직
-      // 실제 구현에서는 API 호출로 공유 취소
-      // console.log('공유 취소:', gifticonId);
+        // 리스트 화면으로 이동
+        navigation.goBack();
+      } else if (alertType === 'cancelShare') {
+        // 공유 취소 처리 API 호출
+        await gifticonService.cancelShareGifticon(gifticonId);
 
-      // 리스트 화면으로 이동
-      navigation.goBack();
+        // 리스트 화면으로 이동
+        navigation.goBack();
+      }
+    } catch (error) {
+      console.error(
+        `[DetailProductScreen] ${alertType === 'delete' ? '삭제' : '공유 취소'} 실패:`,
+        error
+      );
+      Alert.alert(
+        '오류',
+        `기프티콘 ${alertType === 'delete' ? '삭제' : '공유 취소'} 중 오류가 발생했습니다.`
+      );
     }
   };
 
@@ -303,6 +393,11 @@ const DetailProductScreen = () => {
       default:
         return '사용완료';
     }
+  };
+
+  // 이미지 확대 보기 토글
+  const toggleImageView = () => {
+    setImageViewVisible(!isImageViewVisible);
   };
 
   // 로딩 중이거나 데이터가 없는 경우 로딩 화면 표시
@@ -361,7 +456,7 @@ const DetailProductScreen = () => {
                   <Image
                     source={
                       gifticonData.barcodeImageUrl
-                        ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                        ? { uri: gifticonData.barcodeImageUrl }
                         : require('../../../assets/images/barcode.png')
                     }
                     style={styles.barcodeImage}
@@ -377,24 +472,19 @@ const DetailProductScreen = () => {
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <FastImage
-                    source={
-                      gifticonData.thumbnailPath
-                        ? {
-                            uri: `${BASE_URL}${gifticonData.thumbnailPath}`,
-                            priority: FastImage.priority.normal,
-                          }
-                        : require('../../../assets/images/adaptive-icon.png')
-                    }
-                    style={[
-                      styles.gifticonImage,
-                      isUsed && styles.grayScaleImage,
-                      isUsed &&
-                        gifticonData.usageType === 'SELF_USE' &&
-                        styles.smallerGifticonImage,
-                    ]}
-                    resizeMode={FastImage.resizeMode.contain}
-                  />
+                  <TouchableOpacity onPress={toggleImageView} activeOpacity={0.9}>
+                    <Image
+                      source={getImageSource(gifticonData.thumbnailPath)}
+                      style={[
+                        styles.gifticonImage,
+                        isUsed && styles.grayScaleImage,
+                        isUsed &&
+                          gifticonData.usageType === 'SELF_USE' &&
+                          styles.smallerGifticonImage,
+                      ]}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
 
                   {/* 상단 액션 아이콘 */}
                   {!isUsed && (
@@ -424,7 +514,7 @@ const DetailProductScreen = () => {
                       <Image
                         source={
                           gifticonData.barcodeImageUrl
-                            ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                            ? { uri: gifticonData.barcodeImageUrl }
                             : require('../../../assets/images/barcode.png')
                         }
                         style={styles.usedBarcodeImage}
@@ -671,6 +761,38 @@ const DetailProductScreen = () => {
         </View>
       </ScrollView>
 
+      {/* 이미지 확대 보기 모달 */}
+      <Modal
+        visible={isImageViewVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleImageView}
+      >
+        <View style={styles.imageViewModal}>
+          <TouchableOpacity
+            style={styles.imageViewCloseButton}
+            onPress={toggleImageView}
+            activeOpacity={0.7}
+          >
+            <Icon name="close" type="material" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.imageViewContainer}
+            activeOpacity={1}
+            onPress={toggleImageView}
+          >
+            <Image
+              source={
+                // 원본 이미지 경로 우선 사용, 없으면 썸네일 경로 사용
+                getImageSource(gifticonData?.originalImagePath || gifticonData?.thumbnailPath)
+              }
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       {/* 공유 모달 */}
       <Modal
         visible={isShareModalVisible}
@@ -694,29 +816,49 @@ const DetailProductScreen = () => {
 
             {/* 쉐어박스 선택 */}
             <View style={styles.boxSection}>
-              {shareBoxes.map(box => (
-                <View key={box.id} style={styles.boxRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkboxContainer,
-                      shareBoxType === 'SHARE_BOX' &&
-                        selectedShareBoxId === box.id &&
-                        styles.checkboxContainerSelected,
-                    ]}
-                    onPress={() => {
-                      setShareBoxType('SHARE_BOX');
-                      setSelectedShareBoxId(box.id);
-                    }}
-                  >
-                    <View style={styles.checkbox}>
-                      {shareBoxType === 'SHARE_BOX' && selectedShareBoxId === box.id && (
-                        <Icon name="check" type="material" size={16} color={theme.colors.primary} />
-                      )}
-                    </View>
-                    <Text style={styles.checkboxLabel}>{box.name}</Text>
-                  </TouchableOpacity>
+              {isShareBoxLoading ? (
+                <View style={styles.loadingIndicator}>
+                  <ActivityIndicator size="small" color="#278CCC" />
+                  <Text style={styles.loadingText}>쉐어박스 목록을 불러오는 중...</Text>
                 </View>
-              ))}
+              ) : shareBoxError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{shareBoxError}</Text>
+                </View>
+              ) : shareBoxes.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>등록된 쉐어박스가 없습니다.</Text>
+                </View>
+              ) : (
+                shareBoxes.map(box => (
+                  <View key={box.shareBoxId} style={styles.boxRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkboxContainer,
+                        shareBoxType === 'SHARE_BOX' &&
+                          selectedShareBoxId === box.shareBoxId &&
+                          styles.checkboxContainerSelected,
+                      ]}
+                      onPress={() => {
+                        setShareBoxType('SHARE_BOX');
+                        setSelectedShareBoxId(box.shareBoxId);
+                      }}
+                    >
+                      <View style={styles.checkbox}>
+                        {shareBoxType === 'SHARE_BOX' && selectedShareBoxId === box.shareBoxId && (
+                          <Icon
+                            name="check"
+                            type="material"
+                            size={16}
+                            color={theme.colors.primary}
+                          />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              )}
             </View>
 
             <View style={styles.boxButtonContainer}>
@@ -803,19 +945,18 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     backgroundColor: '#EEEEEE',
-    padding: 16,
-    paddingTop: 0,
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     height: 300,
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
     position: 'relative',
   },
   gifticonImage: {
-    width: '60%',
-    height: '90%',
-    marginTop: 5,
+    width: 200,
+    height: 200,
+    resizeMode: 'cover',
+    marginBottom: 20,
   },
   // 바코드 관련 스타일
   barcodeContainer: {
@@ -904,9 +1045,11 @@ const styles = StyleSheet.create({
     // 실제 앱에서는 이미지 처리 라이브러리 사용을 고려할 수 있습니다.
   },
   smallerGifticonImage: {
-    height: '55%', // 기존 높이보다 살짝 줄임
-    marginTop: 25, // 상단 여백 추가
-    marginBottom: 8, // 하단 여백 조정
+    width: 160,
+    height: 160,
+    marginTop: 10,
+    marginBottom: 10,
+    resizeMode: 'cover',
   },
   usedBarcodeContainer: {
     alignItems: 'center',
@@ -1085,6 +1228,62 @@ const styles = StyleSheet.create({
   },
   confirmShareButtonText: {
     color: '#FFFFFF',
+  },
+  loadingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  errorText: {
+    color: '#D33434',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  emptyText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  // 이미지 확대 모달 스타일
+  imageViewModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
+  },
+  imageViewCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

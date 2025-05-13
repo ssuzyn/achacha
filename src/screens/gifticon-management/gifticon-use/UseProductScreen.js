@@ -28,7 +28,8 @@ const UseProductScreen = () => {
   const [barcodeData, setBarcodeData] = useState(null);
 
   // route.params에서 정보 가져오기
-  const { gifticonId, barcodeNumber } = route.params || {};
+  const { id, gifticonId, barcodeNumber, brandName, gifticonName } = route.params || {};
+  const actualGifticonId = id || gifticonId;
 
   // 화면 로드 시 가로 모드로 설정
   useEffect(() => {
@@ -44,7 +45,7 @@ const UseProductScreen = () => {
   // 바코드 데이터 로드
   useEffect(() => {
     const loadBarcodeData = async () => {
-      if (!gifticonId) {
+      if (!actualGifticonId) {
         setIsLoading(false);
         return;
       }
@@ -52,7 +53,19 @@ const UseProductScreen = () => {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await gifticonService.getAvailableGifticonBarcode(gifticonId);
+
+        // route.params에서 isUsed 값을 확인하여 사용완료 기프티콘인지 확인
+        const isUsedGifticon = route.params?.isUsed || false;
+
+        let response;
+        if (isUsedGifticon) {
+          // 사용완료 기프티콘 바코드 조회
+          response = await gifticonService.getUsedGifticonBarcode(actualGifticonId);
+        } else {
+          // 사용 가능 기프티콘 바코드 조회
+          response = await gifticonService.getAvailableGifticonBarcode(actualGifticonId);
+        }
+
         setBarcodeData(response);
         setIsLoading(false);
       } catch (err) {
@@ -82,7 +95,7 @@ const UseProductScreen = () => {
     };
 
     loadBarcodeData();
-  }, [gifticonId, navigation]);
+  }, [actualGifticonId, navigation, route.params]);
 
   // 뒤로가기
   const handleGoBack = () => {
@@ -94,7 +107,7 @@ const UseProductScreen = () => {
     try {
       setIsLoading(true);
       // 사용완료 처리 API 호출
-      await gifticonService.markGifticonAsUsed(gifticonId, 'SELF_USE');
+      await gifticonService.markGifticonAsUsed(actualGifticonId, 'SELF_USE');
       setIsLoading(false);
 
       // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
@@ -165,7 +178,9 @@ const UseProductScreen = () => {
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
             <Icon name="arrow-back-ios" type="material" size={22} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>스타벅스 | 아이스 카페 아메리카노 T</Text>
+          <Text style={styles.headerTitle}>
+            {brandName && gifticonName ? `${brandName} | ${gifticonName}` : '바코드 조회'}
+          </Text>
         </View>
 
         <View style={styles.content}>
@@ -173,7 +188,11 @@ const UseProductScreen = () => {
             <Image
               source={
                 barcodeData?.barcodePath
-                  ? { uri: `${BASE_URL}${barcodeData.barcodePath}` }
+                  ? {
+                      uri: barcodeData.barcodePath.startsWith('http')
+                        ? barcodeData.barcodePath
+                        : `${BASE_URL}${barcodeData.barcodePath}`,
+                    }
                   : require('../../../assets/images/barcode.png')
               }
               style={styles.barcodeImage}
@@ -185,13 +204,23 @@ const UseProductScreen = () => {
           </View>
 
           <View style={styles.actionSection}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleUseComplete}>
-              <Text style={styles.actionButtonText}>사용완료</Text>
-            </TouchableOpacity>
+            {!route.params?.isUsed ? (
+              // 일반 사용 가능 기프티콘
+              <>
+                <TouchableOpacity style={styles.actionButton} onPress={handleUseComplete}>
+                  <Text style={styles.actionButtonText}>사용완료</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-              <Text style={styles.cancelButtonText}>취소</Text>
-            </TouchableOpacity>
+                <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+                  <Text style={styles.cancelButtonText}>취소</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              // 사용완료 기프티콘 - 확인 버튼만 표시
+              <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+                <Text style={styles.cancelButtonText}>확인</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       </View>

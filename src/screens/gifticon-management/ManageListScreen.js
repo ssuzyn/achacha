@@ -1009,6 +1009,21 @@ const ManageListScreen = () => {
     }
   };
 
+  useEffect(() => {
+    // 최초 로드 시 및 탭 변경 시 데이터 로드
+    loadGifticons(true);
+
+    // 화면에 다시 포커스될 때마다 데이터 새로 로드
+    const unsubscribe = navigation.addListener('focus', () => {
+      // 화면이 다시 포커스를 받으면 데이터 새로고침
+      handleRefresh();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedCategory, selectedFilter, sortBy[selectedCategory]]);
+
   return (
     <TouchableWithoutFeedback onPress={handleOutsidePress}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>

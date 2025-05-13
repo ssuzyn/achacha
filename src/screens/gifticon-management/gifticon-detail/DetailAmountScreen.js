@@ -22,8 +22,29 @@ import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
 import AlertDialog from '../../../components/ui/AlertDialog';
 import gifticonService from '../../../api/gifticonService';
-import FastImage from 'react-native-fast-image';
 import { BASE_URL } from '../../../api/config';
+
+// 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
+const getImageSource = path => {
+  if (!path) {
+    return require('../../../assets/images/adaptive_icon.png');
+  }
+  if (path.startsWith('http')) {
+    return { uri: path };
+  }
+  // BASE_URL이 유효한지 확인하고 결합
+  if (BASE_URL && typeof BASE_URL === 'string' && BASE_URL.length > 0) {
+    // BASE_URL 끝에 슬래시가 없고, path 시작에 슬래시가 없으면 추가
+    const separator = !BASE_URL.endsWith('/') && !path.startsWith('/') ? '/' : '';
+    // BASE_URL 끝에 슬래시가 있고, path 시작에 슬래시가 있으면 중복 제거
+    if (BASE_URL.endsWith('/') && path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    return { uri: `${BASE_URL}${separator}${path}` };
+  }
+  // BASE_URL이 유효하지 않으면 기본 이미지 반환
+  return require('../../../assets/images/adaptive_icon.png');
+};
 
 const DetailAmountScreen = () => {
   const insets = useSafeAreaInsets();
@@ -56,6 +77,8 @@ const DetailAmountScreen = () => {
   // 공유 위치 선택 상태
   const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+  // 이미지 확대 보기 상태
+  const [isImageViewVisible, setImageViewVisible] = useState(false);
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -83,13 +106,13 @@ const DetailAmountScreen = () => {
         setIsSharer(route.params.isSharer);
       }
       // refresh 플래그가 true이면 데이터 다시 로드
-      if (route.params.refresh && gifticonId) {
-        loadGifticonData(gifticonId);
+      if (route.params.refresh && route.params.gifticonId) {
+        loadGifticonData(route.params.gifticonId);
         // 사용하기 모드 종료
         setIsUsing(false);
       }
     }
-  }, [route.params, gifticonId]);
+  }, [route.params]);
 
   // 기프티콘 ID가 있으면 데이터 로드
   useEffect(() => {
@@ -109,7 +132,7 @@ const DetailAmountScreen = () => {
     try {
       // API 호출로 기프티콘 상세 정보 가져오기
       const response = await gifticonService.getGifticonDetail(id);
-      const responseData = response.data;
+      const responseData = response;
 
       setGifticonData(responseData);
       setIsSharer(responseData.isSharer);
@@ -336,12 +359,27 @@ const DetailAmountScreen = () => {
 
   // 돋보기 기능 - 확대 화면으로 이동
   const handleMagnify = () => {
-    navigation.navigate('UseAmountScreen', {
-      id: gifticonData.gifticonId,
-      gifticonId: gifticonData.gifticonId,
-      barcodeNumber: gifticonData.barcodeNumber,
-      remainingAmount: gifticonData.gifticonRemainingAmount,
-    });
+    // 사용 완료 상품일 경우 다른 UI 표시
+    if (isUsed && gifticonData.usageType === 'SELF_USE') {
+      navigation.navigate('UseAmountScreen', {
+        id: gifticonData.gifticonId,
+        gifticonId: gifticonData.gifticonId,
+        isUsed: true,
+        barcodeNumber: gifticonData.barcodeNumber,
+        brandName: gifticonData.brandName,
+        gifticonName: gifticonData.gifticonName,
+      });
+    } else {
+      // 일반 사용 모드
+      navigation.navigate('UseAmountScreen', {
+        id: gifticonData.gifticonId,
+        gifticonId: gifticonData.gifticonId,
+        barcodeNumber: gifticonData.barcodeNumber,
+        remainingAmount: gifticonData.gifticonRemainingAmount,
+        brandName: gifticonData.brandName,
+        gifticonName: gifticonData.gifticonName,
+      });
+    }
   };
 
   // 선물하기 기능
@@ -397,6 +435,28 @@ const DetailAmountScreen = () => {
     setAlertVisible(false);
   };
 
+  // 사용완료된 상품일 경우 다른 UI 표시
+  const isUsed = scope === 'USED';
+
+  // 사용 방식에 따른 텍스트 결정
+  const getUsageTypeText = () => {
+    switch (gifticonData.usageType) {
+      case 'SELF_USE':
+        return '사용완료';
+      case 'PRESENT':
+        return '선물완료';
+      case 'GIVE_AWAY':
+        return '뿌리기 완료';
+      default:
+        return '사용완료';
+    }
+  };
+
+  // 이미지 확대 보기 토글
+  const toggleImageView = () => {
+    setImageViewVisible(!isImageViewVisible);
+  };
+
   // 로딩 중이거나 데이터가 없는 경우 로딩 화면 표시
   if (isLoading || !gifticonData) {
     return (
@@ -418,23 +478,6 @@ const DetailAmountScreen = () => {
       </View>
     );
   }
-
-  // 사용완료된 상품일 경우 다른 UI 표시
-  const isUsed = scope === 'USED';
-
-  // 사용 방식에 따른 텍스트 결정
-  const getUsageTypeText = () => {
-    switch (gifticonData.usageType) {
-      case 'SELF_USE':
-        return '사용완료';
-      case 'PRESENT':
-        return '선물완료';
-      case 'GIVE_AWAY':
-        return '뿌리기 완료';
-      default:
-        return '사용완료';
-    }
-  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -470,7 +513,7 @@ const DetailAmountScreen = () => {
                   <Image
                     source={
                       gifticonData.barcodeImageUrl
-                        ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                        ? { uri: gifticonData.barcodeImageUrl }
                         : require('../../../assets/images/barcode.png')
                     }
                     style={styles.barcodeImage}
@@ -486,24 +529,19 @@ const DetailAmountScreen = () => {
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <FastImage
-                    source={
-                      gifticonData.thumbnailPath
-                        ? {
-                            uri: `${BASE_URL}${gifticonData.thumbnailPath}`,
-                            priority: FastImage.priority.normal,
-                          }
-                        : require('../../../assets/images/adaptive-icon.png')
-                    }
-                    style={[
-                      styles.gifticonImage,
-                      isUsed && styles.grayScaleImage,
-                      isUsed &&
-                        gifticonData.usageType === 'SELF_USE' &&
-                        styles.smallerGifticonImage,
-                    ]}
-                    resizeMode={FastImage.resizeMode.contain}
-                  />
+                  <TouchableOpacity onPress={toggleImageView} activeOpacity={0.9}>
+                    <Image
+                      source={getImageSource(gifticonData.thumbnailPath)}
+                      style={[
+                        styles.gifticonImage,
+                        isUsed && styles.grayScaleImage,
+                        isUsed &&
+                          gifticonData.usageType === 'SELF_USE' &&
+                          styles.smallerGifticonImage,
+                      ]}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
 
                   {/* 상단 액션 아이콘 */}
                   {!isUsed && (
@@ -533,7 +571,7 @@ const DetailAmountScreen = () => {
                       <Image
                         source={
                           gifticonData.barcodeImageUrl
-                            ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                            ? { uri: gifticonData.barcodeImageUrl }
                             : require('../../../assets/images/barcode.png')
                         }
                         style={styles.usedBarcodeImage}
@@ -898,6 +936,38 @@ const DetailAmountScreen = () => {
         </View>
       </ScrollView>
 
+      {/* 이미지 확대 보기 모달 */}
+      <Modal
+        visible={isImageViewVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleImageView}
+      >
+        <View style={styles.imageViewModal}>
+          <TouchableOpacity
+            style={styles.imageViewCloseButton}
+            onPress={toggleImageView}
+            activeOpacity={0.7}
+          >
+            <Icon name="close" type="material" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.imageViewContainer}
+            activeOpacity={1}
+            onPress={toggleImageView}
+          >
+            <Image
+              source={
+                // 원본 이미지 경로 우선 사용, 없으면 썸네일 경로 사용
+                getImageSource(gifticonData?.originalImagePath || gifticonData?.thumbnailPath)
+              }
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
       {/* 금액 입력 모달 */}
       <Modal
         animationType="fade"
@@ -1097,7 +1167,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     padding: 16,
     paddingTop: 0,
     borderBottomWidth: 1,
@@ -1108,9 +1178,11 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   gifticonImage: {
-    width: '60%',
-    height: '90%',
+    width: 200,
+    height: 200,
     borderRadius: 8,
+    resizeMode: 'cover',
+    marginBottom: 20,
   },
   infoContainer: {
     padding: 16,
@@ -1223,9 +1295,11 @@ const styles = StyleSheet.create({
     // 투명도를 낮춰 흑백처럼 보이게 합니다.
   },
   smallerGifticonImage: {
-    height: '50%',
+    width: 160,
+    height: 160,
     marginBottom: 5,
     marginTop: 20,
+    resizeMode: 'cover',
   },
   usedOverlay: {
     position: 'absolute',
@@ -1599,6 +1673,35 @@ const styles = StyleSheet.create({
   },
   confirmShareButtonText: {
     color: '#FFFFFF',
+  },
+  // 이미지 확대 모달 스타일
+  imageViewModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
+  },
+  imageViewCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
