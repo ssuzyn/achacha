@@ -389,7 +389,13 @@ const ManageListScreen = () => {
 
       // 정렬 적용
       const currentSortBy = sortBy[selectedCategory];
-      params.sort = currentSortBy === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC';
+      if (selectedCategory === 'used') {
+        // 사용 완료 기프티콘 조회 시 'USED_DESC' 정렬 사용
+        params.sort = 'USED_DESC';
+      } else {
+        // 사용 가능 기프티콘 조회 시 기존 정렬 사용
+        params.sort = currentSortBy === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC';
+      }
 
       // 카테고리에 따라 API 호출 분기
       let response;
@@ -944,10 +950,13 @@ const ManageListScreen = () => {
     // 내가 공유한 기프티콘인지 확인
     const isSharer = item.scope === 'SHARE_BOX' && item.userId === currentUserId;
 
+    // 사용 완료 기프티콘인 경우 'used-' 접두사 추가
+    const gifticonId = item.scope === 'USED' ? `used-${item.gifticonId}` : item.gifticonId;
+
     // 기프티콘 유형에 따라 다른 상세 페이지로 이동
     if (item.gifticonType === 'PRODUCT') {
       navigation.navigate('DetailProduct', {
-        gifticonId: item.gifticonId,
+        gifticonId: gifticonId,
         scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
         usageType: item.usageType, // USED 일 경우에만 사용됨
         usedAt: item.usedAt, // USED 일 경우에만 사용됨
@@ -955,7 +964,7 @@ const ManageListScreen = () => {
       });
     } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('DetailAmount', {
-        gifticonId: item.gifticonId,
+        gifticonId: gifticonId,
         scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
         usageType: item.usageType, // USED 일 경우에만 사용됨
         usedAt: item.usedAt, // USED 일 경우에만 사용됨

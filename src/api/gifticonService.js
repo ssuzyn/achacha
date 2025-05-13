@@ -2,6 +2,8 @@ import apiClient from './apiClient';
 import { API_CONFIG } from './config';
 import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
+import axios from 'axios';
+import { API_BASE_URL } from './config';
 
 /**
  * 기프티콘 API 서비스
@@ -238,10 +240,10 @@ const gifticonService = {
    */
   async getAvailableGifticons(params = {}) {
     try {
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_GIFTICONS, { params });
+      const response = await axios.get(`${API_BASE_URL}/api/available-gifticons`, { params });
       return response.data;
     } catch (error) {
-      console.error('[API] 기프티콘 목록 조회 실패:', error);
+      console.error('[API] 사용 가능 기프티콘 목록 조회 실패:', error);
       throw error;
     }
   },
@@ -250,16 +252,135 @@ const gifticonService = {
    * 사용 완료된 기프티콘 목록 조회
    * @param {Object} params - 조회 파라미터
    * @param {string} params.type - 기프티콘 타입 필터 ('PRODUCT'/'AMOUNT')
+   * @param {string} params.sort - 정렬 방식 ('USED_DESC': 최근 사용순)
    * @param {number} params.page - 페이지 번호
    * @param {number} params.size - 페이지당 항목 수
    * @returns {Promise<Object>} - 사용 완료 기프티콘 목록 조회 결과
    */
   async getUsedGifticons(params = {}) {
     try {
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_USED_GIFTICONS, { params });
+      const response = await axios.get(`${API_BASE_URL}/api/used-gifticons`, { params });
       return response.data;
     } catch (error) {
       console.error('[API] 사용 완료 기프티콘 목록 조회 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 기프티콘 상세 정보 조회
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 기프티콘 상세 정보
+   */
+  async getGifticonDetail(gifticonId) {
+    try {
+      // 사용 가능/사용 완료 여부에 따라 다른 엔드포인트 사용
+      const scope = gifticonId.toString().startsWith('used-') ? 'used' : 'available';
+      const realGifticonId = gifticonId.toString().startsWith('used-')
+        ? gifticonId.toString().substring(5)
+        : gifticonId;
+
+      const endpoint =
+        scope === 'used'
+          ? `/api/used-gifticons/${realGifticonId}`
+          : `/api/available-gifticons/${realGifticonId}`;
+
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      return response;
+    } catch (error) {
+      console.error('[API] 기프티콘 상세 정보 조회 실패:', error);
+
+      // 에러 처리 로직 (오류 유형에 따른 처리)
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 403) {
+          console.error('기프티콘 접근 권한 없음:', data);
+        } else if (status === 404) {
+          console.error('기프티콘을 찾을 수 없음:', data);
+        }
+      }
+
+      throw error;
+    }
+  },
+
+  /**
+   * 사용 가능 기프티콘 바코드 조회
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 바코드 정보
+   */
+  async getAvailableGifticonBarcode(gifticonId) {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/available-gifticons/${gifticonId}/barcode`
+      );
+      return response.data;
+    } catch (error) {
+      console.error('[API] 사용 가능 기프티콘 바코드 조회 실패:', error);
+
+      // 에러 처리 로직
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 403) {
+          console.error('기프티콘 접근 권한 없음:', data);
+        } else if (status === 404) {
+          console.error('기프티콘을 찾을 수 없음:', data);
+        }
+      }
+
+      throw error;
+    }
+  },
+
+  /**
+   * 사용 완료 기프티콘 바코드 조회
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 바코드 정보
+   */
+  async getUsedGifticonBarcode(gifticonId) {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/used-gifticons/${gifticonId}/barcode`);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 사용 완료 기프티콘 바코드 조회 실패:', error);
+
+      // 에러 처리 로직
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+
+        if (status === 403) {
+          console.error('기프티콘 접근 권한 없음:', data);
+        } else if (status === 404) {
+          console.error('기프티콘을 찾을 수 없음:', data);
+        }
+      }
+
+      throw error;
+    }
+  },
+
+  /**
+   * 기프티콘 사용 완료 처리
+   * @param {number} gifticonId - 기프티콘 ID
+   * @param {string} usageType - 사용 유형 ('SELF_USE', 'PRESENT', 'GIVE_AWAY')
+   * @returns {Promise<Object>} - 사용 완료 처리 결과
+   */
+  async markGifticonAsUsed(gifticonId, usageType = 'SELF_USE') {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/available-gifticons/${gifticonId}/use`,
+        {
+          usageType,
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('[API] 기프티콘 사용 완료 처리 실패:', error);
       throw error;
     }
   },

@@ -19,6 +19,9 @@ import AlertDialog from '../../../components/ui/AlertDialog';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
+import gifticonService from '../../../api/gifticonService';
+import FastImage from 'react-native-fast-image';
+import { BASE_URL } from '../../../api/config';
 
 const DetailProductScreen = () => {
   const insets = useSafeAreaInsets();
@@ -31,10 +34,6 @@ const DetailProductScreen = () => {
   const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX', 'SHARE_BOX' 또는 'USED'
   // 기프티콘 ID 관리
   const [gifticonId, setGifticonId] = useState(null);
-  // 사용 유형 관리 (사용완료 경우에만)
-  const [usageType, setUsageType] = useState(null);
-  // 사용일시 관리 (사용완료 경우에만)
-  const [usedAt, setUsedAt] = useState(null);
   // 기프티콘 데이터 상태
   const [gifticonData, setGifticonData] = useState(null);
   // 로딩 상태
@@ -71,7 +70,7 @@ const DetailProductScreen = () => {
     return unsubscribe;
   }, [navigation, showTabBar]);
 
-  // route.params에서 scope와 gifticonId, usageType, usedAt을 가져오는 부분
+  // route.params에서 scope와 gifticonId를 가져오는 부분
   useEffect(() => {
     if (route.params) {
       if (route.params.scope) {
@@ -79,12 +78,6 @@ const DetailProductScreen = () => {
       }
       if (route.params.gifticonId) {
         setGifticonId(route.params.gifticonId);
-      }
-      if (route.params.usageType) {
-        setUsageType(route.params.usageType);
-      }
-      if (route.params.usedAt) {
-        setUsedAt(route.params.usedAt);
       }
       // 공유박스에서 내가 공유한 것인지 확인
       if (route.params.isSharer) {
@@ -110,63 +103,10 @@ const DetailProductScreen = () => {
     setIsLoading(true);
     try {
       // 실제 구현에서는 API 호출로 대체
-      // const response = await api.getGifticonDetail(id);
-      // setGifticonData(response.data);
-
-      // 더미 데이터 - API 명세에 맞춤 (테스트용)
-      // 실제 구현에서는 삭제하고 API 호출로 대체
-      setTimeout(() => {
-        let dummyData;
-
-        if (scope === 'USED') {
-          // 사용완료된 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id,
-            gifticonName: '아이스 카페 아메리카노 T',
-            gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-12-31',
-            brandId: 45,
-            brandName: '스타벅스',
-            scope: scope,
-            usageType: usageType || 'SELF_USE', // 사용유형
-            usageHistoryCreatedAt: usedAt || '2025-01-15T14:30:00', // 사용일시
-            thumbnailPath: require('../../../assets/images/dummy_starbucks.png'),
-            originalImagePath:
-              usageType === 'SELF_USE'
-                ? require('../../../assets/images/dummy_starbucks.png')
-                : null,
-            gifticonCreatedAt: '2025-01-01T10:30:00',
-            // 더미 데이터에 공유자 ID 추가
-            userId: 78, // 사용자 ID
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-          };
-        } else {
-          // 일반 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id,
-            gifticonName: '아이스 카페 아메리카노 T',
-            gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-12-31',
-            brandId: 45,
-            brandName: '스타벅스',
-            scope: scope, // 파라미터에서 받은 scope 사용
-            userId: 78,
-            userName: '홍길동',
-            shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
-            shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
-            thumbnailPath: require('../../../assets/images/dummy_starbucks.png'),
-            originalImagePath: require('../../../assets/images/dummy_starbucks.png'),
-            gifticonCreatedAt: '2025-01-15T10:30:00',
-            barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
-            barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
-            // 더미 데이터에 공유자 ID 추가
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-          };
-        }
-        setGifticonData(dummyData);
-        setIsSharer(dummyData.isSharer);
-        setIsLoading(false);
-      }, 500); // 0.5초 지연 (로딩 효과)
+      const response = await gifticonService.getGifticonDetail(id);
+      setGifticonData(response.data);
+      setIsSharer(response.data.isSharer);
+      setIsLoading(false);
     } catch (error) {
       // console.error('기프티콘 데이터 로드 실패:', error);
       setIsLoading(false);
@@ -297,6 +237,7 @@ const DetailProductScreen = () => {
   const handleMagnify = () => {
     navigation.navigate('UseProductScreen', {
       id: gifticonData.gifticonId,
+      gifticonId: gifticonData.gifticonId,
       barcodeNumber: gifticonData.barcodeNumber,
     });
   };
@@ -418,7 +359,11 @@ const DetailProductScreen = () => {
                 // 사용 모드일 때 바코드 표시
                 <View style={styles.barcodeContainer}>
                   <Image
-                    source={gifticonData.barcodeImageUrl}
+                    source={
+                      gifticonData.barcodeImageUrl
+                        ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                        : require('../../../assets/images/barcode.png')
+                    }
                     style={styles.barcodeImage}
                     resizeMode="contain"
                   />
@@ -432,8 +377,15 @@ const DetailProductScreen = () => {
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={gifticonData.thumbnailPath}
+                  <FastImage
+                    source={
+                      gifticonData.thumbnailPath
+                        ? {
+                            uri: `${BASE_URL}${gifticonData.thumbnailPath}`,
+                            priority: FastImage.priority.normal,
+                          }
+                        : require('../../../assets/images/adaptive-icon.png')
+                    }
                     style={[
                       styles.gifticonImage,
                       isUsed && styles.grayScaleImage,
@@ -441,7 +393,7 @@ const DetailProductScreen = () => {
                         gifticonData.usageType === 'SELF_USE' &&
                         styles.smallerGifticonImage,
                     ]}
-                    resizeMode="contain"
+                    resizeMode={FastImage.resizeMode.contain}
                   />
 
                   {/* 상단 액션 아이콘 */}
@@ -471,14 +423,15 @@ const DetailProductScreen = () => {
                     <View style={styles.usedBarcodeContainer}>
                       <Image
                         source={
-                          gifticonData.barcodeImageUrl ||
-                          require('../../../assets/images/barcode.png')
+                          gifticonData.barcodeImageUrl
+                            ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                            : require('../../../assets/images/barcode.png')
                         }
                         style={styles.usedBarcodeImage}
                         resizeMode="contain"
                       />
                       <Text style={styles.usedBarcodeNumberText}>
-                        {gifticonData.barcodeNumber || '8013-7621-1234-5678'}
+                        {gifticonData.barcodeNumber || '0000-0000-0000-0000'}
                       </Text>
                     </View>
                   )}

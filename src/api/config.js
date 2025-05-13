@@ -28,8 +28,9 @@ export const API_CONFIG = {
     // 기프티콘 관련 엔드포인트
     GIFTICON_IMAGE_METADATA: '/api/gifticons/image-metadata', // 기프티콘 이미지 메타데이터 조회
     REGISTER_GIFTICON: '/api/gifticons', // 기프티콘 등록
-    GET_GIFTICONS: '/api/gifticons', // 기프티콘 목록 조회
-    GET_USED_GIFTICONS: '/api/gifticons/used', // 사용 완료 기프티콘 목록 조회
+    GET_GIFTICONS: '/api/available-gifticons', //사용 가능 기프티콘 목록 조회
+    GET_USED_GIFTICONS: '/api/used-gifticons', // 사용 완료 기프티콘 목록 조회
+    GET_GIFTICON_DETAIL: '/api/gifticons/', // 기프티콘 상세 조회 (뒤에 ID 붙여서 사용)
 
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API

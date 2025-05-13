@@ -21,6 +21,9 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
 import AlertDialog from '../../../components/ui/AlertDialog';
+import gifticonService from '../../../api/gifticonService';
+import FastImage from 'react-native-fast-image';
+import { BASE_URL } from '../../../api/config';
 
 const DetailAmountScreen = () => {
   const insets = useSafeAreaInsets();
@@ -33,10 +36,6 @@ const DetailAmountScreen = () => {
   const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX', 'SHARE_BOX' 또는 'USED'
   // 기프티콘 ID 관리
   const [gifticonId, setGifticonId] = useState(null);
-  // 사용 유형 관리 (사용완료 경우에만)
-  const [usageType, setUsageType] = useState(null);
-  // 사용일시 관리 (사용완료 경우에만)
-  const [usedAt, setUsedAt] = useState(null);
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
   // 로딩 상태
@@ -70,7 +69,7 @@ const DetailAmountScreen = () => {
     return unsubscribe;
   }, [navigation, showTabBar]);
 
-  // route.params에서 scope, gifticonId, usageType, usedAt을 가져오는 부분
+  // route.params에서 scope, gifticonId를 가져오는 부분
   useEffect(() => {
     if (route.params) {
       if (route.params.scope) {
@@ -78,12 +77,6 @@ const DetailAmountScreen = () => {
       }
       if (route.params.gifticonId) {
         setGifticonId(route.params.gifticonId);
-      }
-      if (route.params.usageType) {
-        setUsageType(route.params.usageType);
-      }
-      if (route.params.usedAt) {
-        setUsedAt(route.params.usedAt);
       }
       // 공유박스에서 내가 공유한 것인지 확인
       if (route.params.isSharer) {
@@ -114,100 +107,36 @@ const DetailAmountScreen = () => {
   const loadGifticonData = async id => {
     setIsLoading(true);
     try {
-      // 실제 구현에서는 API 호출로 대체
-      // const response = await api.getGifticonDetail(id);
-      // setGifticonData(response.data);
+      // API 호출로 기프티콘 상세 정보 가져오기
+      const response = await gifticonService.getGifticonDetail(id);
+      const responseData = response.data;
 
-      // 더미 데이터 예시 (테스트용)
-      setTimeout(() => {
-        let dummyData;
+      setGifticonData(responseData);
+      setIsSharer(responseData.isSharer);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('기프티콘 데이터 로드 실패:', error);
+      setIsLoading(false);
 
-        if (scope === 'USED') {
-          // 사용완료된 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id,
-            gifticonName: 'APP전용 e카드 3만원 교환권',
-            gifticonType: 'AMOUNT',
-            gifticonExpiryDate: '2025-03-31',
-            brandId: 46,
-            brandName: '스타벅스',
-            scope: scope,
-            usageType: usageType || 'SELF_USE', // 사용유형
-            usageHistoryCreatedAt: usedAt || '2025-01-25T16:45:00', // 사용일시
-            thumbnailPath: require('../../../assets/images/dummy_starbuckscard.png'),
-            originalImagePath:
-              usageType === 'SELF_USE'
-                ? require('../../../assets/images/dummy_starbuckscard.png')
-                : null,
-            gifticonCreatedAt: '2024-12-20T11:30:00',
-            gifticonOriginalAmount: 10000,
-            // 더미 데이터에 공유자 ID 추가
-            userId: 78, // 사용자 ID
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-            // 사용 내역 추가
-            transactions: [
-              {
-                id: '1',
-                date: '2025-01-10',
-                time: '14:30',
-                userName: '홍길동',
-                amount: 3000,
-                type: 'payment',
-                timestamp: new Date('2025-01-10T14:30:00').getTime(),
-              },
-              {
-                id: '2',
-                date: '2025-01-20',
-                time: '16:45',
-                userName: '김철수',
-                amount: 5000,
-                type: 'payment',
-                timestamp: new Date('2025-01-20T16:45:00').getTime(),
-              },
-              {
-                id: '3',
-                date: '2025-01-25',
-                time: '10:15',
-                userName: '박지민',
-                amount: 2000,
-                type: 'payment',
-                timestamp: new Date('2025-01-25T10:15:00').getTime(),
-              },
-            ].sort((a, b) => b.timestamp - a.timestamp), // 날짜 내림차순 정렬 (최신순)
-          };
+      // 에러 처리
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+
+        if (status === 403) {
+          Alert.alert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
+        } else if (status === 404) {
+          Alert.alert('기프티콘 없음', '기프티콘을 찾을 수 없습니다.');
         } else {
-          // 일반 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id || 124,
-            gifticonName: 'APP전용 e카드 3만원 교환권',
-            gifticonType: 'AMOUNT',
-            gifticonExpiryDate: '2025-01-31',
-            brandId: 46,
-            brandName: '스타벅스',
-            scope: scope,
-            userId: 78,
-            userName: '홍길동',
-            shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
-            shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
-            thumbnailPath: require('../../../assets/images/dummy_starbuckscard.png'),
-            originalImagePath: require('../../../assets/images/dummy_starbuckscard.png'),
-            gifticonCreatedAt: '2025-01-15T10:30:00',
-            gifticonOriginalAmount: 30000,
-            gifticonRemainingAmount: 8000,
-            barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
-            barcodeImageUrl: require('../../../assets/images/barcode.png'), // 바코드 이미지 (더미)
-            // 더미 데이터에 공유자 ID 추가
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-          };
+          Alert.alert(
+            '오류',
+            `기프티콘을 불러오는 중 오류가 발생했습니다. ${errorData?.message || ''}`
+          );
         }
 
-        setGifticonData(dummyData);
-        setIsSharer(dummyData.isSharer);
-        setIsLoading(false);
-      }, 500);
-    } catch (error) {
-      // console.error('기프티콘 데이터 로드 실패:', error);
-      setIsLoading(false);
+        // 오류 발생 시 이전 화면으로 돌아가기
+        NavigationService.goBack();
+      }
     }
   };
 
@@ -409,7 +338,9 @@ const DetailAmountScreen = () => {
   const handleMagnify = () => {
     navigation.navigate('UseAmountScreen', {
       id: gifticonData.gifticonId,
+      gifticonId: gifticonData.gifticonId,
       barcodeNumber: gifticonData.barcodeNumber,
+      remainingAmount: gifticonData.gifticonRemainingAmount,
     });
   };
 
@@ -537,7 +468,11 @@ const DetailAmountScreen = () => {
                 // 사용 모드일 때 바코드 표시
                 <View style={styles.barcodeContainer}>
                   <Image
-                    source={gifticonData.barcodeImageUrl}
+                    source={
+                      gifticonData.barcodeImageUrl
+                        ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                        : require('../../../assets/images/barcode.png')
+                    }
                     style={styles.barcodeImage}
                     resizeMode="contain"
                   />
@@ -551,8 +486,15 @@ const DetailAmountScreen = () => {
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={gifticonData.thumbnailPath}
+                  <FastImage
+                    source={
+                      gifticonData.thumbnailPath
+                        ? {
+                            uri: `${BASE_URL}${gifticonData.thumbnailPath}`,
+                            priority: FastImage.priority.normal,
+                          }
+                        : require('../../../assets/images/adaptive-icon.png')
+                    }
                     style={[
                       styles.gifticonImage,
                       isUsed && styles.grayScaleImage,
@@ -560,7 +502,7 @@ const DetailAmountScreen = () => {
                         gifticonData.usageType === 'SELF_USE' &&
                         styles.smallerGifticonImage,
                     ]}
-                    resizeMode="contain"
+                    resizeMode={FastImage.resizeMode.contain}
                   />
 
                   {/* 상단 액션 아이콘 */}
@@ -590,14 +532,15 @@ const DetailAmountScreen = () => {
                     <View style={styles.usedBarcodeContainer}>
                       <Image
                         source={
-                          gifticonData.barcodeImageUrl ||
-                          require('../../../assets/images/barcode.png')
+                          gifticonData.barcodeImageUrl
+                            ? { uri: `${BASE_URL}${gifticonData.barcodeImageUrl}` }
+                            : require('../../../assets/images/barcode.png')
                         }
                         style={styles.usedBarcodeImage}
                         resizeMode="contain"
                       />
                       <Text style={styles.usedBarcodeNumberText}>
-                        {gifticonData.barcodeNumber || '8013-7621-1234-5678'}
+                        {gifticonData.barcodeNumber || '0000-0000-0000-0000'}
                       </Text>
                     </View>
                   )}

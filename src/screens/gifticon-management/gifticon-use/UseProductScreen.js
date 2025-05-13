@@ -1,28 +1,34 @@
 /* eslint-disable react-native/no-inline-styles */
 // 상품형 사용 스크린
 
-import React, { useEffect } from 'react';
-import { View, StyleSheet, Image, StatusBar, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  Image,
+  StatusBar,
+  TouchableOpacity,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Orientation from 'react-native-orientation-locker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../../components/ui';
+import gifticonService from '../../../api/gifticonService';
+import { BASE_URL } from '../../../api/config';
 
 const UseProductScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [barcodeData, setBarcodeData] = useState(null);
 
   // route.params에서 정보 가져오기
-  const { barcodeNumber } = route.params || {};
-
-  // 기본 상품 정보
-  const productInfo = {
-    name: '스타벅스 | 아이스 카페 아메리카노 T',
-    barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
-    barcodeImage: require('../../../assets/images/barcode.png'),
-  };
+  const { gifticonId, barcodeNumber } = route.params || {};
 
   // 화면 로드 시 가로 모드로 설정
   useEffect(() => {
@@ -35,32 +41,117 @@ const UseProductScreen = () => {
     };
   }, []);
 
+  // 바코드 데이터 로드
+  useEffect(() => {
+    const loadBarcodeData = async () => {
+      if (!gifticonId) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await gifticonService.getAvailableGifticonBarcode(gifticonId);
+        setBarcodeData(response);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('바코드 로드 에러:', err);
+        setError(err);
+        setIsLoading(false);
+
+        // 에러 메시지 표시
+        if (err.response) {
+          const errorMessage = err.response.data?.message || '바코드 로드 중 오류가 발생했습니다.';
+
+          Alert.alert('오류', errorMessage, [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        } else {
+          Alert.alert('오류', '네트워크 연결을 확인해주세요.', [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
+        }
+      }
+    };
+
+    loadBarcodeData();
+  }, [gifticonId, navigation]);
+
   // 뒤로가기
   const handleGoBack = () => {
     navigation.goBack();
   };
 
   // 사용 완료 처리
-  const handleUseComplete = () => {
-    // 사용완료 처리 로직 - API 호출 등
+  const handleUseComplete = async () => {
+    try {
+      setIsLoading(true);
+      // 사용완료 처리 API 호출
+      await gifticonService.markGifticonAsUsed(gifticonId, 'SELF_USE');
+      setIsLoading(false);
 
-    // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-    // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-    navigation.reset({
-      index: 0,
-      routes: [
-        {
-          name: 'Main',
-          params: { screen: 'TabGifticonManage', initialTab: 'used' },
-        },
-      ],
-    });
+      // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: 'Main',
+            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+          },
+        ],
+      });
+    } catch (err) {
+      setIsLoading(false);
+      console.error('기프티콘 사용 완료 처리 오류:', err);
+
+      // 에러 메시지 표시
+      Alert.alert(
+        '오류',
+        err.response?.data?.message || '기프티콘 사용 완료 처리 중 오류가 발생했습니다.',
+        [{ text: '확인' }]
+      );
+    }
   };
 
   // 취소 처리
   const handleCancel = () => {
     navigation.goBack();
   };
+
+  // 로딩 중인 경우
+  if (isLoading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { backgroundColor: 'white', justifyContent: 'center', alignItems: 'center' },
+        ]}
+      >
+        <StatusBar hidden />
+        <ActivityIndicator size="large" color="#56AEE9" />
+        <Text style={{ marginTop: 15, fontSize: 16, color: '#333' }}>
+          바코드 정보를 불러오는 중...
+        </Text>
+      </View>
+    );
+  }
+
+  // 에러가 있는 경우 (이미 Alert로 처리했으므로 빈 화면 렌더링)
+  if (error && !barcodeData) {
+    return (
+      <View style={[styles.container, { backgroundColor: 'white' }]}>
+        <StatusBar hidden />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}>
@@ -74,17 +165,23 @@ const UseProductScreen = () => {
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
             <Icon name="arrow-back-ios" type="material" size={22} color="#333" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{productInfo.name}</Text>
+          <Text style={styles.headerTitle}>스타벅스 | 아이스 카페 아메리카노 T</Text>
         </View>
 
         <View style={styles.content}>
           <View style={styles.barcodeSection}>
             <Image
-              source={productInfo.barcodeImage}
+              source={
+                barcodeData?.barcodePath
+                  ? { uri: `${BASE_URL}${barcodeData.barcodePath}` }
+                  : require('../../../assets/images/barcode.png')
+              }
               style={styles.barcodeImage}
               resizeMode="contain"
             />
-            <Text style={styles.barcodeNumber}>{productInfo.barcodeNumber}</Text>
+            <Text style={styles.barcodeNumber}>
+              {barcodeData?.gifticonBarcodeNumber || barcodeNumber || '바코드 정보 없음'}
+            </Text>
           </View>
 
           <View style={styles.actionSection}>
