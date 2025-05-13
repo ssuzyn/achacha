@@ -7,6 +7,7 @@ import {
   Image,
   TouchableOpacity,
   Dimensions,
+  ImageBackground,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { Text } from '../components/ui';
@@ -283,22 +284,27 @@ const HomeScreen = () => {
         {/* 선물 카드 */}
         <View style={styles.bottomCardSection}>
           <TouchableOpacity onPress={() => NavigationService.navigate('TabGifticonManage')}>
-            <View style={styles.giftMessageCard}>
-              <View style={styles.giftMessageTextContainer}>
-                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
-                  기프티콘 선물해봐요!
-                </Text>
-                <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
-                  포장은 저희가 해드릴게요.
-                </Text>
-              </View>
-              <View style={styles.giftMessageImageContainer}>
-                <Image
-                  source={require('../assets/images/home_gift.png')}
-                  style={styles.giftMessageImage}
-                  resizeMode="contain"
-                />
-              </View>
+            <View style={styles.mapMessageCard}>
+              <ImageBackground
+                source={require('../assets/images/map.png')}
+                style={styles.mapBackgroundImage}
+                imageStyle={styles.mapBackgroundImageStyle}
+              >
+                <View style={styles.mapOverlay}>
+                  <View style={styles.mapMessageTextContainer}>
+                    <View style={styles.mapTitleContainer}>
+                      <Image
+                        source={require('../assets/images/map_marker.png')}
+                        style={styles.mapMarkerImage}
+                        resizeMode="contain"
+                      />
+                      <Text variant="h4" weight="bold" style={styles.mapMessageTitle}>
+                        발견부터 설렘까지, 기프티콘 MAP
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </ImageBackground>
             </View>
           </TouchableOpacity>
         </View>
@@ -330,7 +336,7 @@ const styles = StyleSheet.create({
   },
   carouselSection: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
     overflow: 'hidden',
   },
   carouselCard: {
@@ -353,10 +359,11 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     marginHorizontal: 3,
+    marginVertical: 3,
   },
   giftListContainer: {
     marginBottom: 20,
-    paddingHorizontal: 8,
+    paddingHorizontal: 2,
   },
   giftListTitle: {
     letterSpacing: -0.3,
@@ -422,7 +429,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.1,
   },
   bottomCardSection: {
-    paddingHorizontal: 15,
+    paddingHorizontal: 2,
   },
   giftMessageCard: {
     backgroundColor: '#E5F4FE',
@@ -484,6 +491,49 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     marginRight: 15,
+  },
+  mapMessageCard: {
+    borderRadius: 15,
+    overflow: 'hidden',
+    height: 130,
+  },
+  mapBackgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mapBackgroundImageStyle: {
+    borderRadius: 15,
+  },
+  mapOverlay: {
+    backgroundColor: 'rgba(255, 255, 255, 0.65)',
+    flex: 1,
+    padding: 15,
+    flexDirection: 'row',
+  },
+  mapMessageTextContainer: {
+    flex: 1.5,
+    paddingLeft: 10,
+    paddingRight: 0,
+    justifyContent: 'center',
+    height: '100%',
+  },
+  mapTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  mapMarkerImage: {
+    width: 30,
+    height: 30,
+    marginRight: 5,
+  },
+  mapMessageTitle: {
+    alignSelf: 'center',
+    marginBottom: 2,
+    letterSpacing: -0.2,
+    lineHeight: 30,
+    color: '#000000',
   },
 });
 
