@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import MapGifticonList from './map/MapGifticonList';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const GifticonBottomSheet = ({ gifticons, onUseGifticon, onSelectBrand, selectedBrand }) => {
   const bottomSheetRef = useRef(null);
@@ -10,6 +11,10 @@ const GifticonBottomSheet = ({ gifticons, onUseGifticon, onSelectBrand, selected
   const handleSheetChanges = useCallback(index => {
     console.log('handleSheetChanges', index);
   }, []);
+
+  const handleBackPress = () => {
+    onSelectBrand(null); // 선택된 브랜드 초기화
+  };
 
   return (
     <BottomSheet
@@ -21,6 +26,14 @@ const GifticonBottomSheet = ({ gifticons, onUseGifticon, onSelectBrand, selected
       handleIndicatorStyle={styles.indicator}
       backgroundStyle={styles.background}
     >
+      {selectedBrand && (
+        <View style={styles.headerContainer}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+            <Icon name="arrow-back-ios" type="material" size={22} color="#56AEE9" />
+            <Text style={styles.backText}>전체 목록</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={styles.contentContainer}>
         <MapGifticonList
           gifticons={gifticons}
@@ -38,6 +51,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
+  headerContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: 'white',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#56AEE9',
+    fontFamily: 'Pretendard-Medium',
+  },
   handle: {
     backgroundColor: 'white',
     borderTopLeftRadius: 14,
@@ -53,6 +81,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderTopLeftRadius: 14,
     borderTopRightRadius: 14,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 12,
   },
 });
 

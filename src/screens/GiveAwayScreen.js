@@ -1,18 +1,28 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   Dimensions,
-  StatusBar,
   TouchableOpacity,
   Image,
   Text,
+  Alert,
+  SafeAreaView,
+  StatusBar,
+  PanResponder,
+  Animated,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
-import HeaderBar from '../components/common/HeaderBar';
-import BottomTabBar from '../components/common/BottomTabBar';
+import Tooltip from '../components/Tooltip';
+import LottieView from 'lottie-react-native';
+import NearbyUsersService from '../services/NearbyUsersService';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../hooks/useTheme';
+import { useNavigation } from '@react-navigation/native';
+import useDeviceStore from '../store/deviceStore';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../assets/images/giveaway_button.png');
@@ -21,13 +31,17 @@ const emoji2 = require('../assets/images/emoji2.png');
 const emoji3 = require('../assets/images/emoji3.png');
 const emoji4 = require('../assets/images/emoji4.png');
 const emoji5 = require('../assets/images/emoji5.png');
+// 사용자가 없을 때 표시할 이미지
+const giveawayManagementImg = require('../assets/images/giveaway_management.png');
+const giveawayShareboxImg = require('../assets/images/giveaway_sharebox.png');
 
-const dummyUsers = [
-  { id: 1, name: '안*진', emoji: emoji1, distance: '5m' },
-  { id: 2, name: 'Gw*ter', emoji: emoji2, distance: '10m' },
-  { id: 3, name: '스타*명', emoji: emoji3, distance: '15m' },
-  { id: 4, name: '정*은', emoji: emoji4, distance: '8m' },
-  { id: 5, name: '류*문', emoji: emoji5, distance: '12m' },
+// 더미 사용자 데이터를 상수로 선언
+const DUMMY_USERS = [
+  { id: 1, name: '안*진', emoji: emoji1 },
+  { id: 2, name: 'Gw*ter', emoji: emoji2 },
+  { id: 3, name: '스타*명', emoji: emoji3 },
+  { id: 4, name: '정*은', emoji: emoji4 },
+  { id: 5, name: '류*문', emoji: emoji5 },
 ];
 
 const dummyGifticons = {
@@ -74,58 +88,86 @@ const dummyGifticons = {
       shareBoxName: null,
       thumbnailPath: '/images/gifticons/thumbnail/127.jpg',
     },
-    {
-      gifticonId: 131,
-      gifticonName: '돌체 라떼',
-      gifticonType: 'PRODUCT',
-      gifticonExpiryDate: '2025-09-05',
-      brandId: 45,
-      brandName: '스타벅스',
-      scope: 'MY_BOX',
-      userId: 78,
-      userName: '홍길동',
-      shareBoxId: null,
-      shareBoxName: null,
-      thumbnailPath: '/images/gifticons/thumbnail/131.jpg',
-    },
-    {
-      gifticonId: 123,
-      gifticonName: '아메리카노',
-      gifticonType: 'PRODUCT',
-      gifticonExpiryDate: '2025-12-31',
-      brandId: 45,
-      brandName: '스타벅스',
-      scope: 'MY_BOX',
-      userId: 78,
-      userName: '홍길동',
-      shareBoxId: null,
-      shareBoxName: null,
-      thumbnailPath: '/images/gifticons/thumbnail/123.jpg',
-    },
   ],
   hasNextPage: true,
   nextPage: '1',
 };
 
-const GiveAwayScreen = () => {
+// 주변에 사용자가 없을 때 보여줄 컴포넌트
+const NoUsersScreen = () => {
+  const navigation = useNavigation();
+
+  const handleGoToShareBox = () => {
+    navigation.navigate('ShareBox');
+  };
+
+  const handleGoToManagement = () => {
+    navigation.navigate('GifticonManagement');
+  };
+
+  return (
+    <View style={styles.noUsersContainer}>
+      <Text style={styles.noUsersText}>주변에 사용자가 없습니다</Text>
+      <Text style={styles.noUsersSubText}>다음에 다시 시도해주세요</Text>
+
+      <View style={styles.iconContainer}>
+        <TouchableOpacity style={styles.iconWrapper} onPress={handleGoToShareBox}>
+          <Image source={giveawayShareboxImg} style={styles.noUserIcon} />
+          <Text style={styles.iconText}>쉐어박스</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.iconWrapper} onPress={handleGoToManagement}>
+          <Image source={giveawayManagementImg} style={styles.noUserIcon} />
+          <Text style={styles.iconText}>기프티콘 관리</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.descriptionContainer}>
+        <Text style={styles.descriptionText}>
+          주변 친구들을 찾지 못했습니다.{'\n'}
+          기프티콘을 쉐어박스로 보내거나{'\n'}
+          다른 기프티콘을 관리해보세요.
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const GiveAwayScreen = ({ onClose }) => {
+  const { theme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [users, setUsers] = useState([]);
   const [listVisible, setListVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [selectedGifticon, setSelectedGifticon] = useState(null);
-  const [buttonVisible, setButtonVisible] = useState(true);
+  const [buttonVisible, setButtonVisible] = useState(false);
   const [centerButtonVisible, setCenterButtonVisible] = useState(false);
   const userPositionsRef = useRef([]);
+  const [loading, setLoading] = useState(true);
+  const bleServiceRef = useRef(null);
+  const navigation = useNavigation();
+  const [giftSentUserId, setGiftSentUserId] = useState(null);
+  const [receivedUserAnim] = useState(new Animated.Value(0));
+  const [showTooltip, setShowTooltip] = useState(false);
+  const tooltipOpacity = useRef(new Animated.Value(0)).current;
+
+  // BLE 관련 상태
+  const { appUUID, userUUID, initializeUUIDs } = useDeviceStore();
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [bluetoothReady, setBluetoothReady] = useState(false);
+
+  // 애니메이션을 위한 값
+  const buttonPositionAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const buttonScaleAnim = useRef(new Animated.Value(1)).current;
+  const buttonOpacityAnim = useRef(new Animated.Value(1)).current;
 
   // 원의 중심 좌표
   const centerX = width / 2;
   const centerY = height / 2;
-
   const smallestRadius = width * 0.15;
   const diameter = smallestRadius * 2;
   const spacingRatio = 0.6;
   const circleSpacing = diameter * 0.7;
-
-  // 4개의 원의 반지름 배열 - 중앙 원부터 바깥쪽으로
   const radiusArray = [
     smallestRadius,
     smallestRadius + circleSpacing,
@@ -133,49 +175,358 @@ const GiveAwayScreen = () => {
     smallestRadius + circleSpacing * 3,
   ];
 
+  // 두번째 원 직경 계산 (Lottie 애니메이션 크기로 사용)
+  const secondCircleDiameter = radiusArray[1] * 2;
+
   // 여러 거리에 사용자를 배치하여 원근감 부여
   const calculateUserPositions = users => {
     if (userPositionsRef.current.length === users.length) {
       return userPositionsRef.current;
     }
-
     const positions = [];
     const startAngle = Math.PI / 4;
     const angleStep = (2 * Math.PI) / users.length;
-
     for (let i = 0; i < users.length; i++) {
-      // 다양한 거리에 배치하기 위해 반지름 배열 사용
-      const distanceIndex = i % 3; // 0, 1, 2 값을 순환
+      const distanceIndex = i % 3;
       let userRadius;
-
-      // 사용자를 다양한 원에 배치
       if (distanceIndex === 0) {
-        userRadius = smallestRadius + circleSpacing * 0.7; // 가까운 원
+        userRadius = smallestRadius + circleSpacing * 0.7;
       } else if (distanceIndex === 1) {
-        userRadius = smallestRadius + circleSpacing * 1.5; // 중간 원
+        userRadius = smallestRadius + circleSpacing * 1.5;
       } else {
-        userRadius = smallestRadius + circleSpacing * 2.2; // 먼 원
+        userRadius = smallestRadius + circleSpacing * 2.2;
       }
-
-      // 각도에 따른 좌표 계산
       const angle = startAngle + angleStep * i;
       const x = centerX + userRadius * Math.cos(angle);
       const y = centerY + userRadius * Math.sin(angle);
-
-      // 거리에 따른 크기와 투명도 계산 (원근감)
-      const scale = 1 - distanceIndex * 0.15; // 0: 100%, 1: 85%, 2: 70%
-      const opacity = 1 - distanceIndex * 0.1; // 0: 100%, 1: 90%, 2: 80%
-
+      const scale = 1 - distanceIndex * 0.15;
+      const opacity = 1 - distanceIndex * 0.1;
       positions.push({ x, y, scale, opacity, distanceIndex });
     }
-
     userPositionsRef.current = positions;
     return positions;
   };
 
+  // PanResponder 설정 - 기프티콘 뿌리기 버튼을 드래그할 때 사용
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        // 더 낮은 임계값으로 더 빠르게 움직임 감지
+        return Math.abs(gestureState.dx) > 2 || Math.abs(gestureState.dy) > 2;
+      },
+      onPanResponderGrant: () => {
+        // 드래그 시작시 크기 변경 효과 더 빠르게
+        Animated.spring(buttonScaleAnim, {
+          toValue: 1.2,
+          friction: 2, // 마찰 더 감소
+          tension: 80, // 장력 증가
+          useNativeDriver: true,
+        }).start();
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        // 드래그 움직임 증폭 (1.2배 더 민감하게)
+        buttonPositionAnim.setValue({
+          x: gestureState.dx * 1.2,
+          y: gestureState.dy * 1.2,
+        });
+      },
+      onPanResponderRelease: (e, gesture) => {
+        // 드래그가 끝나면 항상 버튼을 원래 위치로 되돌리기
+        resetButtonPosition();
+
+        // 랜덤으로 주변 사용자 선택 (가까운 사용자 찾기 대신)
+        if (users.length > 0) {
+          const randomIndex = Math.floor(Math.random() * users.length);
+          const selectedUser = { ...users[randomIndex], position: userPositions[randomIndex] };
+
+          // 약간의 딜레이 후 전송 (버튼이 중앙으로 돌아간 후)
+          setTimeout(() => {
+            sendGifticonToUser(selectedUser);
+          }, 100);
+        }
+      },
+    })
+  ).current;
+
+  // 버튼 위치 초기화
+  const resetButtonPosition = () => {
+    Animated.parallel([
+      Animated.spring(buttonPositionAnim, {
+        toValue: { x: 0, y: 0 },
+        friction: 3,
+        tension: 50,
+        useNativeDriver: false,
+      }),
+      Animated.spring(buttonScaleAnim, {
+        toValue: 1,
+        friction: 3,
+        tension: 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  // 사용자에게 기프티콘 전송
+  const sendGifticonToUser = async user => {
+    if (!selectedGifticon || !user) return;
+
+    setGiftSentUserId(user.id);
+
+    // 버튼을 사용자 쪽으로 애니메이션
+    Animated.parallel([
+      Animated.timing(buttonPositionAnim, {
+        toValue: {
+          x: user.position.x - width / 2,
+          y: user.position.y - height / 2,
+        },
+        duration: 250,
+        useNativeDriver: false,
+      }),
+      Animated.timing(buttonScaleAnim, {
+        toValue: 0.5,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonOpacityAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+        delay: 150,
+      }),
+    ]).start(async () => {
+      try {
+        // 선물 효과 시작
+        addReceivedAnimation(user.id);
+
+        // BLE를 통한 실제 데이터 전송 - 현재는 콘솔 로그만 표시
+        if (bleServiceRef.current && bluetoothReady) {
+          try {
+            console.log(`BLE를 통해 기프티콘 정보 전송 시도: ${user.id}, UUID: ${user.deviceUUID}`);
+
+            // 실제 전송 코드는 추가 구현 필요 - 백엔드에서 랜덤 유저 선정 처리
+            // 여기서는 선택한 사용자 ID와 기프티콘 ID만 서버에 전송하는 형태로 구현
+            // await sendGifticonToServer(user.id, selectedGifticon.gifticonId);
+          } catch (error) {
+            console.error('기프티콘 전송 실패:', error);
+          }
+        }
+
+        console.log(
+          `기프티콘 전송 애니메이션 완료: 사용자 ${user.id}에게 ${selectedGifticon.gifticonName}`
+        );
+
+        // 짧은 딜레이 후 알림 표시
+        setTimeout(() => {
+          Alert.alert(
+            '기프티콘 뿌리기 완료',
+            `${user.name}님에게 ${selectedGifticon.gifticonName}을(를) 뿌렸습니다!`,
+            [
+              {
+                text: '확인',
+                onPress: () => {
+                  // 버튼 초기화 및 새로운 기프티콘 선택 가능하도록 설정
+                  resetAfterSend();
+                },
+              },
+            ]
+          );
+        }, 800);
+      } catch (error) {
+        console.error('기프티콘 전송 오류:', error);
+        Alert.alert('전송 실패', '기프티콘 전송 중 오류가 발생했습니다. 다시 시도해주세요.');
+        resetButtonPosition();
+      } finally {
+        setIsTransferring(false);
+        buttonOpacityAnim.setValue(1);
+      }
+    });
+  };
+
+  // 전송 후 초기화 및 버튼 중앙으로 복귀
+  const resetAfterSend = () => {
+    // 버튼 위치 및 상태 초기화
+    buttonPositionAnim.setValue({ x: 0, y: 0 });
+    buttonScaleAnim.setValue(1);
+    buttonOpacityAnim.setValue(1);
+
+    // 상태 초기화
+    setGiftSentUserId(null);
+    setSelectedGifticon(null);
+    setIsTransferring(false);
+
+    // 툴팁 숨기기
+    setShowTooltip(false);
+    tooltipOpacity.setValue(0);
+
+    // 새 기프티콘 선택 가능하도록 리스트 버튼 표시
+    setCenterButtonVisible(false);
+    setButtonVisible(true);
+  };
+
+  // 수신자 효과 애니메이션
+  const addReceivedAnimation = userId => {
+    // 수신자 효과 애니메이션 시작
+    receivedUserAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(receivedUserAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(receivedUserAnim, {
+        toValue: 0.5,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(receivedUserAnim, {
+        toValue: 1,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(receivedUserAnim, {
+        toValue: 0.7,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(receivedUserAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  // NearbyUsersService로 위치 공유 및 주변 유저 검색
   useEffect(() => {
-    setUsers(dummyUsers);
-    calculateUserPositions(dummyUsers);
+    const initialize = async () => {
+      try {
+        setLoading(true);
+        // 로딩 시작 시간 기록
+        const loadingStartTime = Date.now();
+
+        // Zustand 스토어 초기화
+        if (!appUUID) {
+          await initializeUUIDs();
+        }
+
+        // BLE 서비스 초기화
+        try {
+          // NearbyUsersService 초기화 - 싱글톤이므로 참조만 저장
+          bleServiceRef.current = NearbyUsersService;
+
+          // BLE 초기화
+          const initResult = await bleServiceRef.current.initialize();
+          setBluetoothReady(initResult);
+
+          if (initResult) {
+            // 스캔 시작 - 한 번만 실행
+            let foundUsers = [];
+            await bleServiceRef.current.startScan(
+              user => {
+                // 새 사용자가 발견될 때마다 호출되는 콜백
+                console.log('새 사용자 발견:', {
+                  id: user.id,
+                  name: user.name,
+                  deviceUUID: user.deviceUUID,
+                  rssi: user.rssi,
+                  distance: user.distance,
+                  timestamp: new Date(user.timestamp).toLocaleString(),
+                });
+              },
+              allUsers => {
+                // 스캔 완료 후 호출되는 콜백
+                console.log('스캔 완료, 발견된 사용자 수:', allUsers.length);
+                console.log(
+                  '발견된 모든 사용자:',
+                  allUsers.map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    deviceUUID: user.deviceUUID,
+                    rssi: user.rssi,
+                    distance: user.distance,
+                    timestamp: new Date(user.timestamp).toLocaleString(),
+                  }))
+                );
+                foundUsers = allUsers;
+              }
+            );
+
+            // 스캔 결과 처리를 위한 약간의 지연
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 실제 사용자가 있으면 실제 데이터 사용, 없으면 더미 데이터 사용
+            if (foundUsers.length > 0) {
+              // NearbyUsersService에서 찾은 사용자 매핑
+              const mappedUsers = foundUsers
+                .map((user, index) => {
+                  // 사용자별로 다른 이모지 할당
+                  const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
+                  const emoji = emojiOptions[index % emojiOptions.length];
+
+                  return {
+                    id: user.id,
+                    name: user.name || `사용자${index + 1}`,
+                    emoji: emoji,
+                    // BLE 정보도 저장
+                    deviceUUID: user.deviceUUID,
+                    rssi: user.rssi,
+                  };
+                })
+                .slice(0, 5); // 최대 5명까지만
+
+              // UI에 사용자 표시
+              setUsers(mappedUsers);
+              setButtonVisible(mappedUsers.length > 0);
+            } else {
+              // 더미 데이터 사용
+              setUsers(DUMMY_USERS);
+              setButtonVisible(DUMMY_USERS.length > 0);
+            }
+          } else {
+            // BLE 초기화 실패 시 더미 데이터 사용
+            setUsers(DUMMY_USERS);
+            setButtonVisible(DUMMY_USERS.length > 0);
+          }
+        } catch (error) {
+          console.error('BLE 서비스 초기화 실패:', error);
+
+          // 오류 발생 시 더미 데이터 사용
+          setUsers(DUMMY_USERS);
+          setButtonVisible(DUMMY_USERS.length > 0);
+        }
+
+        // 현재 시간과 로딩 시작 시간의 차이 계산
+        const elapsedTime = Date.now() - loadingStartTime;
+        const minLoadingTime = 3000; // 최소 3초
+
+        // 최소 3초 동안 로딩 애니메이션 표시
+        if (elapsedTime < minLoadingTime) {
+          await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime));
+        }
+
+        setLoading(false);
+      } catch (error) {
+        console.error('초기화 중 오류:', error);
+        setLoading(false);
+
+        // 오류 발생 시 더미 데이터 사용
+        setUsers(DUMMY_USERS);
+        setButtonVisible(DUMMY_USERS.length > 0);
+      }
+    };
+
+    initialize();
+
+    return () => {
+      if (bleServiceRef.current) {
+        try {
+          bleServiceRef.current.cleanup();
+        } catch (e) {
+          console.error('정리 중 오류:', e);
+        }
+      }
+    };
   }, []);
 
   // 선물 버튼 핸들러
@@ -197,6 +548,9 @@ const GiveAwayScreen = () => {
     setListVisible(false);
     setButtonVisible(false);
     setCenterButtonVisible(true);
+
+    // 툴팁 표시
+    setShowTooltip(true);
   };
 
   // 선택 확인 모달에서 '취소' 버튼 핸들러
@@ -204,94 +558,207 @@ const GiveAwayScreen = () => {
     setConfirmModalVisible(false);
   };
 
-  // 사용자 위치 계산 (고정)
+  // 목록 외 영역 클릭 핸들러
+  const handleOutsidePress = () => {
+    if (listVisible) {
+      setListVisible(false);
+      setButtonVisible(true);
+    }
+  };
+
+  // 사용자 위치 계산
   const userPositions = calculateUserPositions(users);
 
+  // 뒤로가기 버튼 핸들러
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
   return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor="#f1f7ff" barStyle="dark-content" />
-      <HeaderBar />
-      <View style={styles.svgContainer}>
-        <Svg width={width * 2} height={height * 2} style={styles.svgImage}>
-          {radiusArray.map((radius, index) => (
-            <Circle
-              key={index}
-              cx={centerX * 2}
-              cy={centerY * 2}
-              r={radius}
-              stroke="#CCCCCC"
-              strokeWidth="1"
-              fill="transparent"
-            />
-          ))}
-        </Svg>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-        {users.map((user, index) => {
-          const position = userPositions[index];
-          const baseSize = 80;
-          const adjustedSize = baseSize * position.scale; // 원근감에 따른 크기 조정
+      {/* 안전 영역 고려한 상단 여백 */}
+      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
 
-          return (
-            <View
-              key={`user-${user.id}`}
-              style={[
-                styles.userContainer,
-                {
-                  left: position.x - adjustedSize / 2,
-                  top: position.y - adjustedSize / 2,
-                  width: adjustedSize,
-                  opacity: position.opacity,
-                  zIndex: 10 - position.distanceIndex, // 먼 요소가 뒤로 가도록 z-index 설정
-                },
-              ]}
-            >
-              <View style={[styles.emojiContainer, { width: adjustedSize, height: adjustedSize }]}>
-                <Image
-                  source={user.emoji}
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
+          <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: theme.colors.black }]}>기프티콘 뿌리기</Text>
+        <View style={styles.rightPlaceholder} />
+      </View>
+
+      <View style={styles.contentContainer}>
+        <TouchableOpacity
+          style={styles.svgContainer}
+          activeOpacity={1}
+          onPress={handleOutsidePress}
+        >
+          <Svg width={width} height={height} style={styles.svgImage}>
+            {radiusArray.map((radius, index) => (
+              <Circle
+                key={index}
+                cx={centerX}
+                cy={centerY}
+                r={radius}
+                stroke="#CCCCCC"
+                strokeWidth="1"
+                fill="transparent"
+              />
+            ))}
+          </Svg>
+          {loading ? (
+            <>
+              <View style={styles.loadingOverlay}>
+                <LottieView
+                  source={require('../assets/lottie/search_users.json')}
+                  autoPlay
+                  loop
                   style={{
-                    width: adjustedSize,
-                    height: adjustedSize,
-                    resizeMode: 'contain',
+                    width: secondCircleDiameter,
+                    height: secondCircleDiameter,
                   }}
                 />
               </View>
-              <Text style={[styles.userName, { fontSize: 15 * position.scale }]}>{user.name}</Text>
-            </View>
-          );
-        })}
-        {/* 기프티콘 선택 후 중앙에 표시될 버튼 */}
-        {centerButtonVisible && (
-          <View style={styles.centerButtonContainer}>
-            <Image source={giveAwayButtonImg} style={styles.centerButtonImage} />
-          </View>
-        )}
-      </View>
+            </>
+          ) : users.length > 0 ? (
+            // 사용자가 있을 때 UI
+            users.map((user, index) => {
+              const position = userPositions[index];
+              const baseSize = 80;
+              const adjustedSize = baseSize * position.scale;
 
-      {/* 뿌리기 기프티콘 목록 버튼 */}
-      {buttonVisible && (
-        <TouchableOpacity style={styles.giveawayButton} onPress={handleButtonClick}>
-          <Image source={giveAwayButtonImg} style={styles.buttonImage} />
-        </TouchableOpacity>
-      )}
+              // 수신자 효과 애니메이션 적용
+              const pulseScale =
+                giftSentUserId === user.id
+                  ? receivedUserAnim.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [1, 1.3, 1],
+                    })
+                  : 1;
 
-      {/* 기프티콘 목록 컴포넌트 */}
-      {listVisible && (
-        <View style={styles.gifticonListContainer}>
-          <GiveAwayGifticonList
-            gifticons={dummyGifticons.gifticons}
-            onSelectGifticon={handleGifticonSelect}
+              const glowOpacity =
+                giftSentUserId === user.id
+                  ? receivedUserAnim.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [0.5, 1, 0.8],
+                    })
+                  : 0;
+
+              return (
+                <Animated.View
+                  key={`user-${user.id}`}
+                  style={[
+                    styles.userContainer,
+                    {
+                      left: position.x - adjustedSize / 2,
+                      top: position.y - adjustedSize / 2,
+                      width: adjustedSize,
+                      opacity: position.opacity,
+                      zIndex: 10 - position.distanceIndex,
+                      transform: [{ scale: giftSentUserId === user.id ? pulseScale : 1 }],
+                    },
+                    // 선물을 받은 사용자에게 효과 추가
+                    giftSentUserId === user.id && styles.receivedGift,
+                  ]}
+                >
+                  {/* 선물 받은 사용자 주변 효과 */}
+                  {giftSentUserId === user.id && (
+                    <Animated.View
+                      style={[
+                        styles.giftGlow,
+                        {
+                          width: adjustedSize * 1.5,
+                          height: adjustedSize * 1.5,
+                          opacity: glowOpacity,
+                        },
+                      ]}
+                    />
+                  )}
+
+                  <View
+                    style={[styles.emojiContainer, { width: adjustedSize, height: adjustedSize }]}
+                  >
+                    <Image
+                      source={user.emoji || emoji1}
+                      style={{
+                        width: adjustedSize,
+                        height: adjustedSize,
+                        resizeMode: 'contain',
+                      }}
+                    />
+                  </View>
+                  <Text style={[styles.userName, { fontSize: 15 * position.scale }]}>
+                    {user.name}
+                  </Text>
+                </Animated.View>
+              );
+            })
+          ) : (
+            // 사용자가 없을 때 UI
+            <NoUsersScreen />
+          )}
+
+          {/* 툴팁 컴포넌트 */}
+          <Tooltip
+            visible={showTooltip}
+            message="선물 버튼을 원하는 방향으로 드래그하면 기프티콘 뿌리기가 시작됩니다."
+            autoHide={true}
+            duration={2000}
           />
-        </View>
-      )}
 
-      {/* 기프티콘 선택 확인 모달 컴포넌트 */}
-      <GifticonConfirmModal
-        visible={confirmModalVisible}
-        selectedGifticon={selectedGifticon}
-        onCancel={handleCancel}
-        onConfirm={handleConfirm}
-      />
-      <BottomTabBar />
+          {/* 기프티콘 선택 후 중앙에 표시될 버튼 - 이제 드래그 가능 */}
+          {centerButtonVisible && !isTransferring && (
+            <Animated.View
+              style={[
+                styles.centerButtonContainer,
+                {
+                  transform: [
+                    { translateX: buttonPositionAnim.x },
+                    { translateY: buttonPositionAnim.y },
+                    { scale: buttonScaleAnim },
+                  ],
+                  opacity: buttonOpacityAnim,
+                },
+              ]}
+              {...panResponder.panHandlers}
+            >
+              <Image source={giveAwayButtonImg} style={styles.centerButtonImage} />
+            </Animated.View>
+          )}
+        </TouchableOpacity>
+
+        {/* 뿌리기 기프티콘 목록 버튼 */}
+        {buttonVisible && !loading && (
+          <TouchableOpacity style={styles.giveawayButton} onPress={handleButtonClick}>
+            <Image source={giveAwayButtonImg} style={styles.buttonImage} />
+          </TouchableOpacity>
+        )}
+
+        {/* 기프티콘 목록 컴포넌트 */}
+        {listVisible && (
+          <TouchableOpacity
+            style={styles.gifticonListContainer}
+            activeOpacity={1}
+            onPress={e => e.stopPropagation()}
+          >
+            <GiveAwayGifticonList
+              gifticons={dummyGifticons.gifticons}
+              onSelectGifticon={handleGifticonSelect}
+            />
+          </TouchableOpacity>
+        )}
+
+        {/* 기프티콘 선택 확인 모달 컴포넌트 */}
+        <GifticonConfirmModal
+          visible={confirmModalVisible}
+          selectedGifticon={selectedGifticon}
+          onCancel={handleCancel}
+          onConfirm={handleConfirm}
+        />
+      </View>
     </View>
   );
 };
@@ -300,6 +767,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#EFF9FF',
+  },
+  header: {
+    height: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  backButtonContainer: {
+    padding: 0,
+    backgroundColor: 'transparent',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontFamily: 'Pretendard-Bold',
+    textAlign: 'center',
+    flex: 1,
+  },
+  rightPlaceholder: {
+    width: 30,
+  },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
     overflow: 'hidden',
   },
   svgContainer: {
@@ -310,8 +804,8 @@ const styles = StyleSheet.create({
   },
   svgImage: {
     position: 'absolute',
-    left: -width * 0.5,
-    top: -height * 0.5,
+    width: '100%',
+    height: '100%',
   },
   userContainer: {
     position: 'absolute',
@@ -373,6 +867,117 @@ const styles = StyleSheet.create({
   centerButtonImage: {
     width: 60,
     height: 70,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  receivedGift: {
+    shadowColor: '#FFDC4F',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  giftGlow: {
+    position: 'absolute',
+    backgroundColor: '#FFD700',
+    borderRadius: 100,
+    zIndex: -1,
+    alignSelf: 'center',
+    top: -10,
+    left: -10,
+  },
+  tooltipContainer: {
+    position: 'absolute',
+    top: height * 0.05,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 30,
+  },
+  tooltipBubble: {
+    backgroundColor: 'rgba(86, 174, 233, 0.8)',
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    borderRadius: 20,
+    maxWidth: width * 0.8,
+  },
+  tooltipText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  // NoUsersScreen 관련 스타일
+  noUsersContainer: {
+    position: 'absolute',
+    width: width * 0.8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    top: height * 0.3,
+  },
+  noUsersText: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  noUsersSubText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  iconContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  iconWrapper: {
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 15,
+    padding: 15,
+    marginHorizontal: 10,
+    width: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  noUserIcon: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+    resizeMode: 'contain',
+  },
+  iconText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
+  descriptionContainer: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#777',
+    textAlign: 'center',
+    lineHeight: 22,
   },
 });
 

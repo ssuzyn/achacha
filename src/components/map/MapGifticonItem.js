@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { calculateDday } from '../../utils/dateUtils';
+const StarbucksImg = require('../../assets/images/starbucks.png');
 
 const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
   const { brandName, gifticonExpiryDate, gifticonName, thumbnailPath, gifticonId, brandId } =
     gifticon;
+  const [imageError, setImageError] = useState(false);
 
   const dday = calculateDday(gifticonExpiryDate);
 
@@ -64,9 +66,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#EBF7FF',
   },
   image: {
-    width: 40,
-    height: 40,
-    borderRadius: 4,
+    width: 55,
+    height: 55,
+    borderRadius: 5,
   },
   infoContainer: {
     flex: 1,
@@ -76,31 +78,31 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 4,
-    gap: 8,
+    gap: 10,
   },
   brand: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-SemiBold',
   },
   menuName: {
     fontSize: 14,
-    color: '#666',
+    fontFamily: 'Pretendard-Medium',
   },
   dday: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#278CCC',
-    fontWeight: '500',
+    fontFamily: 'Pretendard-SemiBold',
   },
   useButton: {
     backgroundColor: '#56AEE9',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: 4,
+    borderRadius: 5,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: '500',
+    fontFamily: 'Pretendard-SemiBold',
   },
 });
 

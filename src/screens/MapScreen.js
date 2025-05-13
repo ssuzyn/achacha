@@ -1,12 +1,22 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, AppState } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  AppState,
+  StatusBar,
+} from 'react-native';
 import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import GeofencingService from '../services/GeofencingService';
+import { useNavigation } from '@react-navigation/native';
 import { useMapGifticons } from '../hooks/useMapGifticons'; // 리액트 쿼리 훅
 
 const MapScreen = () => {
+  const navigation = useNavigation();
   const [selectedBrand, setSelectedBrand] = useState(null);
   const mapRef = useRef(null);
   const geofencingServiceRef = useRef();
@@ -136,15 +146,14 @@ const MapScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <Text style={styles.headerText}>기프티콘 Map</Text>
-        </View>
-      </SafeAreaView>
-
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
+      <View style={styles.header}>
+        <Text variant="h2" weight="bold" style={styles.headerTitle}>
+          기프티콘 MAP
+        </Text>
+      </View>
       <View style={styles.mapContainer}>
-        {/* 브랜드 목록과 선택한 브랜드 넘겨줌 */}
         <KakaoMapWebView
           ref={mapRef}
           uniqueBrands={uniqueBrands}
@@ -156,41 +165,65 @@ const MapScreen = () => {
       <TouchableOpacity style={styles.locationButton} onPress={moveToCurrentLocation}>
         <Icon name="my-location" size={24} color="#278CCC" />
       </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.giftButton}
+        onPress={() => navigation.navigate('GiveAwayScreen')}
+      >
+        <Icon name="card-giftcard" size={24} color="#278CCC" />
+      </TouchableOpacity>
       <GifticonBottomSheet
         gifticons={filteredGifticons}
         onUseGifticon={handleUseGifticon}
         onSelectBrand={handleSelectBrand}
         selectedBrand={selectedBrand}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  safeArea: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fafafa',
   },
   header: {
-    padding: 20,
-    backgroundColor: '#f8f8f8',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    height: 80,
+    paddingHorizontal: 18,
+    paddingTop: 25,
+    borderBottomWidth: 0,
+    backgroundColor: '#fafafa',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontSize: 24,
+    letterSpacing: -0.5,
+    fontFamily: 'Pretendard-Bold',
+    lineHeight: 36,
+    textAlign: 'center',
   },
   mapContainer: {
     flex: 1,
+    margin: 0,
+    padding: 0,
   },
   locationButton: {
     position: 'absolute',
-    top: 100,
-    right: 13,
+    top: 95,
+    right: 6,
+    width: 45,
+    height: 45,
+    borderRadius: 24,
+    backgroundColor: 'rgba(229, 244, 254, 0.8)',
+    borderColor: '#56AEE9',
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  giftButton: {
+    position: 'absolute',
+    top: 155,
+    right: 6,
     width: 45,
     height: 45,
     borderRadius: 24,

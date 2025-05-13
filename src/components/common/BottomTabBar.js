@@ -12,19 +12,7 @@ import HomeScreen from '../../screens/HomeScreen';
 import SettingScreen from '../../screens/SettingScreen';
 import ManageListScreen from '../../screens/gifticon-management/ManageListScreen';
 import BoxMainScreen from '../../screens/gifticon-share-box/BoxMainScreen';
-
-// 임시 스크린
-const MapScreen = () => {
-  const { theme } = useTheme();
-
-  return (
-    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
-      <Text variant="body1" weight="medium" style={styles.screenText}>
-        기프티콘 MAP 화면
-      </Text>
-    </View>
-  );
-};
+import MapScreen from '../../screens/MapScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -63,6 +51,17 @@ const ScreenWithHeader = ({ children }) => {
   );
 };
 
+// 헤더 없는 스크린 컴포넌트
+const ScreenWithoutHeader = ({ children }) => {
+  const { theme } = useTheme();
+
+  return (
+    <View style={[styles.contentContainer, { backgroundColor: theme.colors.background }]}>
+      {children}
+    </View>
+  );
+};
+
 // 탭 스크린 래퍼 컴포넌트 - 탭바 표시 여부를 조절하는 로직 포함
 const createWrappedComponent = (Component, screenName) => {
   // 각 화면에 대한 래퍼 컴포넌트를 미리 생성
@@ -84,6 +83,15 @@ const createWrappedComponent = (Component, screenName) => {
       // 화면에서 나갈 때 리스너 해제
       return unsubscribeFocus;
     }, [navigation, hideTabBar, showTabBar]);
+
+    // MapScreen은 헤더 없이 렌더링
+    if (screenName === 'Map') {
+      return (
+        <ScreenWithoutHeader>
+          <Component {...props} />
+        </ScreenWithoutHeader>
+      );
+    }
 
     return (
       <ScreenWithHeader>
