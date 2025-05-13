@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, AppState } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  AppState,
+  StatusBar,
+} from 'react-native';
 import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -278,9 +286,14 @@ const MapScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
+      <View style={styles.header}>
+        <Text variant="h2" weight="bold" style={styles.headerTitle}>
+          기프티콘 MAP
+        </Text>
+      </View>
       <View style={styles.mapContainer}>
-        {/* 브랜드 목록과 선택한 브랜드 넘겨줌 */}
         <KakaoMapWebView
           ref={mapRef}
           uniqueBrands={uniqueBrands}
@@ -304,23 +317,30 @@ const MapScreen = () => {
         onSelectBrand={handleSelectBrand}
         selectedBrand={selectedBrand}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#fafafa',
   },
   header: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    height: 80,
+    paddingHorizontal: 18,
+    paddingTop: 25,
+    borderBottomWidth: 0,
+    backgroundColor: '#fafafa',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  headerText: {
-    fontSize: 20,
-    fontFamily: 'Pretendard-ExtraBold',
+  headerTitle: {
+    fontSize: 24,
+    letterSpacing: -0.5,
+    fontFamily: 'Pretendard-Bold',
+    lineHeight: 36,
+    textAlign: 'center',
   },
   mapContainer: {
     flex: 1,
@@ -329,7 +349,7 @@ const styles = StyleSheet.create({
   },
   locationButton: {
     position: 'absolute',
-    top: 40,
+    top: 95,
     right: 6,
     width: 45,
     height: 45,
@@ -342,7 +362,7 @@ const styles = StyleSheet.create({
   },
   giftButton: {
     position: 'absolute',
-    top: 105,
+    top: 155,
     right: 6,
     width: 45,
     height: 45,
