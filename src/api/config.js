@@ -21,6 +21,8 @@ export const API_CONFIG = {
     SHARE_BOX_USERS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/users`,
     AVAILABLE_GIFTICONS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/available-gifticons`,
     USED_GIFTICONS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/used-gifticons`,
+    SHARE_BOX_NAME: (shareBoxId) => `/api/share-boxes/${shareBoxId}/name`,
+    PARTICIPATION_SETTING: (shareBoxId) => `/api/share-boxes/${shareBoxId}/participation-setting`,
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
     //     CREATE_USER: '/api/users',

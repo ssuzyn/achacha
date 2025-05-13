@@ -75,4 +75,22 @@ export const fetchUsedGifticons = async ({
 
   const res = await apiClient.get(API_CONFIG.ENDPOINTS.USED_GIFTICONS(shareBoxId), { params });
   return res.data;
+};
+
+// 쉐어박스 이름 변경 API
+export const changeShareBoxName = async (shareBoxId, shareBoxName) => {
+  const response = await apiClient.patch(
+    API_CONFIG.ENDPOINTS.SHARE_BOX_NAME(shareBoxId),
+    { shareBoxName }
+  );
+  return response.data;
+};
+
+// 멤버 입장 허용 여부 변경 API
+export const changeShareBoxParticipationSetting = async (shareBoxId, allowParticipation) => {
+  const response = await apiClient.patch(
+    API_CONFIG.ENDPOINTS.PARTICIPATION_SETTING(shareBoxId),
+    { shareBoxAllowParticipation: allowParticipation }
+  );
+  return response.data;
 }; 

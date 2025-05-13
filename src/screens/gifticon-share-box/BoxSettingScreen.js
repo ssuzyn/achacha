@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
-import { leaveShareBox, fetchShareBoxSettings, fetchShareBoxUsers } from '../../api/shareBoxApi';
+import { leaveShareBox, fetchShareBoxSettings, fetchShareBoxUsers, changeShareBoxName, changeShareBoxParticipationSetting } from '../../api/shareBoxApi';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -109,8 +109,23 @@ const BoxSettingScreen = () => {
   };
 
   // 멤버 입장 토글 핸들러
-  const toggleMemberEntry = () => {
-    setMemberEntryEnabled(!memberEntryEnabled);
+  const toggleMemberEntry = async () => {
+    if (userId !== shareBoxUserId) return;
+    try {
+      const newValue = !memberEntryEnabled;
+      const res = await changeShareBoxParticipationSetting(route.params?.shareBoxId, newValue);
+      setMemberEntryEnabled(newValue);
+      Alert.alert('알림', res); // 서버에서 반환하는 메시지 그대로 표시
+    } catch (e) {
+      const errorCode = e?.response?.data?.errorCode;
+      let message = '멤버 입장 허용 설정 변경에 실패했습니다.';
+      if (errorCode && ERROR_MESSAGES[errorCode]) {
+        message = ERROR_MESSAGES[errorCode];
+      } else if (e?.response?.data?.message) {
+        message = e.response.data.message;
+      }
+      Alert.alert('오류', message);
+    }
   };
 
   // 초대 코드 복사 핸들러
@@ -167,6 +182,38 @@ const BoxSettingScreen = () => {
     }
   };
 
+  // 이름 변경 버튼 핸들러
+  const handleChangeName = async () => {
+    try {
+      if (!shareBoxName.trim()) {
+        Alert.alert('알림', '쉐어박스 이름을 입력해 주세요.');
+        return;
+      }
+      const res = await changeShareBoxName(route.params?.shareBoxId, shareBoxName.trim());
+      Alert.alert('알림', res, [
+        {
+          text: '확인',
+          onPress: () => {
+            navigation.navigate('BoxList', {
+              shareBoxId: route.params?.shareBoxId,
+              shareBoxName: shareBoxName.trim(),
+              refresh: true,
+            });
+          },
+        },
+      ]);
+    } catch (e) {
+      const errorCode = e?.response?.data?.errorCode;
+      let message = '쉐어박스 이름 변경에 실패했습니다.';
+      if (errorCode && ERROR_MESSAGES[errorCode]) {
+        message = ERROR_MESSAGES[errorCode];
+      } else if (e?.response?.data?.message) {
+        message = e.response.data.message;
+      }
+      Alert.alert('오류', message);
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -200,15 +247,26 @@ const BoxSettingScreen = () => {
               <TextInput
                 value={shareBoxName}
                 onChangeText={handleNameChange}
-                style={styles.input}
+                style={[styles.input, userId !== shareBoxUserId && {  color: '#B0B0B0' }]}
                 placeholder="쉐어박스 이름을 입력하세요"
+                editable={userId === shareBoxUserId}
+                maxLength={10}
               />
-              <TouchableOpacity style={styles.confirmButton}>
-                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
+              <TouchableOpacity
+                style={[styles.confirmButton, userId !== shareBoxUserId && { backgroundColor: '#E0E0E0' }]}
+                onPress={userId === shareBoxUserId ? handleChangeName : null}
+                disabled={userId !== shareBoxUserId}
+              >
+                <Text variant="body2" weight="medium" style={[styles.confirmButtonText, userId !== shareBoxUserId && { color: '#B0B0B0' }]}> 
                   변경
                 </Text>
               </TouchableOpacity>
             </View>
+            {userId !== shareBoxUserId && (
+              <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
+                방장만 쉐어박스 이름을 변경할 수 있습니다.
+              </Text>
+            )}
           </View>
 
           {/* 멤버 입장 */}
@@ -224,8 +282,10 @@ const BoxSettingScreen = () => {
                     backgroundColor: memberEntryEnabled ? '#C9EAFC' : 'white',
                     borderColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
                   },
+                  userId !== shareBoxUserId && { opacity: 0.5 },
                 ]}
                 onPress={toggleMemberEntry}
+                disabled={userId !== shareBoxUserId}
               >
                 <View
                   style={[
@@ -238,6 +298,11 @@ const BoxSettingScreen = () => {
                 />
               </TouchableOpacity>
             </View>
+            {userId !== shareBoxUserId && (
+              <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
+                방장만 멤버 입장 허용 여부를 변경할 수 있습니다.
+              </Text>
+            )}
           </View>
 
           {/* 쉐어박스 초대 코드 */}

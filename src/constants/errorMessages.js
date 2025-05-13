@@ -65,6 +65,7 @@ export const SHAREBOX_ERROR_MESSAGES = {
   SHAREBOX_006: '최대 참여자 수(10명)에 도달했습니다.',
   SHAREBOX_007: '유효하지 않은 쉐어박스 이름입니다.',
   SHAREBOX_008: '해당 쉐어박스에 접근 권한이 없습니다.',
+  SHAREBOX_012: '해당 쉐어박스 방장만 접근 가능합니다.',
 };
 
 // 모든 에러 메시지를 하나의 객체로 합침

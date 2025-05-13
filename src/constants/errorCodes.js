@@ -58,6 +58,7 @@ export const SHAREBOX_ERRORS = {
   SHAREBOX_006: 'SHAREBOX_006', // 최대 참여자 수(10명)에 도달했습니다.
   SHAREBOX_007: 'SHAREBOX_007', // 유효하지 않은 쉐어박스 이름입니다.
   SHAREBOX_008: 'SHAREBOX_008', // 접근 권한 없음 (신규 추가)
+  SHAREBOX_012: 'SHAREBOX_012', // 해당 쉐어박스 방장만 접근 가능 (신규 추가)
 };
 
 // S3 및 서버 관련 에러 코드
