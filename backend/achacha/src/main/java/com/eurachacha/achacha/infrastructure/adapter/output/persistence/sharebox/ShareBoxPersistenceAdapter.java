@@ -1,7 +1,5 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.sharebox;
 
-import java.util.Optional;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
@@ -36,8 +34,9 @@ public class ShareBoxPersistenceAdapter implements ShareBoxRepository {
 	}
 
 	@Override
-	public Optional<ShareBox> findByInviteCode(String inviteCode) {
-		return shareBoxJpaRepository.findByInviteCode(inviteCode);
+	public ShareBox findByInviteCode(String inviteCode) {
+		return shareBoxJpaRepository.findByInviteCode(inviteCode)
+			.orElseThrow(() -> new CustomException(ErrorCode.SHAREBOX_NOT_FOUND));
 	}
 
 	@Override
