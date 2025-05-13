@@ -13,10 +13,10 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.load
 import com.facebook.react.defaults.DefaultReactNativeHost
 import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
+import com.koup28.achacha_app.WearSyncPackage
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
-import com.koup28.achacha_app.WearSyncPackage
 
 class MainApplication : Application(), ReactApplication {
 
@@ -24,11 +24,9 @@ class MainApplication : Application(), ReactApplication {
         this,
         object : DefaultReactNativeHost(this) {
           override fun getPackages(): List<ReactPackage> {
-            val packages = PackageList(this).packages
+            val packages = PackageList(this).packages.toMutableList()
             packages.add(WearSyncPackage())
-            // Packages that cannot be autolinked yet can be added manually here, for example:
-            // packages.add(new MyReactNativePackage());
-            packages.add(BarcodePackage())
+            packages.add(BlePackage())
             return packages
           }
 
