@@ -17,13 +17,28 @@ const useAuthStore = create((set, get) => ({
   accessToken: null,
   refreshToken: null,
   loginType: null, // 'kakao' 또는 'google'
+  bleToken: null,
+  userId: null,
 
   // 로그인 성공 시 상태 업데이트
   setAuth: async (userData, tokens, type) => {
     try {
-      // AsyncStorage에 토큰 저장
       await AsyncStorage.setItem('accessToken', tokens.accessToken);
       await AsyncStorage.setItem('refreshToken', tokens.refreshToken);
+      if (tokens.bleToken) {
+        await AsyncStorage.setItem('bleToken', tokens.bleToken);
+      }
+      // userId도 AsyncStorage에서 불러와서 상태에 반영
+      const userId = await AsyncStorage.getItem('userId');
+      set({
+        user: userData,
+        isLoggedIn: true,
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        bleToken: tokens.bleToken || null,
+        loginType: type,
+        userId: userId || null,
+      });
 
       // ✅ 네이티브에도 토큰 저장 (Bridge 호출)
       if (WearSyncModule && tokens.accessToken) {
@@ -35,15 +50,6 @@ const useAuthStore = create((set, get) => ({
         }
       }
 
-      // 스토어 상태 업데이트
-      set({
-        user: userData,
-        isLoggedIn: true,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        loginType: type,
-      });
-
       return true;
     } catch (error) {
       console.error('인증 정보 저장 실패:', error);
@@ -54,19 +60,18 @@ const useAuthStore = create((set, get) => ({
   // 로그아웃
   logout: async () => {
     try {
-      // AsyncStorage에서 토큰 제거
       await AsyncStorage.removeItem('accessToken');
       await AsyncStorage.removeItem('refreshToken');
-
-      // 스토어 상태 초기화
+      await AsyncStorage.removeItem('bleToken');
       set({
         user: null,
         isLoggedIn: false,
         accessToken: null,
         refreshToken: null,
+        bleToken: null,
         loginType: null,
+        userId: null,
       });
-
       return true;
     } catch (error) {
       console.error('로그아웃 실패:', error);
@@ -79,19 +84,18 @@ const useAuthStore = create((set, get) => ({
     try {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const refreshToken = await AsyncStorage.getItem('refreshToken');
-
+      const bleToken = await AsyncStorage.getItem('bleToken');
+      const userId = await AsyncStorage.getItem('userId');
       if (accessToken && refreshToken) {
-        // 토큰으로부터 사용자 정보 가져오기 (필요 시 API 호출)
-        // 여기서는 간단히 로그인 상태만 업데이트
         set({
           isLoggedIn: true,
           accessToken,
           refreshToken,
-          // 사용자 정보와 로그인 타입은 API 응답에 따라 업데이트 필요
+          bleToken,
+          userId: userId || null,
         });
         return true;
       }
-
       return false;
     } catch (error) {
       console.error('인증 정보 복원 실패:', error);
@@ -100,21 +104,26 @@ const useAuthStore = create((set, get) => ({
   },
 
   // 토큰 업데이트
-  updateTokens: async (newAccessToken, newRefreshToken) => {
+  updateTokens: async (newAccessToken, newRefreshToken, newBleToken, newUserId) => {
     try {
       if (newAccessToken) {
         await AsyncStorage.setItem('accessToken', newAccessToken);
       }
-
       if (newRefreshToken) {
         await AsyncStorage.setItem('refreshToken', newRefreshToken);
       }
-
+      if (newBleToken) {
+        await AsyncStorage.setItem('bleToken', newBleToken);
+      }
+      if (newUserId) {
+        await AsyncStorage.setItem('userId', newUserId);
+      }
       set({
         accessToken: newAccessToken || get().accessToken,
         refreshToken: newRefreshToken || get().refreshToken,
+        bleToken: newBleToken || get().bleToken,
+        userId: newUserId || get().userId,
       });
-
       return true;
     } catch (error) {
       console.error('토큰 업데이트 실패:', error);

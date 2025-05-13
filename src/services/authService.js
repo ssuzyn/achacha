@@ -3,6 +3,22 @@
 
 import apiClient from '../api/apiClient';
 import { API_CONFIG } from '../api/config';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { decode as atob } from 'base-64'; // base-64 패키지 필요
+
+function parseJwt(token) {
+  if (!token) return null;
+  const base64Url = token.split('.')[1];
+  if (!base64Url) return null;
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+      .join('')
+  );
+  return JSON.parse(jsonPayload);
+}
 
 /**
  * 카카오 로그인 API 호출
@@ -10,10 +26,28 @@ import { API_CONFIG } from '../api/config';
  * @returns {Promise} 서버 응답 데이터
  */
 export const loginWithKakao = async kakaoAccessToken => {
+  // 1. 카카오 로그인
   const response = await apiClient.post(API_CONFIG.ENDPOINTS.KAKAO_LOGIN, {
     kakaoAccessToken,
   });
-  return response.data;
+  const { user, accessToken, refreshToken } = response.data;
+
+  // ✅ accessToken에서 userId 추출 및 저장
+  const payload = parseJwt(accessToken);
+  const userId = payload?.sub || payload?.userId || payload?.id;
+  if (userId) {
+    await AsyncStorage.setItem('userId', String(userId));
+  }
+
+  // 2. BLE 토큰 요청 (이전 bleToken 있으면 전달)
+  const prevBleToken = await AsyncStorage.getItem('bleToken');
+  const bleRes = await apiClient.post('/api/ble', {
+    bleTokenValue: prevBleToken || undefined,
+  });
+  const bleToken = bleRes.data.bleToken;
+
+  // 3. 통합 반환
+  return { user, accessToken, refreshToken, bleToken };
 };
 
 /**

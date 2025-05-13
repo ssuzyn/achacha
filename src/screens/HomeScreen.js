@@ -40,8 +40,12 @@ const HomeScreen = () => {
     const printTokens = async () => {
       const accessToken = await AsyncStorage.getItem('accessToken');
       const refreshToken = await AsyncStorage.getItem('refreshToken');
+      const bleToken = await AsyncStorage.getItem('bleToken');
+      const userId = await AsyncStorage.getItem('userId');
       console.log('Access Token:', accessToken);
       console.log('Refresh Token:', refreshToken);
+      console.log('BLE Token:', bleToken);
+      console.log('User ID:', userId);
     };
     printTokens();
   }, []);
