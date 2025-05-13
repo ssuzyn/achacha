@@ -18,5 +18,6 @@ export const useMapGifticons = (params = {}) => {
       const { data } = await mapGifticonService.getMapGifticons(params);
       return data;
     },
+    staleTime: 5 * 60 * 1000,
   });
 };
