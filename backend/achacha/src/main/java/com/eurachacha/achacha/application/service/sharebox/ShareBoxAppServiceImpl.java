@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ParticipantResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
@@ -266,6 +267,30 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		shareBox.updateAllowParticipation(requestDto.getShareBoxAllowParticipation());
 
 		log.info("쉐어박스 참여 설정 변경 완료 - 쉐어박스 ID: {}", shareBoxId);
+	}
+
+	@Transactional
+	@Override
+	public void updateShareBoxName(Integer shareBoxId, ShareBoxNameUpdateRequestDto requestDto) {
+		log.info("쉐어박스 이름 변경 시작 - 쉐어박스 ID: {}, 새 이름: {}",
+			shareBoxId, requestDto.getShareBoxName());
+
+		// 현재 사용자 ID (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 조회
+		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
+
+		// 방장 권한 검증 (도메인 서비스 활용)
+		shareBoxDomainService.validateShareBoxOwner(shareBox, userId);
+
+		// 이름 유효성 검증
+		shareBoxDomainService.validateShareBoxName(requestDto.getShareBoxName());
+
+		// 이름 변경
+		shareBox.updateName(requestDto.getShareBoxName());
+
+		log.info("쉐어박스 이름 변경 완료 - 쉐어박스 ID: {}", shareBoxId);
 	}
 
 	@Override
