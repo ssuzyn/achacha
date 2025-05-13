@@ -150,7 +150,7 @@ const HomeScreen = () => {
                 <Image source={item.image} style={styles.giftMessageImage1} resizeMode="contain" />
               </View>
               <View style={styles.carouselPaginationOverlay}>
-                <Text variant="caption" weight="semiBold" style={styles.paginationText}>
+                <Text variant="caption" weight="regular" style={styles.paginationText}>
                   {activeIndex + 1} / {CAROUSEL_CARDS.length}
                 </Text>
               </View>
@@ -172,7 +172,7 @@ const HomeScreen = () => {
                 <Image source={item.image} style={styles.giftMessageImage2} resizeMode="contain" />
               </View>
               <View style={styles.carouselPaginationOverlay}>
-                <Text variant="caption" weight="bold" style={styles.paginationText}>
+                <Text variant="caption" weight="regular" style={styles.paginationText}>
                   {activeIndex + 1} / {CAROUSEL_CARDS.length}
                 </Text>
               </View>
@@ -197,7 +197,7 @@ const HomeScreen = () => {
                 <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
               </View>
               <View style={styles.carouselPaginationOverlay}>
-                <Text variant="caption" weight="bold" style={styles.paginationText}>
+                <Text variant="caption" weight="regular" style={styles.paginationText}>
                   {activeIndex + 1} / {CAROUSEL_CARDS.length}
                 </Text>
               </View>
@@ -589,8 +589,8 @@ const styles = StyleSheet.create({
     right: 10,
     backgroundColor: 'rgba(0, 0, 0, 0.15)',
     borderRadius: 15,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   paginationText: {
     color: 'white',
