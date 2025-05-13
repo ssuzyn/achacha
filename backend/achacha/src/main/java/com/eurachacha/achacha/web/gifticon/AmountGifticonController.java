@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonUsageAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.AmountGifticonUseRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUsageHistoriesResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AmountGifticonUseResponseDto;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +26,12 @@ public class AmountGifticonController {
 	private final GifticonUsageAppService gifticonUsageAppService;
 
 	@PostMapping("/{gifticonId}/use")
-	public ResponseEntity<String> useGifticon(
+	public ResponseEntity<AmountGifticonUseResponseDto> useGifticon(
 		@PathVariable Integer gifticonId,
 		@Valid @RequestBody AmountGifticonUseRequestDto requestDto
 	) {
 		gifticonUsageAppService.useAmountGifticon(gifticonId, requestDto);
-		return ResponseEntity.ok("기프티콘이 사용되었습니다.");
+		return ResponseEntity.ok(new AmountGifticonUseResponseDto("기프티콘이 사용되었습니다."));
 	}
 
 	@GetMapping("/{gifticonId}/usage-history")
