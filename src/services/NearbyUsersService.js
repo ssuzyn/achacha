@@ -149,6 +149,7 @@ class NearbyUsersService {
           const permissions = [
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
             PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+            PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           ];
 
@@ -157,6 +158,7 @@ class NearbyUsersService {
           return (
             results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN] === 'granted' &&
             results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT] === 'granted' &&
+            results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE] === 'granted' &&
             results[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === 'granted'
           );
         } else {
