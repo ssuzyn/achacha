@@ -99,11 +99,11 @@ const NoUsersScreen = () => {
   const [showTooltip, setShowTooltip] = useState(true);
 
   const handleGoToShareBox = () => {
-    navigation.navigate('ShareBox');
+    navigation.navigate('BoxMain');
   };
 
   const handleGoToManagement = () => {
-    navigation.navigate('GifticonManagement');
+    navigation.navigate('ManageList');
   };
 
   useEffect(() => {
