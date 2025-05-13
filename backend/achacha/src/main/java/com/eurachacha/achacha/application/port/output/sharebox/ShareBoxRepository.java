@@ -2,6 +2,9 @@ package com.eurachacha.achacha.application.port.output.sharebox;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 
 public interface ShareBoxRepository {
@@ -15,4 +18,6 @@ public interface ShareBoxRepository {
 	Optional<ShareBox> findByInviteCode(String inviteCode);
 
 	boolean existsById(Integer shareBoxId);
+
+	Slice<ShareBox> findParticipatedShareBoxes(Integer userId, Pageable pageable);
 }
