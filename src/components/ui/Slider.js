@@ -5,6 +5,45 @@ import { useTheme } from 'react-native-elements';
 import { Text } from './index';
 
 /**
+ * react-native-elements Slider의 defaultProps 경고를 방지하기 위한 래퍼 컴포넌트
+ */
+const SliderWrapper = ({
+  value,
+  minimumValue,
+  maximumValue,
+  step,
+  onValueChange,
+  onSlidingComplete,
+  disabled,
+  trackStyle,
+  thumbStyle,
+  minimumTrackTintColor,
+  maximumTrackTintColor,
+  thumbTintColor,
+  thumbProps,
+  ...props
+}) => {
+  return (
+    <RNESlider
+      value={value}
+      minimumValue={minimumValue}
+      maximumValue={maximumValue}
+      step={step}
+      onValueChange={onValueChange}
+      onSlidingComplete={onSlidingComplete}
+      disabled={disabled}
+      trackStyle={trackStyle}
+      thumbStyle={thumbStyle}
+      minimumTrackTintColor={minimumTrackTintColor}
+      maximumTrackTintColor={maximumTrackTintColor}
+      thumbTintColor={thumbTintColor}
+      thumbProps={thumbProps}
+      {...props}
+    />
+  );
+};
+
+/**
  * 슬라이더 컴포넌트
  */
 const Slider = ({
@@ -116,7 +155,7 @@ const Slider = ({
       </View>
 
       <View style={styles.sliderArea}>
-        <RNESlider
+        <SliderWrapper
           value={useValueArray ? localIndex : localValue}
           minimumValue={effectiveMinValue}
           maximumValue={effectiveMaxValue}

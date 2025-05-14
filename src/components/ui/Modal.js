@@ -1,8 +1,34 @@
 import React from 'react';
-import { Overlay } from 'react-native-elements';
+import { Overlay as RNEOverlay } from 'react-native-elements';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-elements';
 import { Text } from './index';
+
+/**
+ * react-native-elements Overlay의 defaultProps 경고를 방지하기 위한 래퍼 컴포넌트
+ */
+const Overlay = ({
+  isVisible = false,
+  onBackdropPress,
+  overlayStyle,
+  backdropStyle,
+  animationType,
+  children,
+  ...props
+}) => {
+  return (
+    <RNEOverlay
+      isVisible={isVisible}
+      onBackdropPress={onBackdropPress}
+      overlayStyle={overlayStyle}
+      backdropStyle={backdropStyle}
+      animationType={animationType}
+      {...props}
+    >
+      {children}
+    </RNEOverlay>
+  );
+};
 
 /**
  * 모달 컴포넌트
