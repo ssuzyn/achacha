@@ -10,6 +10,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
@@ -21,11 +23,17 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.response.Share
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
+import com.eurachacha.achacha.application.port.output.file.FileRepository;
+import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
@@ -53,6 +61,8 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	private final UserRepository userRepository;
 	private final ParticipationRepository participationRepository;
 	private final PageableFactory pageableFactory;
+	private final FileRepository fileRepository;
+	private final FileStoragePort fileStoragePort;
 
 	@Transactional
 	@Override
@@ -337,6 +347,64 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	}
 
 	@Override
+	public AvailableGifticonsResponseDto getShareBoxGifticons(
+		Integer shareBoxId,
+		GifticonType type,
+		GifticonSortType sort,
+		Integer page,
+		Integer size) {
+
+		log.info("쉐어박스 내 사용가능한 기프티콘 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
+
+		// 현재 사용자 ID (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 존재 여부 확인
+		if (!shareBoxRepository.existsById(shareBoxId)) {
+			throw new CustomException(ErrorCode.SHAREBOX_NOT_FOUND);
+		}
+
+		// 참여 권한 검증 - 서비스 레이어에서 권한 검증
+		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+		}
+
+		// 페이징 처리
+		Pageable pageable = pageableFactory.createPageable(page, size, sort);
+
+		// 쉐어박스 내 기프티콘 조회
+		Slice<Gifticon> gifticonSlice = gifticonRepository.findGifticonsByShareBoxId(
+			shareBoxId, type, pageable);
+
+		// 기프티콘 엔티티를 DTO로 변환
+		List<AvailableGifticonResponseDto> availableGifticonDtos = gifticonSlice.getContent().stream()
+			.map(gifticon -> AvailableGifticonResponseDto.builder()
+				.gifticonId(gifticon.getId())
+				.gifticonName(gifticon.getName())
+				.gifticonType(gifticon.getType())
+				.gifticonExpiryDate(gifticon.getExpiryDate())
+				.brandId(gifticon.getBrand().getId())
+				.brandName(gifticon.getBrand().getName())
+				.scope(GifticonScopeType.SHARE_BOX.name())
+				.userId(gifticon.getUser().getId())
+				.userName(gifticon.getUser().getName())
+				.shareboxId(gifticon.getSharebox().getId())
+				.shareboxName(gifticon.getSharebox().getName())
+				.thumbnailPath(getGifticonThumbnailPath(gifticon.getId()))
+				.build())
+			.collect(Collectors.toList());
+
+		log.info("쉐어박스 내 사용가능한 기프티콘 조회 완료 - 쉐어박스 ID: {}, 조회된 기프티콘 수: {}",
+			shareBoxId, availableGifticonDtos.size());
+
+		return AvailableGifticonsResponseDto.builder()
+			.gifticons(availableGifticonDtos)
+			.hasNextPage(gifticonSlice.hasNext())
+			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
+			.build();
+	}
+
+	@Override
 	public ShareBoxSettingsResponseDto getShareBoxSettings(Integer shareBoxId) {
 		log.info("쉐어박스 설정 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
 
@@ -434,5 +502,13 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 		participationRepository.save(participation);
 		log.info("쉐어박스 참여 정보 저장 완료 (사용자 ID: {}, 쉐어박스 ID: {})", user.getId(), shareBox.getId());
+	}
+
+	// 기프티콘 썸네일 경로를 가져오는 헬퍼 메서드
+	private String getGifticonThumbnailPath(Integer gifticonId) {
+		return fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(
+				"gifticon", gifticonId, FileType.THUMBNAIL)
+			.map(file -> fileStoragePort.generateFileUrl(file.getPath(), FileType.THUMBNAIL))
+			.orElse(null);
 	}
 }
