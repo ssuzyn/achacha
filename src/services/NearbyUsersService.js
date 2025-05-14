@@ -7,8 +7,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from '../api/apiClient';
 
 // BLE 서비스 및 특성 UUID
-const SERVICE_UUID = '1bf0cbce-7af3-4b59-93f2-0c4c6d170164';
-const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // 해당 서비스 내의 특정 기능을 식별
+const SERVICE_UUID = '1bf0cbce-7af3-4b59-93f2-0c4c6d170164'; // 하이픈 포함된 형식
+const SERVICE_UUID_NO_HYPHENS = SERVICE_UUID.replace(/-/g, ''); // 하이픈 제거된 형식
+const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // 하이픈 포함된 형식
 
 class NearbyUsersService {
   constructor() {
@@ -20,7 +21,8 @@ class NearbyUsersService {
     this.discoveryListener = null;
     this.appStateListener = null;
     this.isAdvertising = false;
-    this.serviceUUID = SERVICE_UUID; // 항상 고정된 SERVICE_UUID 사용
+    this.serviceUUID = SERVICE_UUID; // 하이픈 포함된 UUID
+    this.serviceUUIDNoHyphens = SERVICE_UUID_NO_HYPHENS; // 광고용 (하이픈 제거)
     this.SCAN_DURATION = 5; // 스캔 시간 5초로 설정
 
     // BleManager 초기화
@@ -342,45 +344,49 @@ class NearbyUsersService {
       console.log('=== BLE 광고 시작 ===');
       console.log('광고할 디바이스 ID:', this.deviceId);
 
-      // 각 플랫폼에 맞는 광고 메서드 호출
-      if (Platform.OS === 'ios') {
-        // iOS에서는 Peripheral 모드 시작
-        await this.startIosPeripheralMode();
-      } else {
-        // Android에서는 advertiseCallback 사용
-        await this.startAndroidAdvertising();
+      if (!this.deviceId) {
+        console.error('BLE 토큰이 없습니다. 먼저 로그인이 필요합니다.');
+        return false;
       }
 
-      this.isAdvertising = true;
-      console.log('광고 시작 완료');
+      if (NativeModules.BleModule) {
+        // 토큰 크기 검사 (13바이트 제한)
+        const tokenBytes = new TextEncoder().encode(this.deviceId);
+        if (tokenBytes.length > 13) {
+          console.error('BLE 토큰이 너무 큽니다:', tokenBytes.length, '바이트');
+          return false;
+        }
+
+        // 광고 데이터 구성 - UUID와 bleToken만 포함
+        const advertisingData = {
+          SERVICE_UUID: this.serviceUUID, // 하이픈 포함된 UUID
+          bleToken: this.deviceId,
+        };
+
+        // 디버그 로그
+        console.log('=== 광고 데이터 ===');
+        console.log('SERVICE_UUID:', this.serviceUUID);
+        console.log('BLE 토큰:', this.deviceId);
+        console.log('토큰 크기:', tokenBytes.length, '바이트');
+
+        try {
+          await NativeModules.BleModule.startAdvertising(JSON.stringify(advertisingData));
+          console.log('광고 시작됨');
+          this.isAdvertising = true;
+          return true;
+        } catch (error) {
+          console.error('광고 시작 실패:', error);
+          this.isAdvertising = false;
+          return false;
+        }
+      } else {
+        console.error('BleModule을 찾을 수 없습니다.');
+        return false;
+      }
     } catch (error) {
       console.error('광고 시작 실패:', error);
       this.isAdvertising = false;
-    }
-  }
-
-  // iOS에서 Peripheral 모드 시작
-  async startIosPeripheralMode() {
-    // react-native-ble-manager는 iOS에서 Peripheral 모드를 직접 지원하지 않습니다.
-    // 다른 라이브러리를 사용해야 할 수 있습니다.
-    console.log('iOS Peripheral 모드는 별도 라이브러리가 필요할 수 있습니다.');
-  }
-
-  // Android에서 Advertising 시작
-  async startAndroidAdvertising() {
-    try {
-      if (!this.deviceId) {
-        throw new Error('BLE 토큰이 없습니다. 광고를 시작할 수 없습니다.');
-      }
-
-      const BleModule = NativeModules.BleModule;
-      // 항상 고정된 SERVICE_UUID 사용
-      console.log('Advertising 시작: SERVICE_UUID =', SERVICE_UUID);
-      await BleModule.startAdvertising(SERVICE_UUID);
-      console.log('Android Advertising 시작됨, 토큰:', this.deviceId);
-    } catch (error) {
-      console.error('Android Advertising 시작 실패:', error);
-      throw error;
+      return false;
     }
   }
 
@@ -460,25 +466,34 @@ class NearbyUsersService {
       this.nearbyUsers = [];
       this.isScanning = true;
 
-      console.log('=== BLE 스캔 시작 ===');
+      console.log('\n=== BLE 스캔 시작 ===');
       console.log('현재 디바이스 ID:', this.deviceId);
       console.log('스캔 시간:', this.SCAN_DURATION, '초');
+      console.log('스캔할 서비스 UUID:', this.serviceUUID);
+      console.log('스캔할 서비스 UUID 길이:', this.serviceUUID.length);
+      console.log(
+        '스캔할 서비스 UUID 형식이 올바른지:',
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(this.serviceUUID)
+      );
 
-      // 테스트용: 모든 기기 스캔
-      await BleManager.scan([], this.SCAN_DURATION, true);
-
-      /* 실제 서비스에 적용할 코드
-      // SERVICE_UUID로 필터링하여 같은 앱의 기기만 스캔
-      console.log('스캔 필터 SERVICE_UUID:', SERVICE_UUID);
-      await BleManager.scan([SERVICE_UUID], this.SCAN_DURATION, true);
-      */
+      // 하이픈이 있는 UUID로 스캔
+      await BleManager.scan([this.serviceUUID], this.SCAN_DURATION, true);
 
       // 디버깅을 위한 추가 로그
       this.scanListener = this.bleManagerEmitter.addListener(
         'BleManagerDiscoverPeripheral',
         peripheral => {
-          console.log('\n=== 발견된 기기 ===');
-          console.log(JSON.stringify(peripheral, null, 2));
+          console.log('\n=== 발견된 기기 상세 정보 ===');
+          console.log('기기 ID:', peripheral.id);
+          console.log('기기 이름:', peripheral.name || '이름 없음');
+          console.log('RSSI:', peripheral.rssi);
+          console.log('광고 데이터:', peripheral.advertising || '없음');
+          if (peripheral.advertising) {
+            console.log('서비스 UUID들:', peripheral.advertising.serviceUUIDs || '없음');
+            console.log('서비스 데이터:', peripheral.advertising.serviceData || '없음');
+            console.log('제조사 데이터:', peripheral.advertising.manufacturerData || '없음');
+          }
+          console.log('전체 기기 정보:', JSON.stringify(peripheral, null, 2));
           // 모든 기기 처리
           this.handleDiscoveredDevice(peripheral, onUserFound);
         }
