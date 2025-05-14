@@ -44,7 +44,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
 		// 삭제, 사용, 공유 여부, 타입 검증
-		gifticonDomainService.validateGiveAwayGifticon(userId, findGifticon);
+		gifticonDomainService.validateGifticonForGiveAway(userId, findGifticon);
 
 		// 유효한 uuid만 필터링
 		List<String> validUuids = bleTokenRepository.findValuesByValueIn(uuids);

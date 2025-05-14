@@ -9,9 +9,10 @@ public interface GifticonUsageAppService {
 
 	AmountGifticonUsageHistoriesResponseDto getAmountGifticonUsageHistories(Integer gifticonId);
 
-	void updateGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId, AmountGifticonUseRequestDto requestDto);
+	void updateAmountGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId,
+		AmountGifticonUseRequestDto requestDto);
 
-	void deleteGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId);
+	void deleteAmountGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId);
 
 	void useProductGifticon(Integer gifticonId);
 

@@ -18,12 +18,16 @@ public interface GifticonDomainService {
 	// 기프티콘 사용 여부 확인
 	boolean isUsed(Gifticon gifticon);
 
+	// 사용된 기프티콘인지 확인
 	void validateGifticonIsUsed(Gifticon gifticon);
 
+	// 사용 가능한 기프티콘인지 확인
 	void validateGifticonIsAvailable(Gifticon gifticon);
 
+	// 이미 공유된 기프티콘인지 확인
 	boolean isAlreadyShared(Gifticon gifticon);
 
+	// 금액형 - 사용한적없는 기프티콘인지 확인
 	boolean isAmountGifticonUsed(Gifticon gifticon);
 
 	// 쉐어박스에 공유중인 기프티콘인지 검증
@@ -32,23 +36,31 @@ public interface GifticonDomainService {
 	// 해당 쉐어박스에 기프티콘이 올라가있는지 검증
 	void validateGifticonSharedInShareBox(Gifticon gifticon, Integer shareBoxId);
 
-	void validateDeleteGifticon(Integer userId, Gifticon gifticon);
+	// 기프티콘 삭제에 대한 검증
+	void validateGifticonForDelete(Integer userId, Gifticon gifticon);
 
 	// 기프티콘 유효기간 검증
 	void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate);
 
-	void validateGiveAwayGifticon(Integer userId, Gifticon gifticon);
+	// 기프티콘 뿌리기에 대한 검증
+	void validateGifticonForGiveAway(Integer userId, Gifticon gifticon);
 
+	// 기프티콘 타입 검증(상품형)
 	void validateProductGifticonType(Gifticon gifticon);
 
+	// 기프티콘 타입 검증(금액형)
 	void validateAmountGifticonType(Gifticon gifticon);
 
-	void validateAmountGifticonUsageHistories(Gifticon gifticon);
+	// 금액형 기프티콘 사용내역 조회에 대한 검증
+	void validateAmountGifticonUsageHistoryForGet(Gifticon gifticon);
 
-	void validateDeleteAndUsedAndAmountType(Gifticon gifticon);
+	// 금액형 기프티콘 사용내역 사용, 수정, 삭제에 대한 검증
+	void validateAmountGifticonForCommand(Gifticon gifticon);
 
-	void validateDeleteAndUsedAndProductType(Gifticon gifticon);
+	// 상품형 기프티콘 사용내역 조회에 대한 검증
+	void validateProductGifticonUsageHistoryForGet(Gifticon gifticon);
 
-	void validateDeleteAndIsUsedAndProductType(Gifticon gifticon);
+	// 상품형 기프티콘 사용내역 사용, 수정, 삭제에 대한 검증
+	void validateProductGifticonForCommand(Gifticon gifticon);
 
 }

@@ -116,7 +116,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateDeleteGifticon(Integer userId, Gifticon gifticon) {
+	public void validateGifticonForDelete(Integer userId, Gifticon gifticon) {
 
 		// 삭제된 기프티콘인지 검증
 		if (isDeleted(gifticon)) {
@@ -144,7 +144,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateGiveAwayGifticon(Integer userId, Gifticon gifticon) {
+	public void validateGifticonForGiveAway(Integer userId, Gifticon gifticon) {
 
 		// 삭제 여부
 		if (isDeleted(gifticon)) {
@@ -191,7 +191,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateAmountGifticonUsageHistories(Gifticon gifticon) {
+	public void validateAmountGifticonUsageHistoryForGet(Gifticon gifticon) {
 		// 삭제 여부
 		if (isDeleted(gifticon)) {
 			throw new CustomException(ErrorCode.GIFTICON_DELETED);
@@ -202,7 +202,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateDeleteAndUsedAndAmountType(Gifticon gifticon) {
+	public void validateAmountGifticonForCommand(Gifticon gifticon) {
 
 		// 삭제 여부
 		if (isDeleted(gifticon)) {
@@ -219,24 +219,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateDeleteAndUsedAndProductType(Gifticon gifticon) {
-
-		// 삭제 여부
-		if (isDeleted(gifticon)) {
-			throw new CustomException(ErrorCode.GIFTICON_DELETED);
-		}
-
-		// 사용 여부
-		if (isUsed(gifticon)) {
-			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
-		}
-
-		// 상품형 타입 여부
-		validateProductGifticonType(gifticon);
-	}
-
-	@Override
-	public void validateDeleteAndIsUsedAndProductType(Gifticon gifticon) {
+	public void validateProductGifticonUsageHistoryForGet(Gifticon gifticon) {
 
 		// 삭제 여부
 		if (isDeleted(gifticon)) {
@@ -245,6 +228,23 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 		// 사용 여부
 		if (!isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 상품형 타입 여부
+		validateProductGifticonType(gifticon);
+	}
+
+	@Override
+	public void validateProductGifticonForCommand(Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (isUsed(gifticon)) {
 			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
 		}
 

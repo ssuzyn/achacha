@@ -11,7 +11,7 @@ import com.eurachacha.achacha.web.common.exception.ErrorCode;
 public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainService {
 
 	@Override // 기프티콘 잔액 계산 (잔액이 부족한 경우 예외 발생)
-	public int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
+	public int calculateGifticonBalance(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon) {
 		int currentUsageAmount = findUsageHistory.getUsageAmount(); //이전 사용 금액
 		int currentRemainingAmount = findGifticon.getRemainingAmount(); // 현재 잔액
@@ -29,18 +29,10 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	}
 
 	@Override
-	public int updateUsageHistory(Integer newAmount, Gifticon findGifticon,
-		UsageHistory findUsageHistory) {
-
-		// 잔액 계산
-		return getFindGifticonRemainingAmount(newAmount, findUsageHistory, findGifticon);
-	}
-
-	@Override
 	public void validateSufficientBalance(int remainingAmount, int requiredAmount) {
 		if (remainingAmount < requiredAmount) {
 			throw new CustomException(ErrorCode.GIFTICON_INSUFFICIENT_BALANCE);
 		}
 	}
-	
+
 }

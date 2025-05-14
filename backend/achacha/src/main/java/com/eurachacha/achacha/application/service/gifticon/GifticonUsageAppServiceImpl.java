@@ -52,7 +52,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		 *  2. 사용 여부 판단
 		 *  3. 타입 판단
 		 */
-		gifticonDomainService.validateDeleteAndUsedAndAmountType(findGifticon);
+		gifticonDomainService.validateAmountGifticonForCommand(findGifticon);
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
@@ -85,7 +85,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		// 삭제 여부, 타입 검증
-		gifticonDomainService.validateAmountGifticonUsageHistories(findGifticon);
+		gifticonDomainService.validateAmountGifticonUsageHistoryForGet(findGifticon);
 
 		// 조회 권한 검증
 		validateGifticonAccess(findGifticon, userId);
@@ -115,7 +115,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 	@Override
 	@Transactional
-	public void updateGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId,
+	public void updateAmountGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId,
 		AmountGifticonUseRequestDto requestDto) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
@@ -124,7 +124,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		// 사용 가능한 기프티콘인지 확인
-		gifticonDomainService.validateDeleteAndUsedAndAmountType(findGifticon);
+		gifticonDomainService.validateAmountGifticonForCommand(findGifticon);
 
 		// 해당 사용 내역 조회
 		UsageHistory findUsageHistory = usageHistoryRepository.findByIdAndGifticonIdAndUserId(usageHistoryId,
@@ -134,13 +134,13 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 		// 잔액 및 사용 내역 업데이트
 		findGifticon.updateRemainingAmount(
-			gifticonUsageDomainService.updateUsageHistory(newAmount, findGifticon, findUsageHistory));
+			gifticonUsageDomainService.calculateGifticonBalance(newAmount, findUsageHistory, findGifticon));
 		findUsageHistory.updateUsageAmount(newAmount);
 	}
 
 	@Override
 	@Transactional
-	public void deleteGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId) {
+	public void deleteAmountGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
@@ -148,7 +148,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		// 삭제, 사용, 타입 검증
-		gifticonDomainService.validateDeleteAndUsedAndAmountType(findGifticon);
+		gifticonDomainService.validateAmountGifticonForCommand(findGifticon);
 
 		// 해당 사용 내역 조회
 		UsageHistory findUsageHistory = usageHistoryRepository.findByIdAndGifticonIdAndUserId(usageHistoryId,
@@ -174,7 +174,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		 *  1. 삭제 여부 판단
 		 *  2. 사용 여부 판단
 		 */
-		gifticonDomainService.validateDeleteAndUsedAndProductType(findGifticon);
+		gifticonDomainService.validateProductGifticonForCommand(findGifticon);
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
@@ -203,7 +203,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		// 사용, 삭제 여부 판단
-		gifticonDomainService.validateDeleteAndIsUsedAndProductType(findGifticon);
+		gifticonDomainService.validateProductGifticonUsageHistoryForGet(findGifticon);
 
 		// 조회 권한 검증
 		validateGifticonAccess(findGifticon, userId);
