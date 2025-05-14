@@ -1,8 +1,7 @@
 import React from 'react';
-import { Overlay } from 'react-native-elements';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from 'react-native-elements';
-import { Text } from './index';
+import { Text, Overlay } from './index';
 
 /**
  * 모달 컴포넌트

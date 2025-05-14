@@ -1060,7 +1060,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     marginBottom: 20,
     fontSize: 20,
-    fontWeight: 'bold',
   },
   sectionTitle: {
     marginTop: 15,
