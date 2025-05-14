@@ -9,6 +9,7 @@ import {
   StatusBar,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +18,7 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
 import { useRoute } from '@react-navigation/native';
+import gifticonService from '../../../api/gifticonService';
 
 const DetailAmountHistoryScreen = () => {
   const insets = useSafeAreaInsets();
@@ -28,64 +30,135 @@ const DetailAmountHistoryScreen = () => {
   const [editValue, setEditValue] = useState('');
   const [scope, setScope] = useState('MY_BOX');
   const [usageType, setUsageType] = useState(null);
+  const [gifticonId, setGifticonId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [gifticonData, setGifticonData] = useState(null);
 
   // 바텀탭 표시
   useEffect(() => {
     showTabBar();
 
-    // 라우트 파라미터에서 scope와 usageType 정보 가져오기
+    // 라우트 파라미터에서 정보 가져오기
     if (route.params) {
+      if (route.params.id) {
+        setGifticonId(route.params.id);
+      } else if (route.params.gifticonId) {
+        setGifticonId(route.params.gifticonId);
+      }
+
       if (route.params.scope) {
         setScope(route.params.scope);
       }
+
       if (route.params.usageType) {
         setUsageType(route.params.usageType);
       }
+
+      // 브랜드명이 전달된 경우 이를 미리 설정
+      if (route.params.brandName && !gifticonData) {
+        setGifticonData(prevData => ({
+          ...prevData,
+          brand: route.params.brandName,
+          name: route.params.gifticonName || '',
+        }));
+      }
     }
+  }, [route.params, showTabBar, gifticonData]);
 
-    // 더미 기프티콘 데이터 초기화
-    const transactionsData = [
-      {
-        id: '1',
-        userName: '홍길동',
-        date: '2025.01.10 14:30',
-        amount: 3000,
-        type: 'payment',
-        timestamp: new Date('2025-01-10T14:30:00').getTime(),
-      },
-      {
-        id: '2',
-        userName: '김철수',
-        date: '2025.01.20 16:45',
-        amount: 5000,
-        type: 'payment',
-        timestamp: new Date('2025-01-20T16:45:00').getTime(),
-      },
-      {
-        id: '3',
-        userName: '박지민',
-        date: '2025.01.25 10:15',
-        amount: 20000,
-        type: 'payment',
-        timestamp: new Date('2025-01-25T10:15:00').getTime(),
-      },
-    ];
+  // 기프티콘 ID가 변경될 때 사용내역 로드
+  useEffect(() => {
+    if (gifticonId) {
+      loadUsageHistory();
+    }
+  }, [gifticonId]);
 
-    // 일자별 내림차순(최신순)으로 정렬
-    const sortedTransactions = [...transactionsData].sort((a, b) => b.timestamp - a.timestamp);
+  // 사용내역 로드 함수
+  const loadUsageHistory = async () => {
+    try {
+      setLoading(true);
 
-    setTransactions(sortedTransactions);
-  }, []);
+      // 먼저 기프티콘 상세 정보를 가져와서 브랜드명을 얻습니다.
+      let brandName = '';
+      try {
+        // 먼저 상세 정보를 통해 브랜드명 가져오기 시도
+        const detailResponse = await gifticonService.getGifticonDetail(gifticonId);
+        brandName = detailResponse.brandName || '';
+      } catch (detailError) {
+        console.log('상세 정보 조회 실패, 브랜드명을 가져오지 못했습니다:', detailError);
+      }
 
-  // 더미 기프티콘 데이터
-  const gifticonData = {
-    id: '1',
-    brand: '스타벅스',
-    name: 'APP전용 e카드 3만원 교환권',
-    amount: 30000,
-    totalBalance: 30000,
-    usedAmount: 28000,
-    remainingBalance: 2000,
+      // 사용내역 API 호출
+      const response = await gifticonService.getAmountGifticonUsageHistory(gifticonId);
+
+      setGifticonData({
+        id: response.gifticonId,
+        brand: brandName || response.brandName || '', // 브랜드명 설정
+        name: response.gifticonName,
+        amount: response.gifticonOriginalAmount,
+        totalBalance: response.gifticonOriginalAmount,
+        usedAmount: response.gifticonOriginalAmount - response.gifticonRemainingAmount,
+        remainingBalance: response.gifticonRemainingAmount,
+      });
+
+      // API 응답에서 거래내역 데이터 구성
+      if (response.usageHistories && response.usageHistories.length > 0) {
+        // 날짜 기준 내림차순 정렬
+        const sortedHistories = [...response.usageHistories].sort((a, b) => {
+          return new Date(b.usageHistoryCreatedAt) - new Date(a.usageHistoryCreatedAt);
+        });
+
+        // 트랜잭션 데이터 구성
+        const formattedTransactions = sortedHistories.map(history => ({
+          id: history.usageHistoryId.toString(),
+          userName: history.userName,
+          date: formatDateTime(history.usageHistoryCreatedAt),
+          amount: history.usageAmount,
+          type: 'payment',
+          timestamp: new Date(history.usageHistoryCreatedAt).getTime(),
+        }));
+
+        setTransactions(formattedTransactions);
+      } else {
+        setTransactions([]);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('사용내역 로드 중 오류 발생:', error);
+
+      // 에러 메시지 표시
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+
+        if (status === 403) {
+          Alert.alert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
+        } else if (status === 404) {
+          Alert.alert('사용내역 없음', '사용내역을 찾을 수 없습니다.');
+        } else {
+          Alert.alert(
+            '오류',
+            `사용내역을 불러오는 중 오류가 발생했습니다. ${errorData?.message || ''}`
+          );
+        }
+      } else {
+        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+      }
+
+      setLoading(false);
+    }
+  };
+
+  // 날짜 포맷 함수 (YYYY.MM.DD HH:MM)
+  const formatDateTime = dateTimeString => {
+    const date = new Date(dateTimeString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+
+    return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
   };
 
   // 숫자에 천단위 콤마 추가
@@ -114,22 +187,104 @@ const DetailAmountHistoryScreen = () => {
   };
 
   // 수정 저장 함수
-  const handleSaveEdit = transactionId => {
-    const amount = parseInt(editValue, 10);
-    if (isNaN(amount) || amount <= 0) {
-      Alert.alert('유효하지 않은 금액', '올바른 금액을 입력하세요.');
+  const handleSaveEdit = async transactionId => {
+    // 입력값 검증
+    if (!editValue || editValue.trim() === '') {
+      Alert.alert('알림', '금액을 입력해주세요.');
       return;
     }
 
-    setTransactions(prev => {
-      const updatedTransactions = prev.map(item =>
-        item.id === transactionId ? { ...item, amount } : item
+    // 숫자 변환 전 입력값 검증 (숫자만 허용)
+    if (!/^\d+$/.test(editValue)) {
+      Alert.alert('알림', '금액은 숫자만 입력 가능합니다.');
+      return;
+    }
+
+    // 숫자로 변환
+    const amount = parseInt(editValue, 10);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('알림', '올바른 금액을 입력하세요. (0보다 큰 숫자)');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      console.log('[DetailAmountHistoryScreen] 사용내역 수정 요청:', {
+        gifticonId,
+        transactionId,
+        amount,
+        inputType: typeof amount,
+      });
+
+      // API 호출로 사용내역 수정
+      await gifticonService.updateAmountGifticonUsageHistory(
+        gifticonId,
+        parseInt(transactionId, 10),
+        amount
       );
-      // 정렬 유지
-      return [...updatedTransactions].sort((a, b) => b.timestamp - a.timestamp);
-    });
-    setEditingId(null);
-    setEditValue('');
+
+      // UI 상태 업데이트
+      setTransactions(prev => {
+        const updatedTransactions = prev.map(item =>
+          item.id === transactionId ? { ...item, amount } : item
+        );
+        // 정렬 유지
+        return [...updatedTransactions].sort((a, b) => b.timestamp - a.timestamp);
+      });
+
+      setEditingId(null);
+      setEditValue('');
+
+      // 전체 데이터 다시 로드 (잔액 업데이트를 위해)
+      await loadUsageHistory();
+
+      // 성공 메시지 표시
+      Alert.alert('성공', '기프티콘 사용금액이 변경되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
+            NavigationService.goBack({ refresh: true });
+          },
+        },
+      ]);
+    } catch (error) {
+      console.error('사용내역 수정 오류:', error);
+
+      // 에러 메시지 표시
+      let errorMessage = '사용내역 수정 중 오류가 발생했습니다.';
+
+      if (error.response) {
+        console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
+
+        const status = error.response.status;
+
+        // 특정 에러 코드에 따른 메시지 처리
+        if (status === 400) {
+          errorMessage = '잘못된 요청입니다. 금액을 확인해주세요.';
+        } else if (status === 403) {
+          errorMessage = '권한이 없습니다.';
+        } else if (status === 404) {
+          errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+        } else if (status === 500) {
+          errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+        }
+
+        // 서버에서 온 메시지가 있으면 이를 우선 사용
+        if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      } else if (error.request) {
+        errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
+      } else {
+        errorMessage = `오류: ${error.message}`;
+      }
+
+      Alert.alert('오류', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 삭제하기 함수
@@ -141,12 +296,76 @@ const DetailAmountHistoryScreen = () => {
       },
       {
         text: '삭제',
-        onPress: () => {
-          setTransactions(prev => {
-            const filteredTransactions = prev.filter(item => item.id !== transactionId);
-            // 정렬 유지 (여기서는 이미 정렬된 상태에서 항목만 제거하므로 재정렬 필요 없음)
-            return filteredTransactions;
-          });
+        onPress: async () => {
+          try {
+            setLoading(true);
+
+            console.log('[DetailAmountHistoryScreen] 사용내역 삭제 요청:', {
+              gifticonId,
+              transactionId,
+            });
+
+            // API 호출로 사용내역 삭제
+            await gifticonService.deleteAmountGifticonUsageHistory(
+              gifticonId,
+              parseInt(transactionId, 10)
+            );
+
+            // UI 상태 업데이트
+            setTransactions(prev => {
+              const filteredTransactions = prev.filter(item => item.id !== transactionId);
+              return filteredTransactions;
+            });
+
+            // 전체 데이터 다시 로드 (잔액 업데이트를 위해)
+            await loadUsageHistory();
+
+            // 성공 메시지 표시
+            Alert.alert('성공', '기프티콘 사용내역이 삭제되었습니다.', [
+              {
+                text: '확인',
+                onPress: () => {
+                  // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
+                  NavigationService.goBack({ refresh: true });
+                },
+              },
+            ]);
+          } catch (error) {
+            console.error('사용내역 삭제 오류:', error);
+
+            // 에러 메시지 표시
+            let errorMessage = '사용내역 삭제 중 오류가 발생했습니다.';
+
+            if (error.response) {
+              console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
+
+              const status = error.response.status;
+
+              // 특정 에러 코드에 따른 메시지 처리
+              if (status === 400) {
+                errorMessage = '잘못된 요청입니다.';
+              } else if (status === 403) {
+                errorMessage = '권한이 없습니다.';
+              } else if (status === 404) {
+                errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+              } else if (status === 500) {
+                errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+              }
+
+              // 서버에서 온 메시지가 있으면 이를 우선 사용
+              if (error.response.data?.message) {
+                errorMessage = error.response.data.message;
+              }
+            } else if (error.request) {
+              errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
+            } else {
+              errorMessage = `오류: ${error.message}`;
+            }
+
+            Alert.alert('오류', errorMessage);
+          } finally {
+            setLoading(false);
+          }
         },
         style: 'destructive',
       },
@@ -177,14 +396,23 @@ const DetailAmountHistoryScreen = () => {
         <View style={styles.rightPlaceholder} />
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {scope === 'USED' && usageType !== 'SELF_USE' ? (
-          <View style={styles.noAccessContainer}>
-            <Text style={styles.noAccessText}>
-              직접 사용한 기프티콘만 사용내역을 확인할 수 있습니다.
-            </Text>
-          </View>
-        ) : (
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#56AEE9" />
+          <Text style={styles.loadingText}>데이터를 불러오는 중...</Text>
+        </View>
+      ) : scope === 'USED' && usageType !== 'SELF_USE' ? (
+        <View style={styles.noAccessContainer}>
+          <Text style={styles.noAccessText}>
+            직접 사용한 기프티콘만 사용내역을 확인할 수 있습니다.
+          </Text>
+        </View>
+      ) : !gifticonData ? (
+        <View style={styles.noAccessContainer}>
+          <Text style={styles.noAccessText}>기프티콘 정보를 찾을 수 없습니다.</Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.contentContainer}>
             <View style={styles.infoHeaderContainer}>
               <Text style={styles.brandText}>{gifticonData.brand}</Text>
@@ -213,69 +441,75 @@ const DetailAmountHistoryScreen = () => {
 
             {/* 거래 내역 */}
             <View style={styles.transactionsContainer}>
-              {transactions.map(transaction => (
-                <View key={transaction.id}>
-                  {editingId === transaction.id ? (
-                    <View style={styles.editItemContainer}>
-                      <View style={styles.editInfoSection}>
-                        <Text style={styles.transactionUser}>{transaction.userName}</Text>
-                        <Text style={styles.transactionDate}>{transaction.date}</Text>
-                      </View>
-                      <View style={styles.editActionSection}>
-                        <TextInput
-                          style={styles.editInput}
-                          value={editValue}
-                          onChangeText={setEditValue}
-                          keyboardType="numeric"
-                          placeholder="금액 입력"
-                        />
-                        <TouchableOpacity
-                          style={[styles.editButton, styles.cancelButton]}
-                          onPress={handleCancelEdit}
-                        >
-                          <Text style={styles.cancelButtonText}>취소</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={[styles.editButton, styles.saveButton]}
-                          onPress={() => handleSaveEdit(transaction.id)}
-                        >
-                          <Text style={styles.saveButtonText}>수정</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.transactionItem}>
-                      <View style={styles.transactionLeft}>
-                        <Text style={styles.transactionUser}>{transaction.userName}</Text>
-                        <Text style={styles.transactionDate}>{transaction.date}</Text>
-                      </View>
-                      <View style={styles.transactionRight}>
-                        <Text style={[styles.amountText, { color: '#56AEE9' }]}>
-                          {renderAmount(transaction.amount, transaction.type)}
-                        </Text>
-                        <View style={styles.actionIcons}>
+              {transactions.length === 0 ? (
+                <View style={styles.emptyStateContainer}>
+                  <Text style={styles.emptyStateText}>사용 내역이 없습니다.</Text>
+                </View>
+              ) : (
+                transactions.map(transaction => (
+                  <View key={transaction.id}>
+                    {editingId === transaction.id ? (
+                      <View style={styles.editItemContainer}>
+                        <View style={styles.editInfoSection}>
+                          <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                          <Text style={styles.transactionDate}>{transaction.date}</Text>
+                        </View>
+                        <View style={styles.editActionSection}>
+                          <TextInput
+                            style={styles.editInput}
+                            value={editValue}
+                            onChangeText={setEditValue}
+                            keyboardType="numeric"
+                            placeholder="금액 입력"
+                          />
                           <TouchableOpacity
-                            onPress={() => handleEdit(transaction.id)}
-                            style={styles.iconButton}
+                            style={[styles.editButton, styles.cancelButton]}
+                            onPress={handleCancelEdit}
                           >
-                            <Icon name="edit" type="feather" size={20} color="#AAAAAA" />
+                            <Text style={styles.cancelButtonText}>취소</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
-                            onPress={() => handleDelete(transaction.id)}
-                            style={styles.iconButton}
+                            style={[styles.editButton, styles.saveButton]}
+                            onPress={() => handleSaveEdit(transaction.id)}
                           >
-                            <Icon name="trash-2" type="feather" size={20} color="#AAAAAA" />
+                            <Text style={styles.saveButtonText}>수정</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
-                    </View>
-                  )}
-                </View>
-              ))}
+                    ) : (
+                      <View style={styles.transactionItem}>
+                        <View style={styles.transactionLeft}>
+                          <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                          <Text style={styles.transactionDate}>{transaction.date}</Text>
+                        </View>
+                        <View style={styles.transactionRight}>
+                          <Text style={[styles.amountText, { color: '#56AEE9' }]}>
+                            {renderAmount(transaction.amount, transaction.type)}
+                          </Text>
+                          <View style={styles.actionIcons}>
+                            <TouchableOpacity
+                              onPress={() => handleEdit(transaction.id)}
+                              style={styles.iconButton}
+                            >
+                              <Icon name="edit" type="feather" size={20} color="#AAAAAA" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              onPress={() => handleDelete(transaction.id)}
+                              style={styles.iconButton}
+                            >
+                              <Icon name="trash-2" type="feather" size={20} color="#AAAAAA" />
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    )}
+                  </View>
+                ))
+              )}
             </View>
           </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      )}
     </View>
   );
 };
@@ -313,16 +547,17 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   infoHeaderContainer: {
-    marginVertical: 16,
+    marginVertical: 10,
     alignItems: 'center',
   },
   brandText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 7,
   },
   nameText: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#666',
     marginTop: 4,
     textAlign: 'center',
@@ -451,6 +686,27 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  emptyStateContainer: {
+    padding: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });
 
