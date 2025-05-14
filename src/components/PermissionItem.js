@@ -12,12 +12,12 @@ const PermissionItem = ({ iconName, title, description }) => (
     {/* 상단 행: 아이콘 + 제목 */}
     <View style={styles.itemTopRow}>
       <MaterialIcons name={iconName} size={ICON_SIZE} style={styles.icon} />
-      <Text variant="subtitle1" weight="bold" style={styles.permissionTitle}>
+      <Text variant="subtitle1" weight="bold">
         {title}
       </Text>
     </View>
     {/* 하단 행: 설명 */}
-    <Text variant="body2" color="#666666" style={styles.permissionDescription}>
+    <Text variant="body2" weight="regular" color="#666666" style={styles.permissionDescription}>
       {description}
     </Text>
   </View>
@@ -38,9 +38,6 @@ const styles = StyleSheet.create({
   icon: {
     color: '#737373', // $textSecondary 색상값
     marginRight: ICON_MARGIN_RIGHT,
-  },
-  permissionTitle: {
-    fontWeight: '700', // $fontWeightBold
   },
   permissionDescription: {
     textAlign: 'left', // 왼쪽 정렬 유지

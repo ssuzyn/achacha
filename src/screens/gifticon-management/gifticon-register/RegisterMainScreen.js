@@ -7,7 +7,6 @@ import {
   ScrollView,
   StatusBar,
   TouchableOpacity,
-  Image,
   Modal,
   Alert,
   Platform,
@@ -23,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
+import LottieView from 'lottie-react-native';
 
 // 네이티브 모듈 가져오기
 const { BarcodeNativeModule } = NativeModules;
@@ -621,10 +621,11 @@ const RegisterMainScreen = () => {
           <TouchableOpacity onPress={handleUploadPress}>
             <Card style={styles.uploadCard}>
               <View style={styles.uploadContent}>
-                <Image
-                  source={require('../../../assets/images/gifticon_upload.png')}
+                <LottieView
+                  source={require('../../../assets/lottie/upload_anmation.json')}
+                  autoPlay
+                  loop
                   style={styles.uploadIcon}
-                  resizeMode="contain"
                 />
                 <Text variant="h2" weight="bold" style={styles.uploadTitleMargin}>
                   기프티콘 업로드

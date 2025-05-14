@@ -15,10 +15,12 @@ export const navigationRef = createRef();
  */
 export function navigate(routeName, params = {}, waitForInteraction = true) {
   if (waitForInteraction) {
+    // 인터랙션 완료 후 화면 전환 (부드러운 애니메이션을 위해)
     InteractionManager.runAfterInteractions(() => {
       navigationRef.current?.navigate(routeName, params);
     });
   } else {
+    // 즉시 화면 전환 (즉각적인 반응이 필요한 경우)
     navigationRef.current?.navigate(routeName, params);
   }
 }

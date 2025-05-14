@@ -768,10 +768,11 @@ const DetailAmountScreen = () => {
                       {/* 쉐어박스이고 내가 공유한 경우에만 공유 취소 아이콘 표시 */}
                       {scope === 'SHARE_BOX' && isSharer && (
                         <TouchableOpacity
-                          style={styles.actionIconButton}
+                          style={styles.actionRemoveButton}
                           onPress={handleCancelShare}
                         >
-                          <Icon name="person-remove" type="material" size={24} color="#718096" />
+                          <Icon name="arrow-downward" type="material" size={20} color="#718096" />
+                          <Text style={styles.actionRemoveText}>내리기</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -819,6 +820,7 @@ const DetailAmountScreen = () => {
                       ]}
                     >
                       <Text
+                        weight="bold"
                         style={[
                           styles.ddayButtonText,
                           typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string' &&
@@ -845,17 +847,19 @@ const DetailAmountScreen = () => {
 
               <View style={styles.infoContainer}>
                 <Text style={styles.brandText}>{gifticonData.brandName}</Text>
-                <Text style={styles.nameText}>{gifticonData.gifticonName}</Text>
+                <Text style={styles.nameText} weight="bold">
+                  {gifticonData.gifticonName}
+                </Text>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>유효기간</Text>
                   <Text style={styles.infoValue}>
-                    ~ {formatDate(gifticonData.gifticonExpiryDate)}
+                    {formatDate(gifticonData.gifticonExpiryDate)}
                   </Text>
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>등록일</Text>
+                  <Text style={styles.infoLabel}>등록일시</Text>
                   <Text style={styles.infoValue}>
                     {formatDateTime(gifticonData.gifticonCreatedAt)}
                   </Text>
@@ -901,7 +905,7 @@ const DetailAmountScreen = () => {
                 <View style={styles.amountInfoRow}>
                   <Text style={styles.amountLabel}>총 금액</Text>
                   <View style={styles.amountValueContainer}>
-                    <Text style={styles.amountValue}>
+                    <Text weight="bold" style={styles.amountValue}>
                       {formatAmount(gifticonData.gifticonOriginalAmount)}
                     </Text>
                   </View>
@@ -910,7 +914,10 @@ const DetailAmountScreen = () => {
                 <View style={styles.amountInfoRow}>
                   <Text style={styles.amountLabel}>잔액</Text>
                   <View style={styles.amountValueContainer}>
-                    <Text style={[styles.amountValue, !isUsed && styles.remainingAmount]}>
+                    <Text
+                      weight="bold"
+                      style={[styles.amountValue, !isUsed && styles.remainingAmount]}
+                    >
                       {formatAmount(isUsed ? 0 : gifticonData.gifticonRemainingAmount)}
                     </Text>
                   </View>
@@ -1203,7 +1210,9 @@ const DetailAmountScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>사용 금액 입력</Text>
+            <Text weight="bold" style={styles.modalTitle}>
+              사용 금액 입력
+            </Text>
 
             <View style={styles.inputContainer}>
               <TextInput
@@ -1417,7 +1426,6 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontSize: 20,
-    fontWeight: 'bold',
     color: '#333',
     marginBottom: 20,
     textAlign: 'center',
@@ -1430,14 +1438,15 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     width: 80,
-    fontSize: 15,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 16,
+    color: '#737373',
+    marginRight: 8,
   },
   infoValue: {
     flex: 1,
-    fontSize: 15,
-    color: '#333',
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'right',
   },
 
   divider: {
@@ -1449,13 +1458,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   amountLabel: {
     width: 80,
     fontSize: 16,
-    color: '#555',
-    fontWeight: '500',
+    color: '#737373',
+    marginRight: 8,
   },
   amountValueContainer: {
     flex: 1,
@@ -1463,12 +1472,12 @@ const styles = StyleSheet.create({
   amountValue: {
     fontSize: 16,
     color: '#333',
-    fontWeight: 'bold',
+    textAlign: 'right',
   },
   remainingAmount: {
     color: '#278CCC',
-    fontWeight: 'bold',
     fontSize: 16,
+    textAlign: 'right',
   },
   buttonContainer: {
     marginTop: 10,
@@ -1537,7 +1546,6 @@ const styles = StyleSheet.create({
   usedText: {
     color: 'white',
     fontSize: 28,
-    fontWeight: 'bold',
     textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -1556,7 +1564,6 @@ const styles = StyleSheet.create({
   ddayButtonText: {
     color: '#D33434',
     fontSize: 18,
-    fontWeight: 'semibold',
   },
   expiredButtonContainer: {
     backgroundColor: 'rgba(153, 153, 153, 0.8)',
@@ -1572,11 +1579,9 @@ const styles = StyleSheet.create({
   },
   urgentDDayText: {
     color: '#EA5455',
-    fontWeight: 'bold',
   },
   normalDDayText: {
     color: '#72BFFF',
-    fontWeight: 'bold',
   },
   loadingContent: {
     flex: 1,
@@ -1745,7 +1750,7 @@ const styles = StyleSheet.create({
   },
   amountInput: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     textAlign: 'right',
     width: 200,
     marginRight: 5,
@@ -1826,6 +1831,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+  },
+  actionRemoveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F9F9F9',
+    marginLeft: 8,
+  },
+  actionRemoveText: {
+    fontSize: 14,
+    color: '#718096',
+    marginLeft: 4,
+    fontWeight: '500',
   },
   // 공유 모달 관련 스타일
   shareModalOverlay: {
