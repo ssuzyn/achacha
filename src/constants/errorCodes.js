@@ -40,6 +40,10 @@ export const AI_ERRORS = {
 export const GIFTICON_ERRORS = {
   GIFTICON_006: 'GIFTICON_006', // 금액형 기프티콘은 금액을 입력해야 함
   GIFTICON_007: 'GIFTICON_007', // 이미 등록된 바코드 번호
+  GIFTICON_002: 'GIFTICON_002', // 해당 기프티콘에 접근 권한이 없습니다. (신규 추가)
+  GIFTICON_001: 'GIFTICON_001', // 기프티콘 정보를 찾을 수 없습니다. (신규 추가)
+  GIFTICON_003: 'GIFTICON_003', // 기프티콘이 만료되었습니다. (신규 추가)
+  GIFTICON_005: 'GIFTICON_005', // 삭제된 기프티콘입니다. (신규 추가)
 };
 
 // 브랜드 및 쉐어박스 관련 에러 코드
@@ -58,6 +62,8 @@ export const SHAREBOX_ERRORS = {
   SHAREBOX_006: 'SHAREBOX_006', // 최대 참여자 수(10명)에 도달했습니다.
   SHAREBOX_007: 'SHAREBOX_007', // 유효하지 않은 쉐어박스 이름입니다.
   SHAREBOX_008: 'SHAREBOX_008', // 접근 권한 없음 (신규 추가)
+  SHAREBOX_009: 'SHAREBOX_009', // 일부 사용된 금액형 기프티콘은 공유할 수 없음 (신규 추가)
+  SHAREBOX_010: 'SHAREBOX_010', // 이미 공유된 기프티콘입니다 (신규 추가)
   SHAREBOX_012: 'SHAREBOX_012', // 해당 쉐어박스 방장만 접근 가능 (신규 추가)
 };
 

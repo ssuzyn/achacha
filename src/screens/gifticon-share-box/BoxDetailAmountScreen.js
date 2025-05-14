@@ -12,6 +12,7 @@ import {
   Share,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -21,6 +22,7 @@ import AlertDialog from '../../components/ui/AlertDialog';
 import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
+import { ERROR_MESSAGES } from '../../constants/errorMessages';
 
 const BoxDetailAmountScreen = () => {
   const insets = useSafeAreaInsets();
@@ -423,12 +425,15 @@ const BoxDetailAmountScreen = () => {
   // 공유하기 기능
   const handleShare = async () => {
     try {
-      await Share.share({
-        message: `${gifticonData.brandName} ${gifticonData.gifticonName} 기프티콘을 공유합니다.`,
-      });
+      // 실제 API 호출
+      await api.shareGifticon(selectedShareBoxId, gifticonId);
+
+      Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.');
     } catch (error) {
-      // console.error(error);
-      // 오류 처리
+      const errorCode = error?.response?.data?.code;
+      const errorMessage = ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.default;
+
+      Alert.alert('공유 실패', errorMessage);
     }
   };
 
