@@ -27,6 +27,7 @@ import {
   fetchUsedGifticons,
   fetchShareBoxSettings,
 } from '../../api/shareBoxService';
+import { API_BASE_URL } from '../../api/config';
 
 const BoxListScreen = () => {
   const { theme } = useTheme();
