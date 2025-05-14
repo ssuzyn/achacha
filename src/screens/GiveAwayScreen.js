@@ -17,7 +17,7 @@ import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
 import Tooltip from '../components/Tooltip';
 import LottieView from 'lottie-react-native';
-import nearbyUsersService from '../services/nearbyUsersService';
+import nearbyUsersService from '../services/NearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';

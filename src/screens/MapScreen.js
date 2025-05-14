@@ -10,7 +10,7 @@ import {
 import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import geofencingService from '../services/geofencingService';
+import geofencingService from '../services/GeofencingService';
 import { useNavigation } from '@react-navigation/native';
 import { useMapGifticons } from '../hooks/useMapGifticons'; // 리액트 쿼리 훅
 
