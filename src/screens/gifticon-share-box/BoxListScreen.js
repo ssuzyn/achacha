@@ -686,7 +686,13 @@ const BoxListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={styles.gifticonContent}>
+            <View
+              style={[
+                styles.gifticonContent,
+                isExpired && { opacity: 0.7 },
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
                 <Image source={item.thumbnailPath} style={styles.gifticonImage} />
@@ -728,13 +734,6 @@ const BoxListScreen = () => {
                 )}
               </View>
 
-              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
-
               {/* D-day 또는 사용일자 태그 */}
               <View
                 style={[styles.dDayContainer, isUrgent ? styles.urgentDDay : styles.normalDDay]}
@@ -768,7 +767,13 @@ const BoxListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={[styles.gifticonContent, { opacity: 0.7 }]}>
+            <View
+              style={[
+                styles.gifticonContent,
+                isExpired && { opacity: 0.7 },
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
                 <Image
@@ -798,13 +803,6 @@ const BoxListScreen = () => {
                   </View>
                 )}
               </View>
-
-              {/* 공유 북마크 아이콘 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
 
               {/* 만료 태그 */}
               <View style={[styles.dDayContainer, styles.expiredDDay]}>
@@ -852,7 +850,13 @@ const BoxListScreen = () => {
               offset={[0, 1]}
               style={styles.shadowContainer}
             >
-              <View style={styles.gifticonContent}>
+              <View
+                style={[
+                  styles.gifticonContent,
+                  isExpired && { opacity: 0.7 },
+                  isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+                ]}
+              >
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
                   <Image source={item.thumbnailPath} style={styles.gifticonImage} />
@@ -879,13 +883,6 @@ const BoxListScreen = () => {
                     </View>
                   )}
                 </View>
-
-                {/* 공유 북마크 아이콘 */}
-                {isSharedByOther && (
-                  <View style={styles.bookmarkContainer}>
-                    <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                  </View>
-                )}
 
                 {/* D-day 태그 */}
                 <View
@@ -951,7 +948,13 @@ const BoxListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={styles.gifticonContent}>
+            <View
+              style={[
+                styles.gifticonContent,
+                isExpired && { opacity: 0.7 },
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
                 <Image source={item.thumbnailPath} style={styles.gifticonImage} />
@@ -978,13 +981,6 @@ const BoxListScreen = () => {
                   </View>
                 )}
               </View>
-
-              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
 
               {/* D-day 또는 사용일자 태그 */}
               <View
