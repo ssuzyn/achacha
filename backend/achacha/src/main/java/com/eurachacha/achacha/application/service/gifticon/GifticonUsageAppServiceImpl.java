@@ -50,14 +50,16 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		 * 사용가능 기프티콘 검증 로직
 		 *  1. 삭제 여부 판단
 		 *  2. 사용 여부 판단
+		 *  3. 타입 판단
 		 */
-		gifticonDomainService.validateGifticonIsAvailable(findGifticon);
+		gifticonDomainService.validateAmountGifticonForCommand(findGifticon);
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
-		// 타입, 잔액, 사용금액 검증
-		gifticonUsageDomainService.validateUseAmountGifticon(findGifticon, requestDto.getUsageAmount());
+		// 잔액, 사용금액 검증
+		gifticonUsageDomainService.validateSufficientBalance(findGifticon.getRemainingAmount(),
+			requestDto.getUsageAmount());
 
 		// 사용 처리
 		findGifticon.use(requestDto.getUsageAmount());
@@ -82,11 +84,8 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
-		// 삭제 여부 판단
-		gifticonDomainService.isDeleted(findGifticon);
-
-		// 타입 검증
-		gifticonUsageDomainService.validateAmountGifticonType(findGifticon);
+		// 삭제 여부, 타입 검증
+		gifticonDomainService.validateAmountGifticonUsageHistoryForGet(findGifticon);
 
 		// 조회 권한 검증
 		validateGifticonAccess(findGifticon, userId);
@@ -116,7 +115,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 	@Override
 	@Transactional
-	public void updateGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId,
+	public void updateAmountGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId,
 		AmountGifticonUseRequestDto requestDto) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
@@ -125,7 +124,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		// 사용 가능한 기프티콘인지 확인
-		gifticonDomainService.validateGifticonIsAvailable(findGifticon);
+		gifticonDomainService.validateAmountGifticonForCommand(findGifticon);
 
 		// 해당 사용 내역 조회
 		UsageHistory findUsageHistory = usageHistoryRepository.findByIdAndGifticonIdAndUserId(usageHistoryId,
@@ -135,24 +134,21 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 		// 잔액 및 사용 내역 업데이트
 		findGifticon.updateRemainingAmount(
-			gifticonUsageDomainService.updateUsageHistory(newAmount, findGifticon, findUsageHistory));
+			gifticonUsageDomainService.calculateGifticonBalance(newAmount, findUsageHistory, findGifticon));
 		findUsageHistory.updateUsageAmount(newAmount);
 	}
 
 	@Override
 	@Transactional
-	public void deleteGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId) {
+	public void deleteAmountGifticonUsageHistory(Integer gifticonId, Integer usageHistoryId) {
 
 		Integer userId = 1; // 유저 로직 추가 시 변경 필요
 
 		// 해당 기프티콘 조회
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
-		// 사용 가능한 기프티콘인지 확인
-		gifticonDomainService.validateGifticonIsAvailable(findGifticon);
-
-		// 기프티콘 타입검증
-		gifticonUsageDomainService.validateAmountGifticonType(findGifticon);
+		// 삭제, 사용, 타입 검증
+		gifticonDomainService.validateAmountGifticonForCommand(findGifticon);
 
 		// 해당 사용 내역 조회
 		UsageHistory findUsageHistory = usageHistoryRepository.findByIdAndGifticonIdAndUserId(usageHistoryId,
@@ -178,13 +174,10 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		 *  1. 삭제 여부 판단
 		 *  2. 사용 여부 판단
 		 */
-		gifticonDomainService.validateGifticonIsAvailable(findGifticon);
+		gifticonDomainService.validateProductGifticonForCommand(findGifticon);
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
-
-		// 타입 검증
-		gifticonUsageDomainService.validateProductGifticonType(findGifticon);
 
 		// 사용 처리
 		findGifticon.use();
@@ -210,10 +203,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
 		// 사용, 삭제 여부 판단
-		gifticonDomainService.validateGifticonIsUsed(findGifticon);
-
-		// 타입 검증
-		gifticonUsageDomainService.validateProductGifticonType(findGifticon);
+		gifticonDomainService.validateProductGifticonUsageHistoryForGet(findGifticon);
 
 		// 조회 권한 검증
 		validateGifticonAccess(findGifticon, userId);

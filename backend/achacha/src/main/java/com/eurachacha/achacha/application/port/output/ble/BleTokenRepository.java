@@ -1,6 +1,8 @@
 package com.eurachacha.achacha.application.port.output.ble;
 
-import com.eurachacha.achacha.domain.ble.BleToken;
+import java.util.List;
+
+import com.eurachacha.achacha.domain.model.ble.BleToken;
 
 public interface BleTokenRepository {
 	void deleteByUserIdAndValue(Integer userId, String value);
@@ -8,4 +10,8 @@ public interface BleTokenRepository {
 	BleToken save(BleToken bleToken);
 
 	boolean existsByValue(String value);
+
+	BleToken findByValue(String value);
+
+	List<String> findValuesByValueIn(List<String> values);
 }
