@@ -714,7 +714,7 @@ const DetailProductScreen = () => {
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>등록일</Text>
+                  <Text style={styles.infoLabel}>등록일시</Text>
                   <Text style={styles.infoValue}>
                     {formatDateTime(gifticonData.gifticonCreatedAt)}
                   </Text>
