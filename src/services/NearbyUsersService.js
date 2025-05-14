@@ -328,8 +328,9 @@ class NearbyUsersService {
         return;
       }
 
-      console.log('=== BLE 광고 시작 ===');
-      console.log('광고할 디바이스 ID:', this.deviceId);
+      console.log('\n=== BLE 광고 시작 - 상세 디버그 ===');
+      console.log('1. 광고할 디바이스 ID:', this.deviceId);
+      console.log('디바이스 ID 길이:', this.deviceId.length);
 
       if (!this.deviceId) {
         console.error('BLE 토큰이 없습니다. 먼저 로그인이 필요합니다.');
@@ -339,30 +340,52 @@ class NearbyUsersService {
       if (NativeModules.BleModule) {
         // 토큰 크기 검사 (13바이트 제한)
         const tokenBytes = new TextEncoder().encode(this.deviceId);
-        if (tokenBytes.length > 13) {
-          console.error('BLE 토큰이 너무 큽니다:', tokenBytes.length, '바이트');
-          return false;
+        
+        // UUID 문자열을 실제 바이트로 변환
+        const uuidBytes = new Uint8Array(16);
+        const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
+        for (let i = 0; i < 16; i++) {
+          uuidBytes[i] = parseInt(uuidNoHyphens.substr(i * 2, 2), 16);
         }
+        
+        console.log('\n2. 바이트 크기 분석:');
+        console.log('- BLE 토큰 바이트 크기:', tokenBytes.length);
+        console.log('- 토큰 원본:', this.deviceId);
+        console.log('- 토큰 바이트 배열:', Array.from(tokenBytes));
+        
+        console.log('\n3. UUID 분석:');
+        console.log('- Service UUID:', this.serviceUUID);
+        console.log('- UUID 바이트 크기:', uuidBytes.length);
+        console.log('- UUID 바이트 배열:', Array.from(uuidBytes));
 
         // 광고 데이터 구성 - UUID와 bleToken만 포함
         const advertisingData = {
-          SERVICE_UUID: this.serviceUUID, // 하이픈 포함된 UUID
+          SERVICE_UUID: this.serviceUUID,
           bleToken: this.deviceId,
         };
 
-        // 디버그 로그
-        console.log('=== 광고 데이터 ===');
-        console.log('SERVICE_UUID:', this.serviceUUID);
-        console.log('BLE 토큰:', this.deviceId);
-        console.log('토큰 크기:', tokenBytes.length, '바이트');
+        console.log('\n4. 전체 광고 데이터:');
+        console.log('- 데이터:', advertisingData);
+        console.log('- JSON 문자열:', JSON.stringify(advertisingData));
+        console.log('- JSON 바이트 크기:', new TextEncoder().encode(JSON.stringify(advertisingData)).length);
+
+        if (tokenBytes.length > 13) {
+          console.error('\n❌ BLE 토큰이 너무 큽니다:', tokenBytes.length, '바이트');
+          return false;
+        }
 
         try {
-          await NativeModules.BleModule.startAdvertising(JSON.stringify(advertisingData));
-          console.log('광고 시작됨');
+          const advertisingDataString = JSON.stringify(advertisingData);
+          console.log('\n5. 네이티브 모듈로 전송되는 최종 데이터:');
+          console.log('- 문자열:', advertisingDataString);
+          console.log('- 최종 바이트 크기:', new TextEncoder().encode(advertisingDataString).length);
+          
+          await NativeModules.BleModule.startAdvertising(advertisingDataString);
+          console.log('\n✅ 광고 시작됨');
           this.isAdvertising = true;
           return true;
         } catch (error) {
-          console.error('광고 시작 실패:', error);
+          console.error('\n❌ 광고 시작 실패:', error);
           this.isAdvertising = false;
           return false;
         }
