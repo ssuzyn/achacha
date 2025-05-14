@@ -32,12 +32,19 @@ public class BleTokenDomainServiceImpl implements BleTokenDomainService {
 			sb.append(CHARS.charAt(digit));
 		}
 
-		// 길이가 너무 짧은 경우 패딩 추가
-		while (sb.length() < 10) { // 64비트는 약 10-11자리 Base62 문자열
-			sb.append(CHARS.charAt(0));
+		StringBuilder result = new StringBuilder(sb.reverse().toString());
+
+		// 길이가 9자리보다 짧은 경우 패딩 추가
+		while (result.length() < 9) {
+			result.insert(0, CHARS.charAt(0));
 		}
 
-		return sb.reverse().toString();
+		// 길이가 9자리보다 긴 경우 잘라내기
+		if (result.length() > 9) {
+			result = new StringBuilder(result.substring(0, 9));
+		}
+
+		return result.toString();
 	}
 
 }
