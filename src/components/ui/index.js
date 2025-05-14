@@ -13,8 +13,6 @@ export { default as Card } from './Card';
 export { default as Chip } from './Chip';
 export { default as ListItem } from './ListItem';
 export { default as CheckBox } from './CheckBox';
-// 기존 Divider export를 주석 처리하고 CompatWrappers에서 import
-// export { default as Divider } from './Divider';
-export { Divider, Overlay } from './CompatWrappers';
+export { default as Divider } from './Divider';
 export { default as Text } from './Text';
 export { default as LoadingOcrModal } from './LoadingOcrModal';

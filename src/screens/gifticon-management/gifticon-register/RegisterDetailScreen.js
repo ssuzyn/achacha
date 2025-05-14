@@ -14,6 +14,8 @@ import {
   PermissionsAndroid,
   ActivityIndicator,
   FlatList,
+  TextInput,
+  Keyboard,
 } from 'react-native';
 import { Button, InputLine, Text, LoadingOcrModal } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
@@ -93,7 +95,7 @@ const RegisterDetailScreen = () => {
 
   // 화면 데이터 상태 관리
   const [barcode, setBarcode] = useState('');
-  // eslint-disable-next-line no-unused-vars
+
   const [barcodeFormat, setBarcodeFormat] = useState(null);
   const [isOriginalImageVisible, setOriginalImageVisible] = useState(false); // 원본 이미지 팝업 표시 여부
 
@@ -141,8 +143,8 @@ const RegisterDetailScreen = () => {
       }
     }
 
-    // 바코드 정보 가져오기 (메인 화면에서 전달받은 정보)
-    if (route.params?.barcodeValue) {
+    // 바코드 정보 가져오기 (메인 화면에서 전달받은 정보) - 최초 한 번만 설정
+    if (route.params?.barcodeValue && !barcode) {
       console.log('[상세 화면] 이전 화면에서 전달받은 바코드:', route.params.barcodeValue);
 
       // 바코드 정보 설정
@@ -162,13 +164,6 @@ const RegisterDetailScreen = () => {
         // 바코드 이미지 URI 설정
         setBarcodeImageUri(route.params.barcodeImageUri);
       }
-
-      // Zustand 스토어에 바코드 정보 저장
-      setCurrentBarcodeInfo(
-        route.params.barcodeValue,
-        route.params.barcodeFormat || null,
-        route.params.barcodeBoundingBox || null
-      );
     }
 
     // OCR 학습 데이터 ID 처리
@@ -300,7 +295,7 @@ const RegisterDetailScreen = () => {
       console.log('컴포넌트 언마운트: 이미지 상태 정리');
       // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
     };
-  }, [route.params, setCurrentBarcodeInfo, gifticonType, barcode]);
+  }, [route.params, gifticonType, barcode]);
 
   // 편집된 이미지가 있을 경우 썸네일에 표시 (로직 개선)
   useEffect(() => {
@@ -891,7 +886,7 @@ const RegisterDetailScreen = () => {
 
       // 기프티콘 정보 구성
       const gifticonData = {
-        gifticonBarcodeNumber: barcodeNumber || barcode, // 메타데이터에서 받은 바코드 또는 직접 인식한 바코드
+        gifticonBarcodeNumber: barcode, // 항상 현재 사용자가 입력한 값 사용
         brandId: selectedBrand.brandId, // 선택한 브랜드 ID 사용
         gifticonName: productName,
         gifticonExpiryDate: expiryDate.toISOString().split('T')[0], // YYYY-MM-DD 형식으로 변환
@@ -1153,6 +1148,7 @@ const RegisterDetailScreen = () => {
     if (showBrandList) {
       setShowBrandList(false);
     }
+    // 키보드는 유지 (기존 코드는 여기서 키보드를 닫았을 수 있음)
   }, [showBrandList]);
 
   // 컴포넌트 언마운트 시 메모리 정리
@@ -1196,11 +1192,12 @@ const RegisterDetailScreen = () => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentContainer}
-          keyboardShouldPersistTaps="handled"
-          removeClippedSubviews={true}
+          keyboardShouldPersistTaps="always"
+          removeClippedSubviews={false}
           maxToRenderPerBatch={5}
           windowSize={10}
           scrollEventThrottle={16}
+          keyboardDismissMode="none"
         >
           {/* 이미지 선택 영역 */}
           <View style={styles.imageContainerWrapper}>
@@ -1297,10 +1294,23 @@ const RegisterDetailScreen = () => {
               </Text>
               <InputLine
                 value={barcode}
-                onChangeText={setBarcode}
+                onChangeText={text => {
+                  setBarcode(text);
+                  setBarcodeNumber(text);
+                  // Zustand 스토어에 바코드 정보 저장 - 바코드 번호가 변경되어도 스토어에 반영
+                  setCurrentBarcodeInfo(text, barcodeFormat, null, barcodeImageUri);
+                }}
                 placeholder="바코드 번호를 입력해주세요."
                 keyboardType="numeric"
                 containerStyle={styles.inputContainer}
+                editable={true}
+                autoCorrect={false}
+                textContentType="none"
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                blurOnSubmit={true}
                 rightIcon={
                   <TouchableOpacity onPress={showBarcodeImage}>
                     <Icon name="image" size={22} color="#333333" />
@@ -1711,7 +1721,9 @@ const RegisterDetailScreen = () => {
             onStartShouldSetResponder={() => true}
             onResponderRelease={() => setBarcodeImageModalVisible(false)}
           >
-            <Text style={styles.newBarcodeTitle}>바코드 정보</Text>
+            <Text weight="bold" style={styles.newBarcodeTitle}>
+              바코드 정보
+            </Text>
 
             {/* 바코드 이미지 */}
             {barcodeImageUri ? (
@@ -1726,14 +1738,34 @@ const RegisterDetailScreen = () => {
               </View>
             )}
 
-            {/* 바코드 번호 */}
-            <Text style={styles.newBarcodeNumber}>{barcode}</Text>
+            {/* 바코드 번호 - 수정 가능하도록 변경 */}
+            <TextInput
+              style={styles.newBarcodeNumberInput}
+              value={barcode || barcodeNumber}
+              onChangeText={text => {
+                setBarcode(text);
+                setBarcodeNumber(text);
+                setCurrentBarcodeInfo(text, barcodeFormat, null, barcodeImageUri);
+              }}
+              keyboardType="numeric"
+              selectionColor="#A7DAF9"
+              autoFocus={true}
+              onBlur={null}
+              blurOnSubmit={true}
+              returnKeyType="done"
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+              }}
+            />
 
             {/* 바코드 복사 버튼 */}
             <TouchableOpacity
               style={styles.newBarcodeCopyButton}
               onPress={() => {
-                Alert.alert('알림', `바코드 번호 ${barcode}이(가) 복사되었습니다.`);
+                Alert.alert(
+                  '알림',
+                  `바코드 번호 ${barcode || barcodeNumber}이(가) 복사되었습니다.`
+                );
               }}
             >
               <Icon name="content-copy" size={20} color="white" />
@@ -2073,7 +2105,6 @@ const styles = StyleSheet.create({
   newBarcodeTitle: {
     color: '#333',
     fontSize: 20,
-    fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 10,
   },
@@ -2089,13 +2120,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  newBarcodeNumber: {
-    color: '#333',
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 25,
   },
   newBarcodeCopyButton: {
     flexDirection: 'row',
@@ -2216,6 +2240,19 @@ const styles = StyleSheet.create({
   },
   shareBoxScrollView: {
     maxHeight: 250, // 스크롤 영역 최대 높이 설정
+  },
+  newBarcodeNumberInput: {
+    color: '#333',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 25,
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    width: '90%',
   },
 });
 
