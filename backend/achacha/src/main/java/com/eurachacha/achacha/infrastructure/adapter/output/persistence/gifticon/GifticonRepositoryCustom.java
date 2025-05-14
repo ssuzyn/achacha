@@ -8,6 +8,7 @@ import org.springframework.data.domain.Slice;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
+import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
@@ -21,6 +22,12 @@ public interface GifticonRepositoryCustom {
 
 	Slice<UsedGifticonResponseDto> findUsedGifticons(
 		Integer userId,
+		GifticonType type,
+		Pageable pageable);
+
+	// 쉐어박스 내 기프티콘 조회
+	Slice<Gifticon> findGifticonsByShareBoxId(
+		Integer shareBoxId,
 		GifticonType type,
 		Pageable pageable);
 
