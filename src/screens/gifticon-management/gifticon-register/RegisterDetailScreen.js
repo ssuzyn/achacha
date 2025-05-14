@@ -1392,18 +1392,36 @@ const RegisterDetailScreen = () => {
                 }
               />
 
-              <InputLine
-                value={formatDate(expiryDate)}
-                placeholder="유효기간을 입력해주세요."
-                containerStyle={styles.inputContainer}
-                rightIcon={
-                  <TouchableOpacity onPress={showDatePickerHandler}>
-                    <Icon name="calendar-today" size={22} color="#333333" />
-                  </TouchableOpacity>
-                }
-                editable={false}
-                onTouchStart={showDatePickerHandler}
-              />
+              {/* 유효기간 입력 필드 - 날짜 직접 입력 가능 */}
+              <View style={styles.dateInputContainer}>
+                <InputLine
+                  value={formatDate(expiryDate)}
+                  onChangeText={text => {
+                    // 텍스트 포맷에서 날짜 객체로 변환 (YYYY.MM.DD 형식 가정)
+                    const parts = text.split('.');
+                    if (parts.length === 3) {
+                      const year = parseInt(parts[0]);
+                      const month = parseInt(parts[1]) - 1; // 월은 0부터 시작
+                      const day = parseInt(parts[2]);
+
+                      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                        const newDate = new Date(year, month, day);
+                        if (!isNaN(newDate)) {
+                          setExpiryDate(newDate);
+                        }
+                      }
+                    }
+                  }}
+                  placeholder="유효기간을 입력해주세요. (YYYY.MM.DD)"
+                  containerStyle={styles.inputContainer}
+                  rightIcon={
+                    <TouchableOpacity onPress={showDatePickerHandler}>
+                      <Icon name="calendar-today" size={22} color="#333333" />
+                    </TouchableOpacity>
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
 
               {showDatePicker && (
                 <DateTimePicker
@@ -2253,6 +2271,9 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     borderRadius: 8,
     width: '90%',
+  },
+  dateInputContainer: {
+    marginBottom: 10,
   },
 });
 
