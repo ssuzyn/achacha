@@ -47,7 +47,7 @@ public class AmountGifticonController {
 		@PathVariable Integer usageHistoryId,
 		@Valid @RequestBody AmountGifticonUseRequestDto requestDto
 	) {
-		gifticonUsageAppService.updateGifticonUsageHistory(gifticonId, usageHistoryId, requestDto);
+		gifticonUsageAppService.updateAmountGifticonUsageHistory(gifticonId, usageHistoryId, requestDto);
 		return ResponseEntity.ok("기프티콘 사용내역이 변경되었습니다.");
 	}
 
@@ -56,7 +56,7 @@ public class AmountGifticonController {
 		@PathVariable Integer gifticonId,
 		@PathVariable Integer usageHistoryId
 	) {
-		gifticonUsageAppService.deleteGifticonUsageHistory(gifticonId, usageHistoryId);
+		gifticonUsageAppService.deleteAmountGifticonUsageHistory(gifticonId, usageHistoryId);
 		return ResponseEntity.ok("기프티콘 사용내역이 삭제되었습니다.");
 	}
 }
