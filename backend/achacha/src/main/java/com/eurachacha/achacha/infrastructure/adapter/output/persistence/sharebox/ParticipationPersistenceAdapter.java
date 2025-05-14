@@ -34,4 +34,14 @@ public class ParticipationPersistenceAdapter implements ParticipationRepository 
 	public List<Participation> findByShareBoxId(Integer shareBoxId) {
 		return participationJpaRepository.findByShareboxId(shareBoxId);
 	}
+
+	@Override
+	public void deleteByUserIdAndShareBoxId(Integer userId, Integer shareBoxId) {
+		participationJpaRepository.deleteByUserIdAndShareboxId(userId, shareBoxId);
+	}
+
+	@Override
+	public void deleteAllByShareBoxId(Integer shareBoxId) {
+		participationJpaRepository.deleteByShareboxId(shareBoxId);
+	}
 }

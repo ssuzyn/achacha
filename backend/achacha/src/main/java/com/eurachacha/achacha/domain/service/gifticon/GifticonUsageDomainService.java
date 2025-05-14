@@ -4,21 +4,10 @@ import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 
 public interface GifticonUsageDomainService {
-	// 잔액 여부 확인
-	void validateBalance(Gifticon gifticon, Integer usageAmount);
 
-	void validateAmountGifticonType(Gifticon gifticon);
-
-	int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
+	int calculateGifticonBalance(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon);
-
-	void validateUseAmountGifticon(Gifticon gifticon, Integer usageAmount);
-
-	int updateUsageHistory(Integer newAmount, Gifticon findGifticon, UsageHistory findUsageHistory);
-
+	
 	void validateSufficientBalance(int remainingAmount, int requiredAmount);
 
-	void validateAmount(Integer newAmount);
-
-	void validateProductGifticonType(Gifticon gifticon);
 }

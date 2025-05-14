@@ -97,6 +97,9 @@ public enum ErrorCode {
 	// Present 관련 에러 코드
 	COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "PRESENT_001", "선물 카드 템플릿 색상을 찾을 수 없습니다.");
 
+	// GIVEAWAY 관련 에러코드
+	NO_NEARBY_PEOPLES(HttpStatus.NOT_FOUND, "GIVEAWAY_001", "주변에 감지된 사용자가 없습니다.");
+
 	// http 상태 코드
 	private final HttpStatus status;
 	// 커스텀 에러 코드

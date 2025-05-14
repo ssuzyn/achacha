@@ -56,4 +56,39 @@ class ShareBoxDomainServiceImplTest {
 			.isInstanceOf(CustomException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS);
 	}
+
+	@Test
+	@DisplayName("쉐어박스 방장 확인 - 요청 사용자가 방장이면 true를 반환해야 한다")
+	void isShareBoxOwner_WhenUserIsOwner_ThenReturnTrue() {
+		// given
+		Integer userId = 1;
+		User user = User.builder().id(userId).build();
+
+		ShareBox shareBox = mock(ShareBox.class);
+		given(shareBox.getUser()).willReturn(user);
+
+		// when
+		boolean result = shareBoxDomainService.isShareBoxOwner(shareBox, userId);
+
+		// then
+		assertThat(result).isTrue();
+	}
+
+	@Test
+	@DisplayName("쉐어박스 방장 확인 - 요청 사용자가 방장이 아니면 false를 반환해야 한다")
+	void isShareBoxOwner_WhenUserIsNotOwner_ThenReturnFalse() {
+		// given
+		Integer userId = 1;
+		Integer ownerId = 2;
+		User owner = User.builder().id(ownerId).build();
+
+		ShareBox shareBox = mock(ShareBox.class);
+		given(shareBox.getUser()).willReturn(owner);
+
+		// when
+		boolean result = shareBoxDomainService.isShareBoxOwner(shareBox, userId);
+
+		// then
+		assertThat(result).isFalse();
+	}
 }
