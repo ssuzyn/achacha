@@ -377,9 +377,9 @@ class NearbyUsersService {
           console.log('- 바이트 배열:', Array.from(finalBytes));
           console.log('- 최종 크기:', finalBytes.length, '바이트');
 
-          // Base64로 인코딩하여 전송 (바이너리 데이터 전송을 위해)
+          // Base64로 인코딩하여 optimized 메서드로 전송
           const base64Data = btoa(String.fromCharCode.apply(null, finalBytes));
-          await NativeModules.BleModule.startAdvertising(base64Data);
+          await NativeModules.BleModule.startAdvertisingOptimized(base64Data);
           console.log('\n✅ 광고 시작됨');
           this.isAdvertising = true;
           return true;
