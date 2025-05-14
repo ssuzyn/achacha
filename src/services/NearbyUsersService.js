@@ -4,6 +4,7 @@ import { PermissionsAndroid, Platform, Alert, AppState } from 'react-native';
 import BleManager from 'react-native-ble-manager';
 import { NativeEventEmitter, NativeModules } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import useAuthStore from '../store/authStore';
 import apiClient from '../api/apiClient';
 
 // BLE 서비스 및 특성 UUID
@@ -74,12 +75,8 @@ class NearbyUsersService {
   // BLE 작업 재개 (포그라운드 복귀 시)
   async resumeBleOperations() {
     try {
-      // 토큰 유효성 검사
-      const now = new Date();
-      if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
-        console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청');
-        await this.generateBleToken();
-      }
+      // 토큰 유효성 검사 및 새 토큰 요청
+      await this.generateBleToken();
 
       // 광고 시작
       await this.startAdvertising();
@@ -191,21 +188,10 @@ class NearbyUsersService {
   // 저장된 토큰 불러오기
   async loadStoredToken() {
     try {
-      const storedToken = await AsyncStorage.getItem('bleToken');
-      const expiryStr = await AsyncStorage.getItem('bleTokenExpiry');
-
-      if (storedToken) {
-        const expiry = expiryStr ? new Date(expiryStr) : null;
-        const now = new Date();
-
-        // 토큰이 유효한지 확인 (만료되지 않았거나 만료 정보가 없는 경우)
-        if (!expiry || expiry > now) {
-          this.deviceId = storedToken;
-          this.tokenExpiry = expiry;
-          console.log('저장된 BLE 토큰 불러옴:', this.deviceId);
-        } else {
-          console.log('저장된 BLE 토큰이 만료됨. 새 토큰 필요');
-        }
+      const bleToken = useAuthStore.getState().bleToken;
+      if (bleToken) {
+        this.deviceId = bleToken;
+        console.log('저장된 BLE 토큰 불러옴:', this.deviceId);
       }
     } catch (error) {
       console.error('저장된 BLE 토큰 불러오기 실패:', error);
@@ -248,8 +234,9 @@ class NearbyUsersService {
 
       if (tokenValue) {
         console.log('새 BLE 토큰 받음:', tokenValue);
-        // 새 토큰 저장 (7일간 유효)
-        await this.saveToken(tokenValue, 7);
+        // 새 토큰을 authStore에 저장
+        await useAuthStore.getState().updateTokens(null, null, tokenValue);
+        this.deviceId = tokenValue;
       } else {
         console.error('서버 응답에 토큰이 없습니다:', response.data);
       }
