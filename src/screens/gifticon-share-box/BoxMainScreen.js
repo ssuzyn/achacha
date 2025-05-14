@@ -1,70 +1,28 @@
 // 쉐어박스 메인 스크린
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   Image,
   Modal,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { API_CONFIG } from '../../api/config';
 import apiClient from '../../api/apiClient';
+import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxApi';
+import { ERROR_MESSAGES } from '../../constants/errorMessages';
 
-// 샘플 데이터
-const DUMMY_DATA = {
-  data: [
-    {
-      shareBoxName: '우리 가족',
-      hostName: 'jjjjjuuuuu',
-      gifticonCount: 0,
-    },
-    {
-      shareBoxName: '내 친구들',
-      hostName: '조대성MM',
-      gifticonCount: 12,
-    },
-    {
-      shareBoxName: '자율 PJT',
-      hostName: '안수진짜',
-      gifticonCount: 15,
-    },
-    {
-      shareBoxName: '잘 사용하세요',
-      hostName: '류잼문',
-      gifticonCount: 30,
-    },
-    {
-      shareBoxName: '대학동기들',
-      hostName: '스티치짱',
-      gifticonCount: 34,
-    },
-    {
-      shareBoxName: '배고파요',
-      hostName: '정주은갈치',
-      gifticonCount: 7,
-    },
-    {
-      shareBoxName: '우리만의 쉐어박스',
-      hostName: '김철수',
-      gifticonCount: 212,
-    },
-    {
-      shareBoxName: '쉐박쉐박',
-      hostName: '김민수',
-      gifticonCount: 1,
-    },
-  ],
-  hasNextPage: true,
-  nextPage: 'MTI1',
-};
+
 
 // 배경색 배열 - Theme에서 가져온 색상에 30% 투명도 적용
 const BACKGROUND_COLORS = [
@@ -109,6 +67,44 @@ const BoxMainScreen = () => {
   const [isJoinModalVisible, setIsJoinModalVisible] = useState(false);
   const [inviteCode, setInviteCode] = useState('');
   const navigation = useNavigation();
+  const [shareBoxes, setShareBoxes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // 무한스크롤용 데이터 로딩
+  const loadShareBoxes = async (nextPage = 0) => {
+    if (loading || (!hasNextPage && nextPage !== 0)) return;
+    setLoading(true);
+    try {
+      const data = await fetchShareBoxes({ page: nextPage, size: 8 });
+      setShareBoxes(prev => nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]);
+      setHasNextPage(data.hasNextPage);
+      setPage(data.nextPage);
+    } catch (e) {
+      if (nextPage === 0) setShareBoxes([]);
+      Alert.alert('목록 불러오기 실패', '쉐어박스 목록을 불러오지 못했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadShareBoxes(0);
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadShareBoxes(0);
+    }, [])
+  );
+
+  const handleEndReached = () => {
+    if (hasNextPage && !loading) {
+      loadShareBoxes(page);
+    }
+  };
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
@@ -133,18 +129,24 @@ const BoxMainScreen = () => {
     }
 
     try {
-      // TODO: 실제로는 inviteCode로 shareBoxId를 서버에서 조회하거나, 사용자가 박스를 선택해야 함
-      // 여기서는 예시로 shareBoxId를 inviteCode에서 추출했다고 가정 (실제 로직에 맞게 수정 필요)
-      const shareBoxId = inviteCode.trim(); // 실제로는 올바른 shareBoxId를 사용해야 함
-      const response = await apiClient.post(
-        API_CONFIG.ENDPOINTS.JOIN_SHARE_BOX(shareBoxId),
-        { shareBoxInviteCode: inviteCode.trim() }
-      );
+      await joinShareBox(inviteCode.trim());
       alert('쉐어박스에 성공적으로 참여하였습니다!');
       handleCloseModal();
       // TODO: 필요하다면 목록 새로고침 등 추가
     } catch (error) {
-      alert('참여에 실패했습니다. 초대코드를 확인해 주세요.');
+      // 에러 상세 로그 추가
+      console.log('[쉐어박스 참여 에러]', error);
+      console.log('[에러코드]', error?.response?.data?.errorCode);
+      console.log('[에러메시지]', error?.response?.data?.message);
+
+      let message = '참여에 실패했습니다. 다시 시도해 주세요.';
+      const errorCode = error?.response?.data?.errorCode;
+      if (errorCode && ERROR_MESSAGES[errorCode]) {
+        message = ERROR_MESSAGES[errorCode];
+      } else if (error?.response?.data?.message) {
+        message = error.response.data.message;
+      }
+      alert(message);
     }
   };
 
@@ -161,6 +163,12 @@ const BoxMainScreen = () => {
       shareBoxId: item.shareBoxId || Math.floor(Math.random() * 1000) + 1, // ID가 없는 경우 임의의 ID 생성
       shareBoxName: item.shareBoxName,
     });
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadShareBoxes(0); // 첫 페이지부터 다시 불러오기
+    setRefreshing(false);
   };
 
   // 쉐어박스 카드 렌더링
@@ -209,7 +217,7 @@ const BoxMainScreen = () => {
                   containerStyle={styles.personIconContainer}
                 />
                 <Text variant="body2" weight="semibold" style={styles.boxRole}>
-                  {item.hostName}
+                  {item.shareBoxUserName}
                 </Text>
               </View>
             </View>
@@ -246,40 +254,53 @@ const BoxMainScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* 쉐어박스 목록 */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="h2" weight="bold" style={styles.headerTitle}>
-            쉐어박스
-          </Text>
-
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={styles.joinButton}
-              onPress={handleJoinPress}
-              activeOpacity={0.7}
-            >
-              <Text variant="body2" weight="medium" style={styles.joinButtonText}>
-                참여
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreatePress}
-              activeOpacity={0.7}
-            >
-              <Text variant="body2" weight="medium" style={styles.createButtonText}>
-                생성
-              </Text>
-            </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>  
+      <FlatList
+        data={shareBoxes}
+        renderItem={({ item, index }) => renderShareBox(item, index)}
+        keyExtractor={(item, index) => item.shareBoxId?.toString() || index.toString()}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 0 }}
+        onEndReached={handleEndReached}
+        onEndReachedThreshold={0.7}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text variant="h2" weight="bold" style={styles.headerTitle}>
+              쉐어박스
+            </Text>
+            <View style={styles.headerButtons}>
+              <TouchableOpacity
+                style={styles.joinButton}
+                onPress={handleJoinPress}
+                activeOpacity={0.7}
+              >
+                <Text variant="body2" weight="medium" style={styles.joinButtonText}>
+                  참여
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={handleCreatePress}
+                activeOpacity={0.7}
+              >
+                <Text variant="body2" weight="medium" style={styles.createButtonText}>
+                  생성
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-
-        <View style={styles.boxesContainer}>
-          {DUMMY_DATA.data.map((item, index) => renderShareBox(item, index))}
-        </View>
-      </ScrollView>
+        }
+        ListFooterComponent={loading ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', paddingVertical: 40 }}>
+            <ActivityIndicator size="large" color={theme.colors.primary || '#56AEE9'} />
+          </View>
+        ) : null}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
+      />
 
       {/* 초대코드 입력 모달 */}
       <Modal
@@ -294,7 +315,8 @@ const BoxMainScreen = () => {
               초대코드 입력하기
             </Text>
             <Text variant="body2" style={styles.modalSubtitle}>
-              초대받은 쉐어박스에 참여하려면{'\n'}공유받은 초대코드를 입력해 주세요.
+              {`초대받은 쉐어박스에 참여하려면
+공유받은 초대코드를 입력해 주세요.`}
             </Text>
 
             <TextInput
@@ -302,10 +324,15 @@ const BoxMainScreen = () => {
               placeholder="초대코드"
               placeholderTextColor="#A0AEC0"
               value={inviteCode}
-              onChangeText={setInviteCode}
-              autoCapitalize="none"
+              onChangeText={(text) => {
+                // 영문(대소문자) 또는 숫자만 허용, 10자리로 자르기
+                const filtered = text.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+                setInviteCode(filtered);
+              }}
+              autoCapitalize="characters"
               autoCorrect={false}
               fontFamily="Pretendard-Regular"
+              maxLength={10}
             />
 
             <View style={styles.buttonContainer}>

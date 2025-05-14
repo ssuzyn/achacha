@@ -1,6 +1,6 @@
 // 쉐어박스 설정 스크린
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -11,32 +11,92 @@ import {
   Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
+import { leaveShareBox, fetchShareBoxSettings, fetchShareBoxUsers, changeShareBoxName, changeShareBoxParticipationSetting } from '../../api/shareBoxApi';
+import { ERROR_MESSAGES } from '../../constants/errorMessages';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const route = useRoute();
+  const navigation = useNavigation();
 
   // 쉐어박스 이름 가져오기
-  const [shareBoxName, setShareBoxName] = useState(
-    route.params?.shareBoxName || '오라차차 대성이네'
-  );
+  const [shareBoxName, setShareBoxName] = useState('');
   const [memberEntryEnabled, setMemberEntryEnabled] = useState(true);
-  const shareBoxCode = 'WAZPI76R';
+  const [shareBoxCode, setShareBoxCode] = useState('');
+  const [members, setMembers] = useState([]);
+  const [shareBoxUserId, setShareBoxUserId] = useState(null); // 방장 userId
+  const [userId, setUserId] = useState(null); // 내 userId
 
-  // 멤버 목록
-  const members = [
-    { id: 1, name: '조대성', role: '방장' },
-    { id: 2, name: '박준수', role: '멤버' },
-    { id: 3, name: '신해인', role: '멤버' },
-    { id: 4, name: '안수진', role: '멤버' },
-    { id: 5, name: '정주은', role: '멤버' },
-  ];
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const data = await fetchShareBoxSettings(route.params?.shareBoxId);
+        setShareBoxName(data.shareBoxName);
+        setMemberEntryEnabled(data.shareBoxAllowParticipation);
+        setShareBoxCode(data.shareBoxInviteCode);
+        setShareBoxUserId(data.shareBoxUserId); // 방장 userId 저장
+      } catch (e) {
+        const errorCode = e?.response?.data?.errorCode;
+        let message = '쉐어박스 설정 정보를 불러오지 못했습니다.';
+        if (errorCode && ERROR_MESSAGES[errorCode]) {
+          message = ERROR_MESSAGES[errorCode];
+        } else if (e?.response?.data?.message) {
+          message = e.response.data.message;
+        }
+        Alert.alert('접근 불가', message);
+        if (errorCode === 'SHAREBOX_008') {
+          // 필요하다면 BoxMainScreen 등으로 이동 처리
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'BoxMain' }],
+          });
+        }
+      }
+    };
+    loadSettings();
+  }, [route.params?.shareBoxId]);
+
+  useEffect(() => {
+    const getUserId = async () => {
+      const id = await AsyncStorage.getItem('userId');
+      setUserId(id ? Number(id) : null);
+    };
+    getUserId();
+  }, []);
+
+  // 참가자 목록 불러오기
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const data = await fetchShareBoxUsers(route.params?.shareBoxId);
+        setShareBoxUserId(data.shareBoxUserId); // 방장 userId 저장
+        // 방장 ID와 참가자 목록을 활용해 멤버 배열 생성
+        const membersList = data.participations.map(user => ({
+          id: user.userId,
+          name: user.userName,
+          role: user.userId === data.shareBoxUserId ? '방장' : '멤버',
+        }));
+        setMembers(membersList);
+      } catch (e) {
+        const errorCode = e?.response?.data?.errorCode;
+        let message = '참가자 목록을 불러오지 못했습니다.';
+        if (errorCode && ERROR_MESSAGES[errorCode]) {
+          message = ERROR_MESSAGES[errorCode];
+        } else if (e?.response?.data?.message) {
+          message = e.response.data.message;
+        }
+        Alert.alert('오류', message);
+      }
+    };
+    loadUsers();
+  }, [route.params?.shareBoxId]);
 
   // 뒤로가기 핸들러
   const handleGoBack = () => {
@@ -49,8 +109,23 @@ const BoxSettingScreen = () => {
   };
 
   // 멤버 입장 토글 핸들러
-  const toggleMemberEntry = () => {
-    setMemberEntryEnabled(!memberEntryEnabled);
+  const toggleMemberEntry = async () => {
+    if (userId !== shareBoxUserId) return;
+    try {
+      const newValue = !memberEntryEnabled;
+      const res = await changeShareBoxParticipationSetting(route.params?.shareBoxId, newValue);
+      setMemberEntryEnabled(newValue);
+      Alert.alert('알림', res); // 서버에서 반환하는 메시지 그대로 표시
+    } catch (e) {
+      const errorCode = e?.response?.data?.errorCode;
+      let message = '멤버 입장 허용 설정 변경에 실패했습니다.';
+      if (errorCode && ERROR_MESSAGES[errorCode]) {
+        message = ERROR_MESSAGES[errorCode];
+      } else if (e?.response?.data?.message) {
+        message = e.response.data.message;
+      }
+      Alert.alert('오류', message);
+    }
   };
 
   // 초대 코드 복사 핸들러
@@ -60,9 +135,80 @@ const BoxSettingScreen = () => {
   };
 
   // 쉐어박스 나가기 핸들러
-  const leaveShareBox = () => {
-    // 쉐어박스 나가기 로직 (실제 구현 필요)
-    NavigationService.goBack();
+  const leaveShareBoxHandler = async () => {
+    try {
+      await leaveShareBox(route.params.shareBoxId);
+      Alert.alert('알림', '쉐어박스를 나갔습니다.');
+      // BoxMainScreen으로 이동 및 목록 새로고침 트리거
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'BoxMain' }],
+      });
+    } catch (e) {
+      const errorCode = e?.response?.data?.errorCode;
+      let message = '쉐어박스 나가기에 실패했습니다.';
+      if (errorCode && ERROR_MESSAGES[errorCode]) {
+        message = ERROR_MESSAGES[errorCode];
+      } else if (e?.response?.data?.message) {
+        message = e.response.data.message;
+      }
+      console.log('[쉐어박스 나가기 에러]', e);
+      console.log('[에러코드]', errorCode);
+      console.log('[에러메시지]', e?.response?.data?.message);
+      Alert.alert('오류', message);
+    }
+  };
+
+  // 나가기 버튼 클릭 핸들러 (방장 여부에 따라 안내)
+  const handleLeavePress = () => {
+    if (userId && shareBoxUserId && userId === shareBoxUserId) {
+      Alert.alert(
+        '알림',
+        '쉐어박스가 모든 인원에게 삭제됩니다. 정말 나가시겠습니까?',
+        [
+          { text: '확인', onPress: leaveShareBoxHandler },
+          { text: '취소', style: 'cancel' },
+        ]
+      );
+    } else {
+      Alert.alert(
+        '알림',
+        '쉐어박스에서 나가면 기프티콘이 회수됩니다. 정말 나가시겠습니까?',
+        [
+          { text: '확인', onPress: leaveShareBoxHandler },
+          { text: '취소', style: 'cancel' },
+        ]
+      );
+    }
+  };
+
+  // 이름 변경 버튼 핸들러
+  const handleChangeName = async () => {
+    try {
+      if (!shareBoxName.trim()) {
+        Alert.alert('알림', '쉐어박스 이름을 입력해 주세요.');
+        return;
+      }
+      const res = await changeShareBoxName(route.params?.shareBoxId, shareBoxName.trim());
+      Alert.alert('알림', res, [
+        {
+          text: '확인',
+          onPress: () => {
+            // 이전 화면으로 돌아가면서 새로고침 트리거
+            navigation.goBack();
+          }
+        }
+      ]);
+    } catch (e) {
+      const errorCode = e?.response?.data?.errorCode;
+      let message = '쉐어박스 이름 변경에 실패했습니다.';
+      if (errorCode && ERROR_MESSAGES[errorCode]) {
+        message = ERROR_MESSAGES[errorCode];
+      } else if (e?.response?.data?.message) {
+        message = e.response.data.message;
+      }
+      Alert.alert('오류', message);
+    }
   };
 
   return (
@@ -98,15 +244,25 @@ const BoxSettingScreen = () => {
               <TextInput
                 value={shareBoxName}
                 onChangeText={handleNameChange}
-                style={styles.input}
+                style={[styles.input, userId !== shareBoxUserId && {  color: '#B0B0B0' }]}
                 placeholder="쉐어박스 이름을 입력하세요"
+                editable={userId === shareBoxUserId}
               />
-              <TouchableOpacity style={styles.confirmButton}>
-                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
+              <TouchableOpacity
+                style={[styles.confirmButton, userId !== shareBoxUserId && { backgroundColor: '#E0E0E0' }]}
+                onPress={userId === shareBoxUserId ? handleChangeName : null}
+                disabled={userId !== shareBoxUserId}
+              >
+                <Text variant="body2" weight="medium" style={[styles.confirmButtonText, userId !== shareBoxUserId && { color: '#B0B0B0' }]}> 
                   변경
                 </Text>
               </TouchableOpacity>
             </View>
+            {userId !== shareBoxUserId && (
+              <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
+                방장만 쉐어박스 이름을 변경할 수 있습니다.
+              </Text>
+            )}
           </View>
 
           {/* 멤버 입장 */}
@@ -122,8 +278,10 @@ const BoxSettingScreen = () => {
                     backgroundColor: memberEntryEnabled ? '#C9EAFC' : 'white',
                     borderColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
                   },
+                  userId !== shareBoxUserId && { opacity: 0.5 },
                 ]}
                 onPress={toggleMemberEntry}
+                disabled={userId !== shareBoxUserId}
               >
                 <View
                   style={[
@@ -136,6 +294,11 @@ const BoxSettingScreen = () => {
                 />
               </TouchableOpacity>
             </View>
+            {userId !== shareBoxUserId && (
+              <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
+                방장만 멤버 입장 허용 여부를 변경할 수 있습니다.
+              </Text>
+            )}
           </View>
 
           {/* 쉐어박스 초대 코드 */}
@@ -174,7 +337,7 @@ const BoxSettingScreen = () => {
           </View>
 
           {/* 쉐어박스 나가기 버튼 */}
-          <TouchableOpacity style={styles.leaveButton} onPress={leaveShareBox}>
+          <TouchableOpacity style={styles.leaveButton} onPress={handleLeavePress}>
             <Text variant="body1" weight="semibold" style={styles.leaveButtonText}>
               쉐어박스 나가기
             </Text>

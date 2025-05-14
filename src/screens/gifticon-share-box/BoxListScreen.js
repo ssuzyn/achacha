@@ -12,7 +12,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
 import { Text } from '../../components/ui';
 import AlertDialog from '../../components/ui/AlertDialog';
@@ -22,127 +22,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-// 더미 데이터 - API 응답값 형식에 맞춰서 수정
-const DUMMY_GIFTICONS = [
-  {
-    gifticonId: 122,
-    gifticonName: 'APP전용 e카드 3만원 교환권',
-    gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-01-31',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 78, // 사용자가 공유한 기프티콘
-    userName: '홍길동',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
-    gifticonCreatedAt: '2025-01-15T10:30:00',
-  },
-  {
-    gifticonId: 123,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-12-31',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 78, // 사용자가 공유한 기프티콘
-    userName: '홍길동',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2025-01-05T15:45:00',
-  },
-  {
-    gifticonId: 124,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-11-20',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 90, // 다른 사용자가 공유한 기프티콘
-    userName: '김영희',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2025-01-20T09:15:00',
-  },
-  {
-    gifticonId: 125,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-09-12',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 91, // 다른 사용자가 공유한 기프티콘
-    userName: '이철수',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2025-02-01T08:20:00',
-  },
-  {
-    gifticonId: 126,
-    gifticonName: 'APP전용 e카드 3만원 교환권',
-    gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-05-16',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 92, // 다른 사용자가 공유한 기프티콘
-    userName: '박지민',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
-    gifticonCreatedAt: '2025-01-10T14:40:00',
-  },
-  {
-    gifticonId: 127,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-04-23',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'USED',
-    usageType: 'SELF_USE', // 사용하기
-    usedAt: '2025-01-15T14:30:00',
-    usedBy: '김철수', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2024-12-20T13:10:00',
-  },
-  {
-    gifticonId: 128,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-02-15',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'USED',
-    usageType: 'SELF_USE', // 사용하기
-    usedAt: '2025-01-20T10:15:00',
-    usedBy: '이영희', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2024-12-15T16:40:00',
-  },
-  {
-    gifticonId: 129,
-    gifticonName: 'APP전용 e카드 3만원 교환권',
-    gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-03-31',
-    brandId: 46,
-    brandName: '스타벅스',
-    scope: 'USED',
-    usageType: 'SELF_USE',
-    usedAt: '2025-01-25T16:45:00',
-    usedBy: '박지민', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
-    gifticonCreatedAt: '2024-12-05T10:50:00',
-  },
-];
+import { fetchAvailableGifticons, fetchUsedGifticons, fetchShareBoxSettings } from '../../api/shareBoxApi';
 
 const BoxListScreen = () => {
   const { theme } = useTheme();
@@ -202,6 +82,24 @@ const BoxListScreen = () => {
 
   // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
   const currentUserId = 78;
+
+  // 추가된 상태
+  const [availableGifticons, setAvailableGifticons] = useState([]);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [nextPage, setNextPage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // 사용완료 관련 상태
+  const [usedGifticons, setUsedGifticons] = useState([]);
+  const [usedHasNextPage, setUsedHasNextPage] = useState(false);
+  const [usedNextPage, setUsedNextPage] = useState(null);
+  const [usedLoading, setUsedLoading] = useState(false);
+
+  // 박스 이름 상태 추가
+  const [boxName, setBoxName] = useState('');
+
+  // 새로고침 상태 추가
+  const [refreshing, setRefreshing] = useState(false);
 
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({
@@ -480,7 +378,7 @@ const BoxListScreen = () => {
 
   // 카테고리에 따른 기프티콘 필터링
   const filterGifticons = () => {
-    let filtered = [...DUMMY_GIFTICONS];
+    let filtered = [];
 
     // 카테고리 필터링
     switch (selectedCategory) {
@@ -689,7 +587,7 @@ const BoxListScreen = () => {
             <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -772,7 +670,7 @@ const BoxListScreen = () => {
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
                 <Image
-                  source={item.thumbnailPath}
+                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
                   style={[styles.gifticonImage, { opacity: 0.7 }]}
                 />
               </View>
@@ -855,7 +753,7 @@ const BoxListScreen = () => {
               <View style={styles.gifticonContent}>
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                  <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                  <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
                 </View>
 
                 {/* 텍스트 정보 영역 */}
@@ -954,7 +852,7 @@ const BoxListScreen = () => {
             <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={item.thumbnailPath} style={styles.gifticonImage} />
+                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -1071,6 +969,117 @@ const BoxListScreen = () => {
     }
   };
 
+  // 필터/정렬 값에 따라 API 호출
+  useEffect(() => {
+    if (selectedCategory !== 'available') return;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchAvailableGifticons({
+          shareBoxId,
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
+          sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+          page: undefined, // 첫 페이지
+          size: 20, // 원하는 페이지 크기
+        });
+        setAvailableGifticons(res.gifticons);
+        setHasNextPage(res.hasNextPage);
+        setNextPage(res.nextPage);
+      } catch (e) {
+        // 에러 처리
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedCategory, selectedFilter, sortBy.available, shareBoxId]);
+
+  useEffect(() => {
+    if (selectedCategory !== 'used') return;
+
+    const fetchData = async () => {
+      setUsedLoading(true);
+      try {
+        const res = await fetchUsedGifticons({
+          shareBoxId,
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
+          sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+          page: undefined, // 첫 페이지
+          size: 20,
+        });
+        setUsedGifticons(res.gifticons);
+        setUsedHasNextPage(res.hasNextPage);
+        setUsedNextPage(res.nextPage);
+      } catch (e) {
+        // 에러 처리
+      } finally {
+        setUsedLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [selectedCategory, selectedFilter, sortBy.used, shareBoxId]);
+
+  // shareBoxId로 서버에서 최신 박스 이름 받아오기
+  useEffect(() => {
+    if (!shareBoxId) return;
+    const fetchBoxInfo = async () => {
+      try {
+        const data = await fetchShareBoxSettings(shareBoxId);
+        setBoxName(data.shareBoxName);
+      } catch (e) {
+        setBoxName('쉐어박스');
+      }
+    };
+    fetchBoxInfo();
+  }, [shareBoxId]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshAll = async () => {
+        setRefreshing(true);
+        try {
+          // 최신 박스 이름
+          if (shareBoxId) {
+            const boxInfo = await fetchShareBoxSettings(shareBoxId);
+            setBoxName(boxInfo.shareBoxName);
+          }
+          // 최신 기프티콘 목록
+          if (selectedCategory === 'available') {
+            const res = await fetchAvailableGifticons({
+              shareBoxId,
+              type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+              sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+              page: undefined,
+              size: 20,
+            });
+            setAvailableGifticons(res.gifticons);
+            setHasNextPage(res.hasNextPage);
+            setNextPage(res.nextPage);
+          } else if (selectedCategory === 'used') {
+            const res = await fetchUsedGifticons({
+              shareBoxId,
+              type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+              sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+              page: undefined,
+              size: 20,
+            });
+            setUsedGifticons(res.gifticons);
+            setUsedHasNextPage(res.hasNextPage);
+            setUsedNextPage(res.nextPage);
+          }
+        } catch (e) {
+          // 에러 처리
+        } finally {
+          setRefreshing(false);
+        }
+      };
+      refreshAll();
+    }, [shareBoxId, selectedCategory, selectedFilter, sortBy])
+  );
+
   return (
     <TouchableWithoutFeedback onPress={handleOutsidePress}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1085,7 +1094,7 @@ const BoxListScreen = () => {
             <Icon name="chevron-left" type="material" size={30} color={theme.colors.text} />
           </TouchableOpacity>
           <Text variant="h3" weight="bold" style={styles.title}>
-            {shareBoxName || '쉐어박스'}
+            {boxName}
           </Text>
           <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
             <Icon name="settings" type="material" size={24} color={theme.colors.grey3} />
@@ -1159,18 +1168,20 @@ const BoxListScreen = () => {
           contentContainerStyle={styles.scrollViewContent}
         >
           <View style={styles.gifticonList}>
-            {filteredGifticons.length > 0 ? (
-              filteredGifticons.map(item => renderGifticonItem(item))
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Icon name="inbox" type="material" size={48} color="#CBD5E0" />
-                <Text style={styles.emptyText}>
-                  {selectedCategory === 'available'
-                    ? '사용가능한 기프티콘이 없습니다'
-                    : '사용완료한 기프티콘이 없습니다'}
-                </Text>
-              </View>
-            )}
+            {selectedCategory === 'available'
+              ? (loading
+                  ? <Text>로딩 중...</Text>
+                  : availableGifticons.length > 0
+                    ? availableGifticons.map(item => renderGifticonItem({ ...item, scope: 'SHARE_BOX' }))
+                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text></View>
+                )
+              : (usedLoading
+                  ? <Text>로딩 중...</Text>
+                  : usedGifticons.length > 0
+                    ? usedGifticons.map(item => renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName }))
+                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text></View>
+                )
+            }
           </View>
         </ScrollView>
 
