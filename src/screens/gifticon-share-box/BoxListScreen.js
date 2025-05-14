@@ -24,127 +24,6 @@ import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchAvailableGifticons, fetchUsedGifticons, fetchShareBoxSettings } from '../../api/shareBoxApi';
 
-// 더미 데이터 - API 응답값 형식에 맞춰서 수정
-const DUMMY_GIFTICONS = [
-  {
-    gifticonId: 122,
-    gifticonName: 'APP전용 e카드 3만원 교환권',
-    gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-01-31',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 78, // 사용자가 공유한 기프티콘
-    userName: '홍길동',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
-    gifticonCreatedAt: '2025-01-15T10:30:00',
-  },
-  {
-    gifticonId: 123,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-12-31',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 78, // 사용자가 공유한 기프티콘
-    userName: '홍길동',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2025-01-05T15:45:00',
-  },
-  {
-    gifticonId: 124,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-11-20',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 90, // 다른 사용자가 공유한 기프티콘
-    userName: '김영희',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2025-01-20T09:15:00',
-  },
-  {
-    gifticonId: 125,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-09-12',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 91, // 다른 사용자가 공유한 기프티콘
-    userName: '이철수',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2025-02-01T08:20:00',
-  },
-  {
-    gifticonId: 126,
-    gifticonName: 'APP전용 e카드 3만원 교환권',
-    gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-05-16',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'SHARE_BOX',
-    userId: 92, // 다른 사용자가 공유한 기프티콘
-    userName: '박지민',
-    shareBoxId: 90,
-    shareBoxName: '스터디 그룹',
-    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
-    gifticonCreatedAt: '2025-01-10T14:40:00',
-  },
-  {
-    gifticonId: 127,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-04-23',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'USED',
-    usageType: 'SELF_USE', // 사용하기
-    usedAt: '2025-01-15T14:30:00',
-    usedBy: '김철수', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2024-12-20T13:10:00',
-  },
-  {
-    gifticonId: 128,
-    gifticonName: '아이스 카페 아메리카노 T',
-    gifticonType: 'PRODUCT',
-    gifticonExpiryDate: '2025-02-15',
-    brandId: 45,
-    brandName: '스타벅스',
-    scope: 'USED',
-    usageType: 'SELF_USE', // 사용하기
-    usedAt: '2025-01-20T10:15:00',
-    usedBy: '이영희', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-    gifticonCreatedAt: '2024-12-15T16:40:00',
-  },
-  {
-    gifticonId: 129,
-    gifticonName: 'APP전용 e카드 3만원 교환권',
-    gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-03-31',
-    brandId: 46,
-    brandName: '스타벅스',
-    scope: 'USED',
-    usageType: 'SELF_USE',
-    usedAt: '2025-01-25T16:45:00',
-    usedBy: '박지민', // 사용한 사용자 이름
-    thumbnailPath: require('../../assets/images/dummy_starbuckscard.png'),
-    gifticonCreatedAt: '2024-12-05T10:50:00',
-  },
-];
-
 const BoxListScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -499,7 +378,7 @@ const BoxListScreen = () => {
 
   // 카테고리에 따른 기프티콘 필터링
   const filterGifticons = () => {
-    let filtered = [...DUMMY_GIFTICONS];
+    let filtered = [];
 
     // 카테고리 필터링
     switch (selectedCategory) {
