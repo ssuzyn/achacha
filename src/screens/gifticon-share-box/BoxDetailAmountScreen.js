@@ -1036,11 +1036,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#666',
     fontWeight: '500',
+    marginRight: 8,
   },
   infoValue: {
     flex: 1,
     fontSize: 15,
     color: '#333',
+    textAlign: 'right',
   },
   divider: {
     height: 1,
@@ -1058,6 +1060,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#555',
     fontWeight: '500',
+    marginRight: 8,
   },
   amountValueContainer: {
     flex: 1,
@@ -1066,11 +1069,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     fontWeight: 'bold',
+    textAlign: 'right',
   },
   remainingAmount: {
     color: '#278CCC',
     fontWeight: 'bold',
     fontSize: 16,
+    textAlign: 'right',
   },
   buttonContainer: {
     marginTop: 10,

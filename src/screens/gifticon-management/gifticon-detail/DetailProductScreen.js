@@ -1143,11 +1143,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#666',
     fontWeight: '500',
+    marginRight: 8,
   },
   infoValue: {
     flex: 1,
     fontSize: 15,
     color: '#333',
+    textAlign: 'right',
   },
   buttonContainer: {
     marginTop: 10,
