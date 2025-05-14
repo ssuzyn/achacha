@@ -136,6 +136,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		}
 	}
 
+	@Override
 	public void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate) {
 		if (gifticonExpiryDate.isBefore(currentDate)) {
 			throw new CustomException(ErrorCode.GIFTICON_EXPIRED_DATE);
