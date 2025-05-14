@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.domain.ble;
+package com.eurachacha.achacha.domain.model.ble;
 
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 import com.eurachacha.achacha.domain.model.user.User;

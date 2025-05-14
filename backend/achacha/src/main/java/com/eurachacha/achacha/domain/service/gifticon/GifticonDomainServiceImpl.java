@@ -116,7 +116,7 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
-	public void validateDeleteGifticon(Integer userId, Gifticon gifticon) {
+	public void validateGifticonForDelete(Integer userId, Gifticon gifticon) {
 
 		// 삭제된 기프티콘인지 검증
 		if (isDeleted(gifticon)) {
@@ -136,9 +136,119 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 		}
 	}
 
+	@Override
 	public void validateGifticonExpiryDate(LocalDate gifticonExpiryDate, LocalDate currentDate) {
 		if (gifticonExpiryDate.isBefore(currentDate)) {
 			throw new CustomException(ErrorCode.GIFTICON_EXPIRED_DATE);
 		}
+	}
+
+	@Override
+	public void validateGifticonForGiveAway(Integer userId, Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 유효기간
+		validateGifticonExpiryDate(gifticon.getExpiryDate(), LocalDate.now());
+
+		// 본인 소유인지 확인
+		boolean isOwner = hasAccess(userId, gifticon.getUser().getId());
+		if (!isOwner) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+
+		// 쉐어박스에 공유중인지 확인
+		boolean alreadyShared = isAlreadyShared(gifticon);
+		if (alreadyShared) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_SHARED);
+		}
+
+		// 상품형 타입 여부
+		validateProductGifticonType(gifticon);
+
+	}
+
+	@Override
+	public void validateProductGifticonType(Gifticon gifticon) {
+		if (gifticon.getType() != GifticonType.PRODUCT) {
+			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
+		}
+	}
+
+	@Override // 금액형 타입 검증
+	public void validateAmountGifticonType(Gifticon gifticon) {
+		if (gifticon.getType() != GifticonType.AMOUNT) {
+			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
+		}
+	}
+
+	@Override
+	public void validateAmountGifticonUsageHistoryForGet(Gifticon gifticon) {
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 금액형 타입 여부
+		validateAmountGifticonType(gifticon);
+	}
+
+	@Override
+	public void validateAmountGifticonForCommand(Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 금액형 타입 여부
+		validateAmountGifticonType(gifticon);
+	}
+
+	@Override
+	public void validateProductGifticonUsageHistoryForGet(Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (!isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 상품형 타입 여부
+		validateProductGifticonType(gifticon);
+	}
+
+	@Override
+	public void validateProductGifticonForCommand(Gifticon gifticon) {
+
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
+		}
+
+		// 사용 여부
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 상품형 타입 여부
+		validateProductGifticonType(gifticon);
 	}
 }

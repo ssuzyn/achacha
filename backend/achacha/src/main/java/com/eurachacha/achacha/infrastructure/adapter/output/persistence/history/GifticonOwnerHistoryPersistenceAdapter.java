@@ -17,4 +17,9 @@ public class GifticonOwnerHistoryPersistenceAdapter implements GifticonOwnerHist
 	public GifticonOwnerHistory getGifticonOwnerHistoryDetail(Integer userId, Integer gifticonId) {
 		return gifticonOwnerHistoryJpaRepository.findOwnerHistoryDetailByUserIdAndGifticonId(userId, gifticonId);
 	}
+
+	@Override
+	public GifticonOwnerHistory save(GifticonOwnerHistory gifticonOwnerHistory) {
+		return gifticonOwnerHistoryJpaRepository.save(gifticonOwnerHistory);
+	}
 }

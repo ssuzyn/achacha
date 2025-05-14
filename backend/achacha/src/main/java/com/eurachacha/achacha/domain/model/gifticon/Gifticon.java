@@ -102,4 +102,8 @@ public class Gifticon extends TimeStampEntity {
 	public void deleteBarcode() {
 		this.barcode = null;
 	}
+
+	public void updateUser(User user) {
+		this.user = user;
+	}
 }
