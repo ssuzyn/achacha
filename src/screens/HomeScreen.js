@@ -53,7 +53,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const HomeScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
-  const username = '으라차차';
+  const [nickname, setNickname] = useState('');
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -69,6 +69,20 @@ const HomeScreen = () => {
       console.log('Refresh Token:', refreshToken);
     };
     printTokens();
+
+    const loadNickname = async () => {
+      try {
+        const storedNickname = await AsyncStorage.getItem('userNickname');
+        if (storedNickname !== null) {
+          setNickname(storedNickname);
+        } else {
+          console.log('[HomeScreen] AsyncStorage에서 닉네임을 찾을 수 없습니다.');
+        }
+      } catch (e) {
+        console.error('[HomeScreen] AsyncStorage에서 닉네임 로드 실패:', e);
+      }
+    };
+    loadNickname();
 
     const loadExpiringGifticons = async () => {
       setLoading(true);
@@ -408,7 +422,7 @@ const HomeScreen = () => {
     watchMessageTitle: {
       marginBottom: 2,
       letterSpacing: -0.2,
-      lineHeight: 25,
+      lineHeight: 20,
     },
     watchMessageSubtitle: {
       color: '#737373',
@@ -608,7 +622,7 @@ const HomeScreen = () => {
 
     if (expiringGifticons.length === 0) {
       return (
-        <TouchableOpacity onPress={() => navigation.navigate('RegisterMainScreen')}>
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
           <View style={styles.emptyGifticonCard}>
             <Text style={styles.emptyGifticonCardText}>
               아직 등록한 기프티콘이 없어요. {'\n'}등록하러 가볼까요?
@@ -640,7 +654,7 @@ const HomeScreen = () => {
           <Text variant="h3" weight="bold" style={styles.welcomeText}>
             어서오세요!{' '}
             <Text variant="h3" weight="bold" color="primary" style={null}>
-              {username}
+              {nickname || '아차차'}
             </Text>{' '}
             님,
           </Text>
