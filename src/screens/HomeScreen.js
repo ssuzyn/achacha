@@ -536,7 +536,7 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
             <View style={[styles.giftMessageCard, { backgroundColor: '#F0ECFF' }]}>
               <View style={styles.giftMessageTextContainerSharebox}>
-                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
+                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
                   {item.title}
                 </Text>
               </View>

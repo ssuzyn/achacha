@@ -1357,6 +1357,13 @@ const RegisterDetailScreen = () => {
                 onChangeText={setProductName}
                 placeholder="상품명을 입력해주세요."
                 containerStyle={styles.inputContainer}
+                rightIcon={
+                  productName && productName.trim() ? (
+                    <View style={styles.selectedBrandIndicator}>
+                      <Icon name="check-circle" size={20} color="#2ECC71" />
+                    </View>
+                  ) : null
+                }
               />
 
               <InputLine

@@ -39,10 +39,6 @@ const styles = StyleSheet.create({
     color: '#737373', // $textSecondary 색상값
     marginRight: ICON_MARGIN_RIGHT,
   },
-  permissionTitle: {
-    // fontWeight: '700', // 삭제
-    // fontFamily: 'Pretendard-Bold', // 삭제
-  },
   permissionDescription: {
     textAlign: 'left', // 왼쪽 정렬 유지
     paddingLeft: ICON_SIZE + ICON_MARGIN_RIGHT, // 아이콘과 제목을 같은 라인에 맞춤

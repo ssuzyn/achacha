@@ -426,7 +426,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     letterSpacing: -0.2,
     marginBottom: 2,
-    fontFamily: 'Pretendard-regular',
   },
   boxMiddleArea: {
     flexDirection: 'row',
@@ -460,7 +459,6 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontSize: 12,
-    fontWeight: 'bold',
     fontFamily: 'Pretendard-Bold',
   },
   modalOverlay: {
