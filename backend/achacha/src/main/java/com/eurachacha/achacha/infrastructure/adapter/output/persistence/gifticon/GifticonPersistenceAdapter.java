@@ -76,4 +76,9 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	public void unshareAllAvailableGifticonsByUserIdAndShareBoxId(Integer userId, Integer shareBoxId) {
 		gifticonJpaRepository.unshareAllAvailableGifticonsByUserIdAndShareBoxId(userId, shareBoxId);
 	}
+
+	@Override
+	public Slice<Gifticon> findGifticonsByShareBoxId(Integer shareBoxId, GifticonType type, Pageable pageable) {
+		return gifticonJpaRepository.findGifticonsByShareBoxId(shareBoxId, type, pageable);
+	}
 }
