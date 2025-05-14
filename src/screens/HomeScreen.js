@@ -91,6 +91,7 @@ const HomeScreen = () => {
               ? { uri: item.thumbnailPath }
               : require('../assets/images/adaptive_icon.png'),
             expiryDate: new Date(item.gifticonExpiryDate),
+            gifticonType: item.gifticonType,
           }));
           setExpiringGifticons(formattedGifticons);
         } else {
@@ -400,7 +401,7 @@ const HomeScreen = () => {
     watchMessageTitle: {
       marginBottom: 2,
       letterSpacing: -0.2,
-      lineHeight: 30,
+      lineHeight: 25,
     },
     watchMessageSubtitle: {
       color: '#737373',
@@ -431,6 +432,25 @@ const HomeScreen = () => {
     },
   });
 
+  const handleGifticonPress = item => {
+    if (!item || !item.id || !item.gifticonType) {
+      console.warn('[HomeScreen] 상세 페이지 이동 불가: 필수 정보 부족', item);
+      return;
+    }
+
+    const params = {
+      gifticonId: item.id,
+    };
+
+    if (item.gifticonType === 'PRODUCT') {
+      NavigationService.navigate('DetailProduct', params);
+    } else if (item.gifticonType === 'AMOUNT') {
+      NavigationService.navigate('DetailAmount', params);
+    } else {
+      console.warn('[HomeScreen] 알 수 없는 기프티콘 유형:', item.gifticonType);
+    }
+  };
+
   const renderGiftItem = ({ item }) => {
     const daysLeft = calculateDaysLeft(item.expiryDate);
     const dDayDisplay = daysLeft < 0 ? '만료' : daysLeft === 0 ? 'D-day' : `D-${daysLeft}`;
@@ -452,37 +472,39 @@ const HomeScreen = () => {
     }
 
     return (
-      <View style={styles.giftItemContainer}>
-        <Shadow
-          distance={12}
-          startColor={'rgba(0, 0, 0, 0.008)'}
-          offset={[0, 1]}
-          style={styles.shadowContainer}
-        >
-          <View style={[styles.giftCard, isExpired && styles.expiredGiftCard]}>
-            <View style={styles.giftImageContainer}>
-              <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
-            </View>
-            <Text variant="body1" weight="regular" style={styles.giftBrand}>
-              {item.brand}
-            </Text>
-            <Text
-              variant="body2"
-              weight="bold"
-              style={styles.giftName}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {item.name}
-            </Text>
-            <View style={[styles.dDayBaseContainer, dDayContainerStyle]}>
-              <Text variant="body2" weight="bold" style={[styles.dDayBaseText, dDayTextStyle]}>
-                {dDayDisplay}
+      <TouchableOpacity onPress={() => handleGifticonPress(item)} activeOpacity={0.8}>
+        <View style={styles.giftItemContainer}>
+          <Shadow
+            distance={12}
+            startColor={'rgba(0, 0, 0, 0.008)'}
+            offset={[0, 1]}
+            style={styles.shadowContainer}
+          >
+            <View style={[styles.giftCard, isExpired && styles.expiredGiftCard]}>
+              <View style={styles.giftImageContainer}>
+                <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
+              </View>
+              <Text variant="body1" weight="regular" style={styles.giftBrand}>
+                {item.brand}
               </Text>
+              <Text
+                variant="body2"
+                weight="bold"
+                style={styles.giftName}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Text>
+              <View style={[styles.dDayBaseContainer, dDayContainerStyle]}>
+                <Text variant="body2" weight="bold" style={[styles.dDayBaseText, dDayTextStyle]}>
+                  {dDayDisplay}
+                </Text>
+              </View>
             </View>
-          </View>
-        </Shadow>
-      </View>
+          </Shadow>
+        </View>
+      </TouchableOpacity>
     );
   };
 
