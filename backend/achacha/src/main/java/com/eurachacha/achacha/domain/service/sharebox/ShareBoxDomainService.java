@@ -3,10 +3,6 @@ package com.eurachacha.achacha.domain.service.sharebox;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 
 public interface ShareBoxDomainService {
-
-	// 쉐어박스 초대 코드가 유효한지 검증합니다.
-	void validateInviteCode(ShareBox shareBox, String inviteCode);
-
 	// 쉐어박스가 참여를 허용하는지 검증합니다.
 	void validateParticipationAllowed(ShareBox shareBox);
 
@@ -21,4 +17,6 @@ public interface ShareBoxDomainService {
 
 	// 초대 코드의 길이를 반환합니다.
 	int getRecommendedInviteCodeLength();
+
+	void validateShareBoxOwner(ShareBox shareBox, Integer userId);
 }

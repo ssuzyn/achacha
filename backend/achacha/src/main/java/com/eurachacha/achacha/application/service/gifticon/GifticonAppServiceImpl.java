@@ -183,7 +183,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.remainingAmount(requestDto.getGifticonAmount())
 			.sharebox(shareBox)
 			.brand(brand)
-			.user(null) // 인증 구현 시 현재 사용자 설정
+			.user(userRepository.findById(1)) // 인증 구현 시 현재 사용자 설정
 			.build();
 
 		// 저장소를 통한 영속화

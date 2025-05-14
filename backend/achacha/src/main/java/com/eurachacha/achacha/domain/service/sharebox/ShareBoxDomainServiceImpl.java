@@ -16,21 +16,6 @@ public class ShareBoxDomainServiceImpl implements ShareBoxDomainService {
 	private static final int MIN_NAME_LENGTH = 1;
 
 	@Override
-	public void validateInviteCode(ShareBox shareBox, String inviteCode) {
-		if (shareBox == null) {
-			throw new CustomException(ErrorCode.SHAREBOX_NOT_FOUND);
-		}
-
-		if (inviteCode == null || inviteCode.trim().isEmpty()) {
-			throw new CustomException(ErrorCode.INVALID_INVITE_CODE);
-		}
-
-		if (!shareBox.getInviteCode().equals(inviteCode)) {
-			throw new CustomException(ErrorCode.INVALID_INVITE_CODE);
-		}
-	}
-
-	@Override
 	public void validateParticipationAllowed(ShareBox shareBox) {
 		if (shareBox == null) {
 			throw new CustomException(ErrorCode.SHAREBOX_NOT_FOUND);
@@ -72,5 +57,12 @@ public class ShareBoxDomainServiceImpl implements ShareBoxDomainService {
 	@Override
 	public int getRecommendedInviteCodeLength() {
 		return INVITE_CODE_LENGTH;
+	}
+
+	@Override
+	public void validateShareBoxOwner(ShareBox shareBox, Integer userId) {
+		if (!shareBox.getUser().getId().equals(userId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS);
+		}
 	}
 }

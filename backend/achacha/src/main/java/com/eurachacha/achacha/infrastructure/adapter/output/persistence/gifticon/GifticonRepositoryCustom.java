@@ -1,5 +1,8 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
@@ -20,5 +23,6 @@ public interface GifticonRepositoryCustom {
 		Integer userId,
 		GifticonType type,
 		Pageable pageable);
-	
+
+	Map<Integer, Long> countGifticonsByShareBoxIds(List<Integer> shareBoxIds);
 }

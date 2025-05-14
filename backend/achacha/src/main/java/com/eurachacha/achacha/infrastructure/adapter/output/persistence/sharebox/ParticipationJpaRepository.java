@@ -1,6 +1,10 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.sharebox;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
@@ -10,4 +14,7 @@ public interface ParticipationJpaRepository extends JpaRepository<Participation,
 	boolean existsByUserIdAndShareboxId(Integer userId, Integer shareBoxId);
 
 	int countByShareboxId(Integer shareBoxId);
+
+	@Query("SELECT p FROM Participation p JOIN FETCH p.user WHERE p.sharebox.id = :shareBoxId")
+	List<Participation> findByShareboxId(@Param("shareBoxId") Integer shareBoxId);
 }

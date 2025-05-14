@@ -2,18 +2,28 @@ package com.eurachacha.achacha.web.sharebox;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.eurachacha.achacha.application.port.input.sharebox.dto.ShareBoxAppService;
+import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxParticipationSettingRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxCreateResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
+import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
+import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RequestMapping("/api/share-boxes")
@@ -33,12 +43,11 @@ public class ShareBoxController {
 	}
 
 	// 쉐어박스 참여 엔드포인트
-	@PostMapping("/{shareBoxId}/join")
+	@PostMapping("/join")
 	public ResponseEntity<String> joinShareBox(
-		@PathVariable Integer shareBoxId,
 		@Valid @RequestBody ShareBoxJoinRequestDto requestDto) {
 
-		shareBoxAppService.joinShareBox(shareBoxId, requestDto);
+		shareBoxAppService.joinShareBox(requestDto);
 		return ResponseEntity.ok("쉐어박스에 성공적으로 참여했습니다.");
 	}
 
@@ -60,5 +69,48 @@ public class ShareBoxController {
 
 		shareBoxAppService.unshareGifticon(shareBoxId, gifticonId);
 		return ResponseEntity.ok("공유 해제 완료했습니다.");
+	}
+
+	// 쉐어박스 참여자 조회
+	@GetMapping("/{shareBoxId}/users")
+	public ResponseEntity<ShareBoxParticipantsResponseDto> getShareBoxParticipants(
+		@PathVariable Integer shareBoxId) {
+		return ResponseEntity.ok(shareBoxAppService.getShareBoxParticipants(shareBoxId));
+	}
+
+	// 쉐어박스 페이징 조회
+	@GetMapping
+	public ResponseEntity<ShareBoxesResponseDto> getShareBoxes(
+		@RequestParam(required = false, defaultValue = "CREATED_DESC") ShareBoxSortType sort,
+		@RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+		@RequestParam(required = false, defaultValue = "6") @Min(1) Integer size) {
+		return ResponseEntity.ok(shareBoxAppService.getShareBoxes(sort, page, size));
+	}
+
+	// 쉐어박스 참여 가능 설정
+	@PatchMapping("/{shareBoxId}/participation-setting")
+	public ResponseEntity<String> updateParticipationSetting(
+		@PathVariable Integer shareBoxId,
+		@Valid @RequestBody ShareBoxParticipationSettingRequestDto requestDto) {
+
+		shareBoxAppService.updateParticipationSetting(shareBoxId, requestDto);
+		return ResponseEntity.ok("쉐어박스 참여 설정이 변경되었습니다.");
+	}
+
+	// 쉐어박스 설정 조회
+	@GetMapping("/{shareBoxId}/settings")
+	public ResponseEntity<ShareBoxSettingsResponseDto> getShareBoxSettings(
+		@PathVariable Integer shareBoxId) {
+		return ResponseEntity.ok(shareBoxAppService.getShareBoxSettings(shareBoxId));
+	}
+
+	// 쉐어박스 이름 변경 api
+	@PatchMapping("/{shareBoxId}/name")
+	public ResponseEntity<String> updateShareBoxName(
+		@PathVariable Integer shareBoxId,
+		@Valid @RequestBody ShareBoxNameUpdateRequestDto requestDto) {
+
+		shareBoxAppService.updateShareBoxName(shareBoxId, requestDto);
+		return ResponseEntity.ok("쉐어박스 이름이 변경되었습니다.");
 	}
 }
