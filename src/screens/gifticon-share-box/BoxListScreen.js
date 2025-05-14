@@ -341,13 +341,14 @@ const BoxListScreen = () => {
     brandText: {
       fontSize: 16,
       color: '#333',
-      marginBottom: 2,
+      marginTop: 2,
+      marginBottom: 0,
     },
     nameText: {
       fontSize: 14,
       color: '#666',
-      marginBottom: 0,
-      paddingRight: 80, // D-day 태그를 위한 여백 확보
+      marginBottom: 1,
+      paddingRight: 80,
     },
     shareBoxInfoContainer: {
       flexDirection: 'row',
