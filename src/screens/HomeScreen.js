@@ -96,7 +96,7 @@ const HomeScreen = () => {
           page: 0,
           size: 5,
           sort: 'EXPIRY_ASC',
-          scope: 'ALL',
+          scope: 'MY_BOX',
         };
         console.log('[HomeScreen] 임박 기프티콘 로드 요청:', params);
         const response = await gifticonService.getAvailableGifticons(params);
