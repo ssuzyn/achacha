@@ -233,7 +233,6 @@ const HomeScreen = () => {
     dDayBaseText: {
       alignSelf: 'center',
       letterSpacing: -0.1,
-      fontWeight: 'bold',
     },
     urgentDdayContainer: {
       backgroundColor: 'rgba(234, 84, 85, 0.15)',
@@ -505,12 +504,12 @@ const HomeScreen = () => {
               <View style={styles.giftImageContainer}>
                 <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
               </View>
-              <Text variant="body1" weight="regular" style={styles.giftBrand}>
+              <Text variant="body2" weight="regular" style={styles.giftBrand}>
                 {item.brand}
               </Text>
               <Text
-                variant="body2"
-                weight="bold"
+                variant="body1"
+                weight="semiBold"
                 style={styles.giftName}
                 numberOfLines={1}
                 ellipsizeMode="tail"
