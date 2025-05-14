@@ -77,10 +77,10 @@ const DetailProductScreen = () => {
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
   // 쉐어박스 목록
   const [shareBoxes, setShareBoxes] = useState([]);
-  // 쉐어박스 로딩 상태
-  const [isShareBoxLoading, setIsShareBoxLoading] = useState(false);
-  // 쉐어박스 에러 상태
-  const [shareBoxError, setShareBoxError] = useState(null);
+  // // 쉐어박스 로딩 상태
+  // const [isShareBoxLoading, setIsShareBoxLoading] = useState(false);
+  // // 쉐어박스 에러 상태
+  // const [shareBoxError, setShareBoxError] = useState(null);
   // 이미지 확대 보기 상태
   const [isImageViewVisible, setImageViewVisible] = useState(false);
   // 바코드 정보 상태 추가
@@ -963,7 +963,11 @@ const DetailProductScreen = () => {
               contentContainerStyle={{ paddingBottom: 10 }}
               showsVerticalScrollIndicator={false}
               removeClippedSubviews={false}
-              ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>쉐어박스가 없습니다.</Text>}
+              ListEmptyComponent={
+                <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>
+                  쉐어박스가 없습니다.
+                </Text>
+              }
             />
 
             <View style={styles.boxButtonContainer}>
@@ -1273,12 +1277,6 @@ const styles = StyleSheet.create({
   modalTitle: {
     textAlign: 'center',
     marginBottom: 20,
-  },
-  modalSubtitle: {
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    marginTop: 15,
   },
   boxSection: {
     marginBottom: 20,

@@ -1,6 +1,6 @@
 // 기프티콘 등록 스크린
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import LottieView from 'lottie-react-native';
+import { fetchShareBoxes } from '../../../api/shareBoxApi';
 
 // 네이티브 모듈 가져오기
 const { BarcodeNativeModule } = NativeModules;
@@ -37,13 +38,27 @@ const RegisterMainScreen = () => {
   const [boxType, setBoxType] = useState('MY_BOX'); // 'MY_BOX' 또는 'SHARE_BOX'
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
   const [isOcrLoading, setIsOcrLoading] = useState(false); // OCR 로딩 상태 추가
+  const [shareBoxes, setShareBoxes] = useState([]); // 쉐어박스 목록 상태
+  const [isLoadingShareBoxes, setIsLoadingShareBoxes] = useState(false); // 쉐어박스 로딩 상태
 
-  // 더미 데이터: 쉐어박스 목록
-  const shareBoxes = [
-    { id: 1, name: '으라차차 해인네' },
-    { id: 2, name: '으라차차 주은이네' },
-    { id: 3, name: '으라차차 대성이네' },
-  ];
+  // 쉐어박스 목록 불러오기
+  const loadShareBoxes = async () => {
+    try {
+      setIsLoadingShareBoxes(true);
+      const res = await fetchShareBoxes({ size: 20 });
+      setShareBoxes(res.shareBoxes || []);
+    } catch (e) {
+      console.error('쉐어박스 목록 불러오기 실패:', e);
+      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+    } finally {
+      setIsLoadingShareBoxes(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 쉐어박스 목록 불러오기
+  useEffect(() => {
+    loadShareBoxes();
+  }, []);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -786,34 +801,49 @@ const RegisterMainScreen = () => {
             </View>
 
             <Text variant="h4" weight="bold" style={[styles.modalTitle, styles.sectionTitle]}>
-              쉐어 박스
+              쉐어박스
             </Text>
 
             {/* 쉐어박스 선택 */}
             <View style={styles.boxSection}>
-              {shareBoxes.map(box => (
-                <View key={box.id} style={styles.typeRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkboxContainer,
-                      boxType === 'SHARE_BOX' &&
-                        selectedShareBoxId === box.id &&
-                        styles.checkboxContainerSelected,
-                    ]}
-                    onPress={() => {
-                      setBoxType('SHARE_BOX');
-                      setSelectedShareBoxId(box.id);
-                    }}
-                  >
-                    <View style={styles.checkbox}>
-                      {boxType === 'SHARE_BOX' && selectedShareBoxId === box.id && (
-                        <Icon name="check" type="material" size={16} color={theme.colors.primary} />
-                      )}
-                    </View>
-                    <Text style={styles.checkboxLabel}>{box.name}</Text>
-                  </TouchableOpacity>
+              {isLoadingShareBoxes ? (
+                <View style={styles.loadingContainer}>
+                  <Text>쉐어박스 목록을 불러오는 중...</Text>
                 </View>
-              ))}
+              ) : shareBoxes.length > 0 ? (
+                shareBoxes.map(box => (
+                  <View key={box.shareBoxId} style={styles.typeRow}>
+                    <TouchableOpacity
+                      style={[
+                        styles.checkboxContainer,
+                        boxType === 'SHARE_BOX' &&
+                          selectedShareBoxId === box.shareBoxId &&
+                          styles.checkboxContainerSelected,
+                      ]}
+                      onPress={() => {
+                        setBoxType('SHARE_BOX');
+                        setSelectedShareBoxId(box.shareBoxId);
+                      }}
+                    >
+                      <View style={styles.checkbox}>
+                        {boxType === 'SHARE_BOX' && selectedShareBoxId === box.shareBoxId && (
+                          <Icon
+                            name="check"
+                            type="material"
+                            size={16}
+                            color={theme.colors.primary}
+                          />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))
+              ) : (
+                <View style={styles.emptyShareBoxContainer}>
+                  <Text style={styles.emptyShareBoxText}>참여 중인 쉐어박스가 없습니다.</Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.typeButtonContainer}>
@@ -1177,6 +1207,24 @@ const styles = StyleSheet.create({
   },
   typeButtonTextSelected: {
     color: 'white',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyShareBoxContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E6E6E6',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  emptyShareBoxText: {
+    color: '#666',
+    fontSize: 14,
   },
 });
 
