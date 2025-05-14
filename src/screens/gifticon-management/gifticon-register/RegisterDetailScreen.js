@@ -70,6 +70,8 @@ const RegisterDetailScreen = () => {
   // 쉐어박스 목록 상태 및 로딩 상태 추가
   const [shareBoxes, setShareBoxes] = useState([]);
   const [isLoadingShareBoxes, setIsLoadingShareBoxes] = useState(false);
+  // 날짜 텍스트 입력 상태 추가
+  const [dateInputText, setDateInputText] = useState('');
 
   // 쉐어박스 목록 불러오기
   const loadShareBoxes = async () => {
@@ -282,12 +284,25 @@ const RegisterDetailScreen = () => {
       setShareBoxId(route.params.shareBoxId);
     }
 
-    // 타입 및 위치가 선택되어 있지 않으면 모달 자동 표시
+    // 타입과 위치가 선택되어 있지 않으면 모달 자동 표시
     if (!route.params?.gifticonType) {
       // 약간의 딜레이 후 모달 표시 (화면 전환 애니메이션이 끝난 후)
       setTimeout(() => {
         setBoxModalVisible(true);
       }, 300);
+    }
+
+    // 유효기간이 설정되면 dateInputText도 함께 업데이트
+    if (route.params?.gifticonExpiryDate) {
+      console.log('[상세 화면] 유효기간 설정 (개별):', route.params.gifticonExpiryDate);
+      const expiryDate = new Date(route.params.gifticonExpiryDate);
+      setExpiryDate(expiryDate);
+
+      // dateInputText 업데이트
+      const year = expiryDate.getFullYear();
+      const month = String(expiryDate.getMonth() + 1).padStart(2, '0');
+      const day = String(expiryDate.getDate()).padStart(2, '0');
+      setDateInputText(`${year}.${month}.${day}`);
     }
 
     // 컴포넌트 언마운트 시 메모리 정리
@@ -296,6 +311,16 @@ const RegisterDetailScreen = () => {
       // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
     };
   }, [route.params, gifticonType, barcode]);
+
+  // 메타데이터에서 유효기간 설정 시 dateInputText 업데이트를 위한 useEffect 추가
+  useEffect(() => {
+    if (expiryDate && !dateInputText) {
+      const year = expiryDate.getFullYear();
+      const month = String(expiryDate.getMonth() + 1).padStart(2, '0');
+      const day = String(expiryDate.getDate()).padStart(2, '0');
+      setDateInputText(`${year}.${month}.${day}`);
+    }
+  }, [expiryDate, dateInputText]);
 
   // 편집된 이미지가 있을 경우 썸네일에 표시 (로직 개선)
   useEffect(() => {
@@ -319,6 +344,70 @@ const RegisterDetailScreen = () => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
       setExpiryDate(selectedDate);
+
+      // dateInputText도 함께 업데이트
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      setDateInputText(`${year}.${month}.${day}`);
+    }
+  };
+
+  // 텍스트 형식 날짜 입력 처리 함수 수정
+  const handleDateTextChange = text => {
+    // 숫자와 마침표만 허용
+    let formattedText = text.replace(/[^0-9.]/g, '');
+
+    // YYYYMMDD 형식을 YYYY.MM.DD 형식으로 자동 변환
+    if (formattedText.length === 8 && !formattedText.includes('.')) {
+      formattedText = `${formattedText.substring(0, 4)}.${formattedText.substring(4, 6)}.${formattedText.substring(6, 8)}`;
+    }
+    // YY.MM.DD 또는 YY.M.DD 등의 형식 처리
+    else if (formattedText.includes('.')) {
+      const parts = formattedText.split('.');
+      // 입력 과정 중에는 그대로 유지
+      if (parts.length === 3) {
+        // 날짜 부분이 완성되었을 때 포맷팅
+        if (parts[0].length === 4 && parts[1].length > 0 && parts[2].length > 0) {
+          // 월이 1~12 사이인지 확인
+          let month = parseInt(parts[1], 10);
+          if (month > 0 && month <= 12) {
+            month = String(month).padStart(2, '0');
+          }
+
+          // 일이 1~31 사이이고 해당 월에 유효한지 확인
+          let day = parseInt(parts[2], 10);
+          if (day > 0 && day <= 31) {
+            day = String(day).padStart(2, '0');
+          }
+
+          formattedText = `${parts[0]}.${month}.${day}`;
+        }
+      }
+    }
+
+    // 입력된 텍스트 저장
+    setDateInputText(formattedText);
+
+    // 완전한 날짜 포맷이 아니면 Date 객체 업데이트하지 않음
+    const parts = formattedText.split('.');
+    if (parts.length !== 3) return;
+
+    // 각 부분이 적절한 길이가 아니면 업데이트하지 않음
+    if (parts[0].length < 4 || parts[1].length < 1 || parts[2].length < 1) return;
+
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // 월은 0부터 시작
+    const day = parseInt(parts[2], 10);
+
+    // 입력된 값이 유효한 숫자인지 확인
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      const newDate = new Date(year, month, day);
+
+      // 유효한 날짜인지 확인
+      if (!isNaN(newDate.getTime())) {
+        setExpiryDate(newDate);
+      }
     }
   };
 
@@ -996,9 +1085,9 @@ const RegisterDetailScreen = () => {
     }
   };
 
-  // 날짜를 YYYY.MM.DD 형식으로 포맷
+  // 날짜를 YYYY.MM.DD 형식으로 포맷 - expiryDate가 없을 때 dateInputText 반환
   const formatDate = date => {
-    if (!date) return '';
+    if (!date) return dateInputText;
 
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1395,23 +1484,8 @@ const RegisterDetailScreen = () => {
               {/* 유효기간 입력 필드 - 날짜 직접 입력 가능 */}
               <View style={styles.dateInputContainer}>
                 <InputLine
-                  value={formatDate(expiryDate)}
-                  onChangeText={text => {
-                    // 텍스트 포맷에서 날짜 객체로 변환 (YYYY.MM.DD 형식 가정)
-                    const parts = text.split('.');
-                    if (parts.length === 3) {
-                      const year = parseInt(parts[0]);
-                      const month = parseInt(parts[1]) - 1; // 월은 0부터 시작
-                      const day = parseInt(parts[2]);
-
-                      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-                        const newDate = new Date(year, month, day);
-                        if (!isNaN(newDate)) {
-                          setExpiryDate(newDate);
-                        }
-                      }
-                    }
-                  }}
+                  value={dateInputText || formatDate(expiryDate)}
+                  onChangeText={handleDateTextChange}
                   placeholder="유효기간을 입력해주세요. (YYYY.MM.DD)"
                   containerStyle={styles.inputContainer}
                   rightIcon={
@@ -2262,7 +2336,6 @@ const styles = StyleSheet.create({
   newBarcodeNumberInput: {
     color: '#333',
     fontSize: 24,
-    fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 25,
     borderWidth: 2,
