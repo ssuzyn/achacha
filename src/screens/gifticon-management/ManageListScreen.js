@@ -193,7 +193,8 @@ const ManageListScreen = () => {
       position: 'relative',
     },
     imageContainer: {
-      marginRight: 10,
+      marginLeft: 8,
+      marginRight: 12,
     },
     gifticonImage: {
       width: 60,
@@ -208,7 +209,7 @@ const ManageListScreen = () => {
       fontWeight: 'bold',
       color: '#333',
       marginTop: 2,
-      marginBottom: 0,
+      marginBottom: 1,
       fontFamily: theme.fonts.fontWeight.bold,
     },
     nameText: {

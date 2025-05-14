@@ -320,7 +320,8 @@ const BoxListScreen = () => {
       marginBottom: 10,
     },
     imageContainer: {
-      marginRight: 10,
+      marginLeft: 8,
+      marginRight: 12,
     },
     gifticonImage: {
       width: 60,
@@ -342,7 +343,7 @@ const BoxListScreen = () => {
       fontSize: 16,
       color: '#333',
       marginTop: 2,
-      marginBottom: 0,
+      marginBottom: 1,
     },
     nameText: {
       fontSize: 14,
