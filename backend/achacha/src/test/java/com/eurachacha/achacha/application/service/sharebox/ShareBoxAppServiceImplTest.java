@@ -530,7 +530,7 @@ class ShareBoxAppServiceImplTest {
 		assertThat(thrown).isNull();
 		verify(gifticonRepository).unshareAllGifticonsByShareBoxId(eq(shareBoxId));
 		verify(participationRepository).deleteAllByShareBoxId(eq(shareBoxId));
-		verify(shareBoxRepository).deleteById(eq(shareBoxId));
+		verify(shareBoxRepository).delete(eq(shareBox));
 	}
 
 	@DisplayName("쉐어박스 탈퇴 - 일반 참여자가 탈퇴하면 자신의 참여 정보만 삭제되어야 한다")
@@ -553,7 +553,7 @@ class ShareBoxAppServiceImplTest {
 		assertThat(thrown).isNull();
 		verify(gifticonRepository).unshareAllAvailableGifticonsByUserIdAndShareBoxId(eq(userId), eq(shareBoxId));
 		verify(participationRepository).deleteByUserIdAndShareBoxId(eq(userId), eq(shareBoxId));
-		verify(shareBoxRepository, never()).deleteById(any());
+		verify(shareBoxRepository, never()).delete(any());
 	}
 
 	@DisplayName("쉐어박스 탈퇴 - 참여하지 않은 쉐어박스 탈퇴 시 예외가 발생해야 한다")
@@ -580,6 +580,6 @@ class ShareBoxAppServiceImplTest {
 		verify(gifticonRepository, never()).unshareAllAvailableGifticonsByUserIdAndShareBoxId(any(), any());
 		verify(participationRepository, never()).deleteByUserIdAndShareBoxId(any(), any());
 		verify(participationRepository, never()).deleteAllByShareBoxId(any());
-		verify(shareBoxRepository, never()).deleteById(any());
+		verify(shareBoxRepository, never()).delete(any());
 	}
 }
