@@ -152,7 +152,7 @@ const HomeScreen = () => {
       marginBottom: 15,
     },
     welcomeText: {
-      letterSpacing: -0.3,
+      letterSpacing: 0,
       fontSize: 20,
       lineHeight: 28,
     },
