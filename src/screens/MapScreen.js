@@ -185,23 +185,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
   },
-  header: {
-    height: 80,
-    paddingHorizontal: 12,
-    paddingTop: 30,
-    marginBottom: 5,
-    borderBottomWidth: 0,
-    backgroundColor: '#fafafa',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 24,
-    letterSpacing: -0.5,
-    fontFamily: 'Pretendard-Bold',
-    lineHeight: 36,
-    textAlign: 'center',
-  },
   mapContainer: {
     flex: 1,
     margin: 0,
@@ -209,7 +192,7 @@ const styles = StyleSheet.create({
   },
   locationButton: {
     position: 'absolute',
-    top: 95,
+    top: 55,
     right: 6,
     width: 45,
     height: 45,
@@ -222,7 +205,7 @@ const styles = StyleSheet.create({
   },
   giftButton: {
     position: 'absolute',
-    top: 155,
+    top: 115,
     right: 6,
     width: 45,
     height: 45,
