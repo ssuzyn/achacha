@@ -13,10 +13,13 @@ import com.eurachacha.achacha.domain.model.file.enums.FileType;
 
 @Repository
 public interface FileJpaRepository extends JpaRepository<File, Integer> {
-	@Query("SELECT f FROM File f WHERE f.referenceEntityId = :id AND f.referenceEntityType = :referenceType AND f.type = :type")
-	Optional<File> findFile(
-		@Param("id") Integer referenceEntityId,
-		@Param("referenceType") String referenceEntityType,
+	@Query("""
+		SELECT f FROM File f
+		WHERE f.referenceEntityId = :id
+		AND f.referenceEntityType = :referenceType
+		AND f.type = :type
+		""")
+	Optional<File> findFile(@Param("id") Integer referenceEntityId, @Param("referenceType") String referenceEntityType,
 		@Param("type") FileType fileType);
 
 	Optional<File> findByReferenceEntityTypeAndReferenceEntityIdAndType(
