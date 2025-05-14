@@ -48,7 +48,7 @@ const CAROUSEL_CARDS = [
   {
     id: '1',
     type: 'sharebox',
-    title: '나누면 즐거움이 두배,\n쉐어박스',
+    title: '나누면 즐거움 두배,\n쉐어박스',
     image: require('../assets/images/share_box.png'),
     iconName: 'inventory-2',
     onPress: () => NavigationService.navigate('TabSharebox'),
@@ -168,7 +168,7 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
             <View style={[styles.giftMessageCard, { backgroundColor: '#F0ECFF' }]}>
               <View style={styles.giftMessageTextContainerSharebox}>
-                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
+                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
                   {item.title}
                 </Text>
               </View>
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   },
   carouselSection: {
     alignItems: 'center',
-    marginBottom: 15,
+    marginBottom: 10,
     overflow: 'hidden',
   },
   carouselCard: {
@@ -474,7 +474,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    height: 130,
+    height: 120,
     overflow: 'hidden',
     position: 'relative',
   },
@@ -502,7 +502,7 @@ const styles = StyleSheet.create({
   giftMessageTitle: {
     marginBottom: 2,
     letterSpacing: -0.2,
-    lineHeight: 30,
+    lineHeight: 25,
   },
   giftMessageSubtitle: {
     color: '#737373',
@@ -524,8 +524,8 @@ const styles = StyleSheet.create({
     marginRight: 20,
   },
   giftMessageImage2: {
-    width: 150,
-    height: 150,
+    width: 100,
+    height: 100,
     marginRight: 15,
   },
   mapMessageCard: {
