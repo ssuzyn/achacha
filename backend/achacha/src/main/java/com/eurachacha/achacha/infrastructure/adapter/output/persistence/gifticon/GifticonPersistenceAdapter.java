@@ -81,4 +81,9 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	public Slice<Gifticon> findGifticonsByShareBoxId(Integer shareBoxId, GifticonType type, Pageable pageable) {
 		return gifticonJpaRepository.findGifticonsByShareBoxId(shareBoxId, type, pageable);
 	}
+
+	@Override
+	public Slice<Gifticon> findUsedGifticonsByShareBoxId(Integer shareBoxId, GifticonType type, Pageable pageable) {
+		return gifticonJpaRepository.findUsedGifticonsByShareBoxId(shareBoxId, type, pageable);
+	}
 }
