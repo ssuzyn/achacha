@@ -50,7 +50,7 @@ public class ShareBoxPersistenceAdapter implements ShareBoxRepository {
 	}
 
 	@Override
-	public void deleteById(Integer shareBoxId) {
-		shareBoxJpaRepository.deleteById(shareBoxId);
+	public void delete(ShareBox shareBox) {
+		shareBoxJpaRepository.delete(shareBox);
 	}
 }

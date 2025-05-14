@@ -17,6 +17,6 @@ public interface ShareBoxRepository {
 	boolean existsById(Integer shareBoxId);
 
 	Slice<ShareBox> findParticipatedShareBoxes(Integer userId, Pageable pageable);
-
-	void deleteById(Integer shareBoxId);
+	
+	void delete(ShareBox shareBox);
 }

@@ -319,8 +319,8 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 			// 2. 모든 참여 정보 삭제
 			participationRepository.deleteAllByShareBoxId(shareBoxId);
 			// 3. 쉐어박스 삭제
-			shareBoxRepository.deleteById(shareBoxId);
-			
+			shareBoxRepository.delete(shareBox);
+
 			return;
 		}
 
