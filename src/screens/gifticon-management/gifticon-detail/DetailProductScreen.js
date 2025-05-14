@@ -22,7 +22,7 @@ import AlertDialog from '../../../components/ui/AlertDialog';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
-import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxApi';
+import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxService';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
 
@@ -956,13 +956,25 @@ const DetailProductScreen = () => {
                       )}
                     </View>
                     <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                    <View style={styles.ownerContainer}>
+                      <Icon
+                        name="person"
+                        type="material"
+                        size={14}
+                        color={box.isOwner ? '#4A90E2' : '#999'}
+                      />
+                      <Text style={[styles.ownerText, box.isOwner && styles.ownerTextHighlight]}>
+                        {box.ownerName || box.shareBoxUserName || '나'}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               )}
               style={styles.boxSection}
-              contentContainerStyle={{ paddingBottom: 10 }}
+              maxHeight={250}
               showsVerticalScrollIndicator={false}
               removeClippedSubviews={false}
+              contentContainerStyle={{ paddingBottom: 10 }}
               ListEmptyComponent={
                 <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>
                   쉐어박스가 없습니다.
@@ -1288,7 +1300,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E6E6E6',
@@ -1309,8 +1321,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   checkboxLabel: {
+    flex: 1,
     fontSize: 16,
     color: '#333333',
+  },
+  ownerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+  },
+  ownerText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#999',
+  },
+  ownerTextHighlight: {
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   boxButtonContainer: {
     flexDirection: 'row',

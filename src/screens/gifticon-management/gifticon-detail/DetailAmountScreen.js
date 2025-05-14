@@ -24,7 +24,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import AlertDialog from '../../../components/ui/AlertDialog';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
-import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxApi';
+import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxService';
 
 // 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
 const getImageSource = path => {
@@ -1066,25 +1066,31 @@ const DetailAmountScreen = () => {
                       <View style={styles.buttonRow}>
                         <TouchableOpacity
                           onPress={
-                            gifticonData.gifticonOriginalAmount === gifticonData.gifticonRemainingAmount
+                            gifticonData.gifticonOriginalAmount ===
+                            gifticonData.gifticonRemainingAmount
                               ? handleShare
                               : undefined
                           }
-                          disabled={gifticonData.gifticonOriginalAmount !== gifticonData.gifticonRemainingAmount}
+                          disabled={
+                            gifticonData.gifticonOriginalAmount !==
+                            gifticonData.gifticonRemainingAmount
+                          }
                           style={{
                             flex: 1,
                             marginRight: 4,
                             borderRadius: 8,
                             height: 56,
                             backgroundColor:
-                              gifticonData.gifticonOriginalAmount === gifticonData.gifticonRemainingAmount
+                              gifticonData.gifticonOriginalAmount ===
+                              gifticonData.gifticonRemainingAmount
                                 ? '#EEEEEE'
                                 : '#F2F2F2',
                             justifyContent: 'center',
                             alignItems: 'center',
                             flexDirection: 'row',
                             opacity:
-                              gifticonData.gifticonOriginalAmount === gifticonData.gifticonRemainingAmount
+                              gifticonData.gifticonOriginalAmount ===
+                              gifticonData.gifticonRemainingAmount
                                 ? 1
                                 : 0.5,
                           }}
@@ -1322,13 +1328,30 @@ const DetailAmountScreen = () => {
                       )}
                     </View>
                     <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                    <View style={styles.ownerContainer}>
+                      <Icon
+                        name="person"
+                        type="material"
+                        size={14}
+                        color={box.isOwner ? '#4A90E2' : '#999'}
+                      />
+                      <Text style={[styles.ownerText, box.isOwner && styles.ownerTextHighlight]}>
+                        {box.ownerName || box.shareBoxUserName || '나'}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               )}
+              style={styles.boxSection}
+              maxHeight={250}
               showsVerticalScrollIndicator={false}
               removeClippedSubviews={false}
-              style={styles.boxSection}
-              ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>쉐어박스가 없습니다.</Text>}
+              contentContainerStyle={{ paddingBottom: 10 }}
+              ListEmptyComponent={
+                <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>
+                  쉐어박스가 없습니다.
+                </Text>
+              }
             />
             <View style={styles.boxButtonContainer}>
               <TouchableOpacity style={styles.cancelShareButton} onPress={handleCloseShareModal}>
@@ -1872,7 +1895,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E6E6E6',
@@ -1893,8 +1916,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   checkboxLabel: {
+    flex: 1,
     fontSize: 16,
     color: '#333333',
+  },
+  ownerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+  },
+  ownerText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#999',
+  },
+  ownerTextHighlight: {
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   boxButtonContainer: {
     flexDirection: 'row',

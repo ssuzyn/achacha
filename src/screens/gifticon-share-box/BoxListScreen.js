@@ -22,7 +22,11 @@ import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fetchAvailableGifticons, fetchUsedGifticons, fetchShareBoxSettings } from '../../api/shareBoxApi';
+import {
+  fetchAvailableGifticons,
+  fetchUsedGifticons,
+  fetchShareBoxSettings,
+} from '../../api/shareBoxService';
 
 const BoxListScreen = () => {
   const { theme } = useTheme();
@@ -580,7 +584,10 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
+                <Image
+                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                  style={styles.gifticonImage}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -757,7 +764,10 @@ const BoxListScreen = () => {
               >
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                  <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
+                  <Image
+                    source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                    style={styles.gifticonImage}
+                  />
                 </View>
 
                 {/* 텍스트 정보 영역 */}
@@ -860,7 +870,10 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
+                <Image
+                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                  style={styles.gifticonImage}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -1179,20 +1192,27 @@ const BoxListScreen = () => {
           contentContainerStyle={styles.scrollViewContent}
         >
           <View style={styles.gifticonList}>
-            {selectedCategory === 'available'
-              ? (loading
-                  ? <Text>로딩 중...</Text>
-                  : availableGifticons.length > 0
-                    ? availableGifticons.map(item => renderGifticonItem({ ...item, scope: 'SHARE_BOX' }))
-                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text></View>
-                )
-              : (usedLoading
-                  ? <Text>로딩 중...</Text>
-                  : usedGifticons.length > 0
-                    ? usedGifticons.map(item => renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName }))
-                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text></View>
-                )
-            }
+            {selectedCategory === 'available' ? (
+              loading ? (
+                <Text>로딩 중...</Text>
+              ) : availableGifticons.length > 0 ? (
+                availableGifticons.map(item => renderGifticonItem({ ...item, scope: 'SHARE_BOX' }))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text>
+                </View>
+              )
+            ) : usedLoading ? (
+              <Text>로딩 중...</Text>
+            ) : usedGifticons.length > 0 ? (
+              usedGifticons.map(item =>
+                renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName })
+              )
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text>
+              </View>
+            )}
           </View>
         </ScrollView>
 

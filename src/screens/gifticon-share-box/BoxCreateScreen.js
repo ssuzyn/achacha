@@ -22,7 +22,7 @@ import NavigationService from '../../navigation/NavigationService';
 import apiClient from '../../api/apiClient';
 import { API_CONFIG } from '../../api/config';
 import Clipboard from '@react-native-clipboard/clipboard';
-import { createShareBox } from '../../api/shareBoxApi';
+import { createShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 
 const BoxCreateScreen = () => {

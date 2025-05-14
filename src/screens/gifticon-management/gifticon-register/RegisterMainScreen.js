@@ -23,7 +23,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import LottieView from 'lottie-react-native';
-import { fetchShareBoxes } from '../../../api/shareBoxApi';
+import { fetchShareBoxes } from '../../../api/shareBoxService';
 
 // 네이티브 모듈 가져오기
 const { BarcodeNativeModule } = NativeModules;
@@ -811,34 +811,49 @@ const RegisterMainScreen = () => {
                   <Text>쉐어박스 목록을 불러오는 중...</Text>
                 </View>
               ) : shareBoxes.length > 0 ? (
-                shareBoxes.map(box => (
-                  <View key={box.shareBoxId} style={styles.typeRow}>
-                    <TouchableOpacity
-                      style={[
-                        styles.checkboxContainer,
-                        boxType === 'SHARE_BOX' &&
-                          selectedShareBoxId === box.shareBoxId &&
-                          styles.checkboxContainerSelected,
-                      ]}
-                      onPress={() => {
-                        setBoxType('SHARE_BOX');
-                        setSelectedShareBoxId(box.shareBoxId);
-                      }}
-                    >
-                      <View style={styles.checkbox}>
-                        {boxType === 'SHARE_BOX' && selectedShareBoxId === box.shareBoxId && (
+                <ScrollView style={styles.shareBoxScrollView} showsVerticalScrollIndicator={false}>
+                  {shareBoxes.map(box => (
+                    <View key={box.shareBoxId} style={styles.typeRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.checkboxContainer,
+                          boxType === 'SHARE_BOX' &&
+                            selectedShareBoxId === box.shareBoxId &&
+                            styles.checkboxContainerSelected,
+                        ]}
+                        onPress={() => {
+                          setBoxType('SHARE_BOX');
+                          setSelectedShareBoxId(box.shareBoxId);
+                        }}
+                      >
+                        <View style={styles.checkbox}>
+                          {boxType === 'SHARE_BOX' && selectedShareBoxId === box.shareBoxId && (
+                            <Icon
+                              name="check"
+                              type="material"
+                              size={16}
+                              color={theme.colors.primary}
+                            />
+                          )}
+                        </View>
+                        <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                        <View style={styles.ownerContainer}>
                           <Icon
-                            name="check"
+                            name="person"
                             type="material"
-                            size={16}
-                            color={theme.colors.primary}
+                            size={14}
+                            color={box.isOwner ? '#4A90E2' : '#999'}
                           />
-                        )}
-                      </View>
-                      <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
+                          <Text
+                            style={[styles.ownerText, box.isOwner && styles.ownerTextHighlight]}
+                          >
+                            {box.ownerName || box.shareBoxUserName || '나'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
               ) : (
                 <View style={styles.emptyShareBoxContainer}>
                   <Text style={styles.emptyShareBoxText}>참여 중인 쉐어박스가 없습니다.</Text>
@@ -1077,7 +1092,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E6E6E6',
@@ -1097,12 +1112,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'white',
   },
-  checkboxSelected: {
-    borderColor: '#4A90E2',
-  },
   checkboxLabel: {
+    flex: 1,
     fontSize: 16,
     color: '#333333',
+  },
+  ownerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+  },
+  ownerText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#999',
+  },
+  ownerTextHighlight: {
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   typeButtonContainer: {
     flexDirection: 'row',
@@ -1225,6 +1255,9 @@ const styles = StyleSheet.create({
   emptyShareBoxText: {
     color: '#666',
     fontSize: 14,
+  },
+  shareBoxScrollView: {
+    maxHeight: 250, // 스크롤 영역 최대 높이 설정
   },
 });
 

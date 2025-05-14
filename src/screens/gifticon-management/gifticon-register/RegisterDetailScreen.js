@@ -28,7 +28,7 @@ import useGifticonStore from '../../../store/gifticonStore';
 // 기프티콘 서비스 import
 import gifticonService from '../../../api/gifticonService';
 import brandService from '../../../api/brandService'; // 브랜드 서비스 추가
-import { fetchShareBoxes } from '../../../api/shareBoxApi'; // 쉐어박스 API 추가
+import { fetchShareBoxes } from '../../../api/shareBoxService'; // 쉐어박스 API 추가
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
@@ -1614,29 +1614,44 @@ const RegisterDetailScreen = () => {
                   <Text style={styles.loadingShareBoxText}>쉐어박스 목록을 불러오는 중...</Text>
                 </View>
               ) : shareBoxes.length > 0 ? (
-                shareBoxes.map(box => (
-                  <View key={box.shareBoxId} style={styles.boxRow}>
-                    <TouchableOpacity
-                      style={[
-                        styles.checkboxContainer,
-                        boxType === 'SHARE_BOX' &&
-                          shareBoxId === box.shareBoxId &&
-                          styles.checkboxContainerSelected,
-                      ]}
-                      onPress={() => {
-                        setBoxType('SHARE_BOX');
-                        setShareBoxId(box.shareBoxId);
-                      }}
-                    >
-                      <View style={styles.checkbox}>
-                        {boxType === 'SHARE_BOX' && shareBoxId === box.shareBoxId && (
-                          <Icon name="check" size={16} color={theme.colors.primary} />
-                        )}
-                      </View>
-                      <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))
+                <ScrollView style={styles.shareBoxScrollView} showsVerticalScrollIndicator={false}>
+                  {shareBoxes.map(box => (
+                    <View key={box.shareBoxId} style={styles.boxRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.checkboxContainer,
+                          boxType === 'SHARE_BOX' &&
+                            shareBoxId === box.shareBoxId &&
+                            styles.checkboxContainerSelected,
+                        ]}
+                        onPress={() => {
+                          setBoxType('SHARE_BOX');
+                          setShareBoxId(box.shareBoxId);
+                        }}
+                      >
+                        <View style={styles.checkbox}>
+                          {boxType === 'SHARE_BOX' && shareBoxId === box.shareBoxId && (
+                            <Icon name="check" size={16} color={theme.colors.primary} />
+                          )}
+                        </View>
+                        <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                        <View style={styles.ownerContainer}>
+                          <Icon
+                            name="person"
+                            type="material"
+                            size={14}
+                            color={box.isOwner ? '#4A90E2' : '#999'}
+                          />
+                          <Text
+                            style={[styles.ownerText, box.isOwner && styles.ownerTextHighlight]}
+                          >
+                            {box.ownerName || box.shareBoxUserName || '나'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
               ) : (
                 <View style={styles.emptyShareBoxContainer}>
                   <Text style={styles.emptyShareBoxText}>참여 중인 쉐어박스가 없습니다.</Text>
@@ -1892,7 +1907,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E6E6E6',
@@ -1911,6 +1926,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333333',
+  },
+  ownerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+  },
+  ownerText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#999',
+  },
+  ownerTextHighlight: {
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   boxButtonContainer: {
     flexDirection: 'row',
@@ -2176,6 +2213,9 @@ const styles = StyleSheet.create({
   emptyShareBoxText: {
     color: '#666',
     fontSize: 14,
+  },
+  shareBoxScrollView: {
+    maxHeight: 250, // 스크롤 영역 최대 높이 설정
   },
 });
 

@@ -19,7 +19,7 @@ import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxApi';
+import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 
 // 배경색 배열 - Theme에서 가져온 색상에 30% 투명도 적용

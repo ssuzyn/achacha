@@ -16,7 +16,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
-import { leaveShareBox, fetchShareBoxSettings, fetchShareBoxUsers, changeShareBoxName, changeShareBoxParticipationSetting } from '../../api/shareBoxApi';
+import {
+  leaveShareBox,
+  fetchShareBoxSettings,
+  fetchShareBoxUsers,
+  changeShareBoxName,
+  changeShareBoxParticipationSetting,
+} from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -162,23 +168,15 @@ const BoxSettingScreen = () => {
   // 나가기 버튼 클릭 핸들러 (방장 여부에 따라 안내)
   const handleLeavePress = () => {
     if (userId && shareBoxUserId && userId === shareBoxUserId) {
-      Alert.alert(
-        '알림',
-        '쉐어박스가 모든 인원에게 삭제됩니다. 정말 나가시겠습니까?',
-        [
-          { text: '확인', onPress: leaveShareBoxHandler },
-          { text: '취소', style: 'cancel' },
-        ]
-      );
+      Alert.alert('알림', '쉐어박스가 모든 인원에게 삭제됩니다. 정말 나가시겠습니까?', [
+        { text: '확인', onPress: leaveShareBoxHandler },
+        { text: '취소', style: 'cancel' },
+      ]);
     } else {
-      Alert.alert(
-        '알림',
-        '쉐어박스에서 나가면 기프티콘이 회수됩니다. 정말 나가시겠습니까?',
-        [
-          { text: '확인', onPress: leaveShareBoxHandler },
-          { text: '취소', style: 'cancel' },
-        ]
-      );
+      Alert.alert('알림', '쉐어박스에서 나가면 기프티콘이 회수됩니다. 정말 나가시겠습니까?', [
+        { text: '확인', onPress: leaveShareBoxHandler },
+        { text: '취소', style: 'cancel' },
+      ]);
     }
   };
 
@@ -196,8 +194,8 @@ const BoxSettingScreen = () => {
           onPress: () => {
             // 이전 화면으로 돌아가면서 새로고침 트리거
             navigation.goBack();
-          }
-        }
+          },
+        },
       ]);
     } catch (e) {
       const errorCode = e?.response?.data?.errorCode;
@@ -244,16 +242,26 @@ const BoxSettingScreen = () => {
               <TextInput
                 value={shareBoxName}
                 onChangeText={handleNameChange}
-                style={[styles.input, userId !== shareBoxUserId && {  color: '#B0B0B0' }]}
+                style={[styles.input, userId !== shareBoxUserId && { color: '#B0B0B0' }]}
                 placeholder="쉐어박스 이름을 입력하세요"
                 editable={userId === shareBoxUserId}
               />
               <TouchableOpacity
-                style={[styles.confirmButton, userId !== shareBoxUserId && { backgroundColor: '#E0E0E0' }]}
+                style={[
+                  styles.confirmButton,
+                  userId !== shareBoxUserId && { backgroundColor: '#E0E0E0' },
+                ]}
                 onPress={userId === shareBoxUserId ? handleChangeName : null}
                 disabled={userId !== shareBoxUserId}
               >
-                <Text variant="body2" weight="medium" style={[styles.confirmButtonText, userId !== shareBoxUserId && { color: '#B0B0B0' }]}> 
+                <Text
+                  variant="body2"
+                  weight="medium"
+                  style={[
+                    styles.confirmButtonText,
+                    userId !== shareBoxUserId && { color: '#B0B0B0' },
+                  ]}
+                >
                   변경
                 </Text>
               </TouchableOpacity>
