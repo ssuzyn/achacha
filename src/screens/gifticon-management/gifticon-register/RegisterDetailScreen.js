@@ -2051,7 +2051,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: 'relative',
     zIndex: 10,
-    marginBottom: 10,
+    marginBottom: 0,
   },
   brandListContainer: {
     borderWidth: 1,
