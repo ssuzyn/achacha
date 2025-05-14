@@ -38,10 +38,10 @@ const BoxSettingScreen = () => {
     const loadSettings = async () => {
       try {
         const data = await fetchShareBoxSettings(route.params?.shareBoxId);
+        console.log('[API 응답] settings:', data);
         setShareBoxName(data.shareBoxName);
         setMemberEntryEnabled(data.shareBoxAllowParticipation);
         setShareBoxCode(data.shareBoxInviteCode);
-        setShareBoxUserId(data.shareBoxUserId); // 방장 userId 저장
       } catch (e) {
         const errorCode = e?.response?.data?.errorCode;
         let message = '쉐어박스 설정 정보를 불러오지 못했습니다.';
@@ -66,6 +66,7 @@ const BoxSettingScreen = () => {
   useEffect(() => {
     const getUserId = async () => {
       const id = await AsyncStorage.getItem('userId');
+      console.log('[AsyncStorage userId]', id);
       setUserId(id ? Number(id) : null);
     };
     getUserId();
@@ -97,6 +98,18 @@ const BoxSettingScreen = () => {
     };
     loadUsers();
   }, [route.params?.shareBoxId]);
+
+  useEffect(() => {
+    console.log('[방 진입] userId:', userId, 'shareBoxUserId:', shareBoxUserId);
+  }, [userId, shareBoxUserId]);
+
+  useEffect(() => {
+    console.log('[userId 변경]', userId);
+  }, [userId]);
+
+  useEffect(() => {
+    console.log('[shareBoxUserId 변경]', shareBoxUserId);
+  }, [shareBoxUserId]);
 
   // 뒤로가기 핸들러
   const handleGoBack = () => {
@@ -140,10 +153,7 @@ const BoxSettingScreen = () => {
       await leaveShareBox(route.params.shareBoxId);
       Alert.alert('알림', '쉐어박스를 나갔습니다.');
       // BoxMainScreen으로 이동 및 목록 새로고침 트리거
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'BoxMain' }],
-      });
+      navigation.pop(2);
     } catch (e) {
       const errorCode = e?.response?.data?.errorCode;
       let message = '쉐어박스 나가기에 실패했습니다.';

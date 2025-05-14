@@ -87,6 +87,22 @@ const AppWrapper = ({ children }) => {
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
+const linking = {
+  prefixes: ['achacha://'],
+  config: {
+    screens: {
+      // 예시: BoxCreateScreen에서 초대코드 파라미터 받기
+      BoxCreate: {
+        path: 'sharebox',
+        parse: {
+          code: (code) => code,
+        },
+      },
+      // ...다른 스크린
+    },
+  },
+};
+
 export default function App() {
   const [isReady, setIsReady] = useState(false);
   // Zustand 스토어의 토큰 복원 함수
@@ -148,7 +164,7 @@ export default function App() {
               <View style={styles.container} onLayout={onLayoutRootView}>
                 <HeaderBarProvider>
                   <TabBarProvider>
-                    <NavigationContainer ref={navigationRef}>
+                    <NavigationContainer ref={navigationRef} linking={linking}>
                       <AppNavigator />
                       <StatusBar style="auto" />
                     </NavigationContainer>
