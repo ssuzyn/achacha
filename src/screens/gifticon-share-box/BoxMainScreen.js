@@ -189,7 +189,7 @@ const BoxMainScreen = () => {
               {/* 박스명 */}
               <Text
                 variant="h3"
-                weight="bold"
+                weight="semibold"
                 style={styles.boxTitle}
                 numberOfLines={1}
                 ellipsizeMode="tail"
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     marginLeft: 1,
     color: '#000000',
     paddingRight: 5,
-    fontFamily: 'Pretendard-Bold',
+    fontFamily: 'Pretendard-SemiBold',
   },
   roleContainer: {
     flexDirection: 'row',

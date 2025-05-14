@@ -1140,15 +1140,15 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     width: 80,
-    fontSize: 15,
-    color: '#666',
+    fontSize: 16,
+    color: '#737373',
     fontWeight: '500',
     marginRight: 8,
   },
   infoValue: {
     flex: 1,
-    fontSize: 15,
-    color: '#333',
+    fontSize: 16,
+    color: '#000',
     textAlign: 'right',
   },
   buttonContainer: {

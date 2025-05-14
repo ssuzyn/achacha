@@ -206,7 +206,6 @@ const ManageListScreen = () => {
     },
     brandText: {
       fontSize: 16,
-      fontWeight: 'bold',
       color: '#333',
       marginTop: 2,
       marginBottom: 1,
@@ -234,7 +233,6 @@ const ManageListScreen = () => {
     },
     dDayText: {
       fontSize: 14,
-      fontWeight: 'bold',
       fontFamily: theme.fonts.fontWeight.bold,
     },
     urgentDDayText: {
@@ -256,7 +254,6 @@ const ManageListScreen = () => {
     sharedByText: {
       fontSize: 12,
       color: '#737373',
-      fontWeight: 'bold',
       fontStyle: 'normal',
       fontFamily: theme.fonts.fontWeight.bold,
     },
@@ -271,7 +268,6 @@ const ManageListScreen = () => {
     shareBoxText: {
       fontSize: 12,
       color: '#278CCC',
-      fontWeight: 'bold',
       fontFamily: theme.fonts.fontWeight.bold,
     },
     leftAction: {
@@ -303,7 +299,6 @@ const ManageListScreen = () => {
     actionText: {
       color: 'white',
       fontSize: 12,
-      fontWeight: 'bold',
       marginTop: 4,
       fontFamily: theme.fonts.fontWeight.semiBold,
     },
@@ -318,7 +313,6 @@ const ManageListScreen = () => {
     },
     expiredDDayText: {
       color: '#737373',
-      fontWeight: 'bold',
       fontFamily: theme.fonts.fontWeight.bold,
     },
     loadingContainer: {

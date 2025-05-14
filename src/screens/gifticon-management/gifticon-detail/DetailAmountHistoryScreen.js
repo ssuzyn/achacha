@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     fontSize: 18,
-    color: '#666',
+    color: '#737373',
   },
   balanceValue: {
     fontSize: 18,

@@ -339,12 +339,12 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     fontSize: 18,
-    color: '#666',
+    color: '#737373',
   },
   balanceValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#000',
   },
   divider: {
     marginVertical: 20,
