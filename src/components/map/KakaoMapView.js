@@ -4,7 +4,7 @@ import { WebView } from 'react-native-webview';
 import { KAKAO_REST_API_KEY } from '@env';
 import useLocationTracking from '../../hooks/useLocationTracking';
 import { updateMapMarkers, filterMarkersByBrand } from '../../utils/mapMarkerUtils';
-import GeofencingService from '../../services/GeofencingService';
+import GeofencingService from '../../services/geofencingService';
 import { getKakaoMapHtml } from './KakaoMapHtml';
 
 const { width } = Dimensions.get('window');
