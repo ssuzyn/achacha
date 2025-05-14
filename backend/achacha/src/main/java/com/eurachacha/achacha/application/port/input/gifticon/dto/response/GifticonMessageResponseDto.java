@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductGifticonUseResponseDto {
+public class GifticonMessageResponseDto {
 	private String message;
 }
