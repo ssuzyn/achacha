@@ -603,7 +603,7 @@ const BoxDetailAmountScreen = () => {
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>유효기간</Text>
                   <Text style={styles.infoValue}>
-                    ~ {formatDate(gifticonData.gifticonExpiryDate)}
+                    {formatDate(gifticonData.gifticonExpiryDate)}
                   </Text>
                 </View>
 
