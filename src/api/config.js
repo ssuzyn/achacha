@@ -46,6 +46,7 @@ export const API_CONFIG = {
     GET_GIFTICONS: '/api/available-gifticons', //사용 가능 기프티콘 목록 조회
     GET_USED_GIFTICONS: '/api/used-gifticons', // 사용 완료 기프티콘 목록 조회
     GET_GIFTICON_DETAIL: '/api/gifticons/', // 기프티콘 상세 조회 (뒤에 ID 붙여서 사용)
+    GIVE_AWAY_GIFTICON: gifticonId => `/api/gifticons/${gifticonId}/give-away`, // 기프티콘 뿌리기
 
     // 금액형 기프티콘 관련 엔드포인트
     AMOUNT_GIFTICONS: '/api/amount-gifticons', // 금액형 기프티콘 API 기본 경로
@@ -56,8 +57,10 @@ export const API_CONFIG = {
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
 
+    // 쉐어박스 관련 엔드포인트
+    CREATE_SHARE_BOX: '/api/share-boxes',
+    JOIN_SHARE_BOX: shareBoxId => `/api/share-boxes/${shareBoxId}/join`,
   
-
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
     //     CREATE_USER: '/api/users',

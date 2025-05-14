@@ -10,7 +10,7 @@ import {
 import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import GeofencingService from '../services/GeofencingService';
+import geofencingService from '../services/geofencingService';
 import { useNavigation } from '@react-navigation/native';
 import { useMapGifticons } from '../hooks/useMapGifticons'; // 리액트 쿼리 훅
 
@@ -46,7 +46,7 @@ const MapScreen = () => {
     // 최초 렌더링 시 인스턴스 생성
     if (!geofencingServiceRef.current) {
       console.log('GeofencingService 인스턴스 생성');
-      geofencingServiceRef.current = new GeofencingService(uniqueBrands);
+      geofencingServiceRef.current = new geofencingService(uniqueBrands);
     }
 
     console.log('MapScreen 마운트 - 지오펜싱 초기화 시작');
