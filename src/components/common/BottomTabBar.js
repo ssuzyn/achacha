@@ -84,8 +84,8 @@ const createWrappedComponent = (Component, screenName) => {
       return unsubscribeFocus;
     }, [navigation, hideTabBar, showTabBar]);
 
-    // MapScreen은 헤더 없이 렌더링
-    if (screenName === 'Map') {
+    // MapScreen, GifticonManageScreen, ShareboxScreen은 헤더 없이 렌더링
+    if (screenName === 'Map' || screenName === 'GifticonManage' || screenName === 'Sharebox') {
       return (
         <ScreenWithoutHeader>
           <Component {...props} />
