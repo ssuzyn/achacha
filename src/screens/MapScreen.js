@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
@@ -148,11 +147,11 @@ const MapScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text variant="h2" weight="bold" style={styles.headerTitle}>
           기프티콘 MAP
         </Text>
-      </View>
+      </View> */}
       <View style={styles.mapContainer}>
         <KakaoMapWebView
           ref={mapRef}
