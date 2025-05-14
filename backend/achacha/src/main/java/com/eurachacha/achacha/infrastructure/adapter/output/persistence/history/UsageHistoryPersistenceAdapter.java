@@ -23,12 +23,12 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	}
 
 	@Override
-	public UsageHistory getUsageHistoryDetail(Integer userId, Integer gifticonId) {
-		return usageHistoryJpaRepository.findUsageHistoryDetailByUserIdAndGifticonId(userId, gifticonId);
+	public UsageHistory findLatestByUserIdAndGifticonId(Integer userId, Integer gifticonId) {
+		return usageHistoryJpaRepository.findLatestByUserIdAndGifticonId(userId, gifticonId);
 	}
 
 	@Override
-	public List<UsageHistory> findAmountGifticonUsageHistories(Integer gifticonId) {
+	public List<UsageHistory> findAllByGifticonIdOrderByCreatedAtDesc(Integer gifticonId) {
 		return usageHistoryJpaRepository.findAllByGifticonIdOrderByCreatedAtDesc(gifticonId);
 	}
 

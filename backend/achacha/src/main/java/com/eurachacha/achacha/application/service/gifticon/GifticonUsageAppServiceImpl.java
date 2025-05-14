@@ -91,7 +91,8 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		validateGifticonAccess(findGifticon, userId);
 
 		// 사용 내역 조회
-		List<UsageHistory> findUsageHistories = usageHistoryRepository.findAmountGifticonUsageHistories(gifticonId);
+		List<UsageHistory> findUsageHistories = usageHistoryRepository.findAllByGifticonIdOrderByCreatedAtDesc(
+			gifticonId);
 
 		// entity -> dto로 변환
 		List<AmountGifticonUsageHistoriesResponseDto.UsageHistoryDto> usageHistoryResponseDtos = findUsageHistories.stream()
@@ -209,7 +210,7 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		validateGifticonAccess(findGifticon, userId);
 
 		// 사용 내역 조회
-		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, gifticonId);
+		UsageHistory findUsageHistory = usageHistoryRepository.findLatestByUserIdAndGifticonId(userId, gifticonId);
 
 		// entity -> dto 변환
 		ProductGifticonUsageHistoryResponseDto.UsageHistoryDto usageHistoryResponseDto = ProductGifticonUsageHistoryResponseDto.UsageHistoryDto
