@@ -204,10 +204,10 @@ const RegisterDetailScreen = () => {
         setExpiryDate(new Date(metadata.gifticonExpiryDate));
       }
 
-      // 금액형 기프티콘인 경우 금액 설정
+      // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
       if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
         console.log('[상세 화면] 금액 설정:', metadata.gifticonOriginalAmount);
-        setAmount(metadata.gifticonOriginalAmount.toString());
+        setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
       }
     } else {
       // 개별 메타데이터 정보 처리 (역호환성 용)
@@ -249,7 +249,7 @@ const RegisterDetailScreen = () => {
 
       if (route.params?.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
         console.log('[상세 화면] 금액 설정 (개별):', route.params.gifticonOriginalAmount);
-        setAmount(route.params.gifticonOriginalAmount.toString());
+        setAmount(formatAmount(route.params.gifticonOriginalAmount.toString()));
       }
     }
 
@@ -655,9 +655,9 @@ const RegisterDetailScreen = () => {
             setExpiryDate(new Date(metadata.gifticonExpiryDate));
           }
 
-          // 금액형 기프티콘인 경우 금액 설정
-          if (metadata.gifticonOriginalAmount) {
-            setAmount(metadata.gifticonOriginalAmount.toString());
+          // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
+          if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+            setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
           }
         }
       } catch (error) {
@@ -771,9 +771,9 @@ const RegisterDetailScreen = () => {
             setExpiryDate(new Date(metadata.gifticonExpiryDate));
           }
 
-          // 금액형 기프티콘인 경우 금액 설정
-          if (metadata.gifticonOriginalAmount) {
-            setAmount(metadata.gifticonOriginalAmount.toString());
+          // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
+          if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+            setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
           }
         }
       } catch (error) {
@@ -806,6 +806,21 @@ const RegisterDetailScreen = () => {
     return box ? box.name : '';
   };
 
+  // 금액 포맷팅 함수 추가
+  const formatAmount = value => {
+    // 숫자와 쉼표 이외의 문자 제거
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    // 쉼표 추가하여 반환
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  // 금액 입력 핸들러
+  const handleAmountChange = text => {
+    // 포맷팅된 금액 설정
+    setAmount(formatAmount(text));
+  };
+
   // 기프티콘 등록 처리
   const handleRegister = async () => {
     if (!currentImageUri) {
@@ -829,9 +844,14 @@ const RegisterDetailScreen = () => {
     }
 
     // 금액형인 경우 금액 검증
-    if (gifticonType === 'AMOUNT' && (!amount || isNaN(Number(amount)) || Number(amount) <= 0)) {
-      Alert.alert('알림', '유효한 금액을 입력해주세요.');
-      return;
+    if (gifticonType === 'AMOUNT') {
+      // 쉼표를 제거한 순수 숫자 값 얻기
+      const numericAmount = amount.replace(/,/g, '');
+
+      if (!numericAmount || isNaN(Number(numericAmount)) || Number(numericAmount) <= 0) {
+        Alert.alert('알림', '유효한 금액을 입력해주세요.');
+        return;
+      }
     }
 
     try {
@@ -845,7 +865,7 @@ const RegisterDetailScreen = () => {
         gifticonName: productName,
         gifticonExpiryDate: expiryDate.toISOString().split('T')[0], // YYYY-MM-DD 형식으로 변환
         gifticonType: gifticonType,
-        gifticonAmount: gifticonType === 'AMOUNT' ? parseInt(amount, 10) : null,
+        gifticonAmount: gifticonType === 'AMOUNT' ? parseInt(amount.replace(/,/g, ''), 10) : null,
         shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,
         ocrTrainingDataId: ocrTrainingDataId, // 이미지 메타데이터 조회 시 받은 OCR 학습 데이터 ID
       };
@@ -1334,11 +1354,16 @@ const RegisterDetailScreen = () => {
                   </Text>
                   <InputLine
                     value={amount}
-                    onChangeText={setAmount}
+                    onChangeText={handleAmountChange}
                     placeholder="금액을 입력해주세요."
                     keyboardType="numeric"
                     containerStyle={styles.inputContainer}
-                    rightIcon={<Text variant="body1">원</Text>}
+                    inputStyle={styles.amountInput}
+                    rightIcon={
+                      <Text variant="body1" style={styles.amountUnit}>
+                        원
+                      </Text>
+                    }
                   />
                 </>
               )}
@@ -1730,6 +1755,7 @@ const styles = StyleSheet.create({
     color: '#4A5568',
   },
   formContainer: {
+    paddingHorizontal: 50,
     marginTop: 20,
   },
   formSectionTitle: {
@@ -2036,6 +2062,17 @@ const styles = StyleSheet.create({
   selectedBrandIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  amountInput: {
+    textAlign: 'right',
+    paddingRight: 8,
+    fontSize: 16,
+  },
+  amountUnit: {
+    fontSize: 16,
+    paddingTop: 0,
+    color: '#333333',
+    fontWeight: '500',
   },
 });
 
