@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
@@ -20,6 +21,8 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.response.Share
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxParticipantsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 
 import jakarta.validation.Valid;
@@ -119,5 +122,20 @@ public class ShareBoxController {
 	public ResponseEntity<String> leaveShareBox(@PathVariable Integer shareBoxId) {
 		shareBoxAppService.leaveShareBox(shareBoxId);
 		return ResponseEntity.ok("쉐어박스 탈퇴가 완료되었습니다.");
+	}
+
+	// 쉐어박스 내 사용가능한 기프티콘 목록 조회
+	@GetMapping("/{shareBoxId}/available-gifticons")
+	public ResponseEntity<AvailableGifticonsResponseDto> getShareBoxGifticons(
+		@PathVariable Integer shareBoxId,
+		@RequestParam(required = false) GifticonType type,
+		@RequestParam(required = false, defaultValue = "CREATED_DESC") GifticonSortType sort,
+		@RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+		@RequestParam(required = false, defaultValue = "10") @Min(1) Integer size) {
+
+		AvailableGifticonsResponseDto responseDto =
+			shareBoxAppService.getShareBoxGifticons(shareBoxId, type, sort, page, size);
+
+		return ResponseEntity.ok(responseDto);
 	}
 }

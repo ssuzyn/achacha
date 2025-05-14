@@ -13,6 +13,7 @@ import org.springframework.data.domain.SliceImpl;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.brand.QBrand;
+import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.QGifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
@@ -178,6 +179,44 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 			content = content.subList(0, pageable.getPageSize());
 
 		return new SliceImpl<>(content, pageable, hasNext);
+	}
+
+	// 쉐어박스 내 기프티콘 조회
+	@Override
+	public Slice<Gifticon> findGifticonsByShareBoxId(
+		Integer shareBoxId,
+		GifticonType type,
+		Pageable pageable) {
+
+		QGifticon qGifticon = QGifticon.gifticon;
+		QBrand qBrand = QBrand.brand;
+		QUser qUser = QUser.user;
+		QShareBox qShareBox = QShareBox.shareBox;
+
+		// 메인 쿼리 실행
+		List<Gifticon> gifticons = jpaQueryFactory
+			.selectFrom(qGifticon)
+			.join(qGifticon.brand, qBrand).fetchJoin()
+			.join(qGifticon.user, qUser).fetchJoin()
+			.join(qGifticon.sharebox, qShareBox).fetchJoin()
+			.where(
+				qGifticon.sharebox.id.eq(shareBoxId),
+				qGifticon.isDeleted.eq(false),
+				qGifticon.isUsed.eq(false),
+				typeCondition(type, qGifticon)
+			)
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize() + 1)
+			.orderBy(QueryUtils.getOrderSpecifier(pageable.getSort(), qGifticon))
+			.fetch();
+
+		boolean hasNext = false;
+		if (gifticons.size() > pageable.getPageSize()) {
+			gifticons = gifticons.subList(0, pageable.getPageSize());
+			hasNext = true;
+		}
+
+		return new SliceImpl<>(gifticons, pageable, hasNext);
 	}
 
 	// 쉐어박스 목록의 사용가능한 기프티콘 갯수 조회

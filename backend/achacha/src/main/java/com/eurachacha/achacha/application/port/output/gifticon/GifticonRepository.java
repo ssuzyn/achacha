@@ -32,4 +32,6 @@ public interface GifticonRepository {
 	void unshareAllGifticonsByShareBoxId(Integer shareBoxId);
 
 	void unshareAllAvailableGifticonsByUserIdAndShareBoxId(Integer userId, Integer shareBoxId);
+
+	Slice<Gifticon> findGifticonsByShareBoxId(Integer shareBoxId, GifticonType type, Pageable pageable);
 }
