@@ -18,5 +18,9 @@ public interface ShareBoxDomainService {
 	// 초대 코드의 길이를 반환합니다.
 	int getRecommendedInviteCodeLength();
 
+	// 쉐어박스 Owner 여부 확인
+	boolean isShareBoxOwner(ShareBox shareBox, Integer userId);
+
+	// 쉐어박스 Owner 검증
 	void validateShareBoxOwner(ShareBox shareBox, Integer userId);
 }
