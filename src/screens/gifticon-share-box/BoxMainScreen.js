@@ -9,6 +9,7 @@ import {
   Image,
   Modal,
   TextInput,
+  StatusBar,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
@@ -133,17 +134,14 @@ const BoxMainScreen = () => {
     }
 
     try {
-      // TODO: 실제로는 inviteCode로 shareBoxId를 서버에서 조회하거나, 사용자가 박스를 선택해야 함
-      // 여기서는 예시로 shareBoxId를 inviteCode에서 추출했다고 가정 (실제 로직에 맞게 수정 필요)
-      const shareBoxId = inviteCode.trim(); // 실제로는 올바른 shareBoxId를 사용해야 함
-      const response = await apiClient.post(
-        API_CONFIG.ENDPOINTS.JOIN_SHARE_BOX(shareBoxId),
-        { shareBoxInviteCode: inviteCode.trim() }
-      );
+      const shareBoxId = inviteCode.trim();
+      await apiClient.post(API_CONFIG.ENDPOINTS.JOIN_SHARE_BOX(shareBoxId), {
+        shareBoxInviteCode: inviteCode.trim(),
+      });
       alert('쉐어박스에 성공적으로 참여하였습니다!');
       handleCloseModal();
-      // TODO: 필요하다면 목록 새로고침 등 추가
     } catch (error) {
+      console.error('쉐어박스 참여 실패:', error);
       alert('참여에 실패했습니다. 초대코드를 확인해 주세요.');
     }
   };
@@ -246,36 +244,34 @@ const BoxMainScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* 쉐어박스 목록 */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text variant="h2" weight="bold" style={styles.headerTitle}>
-            쉐어박스
-          </Text>
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-          <View style={styles.headerButtons}>
-            <TouchableOpacity
-              style={styles.joinButton}
-              onPress={handleJoinPress}
-              activeOpacity={0.7}
-            >
-              <Text variant="body2" weight="medium" style={styles.joinButtonText}>
-                참여
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.createButton}
-              onPress={handleCreatePress}
-              activeOpacity={0.7}
-            >
-              <Text variant="body2" weight="medium" style={styles.createButtonText}>
-                생성
-              </Text>
-            </TouchableOpacity>
-          </View>
+      {/* 새로운 헤더 영역 */}
+      <View style={styles.header}>
+        <Text variant="h2" weight="bold" style={styles.headerTitle}>
+          쉐어박스
+        </Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.joinButton} onPress={handleJoinPress} activeOpacity={0.7}>
+            <Text variant="body2" weight="medium" style={styles.joinButtonText}>
+              참여
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={handleCreatePress}
+            activeOpacity={0.7}
+          >
+            <Text variant="body2" weight="medium" style={styles.createButtonText}>
+              생성
+            </Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
+      {/* 쉐어박스 목록 - 헤더 아래로 이동 */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.boxesContainer}>
           {DUMMY_DATA.data.map((item, index) => renderShareBox(item, index))}
         </View>
@@ -294,9 +290,8 @@ const BoxMainScreen = () => {
               초대코드 입력하기
             </Text>
             <Text variant="body2" style={styles.modalSubtitle}>
-              초대받은 쉐어박스에 참여하려면{'\n'}공유받은 초대코드를 입력해 주세요.
+              {'초대받은 쉐어박스에 참여하려면\n공유받은 초대코드를 입력해 주세요.'}
             </Text>
-
             <TextInput
               style={styles.codeInput}
               placeholder="초대코드"
@@ -307,7 +302,6 @@ const BoxMainScreen = () => {
               autoCorrect={false}
               fontFamily="Pretendard-Regular"
             />
-
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -336,22 +330,22 @@ const BoxMainScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
-    paddingHorizontal: 2,
-    paddingTop: 0,
   },
   header: {
+    height: 80,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 0,
-    paddingBottom: 15,
-    paddingHorizontal: 2,
+    paddingHorizontal: 12,
+    paddingTop: 40,
+    paddingBottom: 0,
+    marginBottom: 5,
+    backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 24,
-    marginLeft: 5,
     letterSpacing: -0.5,
     fontFamily: 'Pretendard-Bold',
   },
@@ -382,12 +376,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 10,
     paddingBottom: 30,
+    paddingHorizontal: 2,
   },
   boxesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 0,
   },
   boxWrapper: {
     width: '48%',
@@ -469,7 +463,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: 'Pretendard-Bold',
   },
-  // 모달 스타일
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

@@ -188,8 +188,9 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 80,
-    paddingHorizontal: 18,
-    paddingTop: 25,
+    paddingHorizontal: 12,
+    paddingTop: 40,
+    marginBottom: 5,
     borderBottomWidth: 0,
     backgroundColor: '#fafafa',
     flexDirection: 'row',
