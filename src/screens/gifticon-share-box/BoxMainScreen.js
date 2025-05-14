@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  FlatList,
   TouchableOpacity,
   Image,
   Modal,
@@ -12,18 +11,16 @@ import {
   Alert,
   ActivityIndicator,
   StatusBar,
+  ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { API_CONFIG } from '../../api/config';
-import apiClient from '../../api/apiClient';
 import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxApi';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
-
-
 
 // 배경색 배열 - Theme에서 가져온 색상에 30% 투명도 적용
 const BACKGROUND_COLORS = [
@@ -80,7 +77,7 @@ const BoxMainScreen = () => {
     setLoading(true);
     try {
       const data = await fetchShareBoxes({ page: nextPage, size: 8 });
-      setShareBoxes(prev => nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]);
+      setShareBoxes(prev => (nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]));
       setHasNextPage(data.hasNextPage);
       setPage(data.nextPage);
     } catch (e) {
@@ -100,12 +97,6 @@ const BoxMainScreen = () => {
       loadShareBoxes(0);
     }, [])
   );
-
-  const handleEndReached = () => {
-    if (hasNextPage && !loading) {
-      loadShareBoxes(page);
-    }
-  };
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
@@ -281,11 +272,40 @@ const BoxMainScreen = () => {
       </View>
 
       {/* 쉐어박스 목록 - 헤더 아래로 이동 */}
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const paddingToBottom = 20;
+          const isCloseToBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+
+          if (isCloseToBottom && !loading && hasNextPage) {
+            loadShareBoxes(page);
+          }
+        }}
+        scrollEventThrottle={400}
+      >
         <View style={styles.boxesContainer}>
-          {DUMMY_DATA.data.map((item, index) => renderShareBox(item, index))}
+          {shareBoxes.length > 0 ? (
+            shareBoxes.map((item, index) => renderShareBox(item, index))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text variant="body1" style={styles.emptyText}>
+                쉐어박스가 없습니다.
+              </Text>
+            </View>
+          )}
         </View>
       </ScrollView>
+
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#56AEE9" />
+        </View>
+      )}
 
       {/* 초대코드 입력 모달 */}
       <Modal
@@ -307,7 +327,7 @@ const BoxMainScreen = () => {
               placeholder="초대코드"
               placeholderTextColor="#A0AEC0"
               value={inviteCode}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 // 영문(대소문자) 또는 숫자만 허용, 10자리로 자르기
                 const filtered = text.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
                 setInviteCode(filtered);
@@ -438,6 +458,7 @@ const styles = StyleSheet.create({
   },
   boxRole: {
     color: '#718096',
+    fontFamily: 'Pretendard-Regular',
     fontSize: 13,
     letterSpacing: -0.2,
     marginBottom: 2,
@@ -541,6 +562,20 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: 'white',
     fontFamily: 'Pretendard-Medium',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#718096',
+    fontFamily: 'Pretendard-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
