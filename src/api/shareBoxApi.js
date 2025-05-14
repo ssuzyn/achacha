@@ -93,4 +93,10 @@ export const changeShareBoxParticipationSetting = async (shareBoxId, allowPartic
     { shareBoxAllowParticipation: allowParticipation }
   );
   return response.data;
+};
+
+// 쉐어박스에 기프티콘 공유 API
+export const shareGifticonToShareBox = async (shareBoxId, gifticonId) => {
+  const response = await apiClient.post(API_CONFIG.ENDPOINTS.SHARE_BOX_GIFTICON(shareBoxId, gifticonId));
+  return response.data;
 }; 

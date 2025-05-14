@@ -10,6 +10,7 @@ import {
   StatusBar,
   Modal,
   Alert,
+  FlatList,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -19,6 +20,7 @@ import AlertDialog from '../../../components/ui/AlertDialog';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
+import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxApi';
 
 const DetailProductScreen = () => {
   const insets = useSafeAreaInsets();
@@ -51,13 +53,8 @@ const DetailProductScreen = () => {
   // 공유 위치 선택 상태
   const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
-
-  // 더미 데이터: 쉐어박스 목록
-  const shareBoxes = [
-    { id: 1, name: '으라차차 해인네' },
-    { id: 2, name: '으라차차 주은이네' },
-    { id: 3, name: '으라차차 대성이네' },
-  ];
+  // 쉐어박스 목록 상태
+  const [shareBoxes, setShareBoxes] = useState([]);
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -99,6 +96,23 @@ const DetailProductScreen = () => {
       loadGifticonData(gifticonId);
     }
   }, [gifticonId]);
+
+  // 쉐어박스 목록 불러오기
+  const loadShareBoxes = async () => {
+    try {
+      const res = await fetchShareBoxes({ size: 20 });
+      setShareBoxes(res.shareBoxes || []);
+    } catch (e) {
+      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+    }
+  };
+
+  // 공유 모달 열릴 때마다 쉐어박스 목록 불러오기
+  useEffect(() => {
+    if (isShareModalVisible) {
+      loadShareBoxes();
+    }
+  }, [isShareModalVisible]);
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
@@ -214,50 +228,42 @@ const DetailProductScreen = () => {
 
   // 공유하기 기능 - 모달 표시로 변경
   const handleShare = () => {
-    // 기본 쉐어박스 선택 초기화
     setShareBoxType('SHARE_BOX');
     if (shareBoxes.length > 0) {
-      setSelectedShareBoxId(shareBoxes[0].id);
+      setSelectedShareBoxId(shareBoxes[0].shareBoxId);
+    } else {
+      setSelectedShareBoxId(null);
     }
-
-    // 공유 모달 표시
     setShareModalVisible(true);
   };
 
   // 공유 완료 처리
-  const handleShareConfirm = () => {
+  const handleShareConfirm = async () => {
     // 공유 위치 선택 확인
     if (shareBoxType === 'SHARE_BOX' && !selectedShareBoxId) {
       Alert.alert('알림', '공유할 쉐어박스를 선택해주세요.');
       return;
     }
 
-    // 공유 API 호출 또는 처리 로직
-    // console.log('기프티콘 공유:', gifticonId, '위치:', shareBoxType, '쉐어박스:', getShareBoxName(selectedShareBoxId));
-
-    // 성공 메시지
-    Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
-      {
-        text: '확인',
-        onPress: () => {
-          // 모달 닫기
-          setShareModalVisible(false);
-          // 추가 로직이 필요하면 여기에 구현
+    try {
+      await shareGifticonToShareBox(selectedShareBoxId, gifticonId);
+      Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            setShareModalVisible(false);
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (e) {
+      Alert.alert('에러', '기프티콘 공유에 실패했습니다.');
+    }
   };
 
   // 공유 모달 닫기
   const handleCloseShareModal = () => {
     setShareModalVisible(false);
   };
-
-  // // 박스명 가져오기
-  // const getShareBoxName = id => {
-  //   const box = shareBoxes.find(item => item.id === id);
-  //   return box ? box.name : '';
-  // };
 
   // 사용하기 기능
   const handleUse = () => {
@@ -740,31 +746,38 @@ const DetailProductScreen = () => {
             </Text> */}
 
             {/* 쉐어박스 선택 */}
-            <View style={styles.boxSection}>
-              {shareBoxes.map(box => (
-                <View key={box.id} style={styles.boxRow}>
+            <FlatList
+              data={shareBoxes}
+              keyExtractor={item => String(item.shareBoxId)}
+              renderItem={({ item: box }) => (
+                <View style={styles.boxRow}>
                   <TouchableOpacity
                     style={[
                       styles.checkboxContainer,
                       shareBoxType === 'SHARE_BOX' &&
-                        selectedShareBoxId === box.id &&
+                        selectedShareBoxId === box.shareBoxId &&
                         styles.checkboxContainerSelected,
                     ]}
                     onPress={() => {
                       setShareBoxType('SHARE_BOX');
-                      setSelectedShareBoxId(box.id);
+                      setSelectedShareBoxId(box.shareBoxId);
                     }}
                   >
                     <View style={styles.checkbox}>
-                      {shareBoxType === 'SHARE_BOX' && selectedShareBoxId === box.id && (
+                      {shareBoxType === 'SHARE_BOX' && selectedShareBoxId === box.shareBoxId && (
                         <Icon name="check" type="material" size={16} color={theme.colors.primary} />
                       )}
                     </View>
-                    <Text style={styles.checkboxLabel}>{box.name}</Text>
+                    <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </View>
+              )}
+              style={styles.boxSection}
+              contentContainerStyle={{ paddingBottom: 10 }}
+              showsVerticalScrollIndicator={false}
+              removeClippedSubviews={false}
+              ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>쉐어박스가 없습니다.</Text>}
+            />
 
             <View style={styles.boxButtonContainer}>
               <TouchableOpacity style={styles.cancelShareButton} onPress={handleCloseShareModal}>
