@@ -758,10 +758,11 @@ const DetailAmountScreen = () => {
                       {/* 쉐어박스이고 내가 공유한 경우에만 공유 취소 아이콘 표시 */}
                       {scope === 'SHARE_BOX' && isSharer && (
                         <TouchableOpacity
-                          style={styles.actionIconButton}
+                          style={styles.actionRemoveButton}
                           onPress={handleCancelShare}
                         >
-                          <Icon name="person-remove" type="material" size={24} color="#718096" />
+                          <Icon name="arrow-downward" type="material" size={20} color="#718096" />
+                          <Text style={styles.actionRemoveText}>내리기</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -1808,6 +1809,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+  },
+  actionRemoveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F9F9F9',
+    marginLeft: 8,
+  },
+  actionRemoveText: {
+    fontSize: 14,
+    color: '#718096',
+    marginLeft: 4,
+    fontWeight: '500',
   },
   // 공유 모달 관련 스타일
   shareModalOverlay: {
