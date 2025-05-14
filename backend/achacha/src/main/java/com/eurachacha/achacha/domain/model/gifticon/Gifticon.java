@@ -2,6 +2,8 @@ package com.eurachacha.achacha.domain.model.gifticon;
 
 import java.time.LocalDate;
 
+import org.hibernate.annotations.SQLRestriction;
+
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
@@ -25,6 +27,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@SQLRestriction("is_deleted = false")
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
