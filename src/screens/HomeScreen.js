@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Carousel from 'react-native-reanimated-carousel';
 import Animated from 'react-native-reanimated';
 import gifticonService from '../api/gifticonService';
+import { useNavigation } from '@react-navigation/native';
 
 // 캐러셀에 표시할 카드 데이터
 const CAROUSEL_CARDS = [
@@ -51,6 +52,7 @@ const { width: screenWidth } = Dimensions.get('window');
 
 const HomeScreen = () => {
   const { theme } = useTheme();
+  const navigation = useNavigation();
   const username = '으라차차';
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -252,15 +254,20 @@ const HomeScreen = () => {
       color: theme.colors.error,
       textAlign: 'center',
     },
-    emptyGifticonContainer: {
+    emptyGifticonCard: {
+      width: '100%',
       height: 180,
+      backgroundColor: '#e0e0e0',
+      borderRadius: 12,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      padding: 15,
     },
-    emptyGifticonText: {
-      color: theme.colors.textSecondary,
+    emptyGifticonCardText: {
+      color: theme.colors.border,
+      textAlign: 'center',
       fontSize: 16,
+      lineHeight: 22,
     },
     bottomCardSection: {
       paddingHorizontal: 2,
@@ -601,9 +608,13 @@ const HomeScreen = () => {
 
     if (expiringGifticons.length === 0) {
       return (
-        <View style={styles.emptyGifticonContainer}>
-          <Text style={styles.emptyGifticonText}>임박한 기프티콘이 없어요.</Text>
-        </View>
+        <TouchableOpacity onPress={() => navigation.navigate('RegisterMainScreen')}>
+          <View style={styles.emptyGifticonCard}>
+            <Text style={styles.emptyGifticonCardText}>
+              아직 등록한 기프티콘이 없어요. {'\n'}등록하러 가볼까요?
+            </Text>
+          </View>
+        </TouchableOpacity>
       );
     }
 
