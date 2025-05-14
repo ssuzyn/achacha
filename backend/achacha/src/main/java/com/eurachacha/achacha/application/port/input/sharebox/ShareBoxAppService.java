@@ -28,4 +28,6 @@ public interface ShareBoxAppService {
 	ShareBoxSettingsResponseDto getShareBoxSettings(Integer shareBoxId);
 
 	void updateShareBoxName(Integer shareBoxId, ShareBoxNameUpdateRequestDto requestDto);
+
+	void leaveShareBox(Integer shareBoxId);
 }
