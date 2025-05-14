@@ -234,7 +234,7 @@ const WatchGuideScreen = () => {
               </Text>
             </View>
             <Text variant="body2" style={styles.featureDescription}>
-              중요 알림은 놓치지 않도록 스마트 워치에서 바로!
+              중요 알림은 놓치지 않도록 워치에서 바로!
             </Text>
 
             <View style={styles.animationContainer}>
