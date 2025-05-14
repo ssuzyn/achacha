@@ -16,7 +16,7 @@ public interface UsageHistoryJpaRepository extends JpaRepository<UsageHistory, I
 		SELECT uh
 		FROM UsageHistory uh
 		WHERE uh.user.id = :userId
-			AND uh.gifticon.id = :gifticonId
+		AND uh.gifticon.id = :gifticonId
 		ORDER BY uh.createdAt DESC
 		LIMIT 1
 		""")

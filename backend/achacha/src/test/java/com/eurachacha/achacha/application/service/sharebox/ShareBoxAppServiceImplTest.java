@@ -509,4 +509,77 @@ class ShareBoxAppServiceImplTest {
 
 		verify(shareBox, never()).updateName(any());
 	}
+
+	@DisplayName("쉐어박스 탈퇴 - 방장이 탈퇴하면 쉐어박스가 삭제되어야 한다")
+	@Test
+	void leaveShareBox_WhenUserIsOwner_ThenDeleteShareBox() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+
+		ShareBox shareBox = mock(ShareBox.class);
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		given(participationRepository.checkParticipation(userId, shareBoxId)).willReturn(true);
+		given(shareBoxDomainService.isShareBoxOwner(shareBox, userId)).willReturn(true);
+
+		// when
+		Throwable thrown = catchThrowable(() -> shareBoxAppService.leaveShareBox(shareBoxId));
+
+		// then
+		assertThat(thrown).isNull();
+		verify(gifticonRepository).unshareAllGifticonsByShareBoxId(eq(shareBoxId));
+		verify(participationRepository).deleteAllByShareBoxId(eq(shareBoxId));
+		verify(shareBoxRepository).delete(eq(shareBox));
+	}
+
+	@DisplayName("쉐어박스 탈퇴 - 일반 참여자가 탈퇴하면 자신의 참여 정보만 삭제되어야 한다")
+	@Test
+	void leaveShareBox_WhenUserIsNotOwner_ThenDeleteParticipation() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+
+		ShareBox shareBox = mock(ShareBox.class);
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		given(participationRepository.checkParticipation(userId, shareBoxId)).willReturn(true);
+		given(shareBoxDomainService.isShareBoxOwner(shareBox, userId)).willReturn(false);
+
+		// when
+		Throwable thrown = catchThrowable(() -> shareBoxAppService.leaveShareBox(shareBoxId));
+
+		// then
+		assertThat(thrown).isNull();
+		verify(gifticonRepository).unshareAllAvailableGifticonsByUserIdAndShareBoxId(eq(userId), eq(shareBoxId));
+		verify(participationRepository).deleteByUserIdAndShareBoxId(eq(userId), eq(shareBoxId));
+		verify(shareBoxRepository, never()).delete(any());
+	}
+
+	@DisplayName("쉐어박스 탈퇴 - 참여하지 않은 쉐어박스 탈퇴 시 예외가 발생해야 한다")
+	@Test
+	void leaveShareBox_WhenUserNotParticipating_ThenThrowException() {
+		// given
+		Integer shareBoxId = 1;
+		Integer userId = 1;
+
+		ShareBox shareBox = mock(ShareBox.class);
+
+		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
+		given(participationRepository.checkParticipation(userId, shareBoxId)).willReturn(false);
+
+		// when
+		Throwable thrown = catchThrowable(() -> shareBoxAppService.leaveShareBox(shareBoxId));
+
+		// then
+		assertThat(thrown)
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+
+		verify(gifticonRepository, never()).unshareAllGifticonsByShareBoxId(any());
+		verify(gifticonRepository, never()).unshareAllAvailableGifticonsByUserIdAndShareBoxId(any(), any());
+		verify(participationRepository, never()).deleteByUserIdAndShareBoxId(any(), any());
+		verify(participationRepository, never()).deleteAllByShareBoxId(any());
+		verify(shareBoxRepository, never()).delete(any());
+	}
 }

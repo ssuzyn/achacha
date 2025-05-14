@@ -3,6 +3,7 @@ package com.eurachacha.achacha.infrastructure.adapter.output.persistence.giftico
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,8 +13,7 @@ import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 @Repository
 public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>, GifticonRepositoryCustom {
 	@Query("""
-		SELECT
-			g
+		SELECT g
 		FROM Gifticon g
 		JOIN FETCH g.brand
 		JOIN FETCH g.user
@@ -23,4 +23,24 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 	Optional<Gifticon> findGifticonDetailById(@Param("gifticonId") Integer gifticonId);
 
 	boolean existsByBarcode(String barcode);
+
+	@Modifying
+	@Query("""
+		UPDATE Gifticon g
+		SET g.sharebox = NULL
+		WHERE g.sharebox.id = :shareBoxId
+		""")
+	void unshareAllGifticonsByShareBoxId(@Param("shareBoxId") Integer shareBoxId);
+
+	@Modifying
+	@Query("""
+		UPDATE Gifticon g
+		SET g.sharebox = NULL
+		WHERE g.user.id = :userId
+		AND g.sharebox.id = :shareBoxId
+		AND g.isDeleted = false
+		AND g.isUsed = false
+		""")
+	void unshareAllAvailableGifticonsByUserIdAndShareBoxId(@Param("userId") Integer userId,
+		@Param("shareBoxId") Integer shareBoxId);
 }

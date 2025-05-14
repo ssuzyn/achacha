@@ -113,4 +113,11 @@ public class ShareBoxController {
 		shareBoxAppService.updateShareBoxName(shareBoxId, requestDto);
 		return ResponseEntity.ok("쉐어박스 이름이 변경되었습니다.");
 	}
+
+	// 나가기 api
+	@DeleteMapping("/{shareBoxId}/leave")
+	public ResponseEntity<String> leaveShareBox(@PathVariable Integer shareBoxId) {
+		shareBoxAppService.leaveShareBox(shareBoxId);
+		return ResponseEntity.ok("쉐어박스 탈퇴가 완료되었습니다.");
+	}
 }

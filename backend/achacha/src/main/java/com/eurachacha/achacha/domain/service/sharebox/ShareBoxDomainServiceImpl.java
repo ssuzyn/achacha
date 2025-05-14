@@ -60,8 +60,13 @@ public class ShareBoxDomainServiceImpl implements ShareBoxDomainService {
 	}
 
 	@Override
+	public boolean isShareBoxOwner(ShareBox shareBox, Integer userId) {
+		return shareBox.getUser().getId().equals(userId);
+	}
+
+	@Override
 	public void validateShareBoxOwner(ShareBox shareBox, Integer userId) {
-		if (!shareBox.getUser().getId().equals(userId)) {
+		if (!isShareBoxOwner(shareBox, userId)) {
 			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_OWNER_ACCESS);
 		}
 	}

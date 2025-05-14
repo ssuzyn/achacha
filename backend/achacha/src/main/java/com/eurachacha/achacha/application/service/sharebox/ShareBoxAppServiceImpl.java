@@ -291,6 +291,51 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		log.info("쉐어박스 이름 변경 완료 - 쉐어박스 ID: {}", shareBoxId);
 	}
 
+	@Transactional
+	@Override
+	public void leaveShareBox(Integer shareBoxId) {
+		log.info("쉐어박스 탈퇴 시작 - 쉐어박스 ID: {}", shareBoxId);
+
+		// 현재 사용자 ID (인증 구현 시 변경 필요)
+		Integer userId = 1; // 인증 구현 시 변경 필요
+
+		// 쉐어박스 조회
+		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
+
+		// 참여 여부 확인
+		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+		}
+
+		// 방장 여부 확인
+		boolean isOwner = shareBoxDomainService.isShareBoxOwner(shareBox, userId);
+
+		// 방장인 경우 쉐어박스 삭제
+		if (isOwner) {
+			log.info("방장의 쉐어박스 탈퇴로 인한 쉐어박스 삭제 - 쉐어박스 ID: {}", shareBoxId);
+
+			// 1. 모든 쉐어박스 연결 기프티콘 해제 (벌크 업데이트)
+			gifticonRepository.unshareAllGifticonsByShareBoxId(shareBoxId);
+			// 2. 모든 참여 정보 삭제
+			participationRepository.deleteAllByShareBoxId(shareBoxId);
+			// 3. 쉐어박스 삭제
+			shareBoxRepository.delete(shareBox);
+
+			return;
+		}
+
+		// 일반 참여자인 경우
+		log.info("일반 참여자의 쉐어박스 탈퇴 - 사용자 ID: {}, 쉐어박스 ID: {}", userId, shareBoxId);
+
+		// 1. 사용자의 사용 가능한 기프티콘 공유 해제 (벌크 업데이트)
+		gifticonRepository.unshareAllAvailableGifticonsByUserIdAndShareBoxId(userId, shareBoxId);
+
+		// 2. 참여 정보 삭제
+		participationRepository.deleteByUserIdAndShareBoxId(userId, shareBoxId);
+
+		log.info("쉐어박스 탈퇴 완료 - 사용자 ID: {}, 쉐어박스 ID: {}", userId, shareBoxId);
+	}
+
 	@Override
 	public ShareBoxSettingsResponseDto getShareBoxSettings(Integer shareBoxId) {
 		log.info("쉐어박스 설정 조회 시작 - 쉐어박스 ID: {}", shareBoxId);

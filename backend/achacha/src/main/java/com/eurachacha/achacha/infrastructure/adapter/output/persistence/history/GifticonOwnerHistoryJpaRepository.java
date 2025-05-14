@@ -13,7 +13,7 @@ public interface GifticonOwnerHistoryJpaRepository extends JpaRepository<Giftico
 		SELECT oh
 		FROM GifticonOwnerHistory oh
 		WHERE oh.fromUser.id = :userId
-			AND oh.gifticon.id = :gifticonId
+		AND oh.gifticon.id = :gifticonId
 		ORDER BY oh.createdAt DESC
 		LIMIT 1
 		""")

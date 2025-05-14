@@ -28,4 +28,8 @@ public interface GifticonRepository {
 
 	// ShareBox의 기프티콘 갯수 조회
 	Map<Integer, Long> countGifticonsByShareBoxIds(List<Integer> shareBoxIds);
+
+	void unshareAllGifticonsByShareBoxId(Integer shareBoxId);
+
+	void unshareAllAvailableGifticonsByUserIdAndShareBoxId(Integer userId, Integer shareBoxId);
 }
