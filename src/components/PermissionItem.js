@@ -40,7 +40,8 @@ const styles = StyleSheet.create({
     marginRight: ICON_MARGIN_RIGHT,
   },
   permissionTitle: {
-    fontWeight: '700', // $fontWeightBold
+    fontWeight: '700',
+    fontFamily: 'Pretendard-Bold',
   },
   permissionDescription: {
     textAlign: 'left', // 왼쪽 정렬 유지
