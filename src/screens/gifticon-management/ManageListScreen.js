@@ -89,8 +89,8 @@ const ManageListScreen = () => {
     header: {
       height: 80,
       paddingHorizontal: 12,
-      paddingTop: 40,
-      marginBottom: 5,
+      paddingTop: 30,
+      marginBottom: 0,
       backgroundColor: theme.colors.background,
       flexDirection: 'row',
       alignItems: 'center',

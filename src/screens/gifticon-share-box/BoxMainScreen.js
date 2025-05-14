@@ -339,9 +339,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 12,
-    paddingTop: 40,
+    paddingTop: 30,
     paddingBottom: 0,
-    marginBottom: 5,
+    marginBottom: 0,
     backgroundColor: 'transparent',
   },
   headerTitle: {
