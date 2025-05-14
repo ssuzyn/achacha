@@ -26,12 +26,10 @@ const useKakaoLoginMutation = () => {
   return useMutation({
     mutationFn: loginWithKakao,
     onSuccess: data => {
-      // 서버에서 받은 데이터로 인증 상태 업데이트
-      const { user, accessToken, refreshToken } = data;
-      setAuth(user, { accessToken, refreshToken }, 'kakao');
+      const { user, accessToken, refreshToken, bleToken } = data;
+      setAuth(user, { accessToken, refreshToken, bleToken }, 'kakao');
     },
     onError: error => {
-      // 공통 에러 핸들러 사용
       handleError(error);
       console.error('Kakao Login API Error:', error);
     },

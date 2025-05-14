@@ -26,7 +26,20 @@ export const API_CONFIG = {
     LOGOUT: '/api/auth/logout', // 로그아웃
     REFRESH_TOKEN: '/api/auth/refresh', // 토큰 갱신
     USER_PROFILE: '/api/users/me', // 사용자 정보 조회
+    USER_INFO: (userId) => `/api/users/${userId}`,
 
+    // 쉐어박스 관련
+    SHARE_BOXES: '/api/share-boxes', // 목록 조회(GET), 생성(POST) 모두 사용
+    CREATE_SHARE_BOX: '/api/share-boxes', // (생성용 별칭, 실제 경로는 동일)
+    JOIN_SHARE_BOX: '/api/share-boxes/join',
+    LEAVE_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/leave`,
+    SHARE_BOX_SETTINGS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/settings`,
+    SHARE_BOX_USERS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/users`,
+    AVAILABLE_GIFTICONS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/available-gifticons`,
+    USED_GIFTICONS: (shareBoxId) => `/api/share-boxes/${shareBoxId}/used-gifticons`,
+    SHARE_BOX_NAME: (shareBoxId) => `/api/share-boxes/${shareBoxId}/name`,
+    PARTICIPATION_SETTING: (shareBoxId) => `/api/share-boxes/${shareBoxId}/participation-setting`,
+    SHARE_BOX_GIFTICON: (shareBoxId, gifticonId) => `/api/share-boxes/${shareBoxId}/gifticons/${gifticonId}`,
     // 기프티콘 관련 엔드포인트
     GIFTICON_IMAGE_METADATA: '/api/gifticons/image-metadata', // 기프티콘 이미지 메타데이터 조회
     REGISTER_GIFTICON: '/api/gifticons', // 기프티콘 등록
@@ -43,9 +56,7 @@ export const API_CONFIG = {
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
 
-    // 쉐어박스 관련 엔드포인트
-    CREATE_SHARE_BOX: '/api/share-boxes',
-    JOIN_SHARE_BOX: (shareBoxId) => `/api/share-boxes/${shareBoxId}/join`,
+  
 
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
