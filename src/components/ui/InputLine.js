@@ -107,13 +107,13 @@ const styles = StyleSheet.create({
   },
   inputStyle: {
     fontSize: 14,
-    minHeight: 40,
+    minHeight: 30,
     ...Platform.select({
       ios: {
-        paddingVertical: 10,
+        paddingVertical: 5,
       },
       android: {
-        paddingVertical: 8,
+        paddingVertical: 5,
       },
     }),
   },

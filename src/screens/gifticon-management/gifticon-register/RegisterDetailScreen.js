@@ -1764,7 +1764,6 @@ const styles = StyleSheet.create({
     width: 180,
   },
   infoSection: {
-    backgroundColor: '#F9FAFC',
     borderRadius: 10,
     padding: 5,
     marginBottom: 5,
@@ -1795,15 +1794,15 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     paddingHorizontal: 50,
-    marginTop: 20,
+    marginTop: 2,
   },
   formSectionTitle: {
     marginTop: 10,
-    marginBottom: 10,
-    paddingHorizontal: 8,
+    marginBottom: 0,
+    paddingHorizontal: 6,
   },
   inputContainer: {
-    marginBottom: 10,
+    marginBottom: 0,
   },
   button: {
     width: '100%',
