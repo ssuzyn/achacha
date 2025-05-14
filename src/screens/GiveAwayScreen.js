@@ -17,12 +17,12 @@ import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
 import Tooltip from '../components/Tooltip';
 import LottieView from 'lottie-react-native';
-import NearbyUsersService from '../services/NearbyUsersService';
+import nearbyUsersService from '../services/nearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { useNavigation } from '@react-navigation/native';
-import useDeviceStore from '../store/deviceStore';
+import useAuthStore from '../store/authStore';
 import { PermissionsAndroid } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -168,7 +168,7 @@ const GiveAwayScreen = ({ onClose }) => {
   const tooltipOpacity = useRef(new Animated.Value(0)).current;
 
   // BLE 관련 상태
-  const { appUUID, userUUID, initializeUUIDs } = useDeviceStore();
+  const { bleToken } = useAuthStore();
   const [isTransferring, setIsTransferring] = useState(false);
   const [bluetoothReady, setBluetoothReady] = useState(false);
 
@@ -421,15 +421,10 @@ const GiveAwayScreen = ({ onClose }) => {
         // 로딩 시작 시간 기록
         const loadingStartTime = Date.now();
 
-        // Zustand 스토어 초기화
-        if (!appUUID) {
-          await initializeUUIDs();
-        }
-
         // BLE 서비스 초기화
         try {
           // NearbyUsersService 초기화 - 싱글톤이므로 참조만 저장
-          bleServiceRef.current = NearbyUsersService;
+          bleServiceRef.current = nearbyUsersService;
 
           // 현재 광고 중이라면 중지
           await bleServiceRef.current.stopAdvertising();
