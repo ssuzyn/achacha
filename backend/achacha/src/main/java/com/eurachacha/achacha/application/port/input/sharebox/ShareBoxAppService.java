@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.application.port.input.sharebox;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxNameUpdateRequestDto;
@@ -11,6 +12,7 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.response.Share
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 
 public interface ShareBoxAppService {
@@ -36,4 +38,7 @@ public interface ShareBoxAppService {
 
 	AvailableGifticonsResponseDto getShareBoxGifticons(Integer shareBoxId, GifticonType type,
 		GifticonSortType sort, Integer page, Integer size);
+
+	UsedGifticonsResponseDto getShareBoxUsedGifticons(Integer shareBoxId, GifticonType type,
+		GifticonUsedSortType sort, Integer page, Integer size);
 }
