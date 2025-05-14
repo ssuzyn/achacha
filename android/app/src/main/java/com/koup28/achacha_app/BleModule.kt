@@ -16,6 +16,7 @@ import java.util.*
 class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     companion object {
         private const val TAG = "BleModule"
+        private const val MAX_TOKEN_SIZE = 13 // 31(최대) - 2(헤더) - 16(UUID)
     }
 
     private val bluetoothManager: BluetoothManager = reactContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -48,115 +49,83 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
                 return
             }
 
-            try {
-                // 원본 데이터 로깅
-                Log.d(TAG, "수신된 JSON 데이터: $jsonString")
-
-                // 광고 데이터 파싱
-                val jsonObject = JSONObject(jsonString)
-                val serviceUUID = jsonObject.getString("SERVICE_UUID")
-                val bleToken = jsonObject.getString("bleToken")
-
-                Log.d(TAG, "파싱된 데이터:")
-                Log.d(TAG, "- SERVICE_UUID: $serviceUUID")
-                Log.d(TAG, "- bleToken: $bleToken")
-
-                // UUID 문자열 길이 검증
-                if (serviceUUID.length != 32) {
-                    Log.e(TAG, "Invalid UUID length: ${serviceUUID.length} (expected 32)")
-                    promise.reject("INVALID_UUID", "Invalid UUID length")
-                    return
-                }
-
-                // BLE 토큰 길이 검증
-                if (bleToken.isEmpty()) {
-                    Log.e(TAG, "BLE 토큰이 비어있습니다")
-                    promise.reject("INVALID_TOKEN", "BLE token is empty")
-                    return
-                }
-
-                // 하이픈 추가 (정확한 위치에)
-                val formattedUuid = StringBuilder().apply {
-                    append(serviceUUID.substring(0, 8))  // 8자리
-                    append("-")
-                    append(serviceUUID.substring(8, 12))  // 4자리
-                    append("-")
-                    append(serviceUUID.substring(12, 16))  // 4자리
-                    append("-")
-                    append(serviceUUID.substring(16, 20))  // 4자리
-                    append("-")
-                    append(serviceUUID.substring(20, 32))  // 12자리
-                }.toString()
-
-                Log.d(TAG, "=== BLE 광고 정보 ===")
-                Log.d(TAG, "서비스 UUID: $formattedUuid")
-                Log.d(TAG, "BLE 토큰: $bleToken")
-                Log.d(TAG, "===================")
-
-                // UUID 변환
-                val uuid = try {
-                    UUID.fromString(formattedUuid)
-                } catch (e: IllegalArgumentException) {
-                    Log.e(TAG, "Invalid UUID format: $formattedUuid", e)
-                    promise.reject("INVALID_UUID", "Invalid UUID format")
-                    return
-                }
-
-                // 광고 설정
-                val settings = AdvertiseSettings.Builder()
-                    .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-                    .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-                    .setConnectable(true)
-                    .setTimeout(0)
-                    .build()
-
-                // 광고 데이터 준비
-                val parcelUuid = ParcelUuid(uuid)
-                val advertiseData = AdvertiseData.Builder()
-                    .setIncludeDeviceName(false)
-                    .addServiceUuid(parcelUuid)
-                    .addServiceData(parcelUuid, bleToken.toByteArray(Charsets.UTF_8))
-                    .build()
-
-                // 데이터 크기 로깅
-                Log.d(TAG, "Service UUID size: 16 bytes")
-                Log.d(TAG, "BLE Token size: ${bleToken.toByteArray(Charsets.UTF_8).size} bytes")
-                Log.d(TAG, "Total payload size: ${16 + bleToken.toByteArray(Charsets.UTF_8).size} bytes")
-
-                // 콜백 설정
-                advertiseCallback = object : AdvertiseCallback() {
-                    override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                        Log.d(TAG, "광고 시작 성공!")
-                        promise.resolve(null)
-                    }
-
-                    override fun onStartFailure(errorCode: Int) {
-                        val errorMessage = when (errorCode) {
-                            AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED -> "Advertising is already started"
-                            AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE -> "Advertisement data is too large"
-                            AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "Advertising is not supported on this device"
-                            AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR -> "Internal error occurred while advertising"
-                            AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "No advertising instance is available"
-                            else -> "Failed to start advertising with error code: $errorCode"
-                        }
-                        Log.e(TAG, "광고 시작 실패: $errorMessage")
-                        promise.reject("ADVERTISE_FAILED", errorMessage)
-                    }
-                }
-
-                // 광고 시작
-                bluetoothLeAdvertiser!!.startAdvertising(settings, advertiseData, advertiseCallback)
-
-            } catch (e: Exception) {
-                Log.e(TAG, "광고 시작 중 오류 발생", e)
-                Log.e(TAG, "오류 메시지: ${e.message}")
-                Log.e(TAG, "오류 스택트레이스:", e)
-                promise.reject("ADVERTISE_FAILED", "Failed to start advertising: ${e.message}")
+            // JSON 파싱
+            val jsonObject = JSONObject(jsonString)
+            if (!jsonObject.has("SERVICE_UUID") || !jsonObject.has("bleToken")) {
+                Log.e(TAG, "Required data missing")
+                promise.reject("INVALID_DATA", "SERVICE_UUID or bleToken not found")
+                return
             }
 
+            val serviceUuidStr = jsonObject.getString("SERVICE_UUID")
+            val bleToken = jsonObject.getString("bleToken")
+
+            // 토큰 크기 검사
+            val tokenBytes = bleToken.toByteArray(Charsets.UTF_8)
+            if (tokenBytes.size > MAX_TOKEN_SIZE) {
+                Log.e(TAG, "Token too large: ${tokenBytes.size} bytes (max: $MAX_TOKEN_SIZE bytes)")
+                promise.reject("DATA_TOO_LARGE", "Token exceeds maximum size of $MAX_TOKEN_SIZE bytes")
+                return
+            }
+
+            // UUID 파싱
+            val serviceUuid = try {
+                ParcelUuid(UUID.fromString(serviceUuidStr))
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Invalid UUID format: $serviceUuidStr")
+                promise.reject("INVALID_UUID", "Invalid UUID format")
+                return
+            }
+
+            // 디버그 로그
+            Log.d(TAG, "\n=== BLE 광고 데이터 준비 ===")
+            Log.d(TAG, "Service UUID: $serviceUuidStr")
+            Log.d(TAG, "Token: $bleToken")
+            Log.d(TAG, "Token size: ${tokenBytes.size} bytes")
+
+            // 광고 설정
+            val settings = AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                .setConnectable(true)
+                .setTimeout(0)
+                .build()
+
+            // 광고 데이터 구성 - 최소한의 데이터만 포함
+            val advertiseData = AdvertiseData.Builder()
+                .setIncludeDeviceName(false) // 디바이스 이름 제외
+                .addServiceUuid(serviceUuid) // Service UUID 추가
+                .addServiceData(serviceUuid, tokenBytes) // Service Data 추가
+                .build()
+
+            // 광고 콜백
+            advertiseCallback = object : AdvertiseCallback() {
+                override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+                    Log.d(TAG, "Advertisement started successfully")
+                    promise.resolve(null)
+                }
+
+                override fun onStartFailure(errorCode: Int) {
+                    val errorMessage = when (errorCode) {
+                        ADVERTISE_FAILED_ALREADY_STARTED -> "Already advertising"
+                        ADVERTISE_FAILED_DATA_TOO_LARGE -> "Advertisement data too large"
+                        ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "Feature not supported"
+                        ADVERTISE_FAILED_INTERNAL_ERROR -> "Internal error"
+                        ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "Too many advertisers"
+                        else -> "Unknown error: $errorCode"
+                    }
+                    Log.e(TAG, "Failed to start advertising: $errorMessage")
+                    promise.reject("ADVERTISE_FAILED", errorMessage)
+                }
+            }
+
+            // 광고 시작
+            bluetoothLeAdvertiser!!.startAdvertising(settings, advertiseData, advertiseCallback)
+            Log.d(TAG, "Advertisement request sent")
+
         } catch (e: Exception) {
-            Log.e(TAG, "광고 시작 중 오류 발생", e)
-            promise.reject("ADVERTISE_FAILED", "Failed to start advertising: ${e.message}")
+            Log.e(TAG, "Error in startAdvertising", e)
+            promise.reject("ADVERTISE_ERROR", e.message)
         }
     }
 
@@ -166,15 +135,15 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
             if (bluetoothLeAdvertiser != null && advertiseCallback != null) {
                 bluetoothLeAdvertiser!!.stopAdvertising(advertiseCallback)
                 advertiseCallback = null
-                Log.d(TAG, "Advertising stopped successfully")
+                Log.d(TAG, "Advertisement stopped")
                 promise.resolve(null)
             } else {
-                Log.d(TAG, "No active advertising to stop")
+                Log.d(TAG, "No active advertisement to stop")
                 promise.resolve(null)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping advertising", e)
-            promise.reject("STOP_ADVERTISE_FAILED", e.message)
+            Log.e(TAG, "Error in stopAdvertising", e)
+            promise.reject("STOP_ADVERTISE_ERROR", e.message)
         }
     }
-} 
+}
