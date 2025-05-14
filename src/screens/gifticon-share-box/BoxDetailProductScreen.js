@@ -495,6 +495,7 @@ const BoxDetailProductScreen = () => {
                       ]}
                     >
                       <Text
+                        weight="bold"
                         style={[
                           styles.ddayButtonText,
                           typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string' &&
@@ -521,7 +522,9 @@ const BoxDetailProductScreen = () => {
 
               <View style={styles.infoContainer}>
                 <Text style={styles.brandText}>{gifticonData.brandName}</Text>
-                <Text style={styles.nameText}>{gifticonData.gifticonName}</Text>
+                <Text weight="bold" style={styles.nameText}>
+                  {gifticonData.gifticonName}
+                </Text>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>유효기간</Text>
@@ -876,7 +879,6 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontSize: 20,
-    fontWeight: 'bold',
     color: '#333',
     marginBottom: 20,
     textAlign: 'center',
@@ -891,7 +893,6 @@ const styles = StyleSheet.create({
     width: 80,
     fontSize: 16,
     color: '#737373',
-    fontWeight: '500',
     marginRight: 8,
   },
   infoValue: {
@@ -963,7 +964,6 @@ const styles = StyleSheet.create({
   usedText: {
     color: 'white',
     fontSize: 28,
-    fontWeight: 'bold',
     textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -982,7 +982,6 @@ const styles = StyleSheet.create({
   ddayButtonText: {
     color: '#D33434',
     fontSize: 18,
-    fontWeight: 'semibold',
   },
   expiredButtonContainer: {
     backgroundColor: 'rgba(153, 153, 153, 0.8)',
@@ -998,11 +997,9 @@ const styles = StyleSheet.create({
   },
   urgentDDayText: {
     color: '#EA5455',
-    fontWeight: 'bold',
   },
   normalDDayText: {
     color: '#72BFFF',
-    fontWeight: 'bold',
   },
   // 액션 아이콘 컨테이너 스타일
   actionIconsContainer: {

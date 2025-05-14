@@ -29,7 +29,7 @@ const DUMMY_GIFTICONS = [
     gifticonId: 122,
     gifticonName: 'APP전용 e카드 3만원 교환권',
     gifticonType: 'AMOUNT',
-    gifticonExpiryDate: '2025-01-31',
+    gifticonExpiryDate: '2025-06-31',
     brandId: 45,
     brandName: '스타벅스',
     scope: 'SHARE_BOX',
