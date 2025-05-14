@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ColorInfoResponseDto {
-	private Integer colorId;
-	private String colorCode;
+	private Integer colorPaletteId;
+	private String colorPaletteCode;
 	private Integer presentTemplateId;
 }

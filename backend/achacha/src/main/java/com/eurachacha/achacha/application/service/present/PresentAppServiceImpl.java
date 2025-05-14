@@ -1,6 +1,5 @@
 package com.eurachacha.achacha.application.service.present;
 
-import java.awt.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,8 +28,8 @@ public class PresentAppServiceImpl implements PresentAppService {
 
 		return colorPalettes.stream()
 			.map(colorPalette -> ColorInfoResponseDto.builder()
-				.colorId(colorPalette.getId().intValue())
-				.colorCode(colorPalette.getCode())
+				.colorPaletteId(colorPalette.getId().intValue())
+				.colorPaletteCode(colorPalette.getCode())
 				.presentTemplateId(presentTemplateId)
 				.build())
 			.collect(Collectors.toList());
