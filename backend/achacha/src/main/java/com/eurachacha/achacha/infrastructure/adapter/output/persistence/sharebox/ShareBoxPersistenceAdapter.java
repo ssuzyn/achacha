@@ -48,4 +48,9 @@ public class ShareBoxPersistenceAdapter implements ShareBoxRepository {
 	public Slice<ShareBox> findParticipatedShareBoxes(Integer userId, Pageable pageable) {
 		return shareBoxJpaRepository.findParticipatedShareBoxes(userId, pageable);
 	}
+
+	@Override
+	public void deleteById(Integer shareBoxId) {
+		shareBoxJpaRepository.deleteById(shareBoxId);
+	}
 }
