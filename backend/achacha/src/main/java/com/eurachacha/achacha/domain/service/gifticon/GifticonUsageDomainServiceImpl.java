@@ -29,31 +29,11 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 	}
 
 	@Override
-	public void validateUseAmountGifticon(Gifticon gifticon, Integer usageAmount) {
-
-		// 잔액 검증
-		validateSufficientBalance(gifticon.getRemainingAmount(), usageAmount);
-
-		// 사용 금액 검증
-		validateAmount(usageAmount);
-	}
-
-	@Override
 	public int updateUsageHistory(Integer newAmount, Gifticon findGifticon,
 		UsageHistory findUsageHistory) {
 
-		// 변경 금액이 유효한지 확인
-		validateAmount(newAmount);
-
 		// 잔액 계산
 		return getFindGifticonRemainingAmount(newAmount, findUsageHistory, findGifticon);
-	}
-
-	@Override // 금액 유효성 검증 (0 이하)
-	public void validateAmount(Integer newAmount) {
-		if (newAmount <= 0) {
-			throw new CustomException(ErrorCode.INVALID_AMOUNT_VALUE);
-		}
 	}
 
 	@Override
@@ -62,4 +42,5 @@ public class GifticonUsageDomainServiceImpl implements GifticonUsageDomainServic
 			throw new CustomException(ErrorCode.GIFTICON_INSUFFICIENT_BALANCE);
 		}
 	}
+	
 }

@@ -8,12 +8,8 @@ public interface GifticonUsageDomainService {
 	int getFindGifticonRemainingAmount(Integer newAmount, UsageHistory findUsageHistory,
 		Gifticon findGifticon);
 
-	void validateUseAmountGifticon(Gifticon gifticon, Integer usageAmount);
-
 	int updateUsageHistory(Integer newAmount, Gifticon findGifticon, UsageHistory findUsageHistory);
 
 	void validateSufficientBalance(int remainingAmount, int requiredAmount);
-
-	void validateAmount(Integer newAmount);
 
 }
