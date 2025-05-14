@@ -96,4 +96,6 @@ dependencies {
 
     // implementation(libs.play.services.wearable) // 이미 위에서 명시적으로 선언되어 중복 제거
     implementation("androidx.fragment:fragment-ktx:1.6.2")
+
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
 }

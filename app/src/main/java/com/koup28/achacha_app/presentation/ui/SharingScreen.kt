@@ -95,7 +95,7 @@ fun SharingScreen(
                         resultText = "나눔 실패: ${e.localizedMessage}"
                     }
                 } else {
-                    Log.d("BLE_SCAN", "주변 사용자를 찾지 못함")
+                    Log.d("BLE_SCAN", "주변 사용자를 찾지 못함 (serviceUuids: $SERVICE_UUID)")
                     onScanFail() // 콜백 호출
                     return@launch
                 }

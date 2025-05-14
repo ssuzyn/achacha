@@ -167,26 +167,29 @@ fun GifticonDetailScreen(
 
                 // Row for Share and Use buttons
                 Row(
-                    modifier = Modifier.fillMaxWidth(0.8f), // Match width with barcode chip
-                    horizontalArrangement = Arrangement.SpaceBetween // Space buttons evenly
+                    modifier = Modifier.fillMaxWidth(0.8f),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Replace Button with Chip for "나눔"
-                    Chip(
-                        onClick = { onShareClick(currentGifticon.gifticonId) },
-                        modifier = Modifier.weight(1f), 
-                        label = { Text("나눔", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }, 
-                        colors = ChipDefaults.chipColors(
-                            backgroundColor = Color(0xFFAECBFA), // 색상 변경
-                            contentColor = Color.Black
+                    // 금액형이 아닐 때만 나눔(뿌리기) 버튼 노출
+                    if (currentGifticon.gifticonType != "AMOUNT") {
+                        Chip(
+                            onClick = { onShareClick(currentGifticon.gifticonId) },
+                            modifier = Modifier.weight(1f),
+                            label = { Text("나눔", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+                            colors = ChipDefaults.chipColors(
+                                backgroundColor = Color(0xFFAECBFA),
+                                contentColor = Color.Black
+                            )
                         )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp)) 
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    // 사용 버튼은 항상 노출
                     Chip(
                         onClick = { onUseClick(currentGifticon.gifticonId) },
-                        modifier = Modifier.weight(1f), 
-                        label = { Text("사용", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) }, 
+                        modifier = Modifier.weight(1f),
+                        label = { Text("사용", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
                         colors = ChipDefaults.chipColors(
-                            backgroundColor = Color(0xFFAECBFA), // 색상 변경
+                            backgroundColor = Color(0xFFAECBFA),
                             contentColor = Color.Black
                         )
                     )

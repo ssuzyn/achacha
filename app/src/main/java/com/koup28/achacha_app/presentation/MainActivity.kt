@@ -51,6 +51,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.LaunchedEffect
 import org.json.JSONObject
 import androidx.compose.ui.platform.LocalContext
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 // 화면 상태 정의
 enum class ScreenState {
@@ -357,6 +358,7 @@ class MainActivity : ComponentActivity() {
         Retrofit.Builder()
             .baseUrl("https://k12d205.p.ssafy.io/") // Base URL 변경
             .client(okHttpClient)
+            .addConverterFactory(ScalarsConverterFactory.create()) // 문자열 응답을 위해 가장 먼저 추가
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
             .create(ApiService::class.java)
@@ -534,22 +536,20 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                     if (response.isSuccessful) {
                                                         addLog("[API] Product gifticon used successfully.")
-                                                        // 상품형은 사용 성공 시 리스트로 이동
                                                         _currentScreen.value = ScreenState.GIFTICON_LIST
                                                     } else {
                                                         val errorBody = response.errorBody()?.string() ?: "Unknown error"
-                                                        val errorMessage = when (response.code()) {
-                                                            404 -> when {
-                                                                errorBody.contains("GIFTICON_001") -> "기프티콘 정보를 찾을 수 없습니다."
-                                                                errorBody.contains("GIFTICON_003") -> "기프티콘이 만료되었습니다."
-                                                                errorBody.contains("GIFTICON_004") -> "이미 사용된 기프티콘입니다."
-                                                                errorBody.contains("GIFTICON_005") -> "삭제된 기프티콘입니다."
-                                                                errorBody.contains("FILE_008") -> "파일을 찾을 수 없습니다."
-                                                                else -> "기프티콘 상세 정보를 찾을 수 없습니다."
+                                                        val errorMessage = if (errorBody.trim().startsWith("{")) {
+                                                            try {
+                                                                val json = org.json.JSONObject(errorBody)
+                                                                json.optString("message", "기프티콘 사용 중 오류가 발생했습니다.")
+                                                            } catch (e: Exception) {
+                                                                errorBody
                                                             }
-                                                            else -> "상세 정보 로딩 실패 (${response.code()})"
+                                                        } else {
+                                                            errorBody
                                                         }
-                                                        addLog("[API] Error using product gifticon: ${response.code()} - $errorBody")
+                                                        addLog("[API] Error using product gifticon: $errorBody")
                                                         _connectionError.value = errorMessage
                                                     }
                                                 } catch (e: Exception) {
@@ -995,30 +995,24 @@ class MainActivity : ComponentActivity() {
                 )
                 if (response.isSuccessful) {
                     val body = response.body()
-                    onResult(true, body?.message ?: "기프티콘이 사용되었습니다.")
+                    onResult(true, body ?: "기프티콘이 사용되었습니다.")
                 } else {
-                    val errorBody = response.errorBody()?.string() ?: ""
-                    val errorMessage = when (response.code()) {
-                        400 -> when {
-                            errorBody.contains("X002") -> "[usageAmount] 사용금액은 1 이상이어야 합니다"
-                            errorBody.contains("GIFTICON_010") -> "기프티콘 잔액이 부족합니다."
-                            errorBody.contains("GIFTICON_011") -> "기프티콘 타입이 올바르지 않습니다."
-                            errorBody.contains("GIFTICON_012") -> "금액이 유효하지 않습니다."
-                            else -> "잘못된 요청입니다."
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    val errorMessage = if (errorBody.trim().startsWith("{")) {
+                        try {
+                            val json = JSONObject(errorBody)
+                            json.optString("message", "기프티콘 사용 중 오류가 발생했습니다.")
+                        } catch (e: Exception) {
+                            errorBody
                         }
-                        403 -> "해당 기프티콘에 접근 권한이 없습니다."
-                        404 -> when {
-                            errorBody.contains("GIFTICON_003") -> "기프티콘이 만료되었습니다."
-                            errorBody.contains("GIFTICON_004") -> "이미 사용된 기프티콘입니다."
-                            errorBody.contains("GIFTICON_005") -> "삭제된 기프티콘입니다."
-                            else -> "기프티콘을 찾을 수 없습니다."
-                        }
-                        else -> "알 수 없는 오류: ${response.code()}"
+                    } else {
+                        errorBody
                     }
+                    addLog("[API] Error using amount gifticon: $errorBody")
                     onResult(false, errorMessage)
                 }
             } catch (e: Exception) {
-                onResult(false, "네트워크 오류: ${e.localizedMessage}")
+                onResult(false, "네트워크 오류: "+e.localizedMessage)
             }
         }
     }

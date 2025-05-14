@@ -75,7 +75,7 @@ interface ApiService {
         @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int,
         @Body message: UseGifticonRequest
-    ): Response<Unit>
+    ): Response<String>
 
     // 금액형 기프티콘 사용 API 추가
     @POST("api/amount-gifticons/{gifticonId}/use")
@@ -83,7 +83,7 @@ interface ApiService {
         @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int,
         @Body request: UseAmountGifticonRequest
-    ): Response<UseAmountGifticonResponse>
+    ): Response<String>
 
     @POST("/api/gifticons/{gifticonId}/give-away")
     suspend fun giveAwayGifticon(
@@ -105,7 +105,4 @@ interface ApiService {
 data class UseGifticonRequest(val message: String)
 
 @Serializable
-data class UseAmountGifticonRequest(val usageAmount: Int)
-
-@Serializable
-data class UseAmountGifticonResponse(val message: String) 
+data class UseAmountGifticonRequest(val usageAmount: Int) 
