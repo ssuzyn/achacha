@@ -13,4 +13,8 @@ public interface ParticipationRepository {
 	int countByShareboxId(Integer shareBoxId);
 
 	List<Participation> findByShareBoxId(Integer shareBoxId);
+
+	void deleteByUserIdAndShareBoxId(Integer userId, Integer shareBoxId);
+
+	void deleteAllByShareBoxId(Integer shareBoxId);
 }
