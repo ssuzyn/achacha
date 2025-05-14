@@ -194,13 +194,10 @@ const BoxSettingScreen = () => {
         {
           text: '확인',
           onPress: () => {
-            navigation.navigate('BoxList', {
-              shareBoxId: route.params?.shareBoxId,
-              shareBoxName: shareBoxName.trim(),
-              refresh: true,
-            });
-          },
-        },
+            // 이전 화면으로 돌아가면서 새로고침 트리거
+            navigation.goBack();
+          }
+        }
       ]);
     } catch (e) {
       const errorCode = e?.response?.data?.errorCode;
@@ -250,7 +247,6 @@ const BoxSettingScreen = () => {
                 style={[styles.input, userId !== shareBoxUserId && {  color: '#B0B0B0' }]}
                 placeholder="쉐어박스 이름을 입력하세요"
                 editable={userId === shareBoxUserId}
-                maxLength={10}
               />
               <TouchableOpacity
                 style={[styles.confirmButton, userId !== shareBoxUserId && { backgroundColor: '#E0E0E0' }]}

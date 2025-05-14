@@ -12,7 +12,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
 import { Text } from '../../components/ui';
 import AlertDialog from '../../components/ui/AlertDialog';
@@ -22,7 +22,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fetchAvailableGifticons, fetchUsedGifticons } from '../../api/shareBoxApi';
+import { fetchAvailableGifticons, fetchUsedGifticons, fetchShareBoxSettings } from '../../api/shareBoxApi';
 
 // 더미 데이터 - API 응답값 형식에 맞춰서 수정
 const DUMMY_GIFTICONS = [
@@ -215,6 +215,12 @@ const BoxListScreen = () => {
   const [usedHasNextPage, setUsedHasNextPage] = useState(false);
   const [usedNextPage, setUsedNextPage] = useState(null);
   const [usedLoading, setUsedLoading] = useState(false);
+
+  // 박스 이름 상태 추가
+  const [boxName, setBoxName] = useState('');
+
+  // 새로고침 상태 추가
+  const [refreshing, setRefreshing] = useState(false);
 
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({
@@ -1137,6 +1143,64 @@ const BoxListScreen = () => {
     fetchData();
   }, [selectedCategory, selectedFilter, sortBy.used, shareBoxId]);
 
+  // shareBoxId로 서버에서 최신 박스 이름 받아오기
+  useEffect(() => {
+    if (!shareBoxId) return;
+    const fetchBoxInfo = async () => {
+      try {
+        const data = await fetchShareBoxSettings(shareBoxId);
+        setBoxName(data.shareBoxName);
+      } catch (e) {
+        setBoxName('쉐어박스');
+      }
+    };
+    fetchBoxInfo();
+  }, [shareBoxId]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const refreshAll = async () => {
+        setRefreshing(true);
+        try {
+          // 최신 박스 이름
+          if (shareBoxId) {
+            const boxInfo = await fetchShareBoxSettings(shareBoxId);
+            setBoxName(boxInfo.shareBoxName);
+          }
+          // 최신 기프티콘 목록
+          if (selectedCategory === 'available') {
+            const res = await fetchAvailableGifticons({
+              shareBoxId,
+              type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+              sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+              page: undefined,
+              size: 20,
+            });
+            setAvailableGifticons(res.gifticons);
+            setHasNextPage(res.hasNextPage);
+            setNextPage(res.nextPage);
+          } else if (selectedCategory === 'used') {
+            const res = await fetchUsedGifticons({
+              shareBoxId,
+              type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+              sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+              page: undefined,
+              size: 20,
+            });
+            setUsedGifticons(res.gifticons);
+            setUsedHasNextPage(res.hasNextPage);
+            setUsedNextPage(res.nextPage);
+          }
+        } catch (e) {
+          // 에러 처리
+        } finally {
+          setRefreshing(false);
+        }
+      };
+      refreshAll();
+    }, [shareBoxId, selectedCategory, selectedFilter, sortBy])
+  );
+
   return (
     <TouchableWithoutFeedback onPress={handleOutsidePress}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1151,7 +1215,7 @@ const BoxListScreen = () => {
             <Icon name="chevron-left" type="material" size={30} color={theme.colors.text} />
           </TouchableOpacity>
           <Text variant="h3" weight="bold" style={styles.title}>
-            {shareBoxName || '쉐어박스'}
+            {boxName}
           </Text>
           <TouchableOpacity onPress={handleSettingsPress} style={styles.settingsButton}>
             <Icon name="settings" type="material" size={24} color={theme.colors.grey3} />

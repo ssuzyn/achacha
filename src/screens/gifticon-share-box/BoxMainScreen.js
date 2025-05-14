@@ -71,6 +71,7 @@ const BoxMainScreen = () => {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // 무한스크롤용 데이터 로딩
   const loadShareBoxes = async (nextPage = 0) => {
@@ -162,6 +163,12 @@ const BoxMainScreen = () => {
       shareBoxId: item.shareBoxId || Math.floor(Math.random() * 1000) + 1, // ID가 없는 경우 임의의 ID 생성
       shareBoxName: item.shareBoxName,
     });
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadShareBoxes(0); // 첫 페이지부터 다시 불러오기
+    setRefreshing(false);
   };
 
   // 쉐어박스 카드 렌더링
@@ -256,6 +263,8 @@ const BoxMainScreen = () => {
         columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 0 }}
         onEndReached={handleEndReached}
         onEndReachedThreshold={0.7}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
         ListHeaderComponent={
           <View style={styles.header}>
             <Text variant="h2" weight="bold" style={styles.headerTitle}>
