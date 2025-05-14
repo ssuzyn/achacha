@@ -330,7 +330,6 @@ class NearbyUsersService {
 
       console.log('\n=== BLE 광고 시작 - 상세 디버그 ===');
       console.log('1. 광고할 디바이스 ID:', this.deviceId);
-      console.log('디바이스 ID 길이:', this.deviceId.length);
 
       if (!this.deviceId) {
         console.error('BLE 토큰이 없습니다. 먼저 로그인이 필요합니다.');
@@ -351,12 +350,10 @@ class NearbyUsersService {
         console.log('\n2. 바이트 크기 분석:');
         console.log('- BLE 토큰 바이트 크기:', tokenBytes.length);
         console.log('- 토큰 원본:', this.deviceId);
-        console.log('- 토큰 바이트 배열:', Array.from(tokenBytes));
 
         console.log('\n3. UUID 분석:');
         console.log('- Service UUID:', this.serviceUUID);
         console.log('- UUID 바이트 크기:', uuidBytes.length);
-        console.log('- UUID 바이트 배열:', Array.from(uuidBytes));
 
         // 최종 광고 데이터 생성 (UUID + Token 바이트 배열)
         const finalBytes = new Uint8Array(uuidBytes.length + tokenBytes.length);
@@ -365,7 +362,6 @@ class NearbyUsersService {
 
         console.log('\n4. 최종 광고 데이터:');
         console.log('- 전체 바이트 크기:', finalBytes.length);
-        console.log('- 전체 바이트 배열:', Array.from(finalBytes));
 
         if (tokenBytes.length > 13) {
           console.error('\n❌ BLE 토큰이 너무 큽니다:', tokenBytes.length, '바이트');
