@@ -12,6 +12,7 @@ import android.util.Base64
 import android.util.Log
 import com.facebook.react.bridge.*
 import java.util.*
+import java.nio.ByteBuffer
 
 class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
     companion object {
@@ -24,7 +25,7 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
     private var bluetoothLeAdvertiser: BluetoothLeAdvertiser? = null
     private var advertiseCallback: AdvertiseCallback? = null
 
-    override fun getName() = "BleModule"
+    override fun getName(): String = "BleModule"
 
     // 기본 메서드: 개별 파라미터로 UUID와 토큰을 문자열로 직접 받음
     @ReactMethod
@@ -174,46 +175,92 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
         Log.d(TAG, "\n=== BLE 광고 데이터 준비 ===")
         Log.d(TAG, "Service UUID: ${serviceUuid.uuid}")
         Log.d(TAG, "Token size: ${tokenBytes.size} bytes")
+        Log.d(TAG, "Token bytes: ${tokenBytes.joinToString(",")}")
 
-        // 광고 설정
-        val settings = AdvertiseSettings.Builder()
-            .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-            .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-            .setConnectable(true)
-            .setTimeout(0)
-            .build()
+        try {
+            // 원래 UUID에서 Short UUID 생성 (앞 2바이트만 사용)
+            val uuidString = serviceUuid.uuid.toString()
+            val shortUuidString = uuidString.substring(0, 8) // 앞 8자리 문자만 사용 (4바이트)
+            Log.d(TAG, "Short UUID String: $shortUuidString")
+            
+            // 16비트 Short UUID 생성 (앞 2바이트만 사용)
+            val shortUuidBytes = ByteArray(2)
+            val fullUuidBytes = serviceUuid.uuid.toString().replace("-", "")
+            shortUuidBytes[0] = fullUuidBytes.substring(0, 2).toInt(16).toByte()
+            shortUuidBytes[1] = fullUuidBytes.substring(2, 4).toInt(16).toByte()
+            
+            // 로그 출력
+            Log.d(TAG, "Short UUID Bytes: ${shortUuidBytes[0]}, ${shortUuidBytes[1]}")
+            
+            // 16비트 UUID 생성
+            val shortUuid16Bit = (shortUuidBytes[0].toInt() and 0xFF shl 8) or (shortUuidBytes[1].toInt() and 0xFF)
+            val shortParcelUuid = ParcelUuid(UUID.fromString(String.format("0000%04x-0000-1000-8000-00805f9b34fb", shortUuid16Bit)))
+            
+            Log.d(TAG, "16-bit UUID: 0x${String.format("%04x", shortUuid16Bit)}")
+            Log.d(TAG, "Short ParcelUuid: ${shortParcelUuid.uuid}")
 
-        // 광고 데이터 구성 - 최소한의 데이터만 포함
-        val advertiseData = AdvertiseData.Builder()
-            .setIncludeDeviceName(false) // 디바이스 이름 제외
-            .addServiceUuid(serviceUuid) // Service UUID 추가
-            .addServiceData(serviceUuid, tokenBytes) // Service Data 추가
-            .build()
+            // 광고 데이터 구성 - Short UUID 사용
+            val advertiseData = AdvertiseData.Builder()
+                .setIncludeDeviceName(false)
+                .addServiceUuid(shortParcelUuid) // 짧은 UUID 사용
+                .addServiceData(shortParcelUuid, tokenBytes) // 서비스 데이터는 그대로
+                .build()
 
-        // 광고 콜백
-        advertiseCallback = object : AdvertiseCallback() {
-            override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                Log.d(TAG, "Advertisement started successfully")
-                promise.resolve(null)
-            }
+            // 광고 데이터 크기 추정 (Short UUID 사용)
+            val advertisingDataSize = 2 + 2 + 2 + 2 + tokenBytes.size // 헤더 + UUID 헤더 + Short UUID + 서비스 데이터 헤더 + 토큰 크기
+            Log.d(TAG, "추정된 총 광고 데이터 크기: ${advertisingDataSize} 바이트 (최대 31바이트)")
 
-            override fun onStartFailure(errorCode: Int) {
-                val errorMessage = when (errorCode) {
-                    ADVERTISE_FAILED_ALREADY_STARTED -> "Already advertising"
-                    ADVERTISE_FAILED_DATA_TOO_LARGE -> "Advertisement data too large"
-                    ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "Feature not supported"
-                    ADVERTISE_FAILED_INTERNAL_ERROR -> "Internal error"
-                    ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "Too many advertisers"
-                    else -> "Unknown error: $errorCode"
+            // 광고 설정
+            val settings = AdvertiseSettings.Builder()
+                .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+                .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+                .setConnectable(true)
+                .setTimeout(0)
+                .build()
+
+            // 광고 콜백
+            advertiseCallback = object : AdvertiseCallback() {
+                override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+                    Log.d(TAG, "Advertisement started successfully with Short UUID")
+                    promise.resolve(null)
                 }
-                Log.e(TAG, "Failed to start advertising: $errorMessage")
-                promise.reject("ADVERTISE_FAILED", errorMessage)
-            }
-        }
 
-        // 광고 시작
-        bluetoothLeAdvertiser!!.startAdvertising(settings, advertiseData, advertiseCallback)
-        Log.d(TAG, "Advertisement request sent")
+                override fun onStartFailure(errorCode: Int) {
+                    // 상세 에러 메시지 생성
+                    val errorMessage = when (errorCode) {
+                        ADVERTISE_FAILED_ALREADY_STARTED -> "Already advertising"
+                        ADVERTISE_FAILED_DATA_TOO_LARGE -> "Advertisement data too large"
+                        ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> "Feature not supported"
+                        ADVERTISE_FAILED_INTERNAL_ERROR -> "Internal error"
+                        ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "Too many advertisers"
+                        else -> "Unknown error: $errorCode"
+                    }
+                    
+                    // 추가 디버그 정보
+                    if (errorCode == ADVERTISE_FAILED_DATA_TOO_LARGE) {
+                        Log.e(TAG, "\n===== 광고 데이터 크기 초과 상세 분석 (Short UUID) =====")
+                        Log.e(TAG, "1. 서비스 UUID 크기: 2 바이트 + 헤더 2 바이트 = 4 바이트")
+                        Log.e(TAG, "2. 서비스 데이터: ${tokenBytes.size} 바이트 + 헤더 2 바이트 = ${tokenBytes.size + 2} 바이트")
+                        Log.e(TAG, "3. 기본 광고 헤더: 2 바이트")
+                        Log.e(TAG, "4. 총 광고 패킷 크기: ${2 + 4 + (tokenBytes.size + 2)} 바이트 (최대 31바이트)")
+                        Log.e(TAG, "5. 초과 크기: ${Math.max(0, 2 + 4 + (tokenBytes.size + 2) - 31)} 바이트")
+                        Log.e(TAG, "Short UUID: ${shortParcelUuid.uuid}")
+                        Log.e(TAG, "Token: ${String(tokenBytes, Charsets.UTF_8)}")
+                    }
+                    
+                    Log.e(TAG, "Failed to start advertising with Short UUID: $errorMessage")
+                    promise.reject("ADVERTISE_FAILED", errorMessage)
+                }
+            }
+
+            // 광고 시작
+            bluetoothLeAdvertiser!!.startAdvertising(settings, advertiseData, advertiseCallback)
+            Log.d(TAG, "Short UUID Advertisement request sent")
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during startAdvertising with Short UUID", e)
+            promise.reject("ADVERTISE_ERROR", e.message)
+        }
     }
 
     @ReactMethod
