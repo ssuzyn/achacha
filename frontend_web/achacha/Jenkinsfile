@@ -22,7 +22,7 @@ pipeline {
             steps {
                 echo 'Installing dependencies and building the frontend with npm...'
                 nodejs(nodeJSInstallationName: 'NodeJS22') {
-                    dir('.') {  // 프로젝트 루트 디렉토리
+                    dir('frontend_web') {  // 프로젝트 루트 디렉토리
                         sh 'npm --version'
                         sh 'npm ci || npm install'
                         sh 'npm run build'
