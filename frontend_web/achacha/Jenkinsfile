@@ -22,7 +22,7 @@ pipeline {
             steps {
                 echo 'Installing dependencies and building the frontend with npm...'
                 nodejs(nodeJSInstallationName: 'NodeJS22') {
-                    dir('frontend_web') {  // 프로젝트 루트 디렉토리
+                    dir('frontend_web/achacha') {  // 프로젝트 루트 디렉토리
                         sh 'npm --version'
                         sh 'npm ci || npm install'
                         sh 'npm run build'
@@ -34,10 +34,10 @@ pipeline {
             steps {
                 echo 'Building Docker image for static file update...'
                 // build 폴더를 workspace 루트로 복사 (이미 있는 폴더 활용)
-                sh 'cp -R frontend_web/build ./build'
+                sh 'cp -R frontend_web/achacha/build ./build'
                 // Dockerfile과 entrypoint.sh도 workspace 루트로 복사
-                sh 'cp frontend_web/Dockerfile .'
-                sh 'cp frontend_web/entrypoint.sh .'
+                sh 'cp frontend_web/achacha/Dockerfile .'
+                sh 'cp frontend_web/achacha/entrypoint.sh .'
                 // Docker 이미지 빌드
                 sh "docker build -t ${STATIC_UPDATE_IMAGE} ."
             }
