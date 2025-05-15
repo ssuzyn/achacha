@@ -14,6 +14,8 @@ import {
   PermissionsAndroid,
   ActivityIndicator,
   FlatList,
+  TextInput,
+  Keyboard,
 } from 'react-native';
 import { Button, InputLine, Text, LoadingOcrModal } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
@@ -28,6 +30,7 @@ import useGifticonStore from '../../../store/gifticonStore';
 // 기프티콘 서비스 import
 import gifticonService from '../../../api/gifticonService';
 import brandService from '../../../api/brandService'; // 브랜드 서비스 추가
+import { fetchShareBoxes } from '../../../api/shareBoxService'; // 쉐어박스 API 추가
 
 const RegisterDetailScreen = () => {
   const { theme } = useTheme();
@@ -64,32 +67,53 @@ const RegisterDetailScreen = () => {
   const [gifticonType, setGifticonType] = useState(route.params?.gifticonType || 'PRODUCT');
   // 바코드 이미지 URI 상태 추가
   const [barcodeImageUri, setBarcodeImageUri] = useState(null);
+  // 쉐어박스 목록 상태 및 로딩 상태 추가
+  const [shareBoxes, setShareBoxes] = useState([]);
+  const [isLoadingShareBoxes, setIsLoadingShareBoxes] = useState(false);
+  // 날짜 텍스트 입력 상태 추가
+  const [dateInputText, setDateInputText] = useState('');
 
-  // 더미 데이터: 쉐어박스 목록 (실제 구현에서는 API에서 가져오기)
-  const shareBoxes = [
-    { id: 1, name: '으라차차 해인네' },
-    { id: 2, name: '으라차차 주은이네' },
-    { id: 3, name: '으라차차 대성이네' },
-  ];
+  // 쉐어박스 목록 불러오기
+  const loadShareBoxes = async () => {
+    try {
+      setIsLoadingShareBoxes(true);
+      const res = await fetchShareBoxes({ size: 20 });
+      setShareBoxes(res.shareBoxes || []);
+    } catch (e) {
+      console.error('쉐어박스 목록 불러오기 실패:', e);
+      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+    } finally {
+      setIsLoadingShareBoxes(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 쉐어박스 목록 불러오기
+  useEffect(() => {
+    loadShareBoxes();
+  }, []);
 
   // ref 관련 설정
   const processingRef = useRef(false);
 
   // 화면 데이터 상태 관리
   const [barcode, setBarcode] = useState('');
-  // eslint-disable-next-line no-unused-vars
+
   const [barcodeFormat, setBarcodeFormat] = useState(null);
   const [isOriginalImageVisible, setOriginalImageVisible] = useState(false); // 원본 이미지 팝업 표시 여부
 
-  // 이미지 URI 상태를 메모이제이션하여 렌더링 최적화
+  // 이미지 소스를 위한 타임스탬프 useRef 추가
+  const imageTimestampRef = useRef(Date.now());
+
+  // 이미지 처리 최적화
   const imageSource = useCallback(uri => {
     if (!uri) return null;
-    // 캐시 문제 해결을 위해 타임스탬프 추가
-    return { uri: `${uri}?timestamp=${Date.now()}` };
+    // 고정 타임스탬프를 사용하여 렌더링 횟수 줄이기
+    return { uri: `${uri}?timestamp=${imageTimestampRef.current}` };
   }, []);
 
   // 브랜드 입력 위치 관련 상태 및 함수 제거
   const brandInputContainerRef = useRef(null);
+  const brandSearchDebounceTimeout = useRef(null);
 
   // 화면이 마운트되거나 방향이 변경될 때 위치 측정 - 제거
   useEffect(() => {
@@ -121,8 +145,8 @@ const RegisterDetailScreen = () => {
       }
     }
 
-    // 바코드 정보 가져오기 (메인 화면에서 전달받은 정보)
-    if (route.params?.barcodeValue) {
+    // 바코드 정보 가져오기 (메인 화면에서 전달받은 정보) - 최초 한 번만 설정
+    if (route.params?.barcodeValue && !barcode) {
       console.log('[상세 화면] 이전 화면에서 전달받은 바코드:', route.params.barcodeValue);
 
       // 바코드 정보 설정
@@ -142,13 +166,6 @@ const RegisterDetailScreen = () => {
         // 바코드 이미지 URI 설정
         setBarcodeImageUri(route.params.barcodeImageUri);
       }
-
-      // Zustand 스토어에 바코드 정보 저장
-      setCurrentBarcodeInfo(
-        route.params.barcodeValue,
-        route.params.barcodeFormat || null,
-        route.params.barcodeBoundingBox || null
-      );
     }
 
     // OCR 학습 데이터 ID 처리
@@ -204,10 +221,10 @@ const RegisterDetailScreen = () => {
         setExpiryDate(new Date(metadata.gifticonExpiryDate));
       }
 
-      // 금액형 기프티콘인 경우 금액 설정
+      // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
       if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
         console.log('[상세 화면] 금액 설정:', metadata.gifticonOriginalAmount);
-        setAmount(metadata.gifticonOriginalAmount.toString());
+        setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
       }
     } else {
       // 개별 메타데이터 정보 처리 (역호환성 용)
@@ -249,7 +266,7 @@ const RegisterDetailScreen = () => {
 
       if (route.params?.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
         console.log('[상세 화면] 금액 설정 (개별):', route.params.gifticonOriginalAmount);
-        setAmount(route.params.gifticonOriginalAmount.toString());
+        setAmount(formatAmount(route.params.gifticonOriginalAmount.toString()));
       }
     }
 
@@ -267,7 +284,7 @@ const RegisterDetailScreen = () => {
       setShareBoxId(route.params.shareBoxId);
     }
 
-    // 타입 및 위치가 선택되어 있지 않으면 모달 자동 표시
+    // 타입과 위치가 선택되어 있지 않으면 모달 자동 표시
     if (!route.params?.gifticonType) {
       // 약간의 딜레이 후 모달 표시 (화면 전환 애니메이션이 끝난 후)
       setTimeout(() => {
@@ -275,12 +292,35 @@ const RegisterDetailScreen = () => {
       }, 300);
     }
 
+    // 유효기간이 설정되면 dateInputText도 함께 업데이트
+    if (route.params?.gifticonExpiryDate) {
+      console.log('[상세 화면] 유효기간 설정 (개별):', route.params.gifticonExpiryDate);
+      const expiryDate = new Date(route.params.gifticonExpiryDate);
+      setExpiryDate(expiryDate);
+
+      // dateInputText 업데이트
+      const year = expiryDate.getFullYear();
+      const month = String(expiryDate.getMonth() + 1).padStart(2, '0');
+      const day = String(expiryDate.getDate()).padStart(2, '0');
+      setDateInputText(`${year}.${month}.${day}`);
+    }
+
     // 컴포넌트 언마운트 시 메모리 정리
     return () => {
       console.log('컴포넌트 언마운트: 이미지 상태 정리');
       // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
     };
-  }, [route.params, setCurrentBarcodeInfo, gifticonType, barcode]);
+  }, [route.params, gifticonType, barcode]);
+
+  // 메타데이터에서 유효기간 설정 시 dateInputText 업데이트를 위한 useEffect 추가
+  useEffect(() => {
+    if (expiryDate && !dateInputText) {
+      const year = expiryDate.getFullYear();
+      const month = String(expiryDate.getMonth() + 1).padStart(2, '0');
+      const day = String(expiryDate.getDate()).padStart(2, '0');
+      setDateInputText(`${year}.${month}.${day}`);
+    }
+  }, [expiryDate, dateInputText]);
 
   // 편집된 이미지가 있을 경우 썸네일에 표시 (로직 개선)
   useEffect(() => {
@@ -304,6 +344,70 @@ const RegisterDetailScreen = () => {
     setShowDatePicker(Platform.OS === 'ios');
     if (selectedDate) {
       setExpiryDate(selectedDate);
+
+      // dateInputText도 함께 업데이트
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      setDateInputText(`${year}.${month}.${day}`);
+    }
+  };
+
+  // 텍스트 형식 날짜 입력 처리 함수 수정
+  const handleDateTextChange = text => {
+    // 숫자와 마침표만 허용
+    let formattedText = text.replace(/[^0-9.]/g, '');
+
+    // YYYYMMDD 형식을 YYYY.MM.DD 형식으로 자동 변환
+    if (formattedText.length === 8 && !formattedText.includes('.')) {
+      formattedText = `${formattedText.substring(0, 4)}.${formattedText.substring(4, 6)}.${formattedText.substring(6, 8)}`;
+    }
+    // YY.MM.DD 또는 YY.M.DD 등의 형식 처리
+    else if (formattedText.includes('.')) {
+      const parts = formattedText.split('.');
+      // 입력 과정 중에는 그대로 유지
+      if (parts.length === 3) {
+        // 날짜 부분이 완성되었을 때 포맷팅
+        if (parts[0].length === 4 && parts[1].length > 0 && parts[2].length > 0) {
+          // 월이 1~12 사이인지 확인
+          let month = parseInt(parts[1], 10);
+          if (month > 0 && month <= 12) {
+            month = String(month).padStart(2, '0');
+          }
+
+          // 일이 1~31 사이이고 해당 월에 유효한지 확인
+          let day = parseInt(parts[2], 10);
+          if (day > 0 && day <= 31) {
+            day = String(day).padStart(2, '0');
+          }
+
+          formattedText = `${parts[0]}.${month}.${day}`;
+        }
+      }
+    }
+
+    // 입력된 텍스트 저장
+    setDateInputText(formattedText);
+
+    // 완전한 날짜 포맷이 아니면 Date 객체 업데이트하지 않음
+    const parts = formattedText.split('.');
+    if (parts.length !== 3) return;
+
+    // 각 부분이 적절한 길이가 아니면 업데이트하지 않음
+    if (parts[0].length < 4 || parts[1].length < 1 || parts[2].length < 1) return;
+
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // 월은 0부터 시작
+    const day = parseInt(parts[2], 10);
+
+    // 입력된 값이 유효한 숫자인지 확인
+    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      const newDate = new Date(year, month, day);
+
+      // 유효한 날짜인지 확인
+      if (!isNaN(newDate.getTime())) {
+        setExpiryDate(newDate);
+      }
     }
   };
 
@@ -540,45 +644,48 @@ const RegisterDetailScreen = () => {
   };
 
   // 이미지 선택 시 바코드 자동 추출 및 인식 기능 추가
-  const processImageForBarcode = async imageUri => {
-    if (!imageUri) return;
+  const processImageForBarcode = useCallback(
+    async imageUri => {
+      if (!imageUri) return;
 
-    try {
-      console.log('[이미지 처리] 바코드 인식 시작:', imageUri);
+      try {
+        console.log('[이미지 처리] 바코드 인식 시작:', imageUri);
 
-      // 바코드 감지 및 추출 실행
-      const result = await detectAndCropBarcode(imageUri);
+        // 바코드 감지 및 추출 실행
+        const result = await detectAndCropBarcode(imageUri);
 
-      if (result.success) {
-        console.log('[이미지 처리] 바코드 인식 및 추출 성공:', result);
+        if (result.success) {
+          console.log('[이미지 처리] 바코드 인식 및 추출 성공:', result);
 
-        // 바코드 정보 저장
-        setBarcode(result.barcodeValue);
-        setBarcodeFormat(result.barcodeFormat);
-        setBarcodeImageUri(result.croppedImageUri);
+          // 바코드 정보 저장
+          setBarcode(result.barcodeValue);
+          setBarcodeFormat(result.barcodeFormat);
+          setBarcodeImageUri(result.croppedImageUri);
 
-        // Zustand 스토어에 바코드 정보 저장 (이미지 URI 포함)
-        setCurrentBarcodeInfo(
-          result.barcodeValue,
-          result.barcodeFormat,
-          result.boundingBox,
-          result.croppedImageUri
-        );
+          // Zustand 스토어에 바코드 정보 저장 (이미지 URI 포함)
+          setCurrentBarcodeInfo(
+            result.barcodeValue,
+            result.barcodeFormat,
+            result.boundingBox,
+            result.croppedImageUri
+          );
 
-        // 성공 메시지 (선택적)
-        if (!result.boundingBox) {
-          console.log('[이미지 처리] 바코드 값은 인식했으나 정확한 위치는 파악하지 못했습니다.');
+          // 성공 메시지 (선택적)
+          if (!result.boundingBox) {
+            console.log('[이미지 처리] 바코드 값은 인식했으나 정확한 위치는 파악하지 못했습니다.');
+          }
+        } else {
+          console.log('[이미지 처리] 바코드 인식 실패:', result.message);
         }
-      } else {
-        console.log('[이미지 처리] 바코드 인식 실패:', result.message);
+      } catch (error) {
+        console.error('[이미지 처리] 오류:', error);
       }
-    } catch (error) {
-      console.error('[이미지 처리] 오류:', error);
-    }
-  };
+    },
+    [setCurrentBarcodeInfo]
+  );
 
   // 갤러리에서 이미지 선택
-  const handlePickFromGallery = async () => {
+  const handlePickFromGallery = useCallback(async () => {
     try {
       setImageOptionVisible(false);
 
@@ -586,6 +693,10 @@ const RegisterDetailScreen = () => {
         mediaType: 'photo',
         cropping: false,
         includeExif: true,
+        // 이미지 크기 제한 추가
+        // compressImageMaxWidth: 1000,
+        // compressImageMaxHeight: 1000,
+        // compressImageQuality: 0.8,
       });
 
       console.log('갤러리에서 선택한 이미지:', image);
@@ -655,9 +766,9 @@ const RegisterDetailScreen = () => {
             setExpiryDate(new Date(metadata.gifticonExpiryDate));
           }
 
-          // 금액형 기프티콘인 경우 금액 설정
-          if (metadata.gifticonOriginalAmount) {
-            setAmount(metadata.gifticonOriginalAmount.toString());
+          // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
+          if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+            setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
           }
         }
       } catch (error) {
@@ -682,10 +793,10 @@ const RegisterDetailScreen = () => {
         Alert.alert('오류', '이미지 선택 중 문제가 발생했습니다.');
       }
     }
-  };
+  }, [processImageForBarcode, gifticonType, barcode, formatAmount]);
 
   // 카메라로 촬영 함수 수정
-  const handleTakePhoto = async () => {
+  const handleTakePhoto = useCallback(async () => {
     const hasPermission = await requestCameraPermission();
     if (!hasPermission) {
       Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
@@ -700,6 +811,10 @@ const RegisterDetailScreen = () => {
         height: 1000,
         cropping: false,
         includeExif: true,
+        // // 이미지 크기 제한 추가
+        // compressImageMaxWidth: 1000,
+        // compressImageMaxHeight: 1000,
+        // compressImageQuality: 0.8,
       });
 
       console.log('[이미지 선택] 카메라로 촬영:', image.path);
@@ -771,9 +886,9 @@ const RegisterDetailScreen = () => {
             setExpiryDate(new Date(metadata.gifticonExpiryDate));
           }
 
-          // 금액형 기프티콘인 경우 금액 설정
-          if (metadata.gifticonOriginalAmount) {
-            setAmount(metadata.gifticonOriginalAmount.toString());
+          // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
+          if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+            setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
           }
         }
       } catch (error) {
@@ -798,12 +913,27 @@ const RegisterDetailScreen = () => {
         Alert.alert('오류', '카메라 사용 중 문제가 발생했습니다.');
       }
     }
-  };
+  }, [processImageForBarcode, requestCameraPermission, gifticonType, barcode, formatAmount]);
 
   // 박스명 가져오기
   const getShareBoxName = id => {
-    const box = shareBoxes.find(item => item.id === id);
-    return box ? box.name : '';
+    const box = shareBoxes.find(item => item.shareBoxId === id);
+    return box ? box.shareBoxName : '';
+  };
+
+  // 금액 포맷팅 함수 추가
+  const formatAmount = value => {
+    // 숫자와 쉼표 이외의 문자 제거
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    // 쉼표 추가하여 반환
+    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  // 금액 입력 핸들러
+  const handleAmountChange = text => {
+    // 포맷팅된 금액 설정
+    setAmount(formatAmount(text));
   };
 
   // 기프티콘 등록 처리
@@ -829,9 +959,14 @@ const RegisterDetailScreen = () => {
     }
 
     // 금액형인 경우 금액 검증
-    if (gifticonType === 'AMOUNT' && (!amount || isNaN(Number(amount)) || Number(amount) <= 0)) {
-      Alert.alert('알림', '유효한 금액을 입력해주세요.');
-      return;
+    if (gifticonType === 'AMOUNT') {
+      // 쉼표를 제거한 순수 숫자 값 얻기
+      const numericAmount = amount.replace(/,/g, '');
+
+      if (!numericAmount || isNaN(Number(numericAmount)) || Number(numericAmount) <= 0) {
+        Alert.alert('알림', '유효한 금액을 입력해주세요.');
+        return;
+      }
     }
 
     try {
@@ -840,12 +975,12 @@ const RegisterDetailScreen = () => {
 
       // 기프티콘 정보 구성
       const gifticonData = {
-        gifticonBarcodeNumber: barcodeNumber || barcode, // 메타데이터에서 받은 바코드 또는 직접 인식한 바코드
+        gifticonBarcodeNumber: barcode, // 항상 현재 사용자가 입력한 값 사용
         brandId: selectedBrand.brandId, // 선택한 브랜드 ID 사용
         gifticonName: productName,
         gifticonExpiryDate: expiryDate.toISOString().split('T')[0], // YYYY-MM-DD 형식으로 변환
         gifticonType: gifticonType,
-        gifticonAmount: gifticonType === 'AMOUNT' ? parseInt(amount, 10) : null,
+        gifticonAmount: gifticonType === 'AMOUNT' ? parseInt(amount.replace(/,/g, ''), 10) : null,
         shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,
         ocrTrainingDataId: ocrTrainingDataId, // 이미지 메타데이터 조회 시 받은 OCR 학습 데이터 ID
       };
@@ -950,9 +1085,9 @@ const RegisterDetailScreen = () => {
     }
   };
 
-  // 날짜를 YYYY.MM.DD 형식으로 포맷
+  // 날짜를 YYYY.MM.DD 형식으로 포맷 - expiryDate가 없을 때 dateInputText 반환
   const formatDate = date => {
-    if (!date) return '';
+    if (!date) return dateInputText;
 
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -1019,41 +1154,46 @@ const RegisterDetailScreen = () => {
   };
 
   // 브랜드 검색 함수
-  const searchBrands = useCallback(async searchText => {
-    try {
-      if (!searchText || searchText.trim().length === 0) {
+  const searchBrands = useCallback(
+    async searchText => {
+      try {
+        if (!searchText || searchText.trim().length === 0) {
+          setBrandList([]);
+          setShowBrandList(false);
+          return;
+        }
+
+        // 검색 로딩 표시 (매우 짧은 시간 동안)
+        setBrandSearchLoading(true);
+
+        const keyword = searchText.trim();
+
+        // API 호출
+        const results = await brandService.searchBrands(keyword);
+
+        // 결과 설정 - 렌더링 최적화를 위해 이전 상태와 비교 후 변경
+        if (JSON.stringify(results) !== JSON.stringify(brandList)) {
+          setBrandList(results || []);
+        }
+        setShowBrandList(true); // 결과가 없어도 메시지 표시를 위해 true로 설정
+
+        console.log('브랜드 검색 결과:', results);
+      } catch (error) {
+        console.error('브랜드 검색 오류:', error);
+        // 오류 처리
         setBrandList([]);
-        setShowBrandList(false);
-        return;
+        setShowBrandList(true); // 오류 메시지 표시를 위해 true로 설정
+      } finally {
+        setBrandSearchLoading(false);
       }
-
-      // 검색 로딩 표시 (매우 짧은 시간 동안)
-      setBrandSearchLoading(true);
-
-      const keyword = searchText.trim();
-
-      // API 호출
-      const results = await brandService.searchBrands(keyword);
-
-      // 결과 설정
-      setBrandList(results || []);
-      setShowBrandList(true); // 결과가 없어도 메시지 표시를 위해 true로 설정
-
-      console.log('브랜드 검색 결과:', results);
-    } catch (error) {
-      console.error('브랜드 검색 오류:', error);
-      // 오류 처리
-      setBrandList([]);
-      setShowBrandList(true); // 오류 메시지 표시를 위해 true로 설정
-    } finally {
-      setBrandSearchLoading(false);
-    }
-  }, []);
+    },
+    [brandList]
+  );
 
   // 브랜드 검색 로딩 상태
   const [brandSearchLoading, setBrandSearchLoading] = useState(false);
 
-  // 브랜드 검색어 변경 핸들러
+  // 브랜드 검색어 변경 핸들러 최적화
   const handleBrandSearchChange = useCallback(
     text => {
       setBrandSearchText(text);
@@ -1063,9 +1203,9 @@ const RegisterDetailScreen = () => {
         setSelectedBrand(null);
       }
 
-      // 디바운싱 적용
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
+      // 디바운싱 최적화
+      if (brandSearchDebounceTimeout.current) {
+        clearTimeout(brandSearchDebounceTimeout.current);
       }
 
       // 빈 검색어인 경우 목록 숨김
@@ -1075,9 +1215,10 @@ const RegisterDetailScreen = () => {
         return;
       }
 
-      debounceTimerRef.current = setTimeout(() => {
+      // 디바운스 시간 조정 - 더 빠른 응답을 위해 시간 줄임
+      brandSearchDebounceTimeout.current = setTimeout(() => {
         searchBrands(text);
-      }, 300);
+      }, 200);
     },
     [searchBrands, selectedBrand]
   );
@@ -1096,10 +1237,21 @@ const RegisterDetailScreen = () => {
     if (showBrandList) {
       setShowBrandList(false);
     }
+    // 키보드는 유지 (기존 코드는 여기서 키보드를 닫았을 수 있음)
   }, [showBrandList]);
 
-  // 디바운스 타이머 ref
-  const debounceTimerRef = useRef(null);
+  // 컴포넌트 언마운트 시 메모리 정리
+  useEffect(() => {
+    return () => {
+      // 타이머 정리
+      if (brandSearchDebounceTimeout.current) {
+        clearTimeout(brandSearchDebounceTimeout.current);
+      }
+
+      // 이미지 캐시 정리 로직 (옵션)
+      console.log('컴포넌트 언마운트: 리소스 정리 완료');
+    };
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1129,7 +1281,12 @@ const RegisterDetailScreen = () => {
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.contentContainer}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps="always"
+          removeClippedSubviews={false}
+          maxToRenderPerBatch={5}
+          windowSize={10}
+          scrollEventThrottle={16}
+          keyboardDismissMode="none"
         >
           {/* 이미지 선택 영역 */}
           <View style={styles.imageContainerWrapper}>
@@ -1226,10 +1383,23 @@ const RegisterDetailScreen = () => {
               </Text>
               <InputLine
                 value={barcode}
-                onChangeText={setBarcode}
+                onChangeText={text => {
+                  setBarcode(text);
+                  setBarcodeNumber(text);
+                  // Zustand 스토어에 바코드 정보 저장 - 바코드 번호가 변경되어도 스토어에 반영
+                  setCurrentBarcodeInfo(text, barcodeFormat, null, barcodeImageUri);
+                }}
                 placeholder="바코드 번호를 입력해주세요."
                 keyboardType="numeric"
                 containerStyle={styles.inputContainer}
+                editable={true}
+                autoCorrect={false}
+                textContentType="none"
+                returnKeyType="done"
+                onSubmitEditing={() => {
+                  Keyboard.dismiss();
+                }}
+                blurOnSubmit={true}
                 rightIcon={
                   <TouchableOpacity onPress={showBarcodeImage}>
                     <Icon name="image" size={22} color="#333333" />
@@ -1302,20 +1472,30 @@ const RegisterDetailScreen = () => {
                 onChangeText={setProductName}
                 placeholder="상품명을 입력해주세요."
                 containerStyle={styles.inputContainer}
+                rightIcon={
+                  productName && productName.trim() ? (
+                    <View style={styles.selectedBrandIndicator}>
+                      <Icon name="check-circle" size={20} color="#2ECC71" />
+                    </View>
+                  ) : null
+                }
               />
 
-              <InputLine
-                value={formatDate(expiryDate)}
-                placeholder="유효기간을 입력해주세요."
-                containerStyle={styles.inputContainer}
-                rightIcon={
-                  <TouchableOpacity onPress={showDatePickerHandler}>
-                    <Icon name="calendar-today" size={22} color="#333333" />
-                  </TouchableOpacity>
-                }
-                editable={false}
-                onTouchStart={showDatePickerHandler}
-              />
+              {/* 유효기간 입력 필드 - 날짜 직접 입력 가능 */}
+              <View style={styles.dateInputContainer}>
+                <InputLine
+                  value={dateInputText || formatDate(expiryDate)}
+                  onChangeText={handleDateTextChange}
+                  placeholder="유효기간을 입력해주세요. (YYYY.MM.DD)"
+                  containerStyle={styles.inputContainer}
+                  rightIcon={
+                    <TouchableOpacity onPress={showDatePickerHandler}>
+                      <Icon name="calendar-today" size={22} color="#333333" />
+                    </TouchableOpacity>
+                  }
+                  keyboardType="numeric"
+                />
+              </View>
 
               {showDatePicker && (
                 <DateTimePicker
@@ -1334,11 +1514,16 @@ const RegisterDetailScreen = () => {
                   </Text>
                   <InputLine
                     value={amount}
-                    onChangeText={setAmount}
+                    onChangeText={handleAmountChange}
                     placeholder="금액을 입력해주세요."
                     keyboardType="numeric"
                     containerStyle={styles.inputContainer}
-                    rightIcon={<Text variant="body1">원</Text>}
+                    inputStyle={styles.amountInput}
+                    rightIcon={
+                      <Text variant="body1" style={styles.amountUnit}>
+                        원
+                      </Text>
+                    }
                   />
                 </>
               )}
@@ -1525,29 +1710,55 @@ const RegisterDetailScreen = () => {
 
             {/* 쉐어박스 선택 */}
             <View style={styles.boxSection}>
-              {shareBoxes.map(box => (
-                <View key={box.id} style={styles.boxRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.checkboxContainer,
-                      boxType === 'SHARE_BOX' &&
-                        shareBoxId === box.id &&
-                        styles.checkboxContainerSelected,
-                    ]}
-                    onPress={() => {
-                      setBoxType('SHARE_BOX');
-                      setShareBoxId(box.id);
-                    }}
-                  >
-                    <View style={styles.checkbox}>
-                      {boxType === 'SHARE_BOX' && shareBoxId === box.id && (
-                        <Icon name="check" size={16} color={theme.colors.primary} />
-                      )}
-                    </View>
-                    <Text style={styles.checkboxLabel}>{box.name}</Text>
-                  </TouchableOpacity>
+              {isLoadingShareBoxes ? (
+                <View style={styles.loadingShareBoxContainer}>
+                  <ActivityIndicator size="small" color={theme.colors.primary} />
+                  <Text style={styles.loadingShareBoxText}>쉐어박스 목록을 불러오는 중...</Text>
                 </View>
-              ))}
+              ) : shareBoxes.length > 0 ? (
+                <ScrollView style={styles.shareBoxScrollView} showsVerticalScrollIndicator={false}>
+                  {shareBoxes.map(box => (
+                    <View key={box.shareBoxId} style={styles.boxRow}>
+                      <TouchableOpacity
+                        style={[
+                          styles.checkboxContainer,
+                          boxType === 'SHARE_BOX' &&
+                            shareBoxId === box.shareBoxId &&
+                            styles.checkboxContainerSelected,
+                        ]}
+                        onPress={() => {
+                          setBoxType('SHARE_BOX');
+                          setShareBoxId(box.shareBoxId);
+                        }}
+                      >
+                        <View style={styles.checkbox}>
+                          {boxType === 'SHARE_BOX' && shareBoxId === box.shareBoxId && (
+                            <Icon name="check" size={16} color={theme.colors.primary} />
+                          )}
+                        </View>
+                        <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                        <View style={styles.ownerContainer}>
+                          <Icon
+                            name="person"
+                            type="material"
+                            size={14}
+                            color={box.isOwner ? '#4A90E2' : '#999'}
+                          />
+                          <Text
+                            style={[styles.ownerText, box.isOwner && styles.ownerTextHighlight]}
+                          >
+                            {box.ownerName || box.shareBoxUserName || '나'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={styles.emptyShareBoxContainer}>
+                  <Text style={styles.emptyShareBoxText}>참여 중인 쉐어박스가 없습니다.</Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.boxButtonContainer}>
@@ -1602,7 +1813,9 @@ const RegisterDetailScreen = () => {
             onStartShouldSetResponder={() => true}
             onResponderRelease={() => setBarcodeImageModalVisible(false)}
           >
-            <Text style={styles.newBarcodeTitle}>바코드 정보</Text>
+            <Text weight="bold" style={styles.newBarcodeTitle}>
+              바코드 정보
+            </Text>
 
             {/* 바코드 이미지 */}
             {barcodeImageUri ? (
@@ -1617,14 +1830,34 @@ const RegisterDetailScreen = () => {
               </View>
             )}
 
-            {/* 바코드 번호 */}
-            <Text style={styles.newBarcodeNumber}>{barcode}</Text>
+            {/* 바코드 번호 - 수정 가능하도록 변경 */}
+            <TextInput
+              style={styles.newBarcodeNumberInput}
+              value={barcode || barcodeNumber}
+              onChangeText={text => {
+                setBarcode(text);
+                setBarcodeNumber(text);
+                setCurrentBarcodeInfo(text, barcodeFormat, null, barcodeImageUri);
+              }}
+              keyboardType="numeric"
+              selectionColor="#A7DAF9"
+              autoFocus={true}
+              onBlur={null}
+              blurOnSubmit={true}
+              returnKeyType="done"
+              onSubmitEditing={() => {
+                Keyboard.dismiss();
+              }}
+            />
 
             {/* 바코드 복사 버튼 */}
             <TouchableOpacity
               style={styles.newBarcodeCopyButton}
               onPress={() => {
-                Alert.alert('알림', `바코드 번호 ${barcode}이(가) 복사되었습니다.`);
+                Alert.alert(
+                  '알림',
+                  `바코드 번호 ${barcode || barcodeNumber}이(가) 복사되었습니다.`
+                );
               }}
             >
               <Icon name="content-copy" size={20} color="white" />
@@ -1675,8 +1908,8 @@ const styles = StyleSheet.create({
     marginVertical: 15,
   },
   imageContainer: {
-    width: 180,
-    height: 180,
+    width: 150,
+    height: 150,
     borderRadius: 10,
     backgroundColor: '#F9F9F9',
     justifyContent: 'center',
@@ -1684,10 +1917,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    // 렌더링 최적화
+    backfaceVisibility: 'hidden',
   },
   image: {
     width: '100%',
     height: '100%',
+    backfaceVisibility: 'hidden',
   },
   imagePlaceholder: {
     alignItems: 'center',
@@ -1701,7 +1937,6 @@ const styles = StyleSheet.create({
     width: 180,
   },
   infoSection: {
-    backgroundColor: '#F9FAFC',
     borderRadius: 10,
     padding: 5,
     marginBottom: 5,
@@ -1709,6 +1944,7 @@ const styles = StyleSheet.create({
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: 50,
     alignItems: 'center',
     paddingVertical: 8,
   },
@@ -1730,15 +1966,16 @@ const styles = StyleSheet.create({
     color: '#4A5568',
   },
   formContainer: {
-    marginTop: 20,
+    paddingHorizontal: 50,
+    marginTop: 2,
   },
   formSectionTitle: {
     marginTop: 10,
-    marginBottom: 10,
-    paddingHorizontal: 8,
+    marginBottom: 0,
+    paddingHorizontal: 6,
   },
   inputContainer: {
-    marginBottom: 10,
+    marginBottom: 0,
   },
   button: {
     width: '100%',
@@ -1794,7 +2031,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E6E6E6',
@@ -1813,6 +2050,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'white',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333333',
+  },
+  ownerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+  },
+  ownerText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#999',
+  },
+  ownerTextHighlight: {
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   boxButtonContainer: {
     flexDirection: 'row',
@@ -1938,7 +2197,6 @@ const styles = StyleSheet.create({
   newBarcodeTitle: {
     color: '#333',
     fontSize: 20,
-    fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 10,
   },
@@ -1954,13 +2212,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
-  },
-  newBarcodeNumber: {
-    color: '#333',
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 25,
   },
   newBarcodeCopyButton: {
     flexDirection: 'row',
@@ -1980,7 +2231,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     position: 'relative',
     zIndex: 10,
-    marginBottom: 10,
+    marginBottom: 0,
   },
   brandListContainer: {
     borderWidth: 1,
@@ -2036,6 +2287,66 @@ const styles = StyleSheet.create({
   selectedBrandIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  amountInput: {
+    textAlign: 'right',
+    paddingRight: 8,
+    fontSize: 16,
+  },
+  amountUnit: {
+    fontSize: 16,
+    paddingTop: 0,
+    color: '#333333',
+    fontWeight: '500',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+  },
+  loadingShareBoxContainer: {
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  loadingShareBoxText: {
+    marginLeft: 10,
+    fontSize: 14,
+    color: '#666',
+  },
+  emptyShareBoxContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#E6E6E6',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  emptyShareBoxText: {
+    color: '#666',
+    fontSize: 14,
+  },
+  shareBoxScrollView: {
+    maxHeight: 250, // 스크롤 영역 최대 높이 설정
+  },
+  newBarcodeNumberInput: {
+    color: '#333',
+    fontSize: 24,
+    textAlign: 'center',
+    marginBottom: 25,
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    width: '90%',
+  },
+  dateInputContainer: {
+    marginBottom: 10,
   },
 });
 

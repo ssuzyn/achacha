@@ -6,7 +6,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const GifticonBottomSheet = ({ gifticons, onUseGifticon, onSelectBrand, selectedBrand }) => {
   const bottomSheetRef = useRef(null);
-  const snapPoints = useMemo(() => ['4%', '25%', '50%'], []);
+  const snapPoints = useMemo(() => ['5%', '25%', '50%'], []);
 
   const handleSheetChanges = useCallback(index => {
     console.log('handleSheetChanges', index);

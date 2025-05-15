@@ -10,11 +10,11 @@ const Divider = ({
   style,
   color,
   width,
-  orientation,
+  orientation = 'horizontal',
   subHeader,
   subHeaderStyle,
-  inset,
-  insetType,
+  inset = false,
+  insetType = 'left',
   theme,
   ...rest
 }) => {
@@ -96,12 +96,6 @@ Divider.propTypes = {
    * 테마 (withTheme에서 제공)
    */
   theme: PropTypes.object,
-};
-
-Divider.defaultProps = {
-  orientation: 'horizontal',
-  insetType: 'left',
-  inset: false,
 };
 
 export default withTheme(Divider, 'Divider');

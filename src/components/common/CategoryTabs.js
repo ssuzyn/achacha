@@ -75,7 +75,6 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 15,
-    fontWeight: '500',
     textAlign: 'center',
     color: 'white',
   },

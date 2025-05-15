@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
@@ -11,7 +10,7 @@ import {
 import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import GeofencingService from '../services/GeofencingService';
+import geofencingService from '../services/GeofencingService';
 import { useNavigation } from '@react-navigation/native';
 import { useMapGifticons } from '../hooks/useMapGifticons'; // 리액트 쿼리 훅
 
@@ -47,7 +46,7 @@ const MapScreen = () => {
     // 최초 렌더링 시 인스턴스 생성
     if (!geofencingServiceRef.current) {
       console.log('GeofencingService 인스턴스 생성');
-      geofencingServiceRef.current = new GeofencingService(uniqueBrands);
+      geofencingServiceRef.current = new geofencingService(uniqueBrands);
     }
 
     console.log('MapScreen 마운트 - 지오펜싱 초기화 시작');
@@ -148,11 +147,11 @@ const MapScreen = () => {
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <Text variant="h2" weight="bold" style={styles.headerTitle}>
           기프티콘 MAP
         </Text>
-      </View>
+      </View> */}
       <View style={styles.mapContainer}>
         <KakaoMapWebView
           ref={mapRef}
@@ -186,22 +185,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
   },
-  header: {
-    height: 80,
-    paddingHorizontal: 18,
-    paddingTop: 25,
-    borderBottomWidth: 0,
-    backgroundColor: '#fafafa',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 24,
-    letterSpacing: -0.5,
-    fontFamily: 'Pretendard-Bold',
-    lineHeight: 36,
-    textAlign: 'center',
-  },
   mapContainer: {
     flex: 1,
     margin: 0,
@@ -209,7 +192,7 @@ const styles = StyleSheet.create({
   },
   locationButton: {
     position: 'absolute',
-    top: 95,
+    top: 55,
     right: 6,
     width: 45,
     height: 45,
@@ -222,7 +205,7 @@ const styles = StyleSheet.create({
   },
   giftButton: {
     position: 'absolute',
-    top: 155,
+    top: 115,
     right: 6,
     width: 45,
     height: 45,

@@ -187,7 +187,9 @@ const BoxDetailAmountHistoryScreen = () => {
         ) : (
           <View style={styles.contentContainer}>
             <View style={styles.infoHeaderContainer}>
-              <Text style={styles.brandText}>{gifticonData.brand}</Text>
+              <Text weight="bold" style={styles.brandText}>
+                {gifticonData.brand}
+              </Text>
               <Text style={styles.nameText}>{gifticonData.name}</Text>
             </View>
 
@@ -195,15 +197,19 @@ const BoxDetailAmountHistoryScreen = () => {
             <View style={styles.balanceSection}>
               <View style={styles.balanceRow}>
                 <Text style={styles.balanceLabel}>총 금액</Text>
-                <Text style={styles.balanceValue}>{formatNumber(gifticonData.totalBalance)}원</Text>
+                <Text weight="bold" style={styles.balanceValue}>
+                  {formatNumber(gifticonData.totalBalance)}원
+                </Text>
               </View>
               <View style={styles.balanceRow}>
                 <Text style={styles.balanceLabel}>사용 금액</Text>
-                <Text style={styles.balanceValue}>{formatNumber(gifticonData.usedAmount)}원</Text>
+                <Text weight="bold" style={styles.balanceValue}>
+                  {formatNumber(gifticonData.usedAmount)}원
+                </Text>
               </View>
               <View style={styles.balanceRow}>
                 <Text style={styles.balanceLabel}>남은 금액</Text>
-                <Text style={[styles.balanceValue, { color: '#56AEE9' }]}>
+                <Text weight="bold" style={[styles.balanceValue, { color: '#56AEE9' }]}>
                   {formatNumber(gifticonData.remainingBalance)}원
                 </Text>
               </View>
@@ -218,7 +224,9 @@ const BoxDetailAmountHistoryScreen = () => {
                   {editingId === transaction.id ? (
                     <View style={styles.editItemContainer}>
                       <View style={styles.editInfoSection}>
-                        <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                        <Text weight="bold" style={styles.transactionUser}>
+                          {transaction.userName}
+                        </Text>
                         <Text style={styles.transactionDate}>{transaction.date}</Text>
                       </View>
                       <View style={styles.editActionSection}>
@@ -246,11 +254,13 @@ const BoxDetailAmountHistoryScreen = () => {
                   ) : (
                     <View style={styles.transactionItem}>
                       <View style={styles.transactionLeft}>
-                        <Text style={styles.transactionUser}>{transaction.userName}</Text>
+                        <Text weight="bold" style={styles.transactionUser}>
+                          {transaction.userName}
+                        </Text>
                         <Text style={styles.transactionDate}>{transaction.date}</Text>
                       </View>
                       <View style={styles.transactionRight}>
-                        <Text style={[styles.amountText, { color: '#56AEE9' }]}>
+                        <Text weight="bold" style={[styles.amountText, { color: '#56AEE9' }]}>
                           {renderAmount(transaction.amount, transaction.type)}
                         </Text>
                         <View style={styles.actionIcons}>
@@ -313,17 +323,17 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   infoHeaderContainer: {
-    marginVertical: 16,
+    marginVertical: 10,
     alignItems: 'center',
   },
   brandText: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: '#333',
+    marginBottom: 7,
   },
   nameText: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: 20,
+    color: '#000',
     marginTop: 4,
     textAlign: 'center',
   },
@@ -339,11 +349,10 @@ const styles = StyleSheet.create({
   },
   balanceLabel: {
     fontSize: 18,
-    color: '#666',
+    color: '#737373',
   },
   balanceValue: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: '#333',
   },
   divider: {
@@ -371,7 +380,6 @@ const styles = StyleSheet.create({
   },
   transactionUser: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#333',
   },
   transactionDate: {
@@ -381,7 +389,6 @@ const styles = StyleSheet.create({
   },
   amountText: {
     fontSize: 18,
-    fontWeight: 'bold',
     color: '#278CCC',
     marginRight: 15,
   },
@@ -431,12 +438,10 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#56AEE9',
-    fontWeight: 'bold',
     fontSize: 14,
   },
   saveButtonText: {
     color: 'white',
-    fontWeight: 'bold',
     fontSize: 14,
   },
   noAccessContainer: {

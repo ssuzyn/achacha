@@ -33,7 +33,7 @@ export const guideSteps = [
   },
   // Step 4: 기프티콘 전달
   {
-    title: '쓱- 하고 나누면,',
+    title: '쓱- 하고 뿌리면,',
     subText1: '선물의 행운이',
     subText2: '누군가에게로.',
     image: require('../assets/images/gesture.png'),

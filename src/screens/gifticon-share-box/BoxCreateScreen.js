@@ -23,8 +23,8 @@ import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
 import apiClient from '../../api/apiClient';
 import { API_CONFIG } from '../../api/config';
-import * as Clipboard from 'expo-clipboard';
-import { createShareBox } from '../../api/shareBoxApi';
+import Clipboard from '@react-native-clipboard/clipboard';
+import { createShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import { useRoute } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
@@ -114,7 +114,7 @@ const BoxCreateScreen = () => {
     },
     imageContainer: {
       marginTop: 40,
-      marginBottom: 30,
+      marginBottom: 20,
       alignItems: 'center',
     },
     shareImage: {
@@ -128,22 +128,6 @@ const BoxCreateScreen = () => {
     shareTextContainer: {
       alignItems: 'center',
       marginVertical: 30,
-    },
-    guideText: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#333333',
-      textAlign: 'center',
-      marginBottom: 12,
-      lineHeight: 28,
-      fontFamily: theme.fonts.fontWeight.bold,
-    },
-    subGuideText: {
-      fontSize: 15,
-      color: '#718096',
-      textAlign: 'center',
-      lineHeight: 22,
-      fontFamily: theme.fonts.fontWeight.regular,
     },
     inputContainer: {
       width: '100%',
@@ -327,7 +311,11 @@ const BoxCreateScreen = () => {
 
           {/* 안내 텍스트 */}
           <View style={styles.textContainer}>
-            <Text style={styles.guideText}>
+            <Text
+              variant="h3"
+              weight="bold"
+              style={{ textAlign: 'center', marginBottom: 12, lineHeight: 28 }}
+            >
               쉐어박스를 생성하고{'\n'}함께 나누는 기프티콘을 관리해봐요!
             </Text>
           </View>
@@ -355,7 +343,9 @@ const BoxCreateScreen = () => {
           onPress={handleCreate}
           disabled={!boxName.trim()}
         >
-          <Text style={styles.createButtonText}>생성</Text>
+          <Text variant="body1" weight="semiBold" color="#FFFFFF">
+            생성
+          </Text>
         </TouchableOpacity>
       </View>
     </>
@@ -371,19 +361,36 @@ const BoxCreateScreen = () => {
             {/* 박스명 표시 버튼 */}
             <View style={styles.boxInfoButton}>
               <MaterialIcons name="inventory-2" size={18} color="#56AEE9" style={styles.boxIcon} />
-              <Text style={styles.boxNameText}>{boxName}</Text>
+              <Text variant="body2" weight="bold" color="#56AEE9">
+                {boxName}
+              </Text>
             </View>
 
-            <Text style={styles.codeValue}>{inviteCode}</Text>
+            <Text
+              variant="h2"
+              weight="bold"
+              style={{ color: '#000000', letterSpacing: 2, padding: 10 }}
+            >
+              {inviteCode}
+            </Text>
           </View>
 
           {/* 안내 텍스트 */}
           <View style={styles.shareTextContainer}>
-            <Text style={styles.guideText}>
-              위의 초대코드를 입력하면{"\n"}쉐어박스에 참여할 수 있어요.
+            <Text
+              variant="h4"
+              weight="bold"
+              style={{ textAlign: 'center', marginBottom: 12, lineHeight: 28 }}
+            >
+              위의 초대코드를 입력하면{'\n'}쉐어박스에 참여할 수 있어요.
             </Text>
-            <Text style={styles.subGuideText}>
-              쉐어박스 메인 페이지 상단에{"\n"}참여 버튼을 눌러 코드를 입력해주세요.
+            <Text
+              variant="body2"
+              weight="regular"
+              color="#718096"
+              style={{ textAlign: 'center', lineHeight: 22 }}
+            >
+              쉐어박스 메인 페이지 상단에{'\n'}참여 버튼을 눌러 코드를 입력해주세요.
             </Text>
           </View>
         </View>
@@ -398,11 +405,15 @@ const BoxCreateScreen = () => {
       >
         <View style={styles.rowButtonContainer}>
           <TouchableOpacity style={styles.kakaoButton} onPress={handleShareKakao}>
-            <Text style={styles.kakaobuttonText}>카카오톡 공유</Text>
+            <Text variant="body1" weight="semiBold" color="#462000">
+              카카오톡 공유
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.copyButton} onPress={handleCopyCode}>
-            <Text style={styles.buttonText}>코드 복사</Text>
+            <Text variant="body1" weight="semiBold" color="#FFFFFF">
+              코드 복사
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

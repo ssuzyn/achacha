@@ -17,12 +17,13 @@ import GiveAwayGifticonList from '../components/GiveAwayGifticonList';
 import GifticonConfirmModal from '../components/GifticonConfirmModal';
 import Tooltip from '../components/Tooltip';
 import LottieView from 'lottie-react-native';
-import NearbyUsersService from '../services/NearbyUsersService';
+import nearbyUsersService from '../services/NearbyUsersService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../hooks/useTheme';
 import { useNavigation } from '@react-navigation/native';
-import useDeviceStore from '../store/deviceStore';
+import useAuthStore from '../store/authStore';
+import { PermissionsAndroid } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../assets/images/giveaway_button.png');
@@ -96,38 +97,53 @@ const dummyGifticons = {
 // 주변에 사용자가 없을 때 보여줄 컴포넌트
 const NoUsersScreen = () => {
   const navigation = useNavigation();
+  const [showTooltip, setShowTooltip] = useState(true);
 
   const handleGoToShareBox = () => {
-    navigation.navigate('ShareBox');
+    navigation.navigate('BoxMain');
   };
 
   const handleGoToManagement = () => {
-    navigation.navigate('GifticonManagement');
+    navigation.navigate('ManageList');
   };
+
+  useEffect(() => {
+    // 3초 후에 툴팁 숨기기
+    const timer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <View style={styles.noUsersContainer}>
-      <Text style={styles.noUsersText}>주변에 사용자가 없습니다</Text>
-      <Text style={styles.noUsersSubText}>다음에 다시 시도해주세요</Text>
+      {showTooltip && (
+        <View style={styles.tooltipContainer}>
+          <View style={styles.tooltipBubble}>
+            <Text style={styles.tooltipText}>
+              주변에 사용자가 없습니다.{'\n'}다음에 다시 시도해주세요.
+            </Text>
+          </View>
+        </View>
+      )}
 
-      <View style={styles.iconContainer}>
-        <TouchableOpacity style={styles.iconWrapper} onPress={handleGoToShareBox}>
-          <Image source={giveawayShareboxImg} style={styles.noUserIcon} />
+      <View style={styles.circleContainer}>
+        <TouchableOpacity
+          onPress={handleGoToShareBox}
+          style={[styles.iconButton, styles.shareboxPosition]}
+        >
+          <Image source={giveawayShareboxImg} style={styles.iconImage} />
           <Text style={styles.iconText}>쉐어박스</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.iconWrapper} onPress={handleGoToManagement}>
-          <Image source={giveawayManagementImg} style={styles.noUserIcon} />
-          <Text style={styles.iconText}>기프티콘 관리</Text>
+        <TouchableOpacity
+          onPress={handleGoToManagement}
+          style={[styles.iconButton, styles.managementPosition]}
+        >
+          <Image source={giveawayManagementImg} style={styles.iconImage} />
+          <Text style={styles.iconText}>기프티콘</Text>
         </TouchableOpacity>
-      </View>
-
-      <View style={styles.descriptionContainer}>
-        <Text style={styles.descriptionText}>
-          주변 친구들을 찾지 못했습니다.{'\n'}
-          기프티콘을 쉐어박스로 보내거나{'\n'}
-          다른 기프티콘을 관리해보세요.
-        </Text>
       </View>
     </View>
   );
@@ -152,7 +168,7 @@ const GiveAwayScreen = ({ onClose }) => {
   const tooltipOpacity = useRef(new Animated.Value(0)).current;
 
   // BLE 관련 상태
-  const { appUUID, userUUID, initializeUUIDs } = useDeviceStore();
+  const { bleToken } = useAuthStore();
   const [isTransferring, setIsTransferring] = useState(false);
   const [bluetoothReady, setBluetoothReady] = useState(false);
 
@@ -405,15 +421,13 @@ const GiveAwayScreen = ({ onClose }) => {
         // 로딩 시작 시간 기록
         const loadingStartTime = Date.now();
 
-        // Zustand 스토어 초기화
-        if (!appUUID) {
-          await initializeUUIDs();
-        }
-
         // BLE 서비스 초기화
         try {
           // NearbyUsersService 초기화 - 싱글톤이므로 참조만 저장
-          bleServiceRef.current = NearbyUsersService;
+          bleServiceRef.current = nearbyUsersService;
+
+          // 현재 광고 중이라면 중지
+          await bleServiceRef.current.stopAdvertising();
 
           // BLE 초기화
           const initResult = await bleServiceRef.current.initialize();
@@ -422,106 +436,125 @@ const GiveAwayScreen = ({ onClose }) => {
           if (initResult) {
             // 스캔 시작 - 한 번만 실행
             let foundUsers = [];
-            await bleServiceRef.current.startScan(
-              user => {
-                // 새 사용자가 발견될 때마다 호출되는 콜백
-                console.log('새 사용자 발견:', {
-                  id: user.id,
-                  name: user.name,
-                  deviceUUID: user.deviceUUID,
-                  rssi: user.rssi,
-                  distance: user.distance,
-                  timestamp: new Date(user.timestamp).toLocaleString(),
-                });
-              },
-              allUsers => {
-                // 스캔 완료 후 호출되는 콜백
-                console.log('스캔 완료, 발견된 사용자 수:', allUsers.length);
-                console.log(
-                  '발견된 모든 사용자:',
-                  allUsers.map(user => ({
-                    id: user.id,
-                    name: user.name,
-                    deviceUUID: user.deviceUUID,
-                    rssi: user.rssi,
-                    distance: user.distance,
-                    timestamp: new Date(user.timestamp).toLocaleString(),
-                  }))
+            console.log('BLE 스캔 시작');
+
+            try {
+              const scanStartTime = Date.now();
+              await new Promise(resolve => {
+                bleServiceRef.current.startScan(
+                  user => {
+                    // 새 사용자가 발견될 때마다 호출되는 콜백
+                    console.log('새 사용자 발견:', {
+                      id: user.id,
+                      name: user.name,
+                      deviceUUID: user.deviceUUID,
+                      rssi: user.rssi,
+                      distance: user.distance,
+                      timestamp: new Date(user.timestamp).toLocaleString(),
+                    });
+                  },
+                  allUsers => {
+                    // 스캔 완료 후 호출되는 콜백
+                    console.log('스캔 완료, 발견된 사용자 수:', allUsers.length);
+                    foundUsers = allUsers;
+
+                    // 남은 시간 계산
+                    const elapsedTime = Date.now() - scanStartTime;
+                    const remainingTime = Math.max(5000 - elapsedTime, 0);
+
+                    // 남은 시간이 있으면 대기 후 resolve
+                    if (remainingTime > 0) {
+                      console.log(`스캔 완료 후 ${remainingTime}ms 더 대기`);
+                      setTimeout(resolve, remainingTime);
+                    } else {
+                      resolve();
+                    }
+                  }
                 );
-                foundUsers = allUsers;
+
+                // 5초 타이머 설정
+                setTimeout(() => {
+                  console.log('5초 스캔 시간 완료');
+                  resolve();
+                }, 5000);
+              });
+
+              console.log('BLE 스캔 및 대기 완료');
+            } catch (error) {
+              console.error('BLE 스캔 중 오류:', error);
+            } finally {
+              // 실제 사용자만 표시
+              if (foundUsers.length > 0) {
+                // NearbyUsersService에서 찾은 사용자 매핑
+                const mappedUsers = foundUsers
+                  .map((user, index) => {
+                    // 사용자별로 다른 이모지 할당
+                    const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
+                    const emoji = emojiOptions[index % emojiOptions.length];
+
+                    return {
+                      id: user.id,
+                      name: user.name || `사용자${index + 1}`,
+                      emoji: emoji,
+                      // BLE 정보도 저장
+                      deviceUUID: user.deviceUUID,
+                      rssi: user.rssi,
+                    };
+                  })
+                  .slice(0, 5); // 최대 5명까지만
+
+                // UI에 사용자 표시
+                setUsers(mappedUsers);
+                setButtonVisible(mappedUsers.length > 0);
+              } else {
+                // 사용자가 없을 때는 빈 배열 설정
+                setUsers([]);
+                setButtonVisible(false);
               }
-            );
 
-            // 스캔 결과 처리를 위한 약간의 지연
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // 실제 사용자가 있으면 실제 데이터 사용, 없으면 더미 데이터 사용
-            if (foundUsers.length > 0) {
-              // NearbyUsersService에서 찾은 사용자 매핑
-              const mappedUsers = foundUsers
-                .map((user, index) => {
-                  // 사용자별로 다른 이모지 할당
-                  const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
-                  const emoji = emojiOptions[index % emojiOptions.length];
-
-                  return {
-                    id: user.id,
-                    name: user.name || `사용자${index + 1}`,
-                    emoji: emoji,
-                    // BLE 정보도 저장
-                    deviceUUID: user.deviceUUID,
-                    rssi: user.rssi,
-                  };
-                })
-                .slice(0, 5); // 최대 5명까지만
-
-              // UI에 사용자 표시
-              setUsers(mappedUsers);
-              setButtonVisible(mappedUsers.length > 0);
-            } else {
-              // 더미 데이터 사용
-              setUsers(DUMMY_USERS);
-              setButtonVisible(DUMMY_USERS.length > 0);
+              // 스캔이 완료되면 다시 광고 시작
+              await bleServiceRef.current.startAdvertising();
             }
           } else {
-            // BLE 초기화 실패 시 더미 데이터 사용
-            setUsers(DUMMY_USERS);
-            setButtonVisible(DUMMY_USERS.length > 0);
+            // BLE 초기화 실패 시 빈 배열 설정
+            setUsers([]);
+            setButtonVisible(false);
           }
         } catch (error) {
           console.error('BLE 서비스 초기화 실패:', error);
-
-          // 오류 발생 시 더미 데이터 사용
-          setUsers(DUMMY_USERS);
-          setButtonVisible(DUMMY_USERS.length > 0);
+          // 오류 발생 시 빈 배열 설정
+          setUsers([]);
+          setButtonVisible(false);
         }
 
-        // 현재 시간과 로딩 시작 시간의 차이 계산
+        // 현재까지 경과된 시간 계산
         const elapsedTime = Date.now() - loadingStartTime;
-        const minLoadingTime = 3000; // 최소 3초
+        const maxLoadingTime = 5000; // 최대 5초
 
-        // 최소 3초 동안 로딩 애니메이션 표시
-        if (elapsedTime < minLoadingTime) {
-          await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime));
+        // 5초에서 경과 시간을 뺀 만큼만 더 대기
+        if (elapsedTime < maxLoadingTime) {
+          await new Promise(resolve => setTimeout(resolve, maxLoadingTime - elapsedTime));
         }
 
         setLoading(false);
       } catch (error) {
-        console.error('초기화 중 오류:', error);
         setLoading(false);
-
-        // 오류 발생 시 더미 데이터 사용
-        setUsers(DUMMY_USERS);
-        setButtonVisible(DUMMY_USERS.length > 0);
+        // 오류 발생 시 빈 배열 설정
+        setUsers([]);
+        setButtonVisible(false);
       }
     };
 
     initialize();
 
+    // 컴포넌트 언마운트 시
     return () => {
       if (bleServiceRef.current) {
         try {
-          bleServiceRef.current.cleanup();
+          // 스캔 중지
+          bleServiceRef.current.stopScan();
+          // 광고 다시 시작
+          bleServiceRef.current.startAdvertising();
         } catch (e) {
           console.error('정리 중 오류:', e);
         }
@@ -573,6 +606,13 @@ const GiveAwayScreen = ({ onClose }) => {
   const handleGoBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  const permissions = [
+    PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+    PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+    PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  ];
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -896,88 +936,60 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: 'absolute',
-    top: height * 0.05,
-    left: 0,
-    right: 0,
+    top: '1%',
     alignItems: 'center',
-    zIndex: 30,
+    zIndex: 10,
   },
   tooltipBubble: {
-    backgroundColor: 'rgba(86, 174, 233, 0.8)',
-    paddingHorizontal: 20,
+    backgroundColor: 'rgba(85, 85, 85, 0.6)',
+    paddingHorizontal: 50,
     paddingVertical: 18,
     borderRadius: 20,
-    maxWidth: width * 0.8,
   },
   tooltipText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 19,
+    fontFamily: 'Pretendard-Medium',
     textAlign: 'center',
+    lineHeight: 24,
   },
-  // NoUsersScreen 관련 스타일
   noUsersContainer: {
     position: 'absolute',
-    width: width * 0.8,
+    width: width,
+    height: height * 0.7,
     alignItems: 'center',
     justifyContent: 'center',
-    alignSelf: 'center',
-    top: height * 0.3,
   },
-  noUsersText: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 8,
+  circleContainer: {
+    width: width * 0.9,
+    height: width * 0.9,
+    position: 'relative',
   },
-  noUsersSubText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 40,
-  },
-  iconContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 20,
-    marginBottom: 30,
-  },
-  iconWrapper: {
+  iconButton: {
+    position: 'absolute',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 15,
-    padding: 15,
-    marginHorizontal: 10,
-    width: 120,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',
+    width: 160,
   },
-  noUserIcon: {
-    width: 80,
-    height: 80,
-    marginBottom: 10,
+  shareboxPosition: {
+    top: 0,
+    left: 0,
+  },
+  managementPosition: {
+    bottom: 0,
+    right: -13,
+  },
+  iconImage: {
+    width: 140,
+    height: 140,
     resizeMode: 'contain',
+    marginBottom: 12,
   },
   iconText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontFamily: 'Pretendard-Medium',
     color: '#333',
     textAlign: 'center',
-  },
-  descriptionContainer: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: '#777',
-    textAlign: 'center',
-    lineHeight: 22,
   },
 });
 

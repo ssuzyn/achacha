@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,10 +12,15 @@ import {
   Alert,
   NativeEventEmitter,
   NativeModules,
+  StatusBar,
+  InteractionManager,
 } from 'react-native';
-import { useTheme } from 'react-native-elements';
+import { useTheme, Icon } from 'react-native-elements';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTabBar } from '../context/TabBarContext';
 import Slider from '../components/ui/Slider';
-import { Divider, Text } from '../components/ui';
+import { Divider, Text, Button } from '../components/ui';
 import Switch from '../components/ui/Switch';
 import { Svg, Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,6 +30,13 @@ import { ERROR_MESSAGES } from '../constants/errorMessages';
 const SettingScreen = () => {
   const { theme } = useTheme();
   const { WearSyncModule } = NativeModules;
+  const navigation = useNavigation();
+  const route = useRoute();
+  const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
+  const { hideTabBar, showTabBar } = useTabBar();
+
+  // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
+  const keepTabBarVisible = route.params?.keepTabBarVisible || false;
 
   // 상태 관리
   const [expiryNotification, setExpiryNotification] = useState(true);
@@ -32,9 +44,13 @@ const SettingScreen = () => {
   const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
   const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(1);
   const [usageCompletionNotification, setUsageCompletionNotification] = useState(true);
-  const [shareboxNotification, setShareboxNotification] = useState(true);
+  const [shareboxGiftRegistration, setShareboxGiftRegistration] = useState(true);
+  const [shareboxGiftUsage, setShareboxGiftUsage] = useState(true);
+  const [shareboxMemberJoin, setShareboxMemberJoin] = useState(true);
+  const [shareboxGroupDelete, setShareboxGroupDelete] = useState(true);
   const [watchModalVisible, setWatchModalVisible] = useState(false);
   const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
+
   // 로그인 타입 (추후 API 연동 시 실제 데이터로 대체)
   // eslint-disable-next-line no-unused-vars
   const [loginType, setLoginType] = useState('kakao'); // 'kakao' 또는 'google'
@@ -42,6 +58,11 @@ const SettingScreen = () => {
 
   // 슬라이더 마커 값
   const markers = [0, 1, 2, 3, 7, 30, 60, 90];
+
+  // 뒤로가기 처리
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
   // Google 로고 SVG 컴포넌트
   // eslint-disable-next-line react/no-unstable-nested-components
@@ -94,11 +115,15 @@ const SettingScreen = () => {
       const granted = await PermissionsAndroid.requestMultiple(permissionsToRequest);
 
       // 모든 필수 권한이 승인되었는지 확인
-      const allPermissionsGranted = 
-        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN] === PermissionsAndroid.RESULTS.GRANTED &&
-        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE] === PermissionsAndroid.RESULTS.GRANTED &&
-        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT] === PermissionsAndroid.RESULTS.GRANTED &&
-        granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] === PermissionsAndroid.RESULTS.GRANTED;
+      const allPermissionsGranted =
+        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT] ===
+          PermissionsAndroid.RESULTS.GRANTED &&
+        granted[PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION] ===
+          PermissionsAndroid.RESULTS.GRANTED;
 
       if (allPermissionsGranted) {
         const result = await WearSyncModule.startNearbyAdvertising();
@@ -224,7 +249,7 @@ const SettingScreen = () => {
   useEffect(() => {
     if (Platform.OS === 'android' && WearSyncModule) {
       const eventEmitter = new NativeEventEmitter(WearSyncModule);
-      const subscription = eventEmitter.addListener('NearbyConnected', (event) => {
+      const subscription = eventEmitter.addListener('NearbyConnected', event => {
         // event.endpointId가 특정 값이어야만 성공 처리 등 추가 검증 가능
         if (event && event.endpointId) {
           setConnectionStep(2);
@@ -259,196 +284,268 @@ const SettingScreen = () => {
     fetchUserName();
   }, []);
 
+  // 탭바 처리 - 화면 진입 시 및 이탈 시
+  useEffect(() => {
+    // 애니메이션이 완료된 후에 탭바 숨기기
+    const interactionComplete = InteractionManager.runAfterInteractions(() => {
+      if (!keepTabBarVisible) {
+        hideTabBar();
+      }
+    });
+
+    // 화면 이탈 시 탭바 복원 및 리소스 정리
+    return () => {
+      interactionComplete.cancel();
+      showTabBar();
+    };
+  }, [hideTabBar, showTabBar, keepTabBarVisible]);
+
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.headerSection}>
-        <Text variant="h2" style={styles.headerTitle}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+
+      {/* 안전 영역 고려한 상단 여백 */}
+      <View style={{ height: insets.top, backgroundColor: theme.colors.background }} />
+
+      {/* 커스텀 헤더 */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        <Button
+          variant="ghost"
+          onPress={handleGoBack}
+          style={styles.backButton}
+          leftIcon={
+            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+          }
+        />
+        <Text variant="h3" style={styles.headerTitle}>
           설정
         </Text>
+        <View style={styles.emptyRightSpace} />
       </View>
 
-      {/* 회원정보 섹션 */}
-      <View style={[styles.section, styles.firstSection]}>
-        <Text variant="h3" style={styles.sectionTitle}>
-          회원정보
-        </Text>
-        <View style={styles.infoItem}>
-          <Text variant="body1" color="grey3" style={styles.infoLabel}>
-            연결된 소셜 서비스
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 회원정보 섹션 */}
+        <View style={styles.section}>
+          <Text variant="h3" style={styles.sectionTitle}>
+            회원정보
           </Text>
-          <View style={styles.socialServiceContainer}>
-            {loginType === 'kakao' ? (
-              <>
-                <Image
-                  source={require('../assets/images/login_kakaotalk.png')}
-                  style={styles.socialIcon}
-                  resizeMode="contain"
-                />
-                <Text variant="body1" style={styles.infoValue}>
-                  카카오톡
-                </Text>
-              </>
-            ) : (
-              <>
-                <GoogleLogo />
-                <Text variant="body1" style={styles.infoValue2}>
-                  Google
-                </Text>
-              </>
-            )}
-          </View>
-        </View>
-        <View style={styles.infoItem}>
-          <Text variant="body1" color="grey3" style={styles.infoLabel}>
-            닉네임
-          </Text>
-          <Text variant="body1" style={styles.infoValue}>
-            {nickname || '-'}
-          </Text>
-        </View>
-      </View>
-
-      {/* 회원정보와 알림 사이 구분선 */}
-      <Divider style={styles.sectionDivider} />
-
-      {/* 알림 섹션 */}
-      <View style={styles.section}>
-        <Text variant="h3" style={styles.sectionTitle}>
-          알림
-        </Text>
-
-        {/* 유효기간 만료 알림 */}
-        <View style={styles.notificationItem}>
-          <View style={styles.notificationInfo}>
-            <Text variant="body1" style={styles.notificationLabel}>
-              유효기간 만료 알림
+          <View style={styles.infoItem}>
+            <Text variant="body1" color="grey3" style={styles.infoLabel}>
+              연결된 소셜 서비스
             </Text>
-            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              유효기간 임박 시 알림
+            <View style={styles.socialServiceContainer}>
+              {loginType === 'kakao' ? (
+                <>
+                  <Image
+                    source={require('../assets/images/login_kakaotalk.png')}
+                    style={styles.socialIcon}
+                    resizeMode="contain"
+                  />
+                  <Text variant="body1" style={styles.infoValue}>
+                    카카오톡
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <GoogleLogo />
+                  <Text variant="body1" style={styles.infoValue2}>
+                    Google
+                  </Text>
+                </>
+              )}
+            </View>
+          </View>
+          <View style={styles.infoItem}>
+            <Text variant="body1" color="grey3" style={styles.infoLabel}>
+              닉네임
+            </Text>
+            <Text variant="body1" style={styles.infoValue}>
+              {nickname || '-'}
             </Text>
           </View>
-          <Switch value={expiryNotification} onValueChange={setExpiryNotification} />
         </View>
 
-        {/* 유효기간 알림 주기 설정 - 만료 알림이 활성화된 경우에만 표시 */}
-        {expiryNotification && (
-          <View style={styles.sliderContainer}>
+        {/* 회원정보와 알림 사이 구분선 */}
+        <Divider style={styles.sectionDivider} />
+
+        {/* 알림 섹션 */}
+        <View style={styles.section}>
+          <Text variant="h3" style={styles.sectionTitle}>
+            알림
+          </Text>
+
+          {/* 유효기간 만료 알림 */}
+          <View style={styles.notificationItem}>
             <View style={styles.notificationInfo}>
               <Text variant="body1" style={styles.notificationLabel}>
-                유효기간 알림 주기 설정
+                유효기간 만료 알림
               </Text>
               <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-                만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90일 단위
+                유효기간 임박 시 알림
               </Text>
             </View>
+            <Switch value={expiryNotification} onValueChange={setExpiryNotification} />
+          </View>
 
-            <View style={styles.customSliderContainer}>
-              <Slider
-                value={expiryNotificationInterval}
-                values={markers}
-                onValueChange={value => setExpiryNotificationInterval(value)}
-                minimumTrackTintColor={theme.colors.primary}
-                maximumTrackTintColor={theme.colors.grey2}
-                showValue={false}
-                containerStyle={styles.sliderStyle}
-              />
+          {/* 유효기간 알림 주기 설정 - 만료 알림이 활성화된 경우에만 표시 */}
+          {expiryNotification && (
+            <View style={styles.sliderContainer}>
+              <View style={styles.notificationInfo}>
+                <Text variant="body1" style={styles.notificationLabel}>
+                  유효기간 알림 주기 설정
+                </Text>
+                <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                  만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90일 단위
+                </Text>
+              </View>
+
+              <View style={styles.customSliderContainer}>
+                <Slider
+                  value={expiryNotificationInterval}
+                  values={markers}
+                  onValueChange={value => setExpiryNotificationInterval(value)}
+                  minimumTrackTintColor={theme.colors.primary}
+                  maximumTrackTintColor={theme.colors.grey2}
+                  showValue={false}
+                  containerStyle={styles.sliderStyle}
+                />
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {/* 주변 매장 알림 */}
-        <View style={styles.notificationItem}>
-          <View style={styles.notificationInfo}>
-            <Text variant="body1" style={styles.notificationLabel}>
-              주변 매장 알림
-            </Text>
-            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              각 매장 기준 50m 이내 접근 시 알림
-            </Text>
+          {/* 주변 매장 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                주변 매장 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                각 매장 기준 50m 이내 접근 시 알림
+              </Text>
+            </View>
+            <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
           </View>
-          <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
+
+          {/* 사용 완료 여부 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                사용완료 여부 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                사용완료 처리 여부 알림
+              </Text>
+            </View>
+            <Switch
+              value={usageCompletionNotification}
+              onValueChange={setUsageCompletionNotification}
+            />
+          </View>
+
+          {/* 기프티콘 뿌리기 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                기프티콘 뿌리기 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                기프티콘 뿌리기 수신 알림
+              </Text>
+            </View>
+            <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
+          </View>
+
+          {/* 쉐어박스 기프티콘 등록 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                쉐어박스 기프티콘 등록 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                쉐어박스 신규 기프티콘 등록 시 알림
+              </Text>
+            </View>
+            <Switch value={shareboxGiftRegistration} onValueChange={setShareboxGiftRegistration} />
+          </View>
+
+          {/* 쉐어박스 기프티콘 사용 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                쉐어박스 기프티콘 사용 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                쉐어박스 기프티콘 사용 완료 시 알림
+              </Text>
+            </View>
+            <Switch value={shareboxGiftUsage} onValueChange={setShareboxGiftUsage} />
+          </View>
+
+          {/* 쉐어박스 멤버 참여 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                쉐어박스 멤버 참여 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                새 멤버 참여 시 알림
+              </Text>
+            </View>
+            <Switch value={shareboxMemberJoin} onValueChange={setShareboxMemberJoin} />
+          </View>
+
+          {/* 쉐어박스 그룹 삭제 알림 */}
+          <View style={styles.notificationItem}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                쉐어박스 그룹 삭제 알림
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                그룹 삭제 시 알림
+              </Text>
+            </View>
+            <Switch value={shareboxGroupDelete} onValueChange={setShareboxGroupDelete} />
+          </View>
         </View>
 
-        {/* 사용 완료 여부 알림 */}
-        <View style={styles.notificationItem}>
-          <View style={styles.notificationInfo}>
-            <Text variant="body1" style={styles.notificationLabel}>
-              사용완료 여부 알림
-            </Text>
-            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              사용완료 처리 여부 알림
-            </Text>
-          </View>
-          <Switch
-            value={usageCompletionNotification}
-            onValueChange={setUsageCompletionNotification}
-          />
+        {/* 알림과 워치 섹션 사이 구분선 */}
+        <Divider style={styles.sectionDivider} />
+
+        {/* 워치 섹션 */}
+        <View style={styles.section}>
+          <Text variant="h3" style={styles.sectionTitle}>
+            워치 설정
+          </Text>
+          <TouchableOpacity style={styles.watchItem} onPress={openWatchModal}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                워치 연결하기
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                스마트폰과 워치 연동 설정
+              </Text>
+            </View>
+            <View style={styles.arrowContainer}>
+              <Text style={styles.arrowText}>{'>'}</Text>
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {/* 기프티콘 뿌리기 알림 */}
-        <View style={styles.notificationItem}>
-          <View style={styles.notificationInfo}>
-            <Text variant="body1" style={styles.notificationLabel}>
-              기프티콘 뿌리기 알림
-            </Text>
-            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              기프티콘 뿌리기 수신 알림
-            </Text>
-          </View>
-          <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
+        {/* 버튼 영역 */}
+        <View style={styles.footerButtonsWrapper}>
+          <TouchableOpacity style={styles.withdrawTouchable}>
+            <Text style={styles.withdrawText}>회원탈퇴</Text>
+          </TouchableOpacity>
+          <View style={styles.buttonSpacer} />
+          <TouchableOpacity style={styles.logoutTouchable}>
+            <Text style={styles.logoutText}>로그아웃</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* 쉐어박스 알림 */}
-        <View style={styles.notificationItem}>
-          <View style={styles.notificationInfo}>
-            <Text variant="body1" style={styles.notificationLabel}>
-              쉐어박스 알림
-            </Text>
-            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              쉐어박스 등록, 사용완료, 새 멤버 참여 알림
-            </Text>
-          </View>
-          <Switch value={shareboxNotification} onValueChange={setShareboxNotification} />
-        </View>
-      </View>
-
-      {/* 알림과 워치 섹션 사이 구분선 */}
-      <Divider style={styles.sectionDivider} />
-
-      {/* 워치 섹션 */}
-      <View style={styles.section}>
-        <Text variant="h3" style={styles.sectionTitle}>
-          워치 설정
-        </Text>
-        <TouchableOpacity style={styles.watchItem} onPress={openWatchModal}>
-          <View style={styles.notificationInfo}>
-            <Text variant="body1" style={styles.notificationLabel}>
-              워치 연결하기
-            </Text>
-            <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-              스마트폰과 워치 연동 설정
-            </Text>
-          </View>
-          <View style={styles.arrowContainer}>
-            <Text style={styles.arrowText}>{'>'}</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* 버튼 영역 */}
-      <View style={styles.footerButtonsWrapper}>
-        <TouchableOpacity style={styles.withdrawTouchable}>
-          <Text style={styles.withdrawText}>회원탈퇴</Text>
-        </TouchableOpacity>
-        <View style={styles.buttonSpacer} />
-        <TouchableOpacity style={styles.logoutTouchable}>
-          <Text style={styles.logoutText}>로그아웃</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {/* 워치 연결 모달 */}
       <Modal
@@ -463,35 +560,47 @@ const SettingScreen = () => {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingTop: 0,
   },
-  contentContainer: {
-    paddingTop: 0,
+  header: {
+    height: 60,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
   },
-  headerSection: {
-    paddingTop: 0,
-    paddingBottom: 10,
+  backButton: {
+    padding: 0,
+    backgroundColor: 'transparent',
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  emptyRightSpace: {
+    width: 48,
+    height: 48,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
   },
   section: {
-    marginBottom: 2,
+    marginBottom: 16,
   },
   sectionTitle: {
     marginBottom: 10,
-  },
-  firstSection: {
-    marginTop: 10,
   },
   infoItem: {
     flexDirection: 'row',
@@ -578,7 +687,7 @@ const styles = StyleSheet.create({
   },
   sectionDivider: {
     marginBottom: 20,
-    marginTop: 10,
+    marginTop: 8,
   },
   watchItem: {
     flexDirection: 'row',

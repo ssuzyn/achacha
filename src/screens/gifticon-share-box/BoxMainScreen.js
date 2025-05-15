@@ -4,25 +4,23 @@ import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
-  FlatList,
   TouchableOpacity,
   Image,
   Modal,
   TextInput,
   Alert,
   ActivityIndicator,
+  StatusBar,
+  ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { API_CONFIG } from '../../api/config';
-import apiClient from '../../api/apiClient';
-import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxApi';
+import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
-
-
 
 // 배경색 배열 - Theme에서 가져온 색상에 30% 투명도 적용
 const BACKGROUND_COLORS = [
@@ -79,7 +77,7 @@ const BoxMainScreen = () => {
     setLoading(true);
     try {
       const data = await fetchShareBoxes({ page: nextPage, size: 8 });
-      setShareBoxes(prev => nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]);
+      setShareBoxes(prev => (nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]));
       setHasNextPage(data.hasNextPage);
       setPage(data.nextPage);
     } catch (e) {
@@ -99,12 +97,6 @@ const BoxMainScreen = () => {
       loadShareBoxes(0);
     }, [])
   );
-
-  const handleEndReached = () => {
-    if (hasNextPage && !loading) {
-      loadShareBoxes(page);
-    }
-  };
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {
@@ -132,7 +124,6 @@ const BoxMainScreen = () => {
       await joinShareBox(inviteCode.trim());
       alert('쉐어박스에 성공적으로 참여하였습니다!');
       handleCloseModal();
-      // TODO: 필요하다면 목록 새로고침 등 추가
     } catch (error) {
       // 에러 상세 로그 추가
       console.log('[쉐어박스 참여 에러]', error);
@@ -199,7 +190,7 @@ const BoxMainScreen = () => {
               {/* 박스명 */}
               <Text
                 variant="h3"
-                weight="bold"
+                weight="semibold"
                 style={styles.boxTitle}
                 numberOfLines={1}
                 ellipsizeMode="tail"
@@ -254,53 +245,67 @@ const BoxMainScreen = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>  
-      <FlatList
-        data={shareBoxes}
-        renderItem={({ item, index }) => renderShareBox(item, index)}
-        keyExtractor={(item, index) => item.shareBoxId?.toString() || index.toString()}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 0 }}
-        onEndReached={handleEndReached}
-        onEndReachedThreshold={0.7}
-        onRefresh={handleRefresh}
-        refreshing={refreshing}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <Text variant="h2" weight="bold" style={styles.headerTitle}>
-              쉐어박스
+    <View style={[styles.screenContainer, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+
+      {/* 새로운 헤더 영역 */}
+      <View style={styles.header}>
+        <Text variant="h2" weight="bold" style={styles.headerTitle}>
+          쉐어박스
+        </Text>
+        <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.joinButton} onPress={handleJoinPress} activeOpacity={0.7}>
+            <Text variant="body2" weight="medium" style={styles.joinButtonText}>
+              참여
             </Text>
-            <View style={styles.headerButtons}>
-              <TouchableOpacity
-                style={styles.joinButton}
-                onPress={handleJoinPress}
-                activeOpacity={0.7}
-              >
-                <Text variant="body2" weight="medium" style={styles.joinButtonText}>
-                  참여
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.createButton}
-                onPress={handleCreatePress}
-                activeOpacity={0.7}
-              >
-                <Text variant="body2" weight="medium" style={styles.createButtonText}>
-                  생성
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        }
-        ListFooterComponent={loading ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', width: '100%', paddingVertical: 40 }}>
-            <ActivityIndicator size="large" color={theme.colors.primary || '#56AEE9'} />
-          </View>
-        ) : null}
-        contentContainerStyle={styles.scrollContent}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={handleCreatePress}
+            activeOpacity={0.7}
+          >
+            <Text variant="body2" weight="medium" style={styles.createButtonText}>
+              생성
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* 쉐어박스 목록 - 헤더 아래로 이동 */}
+      <ScrollView
         showsVerticalScrollIndicator={false}
-        removeClippedSubviews={false}
-      />
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        onScroll={({ nativeEvent }) => {
+          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+          const paddingToBottom = 20;
+          const isCloseToBottom =
+            layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
+
+          if (isCloseToBottom && !loading && hasNextPage) {
+            loadShareBoxes(page);
+          }
+        }}
+        scrollEventThrottle={400}
+      >
+        <View style={styles.boxesContainer}>
+          {shareBoxes.length > 0 ? (
+            shareBoxes.map((item, index) => renderShareBox(item, index))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text variant="body1" style={styles.emptyText}>
+                쉐어박스가 없습니다.
+              </Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      {loading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#56AEE9" />
+        </View>
+      )}
 
       {/* 초대코드 입력 모달 */}
       <Modal
@@ -315,16 +320,14 @@ const BoxMainScreen = () => {
               초대코드 입력하기
             </Text>
             <Text variant="body2" style={styles.modalSubtitle}>
-              {`초대받은 쉐어박스에 참여하려면
-공유받은 초대코드를 입력해 주세요.`}
+              {'초대받은 쉐어박스에 참여하려면\n공유받은 초대코드를 입력해 주세요.'}
             </Text>
-
             <TextInput
               style={styles.codeInput}
               placeholder="초대코드"
               placeholderTextColor="#A0AEC0"
               value={inviteCode}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 // 영문(대소문자) 또는 숫자만 허용, 10자리로 자르기
                 const filtered = text.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
                 setInviteCode(filtered);
@@ -334,7 +337,6 @@ const BoxMainScreen = () => {
               fontFamily="Pretendard-Regular"
               maxLength={10}
             />
-
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={styles.cancelButton}
@@ -363,22 +365,22 @@ const BoxMainScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
-    paddingHorizontal: 2,
-    paddingTop: 0,
   },
   header: {
+    height: 80,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 0,
-    paddingBottom: 15,
-    paddingHorizontal: 2,
+    paddingHorizontal: 12,
+    paddingTop: 30,
+    paddingBottom: 0,
+    marginBottom: 0,
+    backgroundColor: 'transparent',
   },
   headerTitle: {
     fontSize: 24,
-    marginLeft: 5,
     letterSpacing: -0.5,
     fontFamily: 'Pretendard-Bold',
   },
@@ -409,12 +411,12 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 10,
     paddingBottom: 30,
+    paddingHorizontal: 2,
   },
   boxesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingHorizontal: 0,
   },
   boxWrapper: {
     width: '48%',
@@ -444,7 +446,7 @@ const styles = StyleSheet.create({
     marginLeft: 1,
     color: '#000000',
     paddingRight: 5,
-    fontFamily: 'Pretendard-Bold',
+    fontFamily: 'Pretendard-SemiBold',
   },
   roleContainer: {
     flexDirection: 'row',
@@ -456,10 +458,10 @@ const styles = StyleSheet.create({
   },
   boxRole: {
     color: '#718096',
+    fontFamily: 'Pretendard-Regular',
     fontSize: 13,
     letterSpacing: -0.2,
     marginBottom: 2,
-    fontFamily: 'Pretendard-regular',
   },
   boxMiddleArea: {
     flexDirection: 'row',
@@ -493,10 +495,8 @@ const styles = StyleSheet.create({
   },
   countText: {
     fontSize: 12,
-    fontWeight: 'bold',
     fontFamily: 'Pretendard-Bold',
   },
-  // 모달 스타일
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -562,6 +562,20 @@ const styles = StyleSheet.create({
   confirmButtonText: {
     color: 'white',
     fontFamily: 'Pretendard-Medium',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#718096',
+    fontFamily: 'Pretendard-Regular',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

@@ -14,6 +14,8 @@ import { navigationRef } from './src/navigation/NavigationService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppQueryClientProvider from './src/context/QueryClientProvider';
 import useAuthStore from './src/store/authStore';
+import { Linking } from 'react-native';
+import NavigationService from './src/navigation/NavigationService';
 
 // 특정 경고 무시 설정
 LogBox.ignoreLogs([
@@ -24,19 +26,60 @@ LogBox.ignoreLogs([
 
 // 텍스트 컴포넌트에 전역 스타일 적용
 const setDefaultFontFamily = () => {
+  // 폰트 굵기에 따른 폰트 패밀리 매핑 함수
+  const getFontFamily = style => {
+    // 기본 폰트 패밀리
+    let fontWeight = null;
+
+    // style에서 fontWeight 추출
+    if (style) {
+      if (Array.isArray(style)) {
+        // 배열 스타일에서 마지막에 정의된 fontWeight를 사용
+        for (let i = style.length - 1; i >= 0; i--) {
+          if (style[i] && style[i].fontWeight) {
+            fontWeight = style[i].fontWeight;
+            break;
+          }
+        }
+      } else if (typeof style === 'object' && style.fontWeight) {
+        fontWeight = style.fontWeight;
+      }
+    }
+
+    // fontWeight에 따른 적절한 폰트 패밀리 반환
+    if (fontWeight === '100' || fontWeight === 100) return 'Pretendard-Thin';
+    if (fontWeight === '200' || fontWeight === 200) return 'Pretendard-ExtraLight';
+    if (fontWeight === '300' || fontWeight === 300) return 'Pretendard-Light';
+    if (fontWeight === '400' || fontWeight === 400 || fontWeight === 'normal')
+      return 'Pretendard-Regular';
+    if (fontWeight === '500' || fontWeight === 500) return 'Pretendard-Medium';
+    if (fontWeight === '600' || fontWeight === 600) return 'Pretendard-SemiBold';
+    if (fontWeight === '700' || fontWeight === 700 || fontWeight === 'bold')
+      return 'Pretendard-Bold';
+    if (fontWeight === '800' || fontWeight === 800) return 'Pretendard-ExtraBold';
+    if (fontWeight === '900' || fontWeight === 900) return 'Pretendard-Black';
+
+    // 기본값
+    return 'Pretendard-Regular';
+  };
+
   // 기본 Text 컴포넌트 오버라이드
   const defaultTextProps = Object.getOwnPropertyDescriptor(Text, 'render');
   if (defaultTextProps) {
     const oldRender = defaultTextProps.value;
     const newRender = function (...args) {
       const origin = oldRender.call(this, ...args);
+      const fontFamily = getFontFamily(origin.props.style);
+
+      // 기존 스타일을 유지하면서 fontFamily만 새로 적용
       return React.cloneElement(origin, {
         style: [
           {
-            fontFamily: 'Pretendard-Regular',
+            fontFamily,
             includeFontPadding: false,
             textAlignVertical: 'center',
           },
+          // fontWeight가 있는 경우 그대로 유지 (숫자를 문자열로 변환하지 않도록)
           origin.props.style,
         ],
         allowFontScaling: false,
@@ -55,13 +98,17 @@ const setDefaultFontFamily = () => {
     const oldRender = defaultTextInputProps.value;
     const newRender = function (...args) {
       const origin = oldRender.call(this, ...args);
+      const fontFamily = getFontFamily(origin.props.style);
+
+      // 기존 스타일을 유지하면서 fontFamily만 새로 적용
       return React.cloneElement(origin, {
         style: [
           {
-            fontFamily: 'Pretendard-Regular',
+            fontFamily,
             includeFontPadding: false,
             textAlignVertical: 'center',
           },
+          // fontWeight가 있는 경우 그대로 유지
           origin.props.style,
         ],
         allowFontScaling: false,
@@ -91,8 +138,8 @@ const linking = {
   prefixes: ['achacha://'],
   config: {
     screens: {
-      // 예시: BoxCreateScreen에서 초대코드 파라미터 받기
-      BoxCreate: {
+      // BoxMainScreen에서 초대코드 파라미터 받기
+      BoxMain: {
         path: 'sharebox',
         parse: {
           code: (code) => code,
@@ -107,7 +154,17 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   // Zustand 스토어의 토큰 복원 함수
   const restoreAuth = useAuthStore(state => state.restoreAuth);
-
+  useEffect(() => {
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        NavigationService.handleDeepLink(url);
+      }
+    });
+    const subscription = Linking.addEventListener('url', (event) => {
+      NavigationService.handleDeepLink(event.url);
+    });
+    return () => subscription.remove();
+  }, []);
   // 폰트 및 인증 상태 로딩 함수
   const loadResources = async () => {
     try {

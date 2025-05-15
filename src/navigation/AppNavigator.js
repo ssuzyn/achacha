@@ -18,6 +18,8 @@ import UseProductScreen from '../screens/gifticon-management/gifticon-use/UsePro
 import UseAmountScreen from '../screens/gifticon-management/gifticon-use/UseAmountScreen';
 import PresentScreen from '../screens/gifticon-management/PresentScreen';
 import GiveAwayScreen from '../screens/GiveAwayScreen';
+import SettingScreen from '../screens/SettingScreen';
+import WatchGuideScreen from '../screens/WatchGuideScreen';
 // 쉐어박스 스크린 추가
 import BoxMainScreen from '../screens/gifticon-share-box/BoxMainScreen';
 import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
@@ -43,8 +45,20 @@ const AppNavigator = () => {
         name="Notification"
         component={NotificationScreen}
         options={{
-          animation: 'slide_from_right',
-          animationDuration: 200,
+          animation: 'fade_from_bottom',
+          animationDuration: 150,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+        }}
+      />
+      <Stack.Screen
+        name="Settings"
+        component={SettingScreen}
+        options={{
+          animation: 'fade_from_bottom',
+          animationDuration: 150,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
         }}
       />
       <Stack.Screen
@@ -180,6 +194,14 @@ const AppNavigator = () => {
       <Stack.Screen
         name="BoxSetting"
         component={BoxSettingScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="WatchGuideScreen"
+        component={WatchGuideScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,

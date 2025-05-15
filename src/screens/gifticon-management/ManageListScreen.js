@@ -79,11 +79,30 @@ const ManageListScreen = () => {
   const usedSortOptions = [{ id: 'recent', title: '사용순' }];
 
   // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
-  const currentUserId = 78;
+  const currentUserId = 1;
 
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({
     container: {
+      flex: 1,
+    },
+    header: {
+      height: 80,
+      paddingHorizontal: 12,
+      paddingTop: 30,
+      marginBottom: 0,
+      backgroundColor: theme.colors.background,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderBottomWidth: 0,
+    },
+    headerTitle: {
+      fontSize: 24,
+      letterSpacing: -0.5,
+      fontFamily: theme.fonts.fontWeight.bold,
+      lineHeight: 36,
+    },
+    contentWrapper: {
       flex: 1,
       paddingHorizontal: 2,
       paddingTop: 0,
@@ -169,13 +188,13 @@ const ManageListScreen = () => {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 8,
-      // paddingBottom: 5,
       backgroundColor: '#FFFFFF',
       borderRadius: 12,
-      position: 'relative', // D-day 태그의 절대 위치를 위해 필요
+      position: 'relative',
     },
     imageContainer: {
-      marginRight: 10,
+      marginLeft: 8,
+      marginRight: 12,
     },
     gifticonImage: {
       width: 60,
@@ -187,16 +206,16 @@ const ManageListScreen = () => {
     },
     brandText: {
       fontSize: 16,
-      fontWeight: 'bold',
       color: '#333',
+      marginTop: 2,
       marginBottom: 1,
       fontFamily: theme.fonts.fontWeight.bold,
     },
     nameText: {
       fontSize: 14,
       color: '#666',
-      marginBottom: 2,
-      paddingRight: 80, // D-day 태그를 위한 여백 확보
+      marginBottom: 1,
+      paddingRight: 80,
       fontFamily: theme.fonts.fontWeight.regular,
     },
     dDayContainer: {
@@ -214,7 +233,6 @@ const ManageListScreen = () => {
     },
     dDayText: {
       fontSize: 14,
-      fontWeight: 'bold',
       fontFamily: theme.fonts.fontWeight.bold,
     },
     urgentDDayText: {
@@ -236,7 +254,6 @@ const ManageListScreen = () => {
     sharedByText: {
       fontSize: 12,
       color: '#737373',
-      fontWeight: 'bold',
       fontStyle: 'normal',
       fontFamily: theme.fonts.fontWeight.bold,
     },
@@ -251,21 +268,19 @@ const ManageListScreen = () => {
     shareBoxText: {
       fontSize: 12,
       color: '#278CCC',
-      fontWeight: 'bold',
       fontFamily: theme.fonts.fontWeight.bold,
     },
-    // 스와이프 액션 관련 스타일
     leftAction: {
-      width: 100, // 1/3 정도 보이도록 너비 조정
-      backgroundColor: '#4CAF50', // 초록색 계열
+      width: 100,
+      backgroundColor: '#4CAF50',
       justifyContent: 'center',
       marginBottom: 10,
       borderTopLeftRadius: 12,
       borderBottomLeftRadius: 12,
     },
     rightAction: {
-      width: '100', // 1/3 정도 보이도록 너비 조정
-      backgroundColor: '#278CCC', // 파란색 계열
+      width: '100',
+      backgroundColor: '#278CCC',
       justifyContent: 'center',
       marginBottom: 10,
       borderTopRightRadius: 12,
@@ -284,11 +299,9 @@ const ManageListScreen = () => {
     actionText: {
       color: 'white',
       fontSize: 12,
-      fontWeight: 'bold',
       marginTop: 4,
       fontFamily: theme.fonts.fontWeight.semiBold,
     },
-    // 북마크 컨테이너 스타일 추가
     bookmarkContainer: {
       position: 'absolute',
       top: -2,
@@ -300,10 +313,8 @@ const ManageListScreen = () => {
     },
     expiredDDayText: {
       color: '#737373',
-      fontWeight: 'bold',
       fontFamily: theme.fonts.fontWeight.bold,
     },
-    // 로딩 인디케이터 스타일 추가
     loadingContainer: {
       padding: 20,
       alignItems: 'center',
@@ -753,7 +764,13 @@ const ManageListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={[styles.gifticonContent, { opacity: 0.7 }]}>
+            <View
+              style={[
+                styles.gifticonContent,
+                { opacity: 0.7 },
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>{renderImage()}</View>
 
@@ -782,13 +799,6 @@ const ManageListScreen = () => {
                   </View>
                 )}
               </View>
-
-              {/* 공유 북마크 아이콘 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
 
               {/* 만료 태그 */}
               <View style={[styles.dDayContainer, styles.expiredDDay]}>
@@ -836,7 +846,12 @@ const ManageListScreen = () => {
               offset={[0, 1]}
               style={styles.shadowContainer}
             >
-              <View style={styles.gifticonContent}>
+              <View
+                style={[
+                  styles.gifticonContent,
+                  isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+                ]}
+              >
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>{renderImage()}</View>
 
@@ -865,13 +880,6 @@ const ManageListScreen = () => {
                     </View>
                   )}
                 </View>
-
-                {/* 공유 북마크 아이콘 */}
-                {isSharedByOther && (
-                  <View style={styles.bookmarkContainer}>
-                    <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                  </View>
-                )}
 
                 {/* D-day 태그 */}
                 <View
@@ -945,7 +953,12 @@ const ManageListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={styles.gifticonContent}>
+            <View
+              style={[
+                styles.gifticonContent,
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>{renderImage()}</View>
 
@@ -974,13 +987,6 @@ const ManageListScreen = () => {
                   </View>
                 )}
               </View>
-
-              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
 
               {/* D-day 또는 사용일자 태그 */}
               <View
@@ -1061,119 +1067,120 @@ const ManageListScreen = () => {
   }, [selectedCategory, selectedFilter, sortBy[selectedCategory]]);
 
   return (
-    <TouchableWithoutFeedback onPress={handleOutsidePress}>
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
 
-        {/* 카테고리 탭 */}
-        <CategoryTabs
-          categories={categories}
-          selectedId={selectedCategory}
-          onSelectCategory={handleCategoryChange}
-        />
-
-        {/* 필터링 섹션 */}
-        <View style={styles.filterContainer}>
-          <View style={styles.tabFilterContainer}>
-            <TabFilter
-              tabs={filterTabs}
-              onTabChange={handleFilterChange}
-              initialTabId={selectedFilter}
-            />
-          </View>
-
-          {/* 정렬 드롭다운 */}
-          <View style={styles.sortContainer}>
-            <TouchableOpacity style={styles.sortButton} onPress={toggleSortDropdown}>
-              <Text style={styles.sortButtonText}>
-                {
-                  (selectedCategory === 'used' ? usedSortOptions : sortOptions).find(
-                    option => option.id === sortBy[selectedCategory]
-                  )?.title
-                }
-              </Text>
-              <Icon
-                name={showSortDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-                type="material"
-                size={18}
-                color="#333"
-              />
-            </TouchableOpacity>
-
-            {/* 정렬 드롭다운 메뉴 */}
-            {showSortDropdown && (
-              <View style={styles.sortDropdown}>
-                {(selectedCategory === 'used' ? usedSortOptions : sortOptions).map(option => (
-                  <TouchableOpacity
-                    key={option.id}
-                    style={styles.sortOption}
-                    onPress={() => handleSortChange(option.id)}
-                  >
-                    <Text
-                      style={[
-                        styles.sortOptionText,
-                        sortBy[selectedCategory] === option.id && styles.sortOptionTextSelected,
-                      ]}
-                    >
-                      {option.title}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* 기프티콘 리스트 */}
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollViewContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={['#278CCC']}
-            />
-          }
-          onScroll={({ nativeEvent }) => {
-            // 스크롤이 맨 아래에 도달하면 더 불러오기
-            const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-            const paddingToBottom = 50; // 하단에서 50픽셀 위치에 도달하면 로드
-            if (
-              layoutMeasurement.height + contentOffset.y >=
-              contentSize.height - paddingToBottom
-            ) {
-              handleLoadMore();
-            }
-          }}
-          scrollEventThrottle={400} // 스크롤 이벤트 처리 주기
-        >
-          {renderContent()}
-        </ScrollView>
-
-        {/* 사용 완료 확인 다이얼로그 */}
-        {selectedGifticon && (
-          <AlertDialog
-            isVisible={dialogVisible}
-            title="사용 완료 처리"
-            message={`${selectedGifticon.brandName} - ${selectedGifticon.gifticonName}을(를) 사용 완료 처리하시겠습니까?`}
-            confirmText="확인"
-            cancelText="취소"
-            onConfirm={handleMarkAsUsed}
-            onCancel={() => {
-              setDialogVisible(false);
-              setSelectedGifticon(null);
-            }}
-            onBackdropPress={() => {
-              setDialogVisible(false);
-              setSelectedGifticon(null);
-            }}
-            type="info"
-          />
-        )}
+      <View style={styles.header}>
+        <Text variant="h2" weight="bold" style={styles.headerTitle}>
+          기프티콘 관리
+        </Text>
       </View>
-    </TouchableWithoutFeedback>
+
+      <TouchableWithoutFeedback onPress={handleOutsidePress}>
+        <View style={styles.contentWrapper}>
+          <CategoryTabs
+            categories={categories}
+            selectedId={selectedCategory}
+            onSelectCategory={handleCategoryChange}
+          />
+
+          <View style={styles.filterContainer}>
+            <View style={styles.tabFilterContainer}>
+              <TabFilter
+                tabs={filterTabs}
+                onTabChange={handleFilterChange}
+                initialTabId={selectedFilter}
+              />
+            </View>
+
+            <View style={styles.sortContainer}>
+              <TouchableOpacity style={styles.sortButton} onPress={toggleSortDropdown}>
+                <Text style={styles.sortButtonText}>
+                  {
+                    (selectedCategory === 'used' ? usedSortOptions : sortOptions).find(
+                      option => option.id === sortBy[selectedCategory]
+                    )?.title
+                  }
+                </Text>
+                <Icon
+                  name={showSortDropdown ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                  type="material"
+                  size={18}
+                  color="#333"
+                />
+              </TouchableOpacity>
+
+              {showSortDropdown && (
+                <View style={styles.sortDropdown}>
+                  {(selectedCategory === 'used' ? usedSortOptions : sortOptions).map(option => (
+                    <TouchableOpacity
+                      key={option.id}
+                      style={styles.sortOption}
+                      onPress={() => handleSortChange(option.id)}
+                    >
+                      <Text
+                        style={[
+                          styles.sortOptionText,
+                          sortBy[selectedCategory] === option.id && styles.sortOptionTextSelected,
+                        ]}
+                      >
+                        {option.title}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          </View>
+
+          <ScrollView
+            style={styles.scrollView}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollViewContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                colors={['#278CCC']}
+              />
+            }
+            onScroll={({ nativeEvent }) => {
+              const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
+              const paddingToBottom = 50;
+              if (
+                layoutMeasurement.height + contentOffset.y >=
+                contentSize.height - paddingToBottom
+              ) {
+                handleLoadMore();
+              }
+            }}
+            scrollEventThrottle={400}
+          >
+            {renderContent()}
+          </ScrollView>
+        </View>
+      </TouchableWithoutFeedback>
+
+      {selectedGifticon && (
+        <AlertDialog
+          isVisible={dialogVisible}
+          title="사용 완료 처리"
+          message={`${selectedGifticon.brandName} - ${selectedGifticon.gifticonName}을(를) 사용 완료 처리하시겠습니까?`}
+          confirmText="확인"
+          cancelText="취소"
+          onConfirm={handleMarkAsUsed}
+          onCancel={() => {
+            setDialogVisible(false);
+            setSelectedGifticon(null);
+          }}
+          onBackdropPress={() => {
+            setDialogVisible(false);
+            setSelectedGifticon(null);
+          }}
+          type="info"
+        />
+      )}
+    </View>
   );
 };
 

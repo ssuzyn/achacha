@@ -1,43 +1,65 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, ScrollView, View, FlatList, Image, TouchableOpacity } from 'react-native';
+/* eslint-disable react-native/no-inline-styles */
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  StyleSheet,
+  ScrollView,
+  View,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  Dimensions,
+  ImageBackground,
+  ActivityIndicator,
+} from 'react-native';
 import { useTheme } from '../hooks/useTheme';
-import Card from '../components/ui/Card';
 import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import NavigationService from '../navigation/NavigationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import Carousel from 'react-native-reanimated-carousel';
+import Animated from 'react-native-reanimated';
+import gifticonService from '../api/gifticonService';
+import { useNavigation } from '@react-navigation/native';
 
-// 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
-const SAMPLE_GIFTICONS = [
+// 캐러셀에 표시할 카드 데이터
+const CAROUSEL_CARDS = [
   {
     id: '1',
-    brand: '맥도날드',
-    name: '모바일 금액권 20,000원',
-    image: require('../assets/images/dummy_mc.png'),
-    expiryDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5일 후
+    type: 'sharebox',
+    title: '나누면 즐거움 두배,\n쉐어박스',
+    image: require('../assets/images/share_box.png'),
+    iconName: 'inventory-2',
+    onPress: () => NavigationService.navigate('TabSharebox'),
   },
   {
     id: '2',
-    brand: '메가MGC커피',
-    name: '(핫)아이스라떼',
-    image: require('../assets/images/dummy_mega.png'),
-    expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3일 후
+    type: 'radar',
+    title: '쓱 - 뿌리기\n행운의 주인공은?',
+    image: require('../assets/images/home_radar.png'),
+    onPress: () => NavigationService.navigate('TabMap'),
   },
   {
     id: '3',
-    brand: '스타벅스',
-    name: '아메리카노 Tall',
-    image: require('../assets/images/dummy_starbucks.png'),
-    expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7일 후
+    type: 'gift',
+    title: '기프티콘을 선물해봐요!',
+    subtitle: '포장은 저희가 해드릴게요.',
+    image: require('../assets/images/home_gift.png'),
+    onPress: () => NavigationService.navigate('TabGifticonManage'),
   },
 ];
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const HomeScreen = () => {
   const { theme } = useTheme();
-  const username = '으라차차'; // 실제 앱에서는 로그인된 사용자 이름을 가져옵니다
   const navigation = useNavigation();
-  const route = useRoute();
+  const [nickname, setNickname] = useState('');
+  const carouselRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const [expiringGifticons, setExpiringGifticons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const printTokens = async () => {
@@ -52,70 +74,577 @@ const HomeScreen = () => {
     };
     printTokens();
 
-    if (route.params?.code) {
-      navigation.navigate('BoxMain', { code: route.params.code });
-    }
-  }, [route.params?.code]);
+    const loadNickname = async () => {
+      try {
+        const storedNickname = await AsyncStorage.getItem('userNickname');
+        if (storedNickname !== null) {
+          setNickname(storedNickname);
+        } else {
+          console.log('[HomeScreen] AsyncStorage에서 닉네임을 찾을 수 없습니다.');
+        }
+      } catch (e) {
+        console.error('[HomeScreen] AsyncStorage에서 닉네임 로드 실패:', e);
+      }
+    };
+    loadNickname();
 
-  // 날짜 간격 계산 함수
+    const loadExpiringGifticons = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = {
+          page: 0,
+          size: 5,
+          sort: 'EXPIRY_ASC',
+          scope: 'MY_BOX',
+        };
+        console.log('[HomeScreen] 임박 기프티콘 로드 요청:', params);
+        const response = await gifticonService.getAvailableGifticons(params);
+        console.log('[HomeScreen] API 응답:', response);
+
+        if (response && response.gifticons) {
+          const formattedGifticons = response.gifticons.map(item => ({
+            id: item.gifticonId,
+            brand: item.brandName,
+            name: item.gifticonName,
+            image: item.thumbnailPath
+              ? { uri: item.thumbnailPath }
+              : require('../assets/images/adaptive_icon.png'),
+            expiryDate: new Date(item.gifticonExpiryDate),
+            gifticonType: item.gifticonType,
+          }));
+          setExpiringGifticons(formattedGifticons);
+        } else {
+          setExpiringGifticons([]);
+        }
+      } catch (err) {
+        console.error('[HomeScreen] 임박 기프티콘 로드 실패:', err);
+        setError(err.message || '기프티콘을 불러오는 데 실패했습니다.');
+        setExpiringGifticons([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExpiringGifticons();
+  }, []);
+
   const calculateDaysLeft = expiryDate => {
     const today = new Date();
-    const diffTime = expiryDate - today;
+    today.setHours(0, 0, 0, 0);
+    const expiry = new Date(expiryDate);
+    expiry.setHours(0, 0, 0, 0);
+    const diffTime = expiry - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
 
-  // 기프티콘 아이템 렌더링
+  // 스타일 정의를 컴포넌트 내부로 이동하여 theme에 접근 가능하도록 합니다.
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingHorizontal: 2,
+      paddingTop: 0,
+    },
+    contentContainer: {
+      paddingTop: 0,
+      paddingBottom: 30,
+    },
+    welcomeSection: {
+      paddingHorizontal: 8,
+      alignItems: 'flex-start',
+      marginBottom: 15,
+    },
+    welcomeText: {
+      letterSpacing: 0,
+      fontSize: 20,
+      lineHeight: 28,
+    },
+    carouselSection: {
+      alignItems: 'center',
+      marginBottom: 10,
+      overflow: 'hidden',
+    },
+    carouselCard: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: 130,
+      width: '100%',
+      borderRadius: 15,
+      overflow: 'hidden',
+    },
+    giftListContainer: {
+      marginBottom: 10,
+      paddingHorizontal: 2,
+      minHeight: 190,
+    },
+    giftListContent: {
+      paddingRight: 10,
+      paddingBottom: 5,
+    },
+    shadowContainer: {
+      borderRadius: 12,
+      width: '100%',
+    },
+    giftItemContainer: {
+      width: 180,
+      marginRight: 10,
+    },
+    giftCard: {
+      width: '100%',
+      height: 180,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      paddingVertical: 5,
+      overflow: 'visible',
+    },
+    expiredGiftCard: {
+      opacity: 0.6,
+    },
+    giftImageContainer: {
+      width: '100%',
+      height: 80,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingTop: 5,
+    },
+    giftImage: {
+      width: '55%',
+      height: '85%',
+    },
+    giftBrand: {
+      color: '#000000',
+      textAlign: 'center',
+      marginTop: 2,
+      letterSpacing: -0.2,
+    },
+    giftName: {
+      color: '#000000',
+      textAlign: 'center',
+      paddingHorizontal: 10,
+      letterSpacing: -0.1,
+    },
+    dDayBaseContainer: {
+      width: '45%',
+      paddingHorizontal: 10,
+      paddingVertical: 1,
+      borderRadius: 5,
+      alignSelf: 'center',
+      marginTop: 10,
+      marginBottom: 6,
+    },
+    dDayBaseText: {
+      alignSelf: 'center',
+      letterSpacing: -0.1,
+    },
+    urgentDdayContainer: {
+      backgroundColor: 'rgba(234, 84, 85, 0.15)',
+    },
+    normalDdayContainer: {
+      backgroundColor: 'rgba(114, 191, 255, 0.15)',
+    },
+    expiredDdayContainer: {
+      backgroundColor: 'rgba(153, 153, 153, 0.15)',
+    },
+    urgentDdayText: {
+      color: '#EA5455',
+    },
+    normalDdayText: {
+      color: '#72BFFF',
+    },
+    expiredDdayText: {
+      color: '#737373',
+    },
+    loadingContainer: {
+      height: 180,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    errorContainer: {
+      height: 180,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+    },
+    errorText: {
+      color: theme.colors.error,
+      textAlign: 'center',
+    },
+    emptyGifticonCard: {
+      width: '100%',
+      height: 180,
+      backgroundColor: '#e0e0e0',
+      borderRadius: 12,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 15,
+    },
+    emptyGifticonCardText: {
+      color: theme.colors.border,
+      textAlign: 'center',
+      fontSize: 16,
+      lineHeight: 22,
+    },
+    bottomCardSection: {
+      paddingHorizontal: 2,
+      marginBottom: 10,
+    },
+    giftMessageCard: {
+      backgroundColor: '#E5F4FE',
+      borderRadius: 15,
+      padding: 15,
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+      height: 120,
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    giftMessageTextContainer: {
+      flex: 1.5,
+      paddingLeft: 10,
+      paddingRight: 0,
+      justifyContent: 'center',
+      height: '100%',
+    },
+    giftMessageTextContainerRadar: {
+      flex: 1.5,
+      paddingLeft: 15,
+      paddingRight: 10,
+      justifyContent: 'center',
+      height: '100%',
+    },
+    giftMessageTextContainerSharebox: {
+      flex: 1.5,
+      paddingLeft: 25,
+      paddingRight: 10,
+      justifyContent: 'center',
+      height: '100%',
+    },
+    giftMessageTitle: {
+      marginBottom: 2,
+      letterSpacing: -0.2,
+      lineHeight: 25,
+    },
+    giftMessageSubtitle: {
+      color: '#737373',
+      letterSpacing: -0.3,
+    },
+    giftMessageImageContainer: {
+      flex: 1,
+      alignItems: 'flex-end',
+      marginTop: -10,
+      marginBottom: -10,
+    },
+    giftMessageImage: {
+      width: 100,
+      height: 100,
+    },
+    giftMessageImage1: {
+      width: 100,
+      height: 100,
+      marginRight: 20,
+    },
+    giftMessageImage2: {
+      width: 100,
+      height: 100,
+      marginRight: 15,
+    },
+    mapMessageCard: {
+      borderRadius: 8,
+      overflow: 'hidden',
+      height: 90,
+    },
+    mapBackgroundImage: {
+      width: '100%',
+      height: '100%',
+    },
+    mapBackgroundImageStyle: {
+      borderRadius: 15,
+    },
+    mapOverlay: {
+      backgroundColor: 'rgba(255, 255, 255, 0.65)',
+      flex: 1,
+      padding: 15,
+      flexDirection: 'row',
+    },
+    mapMessageTextContainer: {
+      flex: 1.5,
+      paddingLeft: 10,
+      paddingRight: 0,
+      justifyContent: 'center',
+      height: '100%',
+    },
+    mapTitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    mapMarkerImage: {
+      width: 30,
+      height: 30,
+      marginRight: 5,
+    },
+    mapMessageTitle: {
+      alignSelf: 'center',
+      marginBottom: 2,
+      letterSpacing: -0.2,
+      lineHeight: 30,
+      color: '#000000',
+    },
+    bottomWatchSection: {
+      paddingHorizontal: 2,
+      marginBottom: 10,
+    },
+    watchMessageCard: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 8,
+      padding: 15,
+      flexDirection: 'row',
+      justifyContent: 'flex-start',
+      alignItems: 'center',
+      height: 90,
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    watchMessageTextContainer: {
+      flex: 1.5,
+      paddingLeft: 10,
+      paddingRight: 0,
+      justifyContent: 'center',
+      height: '100%',
+    },
+    watchTitleContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 10,
+    },
+    watchMessageTitle: {
+      marginBottom: 2,
+      letterSpacing: -0.2,
+      lineHeight: 20,
+    },
+    watchMessageSubtitle: {
+      color: '#737373',
+      letterSpacing: -0.3,
+    },
+    watchGuideImageContainer: {
+      flex: 1,
+      alignItems: 'flex-end',
+      justifyContent: 'center',
+      marginRight: 5,
+    },
+    watchGuideImage: {
+      width: 75,
+      height: 75,
+    },
+    carouselPaginationOverlay: {
+      position: 'absolute',
+      bottom: 10,
+      right: 10,
+      backgroundColor: 'rgba(0, 0, 0, 0.15)',
+      borderRadius: 15,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    paginationText: {
+      color: 'white',
+      fontSize: 12,
+    },
+  });
+
+  const handleGifticonPress = item => {
+    if (!item || !item.id || !item.gifticonType) {
+      console.warn('[HomeScreen] 상세 페이지 이동 불가: 필수 정보 부족', item);
+      return;
+    }
+
+    const params = {
+      gifticonId: item.id,
+    };
+
+    if (item.gifticonType === 'PRODUCT') {
+      NavigationService.navigate('DetailProduct', params);
+    } else if (item.gifticonType === 'AMOUNT') {
+      NavigationService.navigate('DetailAmount', params);
+    } else {
+      console.warn('[HomeScreen] 알 수 없는 기프티콘 유형:', item.gifticonType);
+    }
+  };
+
   const renderGiftItem = ({ item }) => {
     const daysLeft = calculateDaysLeft(item.expiryDate);
+    const dDayDisplay = daysLeft < 0 ? '만료' : daysLeft === 0 ? 'D-day' : `D-${daysLeft}`;
+    const isExpired = daysLeft < 0;
+    const isUrgent = !isExpired && daysLeft <= 7;
+
+    let dDayContainerStyle = styles.normalDdayContainer;
+    if (isExpired) {
+      dDayContainerStyle = styles.expiredDdayContainer;
+    } else if (isUrgent) {
+      dDayContainerStyle = styles.urgentDdayContainer;
+    }
+
+    let dDayTextStyle = styles.normalDdayText;
+    if (isExpired) {
+      dDayTextStyle = styles.expiredDdayText;
+    } else if (isUrgent) {
+      dDayTextStyle = styles.urgentDdayText;
+    }
+
     return (
-      <View style={styles.giftItemContainer}>
-        <Shadow
-          distance={12}
-          startColor={'rgba(0, 0, 0, 0.008)'}
-          offset={[0, 1]}
-          style={styles.shadowContainer}
-        >
-          <View style={styles.giftCard}>
-            <View style={styles.giftImageContainer}>
-              <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
-            </View>
-            <Text variant="body1" weight="regular" style={styles.giftBrand}>
-              {item.brand}
-            </Text>
-            <Text
-              variant="body2"
-              weight="bold"
-              style={styles.giftName}
-              numberOfLines={1}
-              ellipsizeMode="tail"
-            >
-              {item.name}
-            </Text>
-            <View style={styles.dDayContainer}>
-              <Text variant="body2" weight="bold" style={styles.dDayText}>
-                D-{daysLeft}
+      <TouchableOpacity onPress={() => handleGifticonPress(item)} activeOpacity={0.8}>
+        <View style={styles.giftItemContainer}>
+          <Shadow
+            distance={12}
+            startColor={'rgba(0, 0, 0, 0.008)'}
+            offset={[0, 1]}
+            style={styles.shadowContainer}
+          >
+            <View style={[styles.giftCard, isExpired && styles.expiredGiftCard]}>
+              <View style={styles.giftImageContainer}>
+                <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
+              </View>
+              <Text variant="body2" weight="regular" style={styles.giftBrand}>
+                {item.brand}
               </Text>
+              <Text
+                variant="body1"
+                weight="semiBold"
+                style={styles.giftName}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {item.name}
+              </Text>
+              <View style={[styles.dDayBaseContainer, dDayContainerStyle]}>
+                <Text variant="body2" weight="bold" style={[styles.dDayBaseText, dDayTextStyle]}>
+                  {dDayDisplay}
+                </Text>
+              </View>
             </View>
-          </View>
-        </Shadow>
-      </View>
+          </Shadow>
+        </View>
+      </TouchableOpacity>
     );
   };
 
-  // 쉐어박스로 이동하는 함수
-  const handleShareBoxPress = () => {
-    NavigationService.navigate('TabSharebox');
+  const renderCarouselItem = ({ item, index }) => {
+    if (item.type === 'sharebox') {
+      return (
+        <Animated.View style={styles.carouselCard}>
+          <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
+            <View style={[styles.giftMessageCard, { backgroundColor: '#F0ECFF' }]}>
+              <View style={styles.giftMessageTextContainerSharebox}>
+                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
+                  {item.title}
+                </Text>
+              </View>
+              <View style={styles.giftMessageImageContainer}>
+                <Image source={item.image} style={styles.giftMessageImage1} resizeMode="contain" />
+              </View>
+              <View style={styles.carouselPaginationOverlay}>
+                <Text variant="caption" weight="regular" style={styles.paginationText}>
+                  {activeIndex + 1} / {CAROUSEL_CARDS.length}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      );
+    } else if (item.type === 'radar') {
+      return (
+        <Animated.View style={styles.carouselCard}>
+          <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
+            <View style={[styles.giftMessageCard, { backgroundColor: '#FDF3E3' }]}>
+              <View style={styles.giftMessageTextContainerRadar}>
+                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
+                  {item.title}
+                </Text>
+              </View>
+              <View style={styles.giftMessageImageContainer}>
+                <Image source={item.image} style={styles.giftMessageImage2} resizeMode="contain" />
+              </View>
+              <View style={styles.carouselPaginationOverlay}>
+                <Text variant="caption" weight="regular" style={styles.paginationText}>
+                  {activeIndex + 1} / {CAROUSEL_CARDS.length}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      );
+    } else if (item.type === 'gift') {
+      return (
+        <Animated.View style={styles.carouselCard}>
+          <TouchableOpacity onPress={item.onPress} style={{ width: '100%', height: '100%' }}>
+            <View style={styles.giftMessageCard}>
+              <View style={styles.giftMessageTextContainer}>
+                <Text variant="h3" weight="bold" style={styles.giftMessageTitle}>
+                  {item.title}
+                </Text>
+                <Text variant="body1" weight="regular" style={styles.giftMessageSubtitle}>
+                  {item.subtitle}
+                </Text>
+              </View>
+              <View style={styles.giftMessageImageContainer}>
+                <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+              </View>
+              <View style={styles.carouselPaginationOverlay}>
+                <Text variant="caption" weight="regular" style={styles.paginationText}>
+                  {activeIndex + 1} / {CAROUSEL_CARDS.length}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      );
+    }
+    return null;
   };
 
-  // 기프티콘 MAP으로 이동하는 함수
-  const handleMapPress = () => {
-    NavigationService.navigate('TabMap');
-  };
+  const renderExpiringGifticonSection = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      );
+    }
 
-  // 선물 관련 화면으로 이동하는 함수
-  const handleGiftPress = () => {
-    NavigationService.navigate('TabGifticonManage');
+    if (error) {
+      return (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      );
+    }
+
+    if (expiringGifticons.length === 0) {
+      return (
+        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <View style={styles.emptyGifticonCard}>
+            <Text style={styles.emptyGifticonCardText}>
+              아직 등록한 기프티콘이 없어요. {'\n'}등록하러 가볼까요?
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    }
+
+    return (
+      <FlatList
+        data={expiringGifticons}
+        renderItem={renderGiftItem}
+        keyExtractor={item => item.id.toString()}
+        horizontal={true}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.giftListContent}
+      />
+    );
   };
 
   return (
@@ -124,72 +653,98 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
       >
-        {/* 환영 메시지 */}
         <View style={styles.welcomeSection}>
           <Text variant="h3" weight="bold" style={styles.welcomeText}>
             어서오세요!{' '}
-            <Text variant="h3" weight="bold" color="primary" style={styles.welcomeText}>
-              {username}
+            <Text variant="h3" weight="bold" color="primary" style={null}>
+              {nickname || '아차차'}
             </Text>{' '}
             님,
           </Text>
-          <Text variant="h3" weight="bold" style={styles.subWelcomeText}>
+          <Text variant="h3" weight="bold" style={styles.welcomeText}>
             당신을 위한 기프티콘이 기다려요.
           </Text>
         </View>
 
-        {/* 만료 임박 기프티콘 섹션 */}
-        <View style={styles.giftListContainer}>
-          {/* <Text variant="h5" weight="medium" style={styles.giftListText}>
-            만료 임박 기프티콘{' '}
-          </Text> */}
-          <FlatList
-            data={SAMPLE_GIFTICONS}
-            renderItem={renderGiftItem}
-            keyExtractor={item => item.id}
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.giftListContent}
+        <View style={styles.carouselSection}>
+          <Carousel
+            ref={carouselRef}
+            width={screenWidth - 30}
+            height={130}
+            data={CAROUSEL_CARDS}
+            renderItem={renderCarouselItem}
+            onSnapToItem={setActiveIndex}
+            loop
+            autoPlay={true}
+            autoPlayInterval={4000}
+            style={{ borderRadius: 15, overflow: 'hidden' }}
+            defaultIndex={0}
+            enabled={true}
+            snapEnabled
+            pagingEnabled
+            mode="default"
+            modeConfig={{
+              snapDirection: 'left',
+              stackInterval: 0,
+              moveSize: undefined,
+            }}
+            panGestureHandlerProps={{
+              activeOffsetX: [-10, 10],
+            }}
+            withAnimation={{
+              type: 'timing',
+              config: {
+                duration: 600,
+              },
+            }}
           />
         </View>
 
-        {/* 중간 카드 섹션 (쉐어박스, 뿌리기) */}
-        <View style={styles.middleCardSection}>
-          <View style={styles.middleCardRow}>
-            {/* 쉐어박스 & 뿌리기 카드 */}
-            <Card.FeatureCard
-              title={`나누면\n즐거움 두배,\n쉐어박스`}
-              iconName="inventory-2"
-              imageSource={require('../assets/images/share_box.png')}
-              onPress={handleShareBoxPress}
-              style={styles.interactiveCard}
-            />
+        <View style={styles.giftListContainer}>{renderExpiringGifticonSection()}</View>
 
-            {/* 레이더 카드 */}
-            <Card.RadarCard
-              text={`쓱 - 뿌리기\n행운의 주인공은?`}
-              image={require('../assets/images/home_radar.png')}
-              onPress={handleMapPress}
-            />
-          </View>
+        <View style={styles.bottomCardSection}>
+          <TouchableOpacity onPress={() => NavigationService.navigate('TabMap')}>
+            <View style={styles.mapMessageCard}>
+              <ImageBackground
+                source={require('../assets/images/map.png')}
+                style={styles.mapBackgroundImage}
+                imageStyle={styles.mapBackgroundImageStyle}
+              >
+                <View style={styles.mapOverlay}>
+                  <View style={styles.mapMessageTextContainer}>
+                    <View style={styles.mapTitleContainer}>
+                      <Image
+                        source={require('../assets/images/map_marker.png')}
+                        style={styles.mapMarkerImage}
+                        resizeMode="contain"
+                      />
+                      <Text variant="h3" weight="semiBold" style={styles.mapMessageTitle}>
+                        MAP
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </ImageBackground>
+            </View>
+          </TouchableOpacity>
         </View>
 
-        {/* 하단 선물 카드 */}
-        <View style={styles.bottomCardSection}>
-          <TouchableOpacity onPress={handleGiftPress}>
-            <View style={styles.giftMessageCard}>
-              <View style={styles.giftMessageTextContainer}>
-                <Text variant="h4" weight="bold" style={styles.giftMessageTitle}>
-                  기프티콘 선물해봐요!
+        <View style={styles.bottomWatchSection}>
+          <TouchableOpacity onPress={() => NavigationService.navigate('WatchGuideScreen')}>
+            <View style={styles.watchMessageCard}>
+              <View style={styles.watchMessageTextContainer}>
+                <View style={styles.watchTitleContainer} />
+                <Text variant="h4" weight="semiBold" style={styles.watchMessageTitle}>
+                  스마트 워치가 있으신가요?
                 </Text>
-                <Text variant="body2" weight="regular" style={styles.giftMessageSubtitle}>
-                  포장은 저희가 해드릴게요.
+                <Text variant="body2" weight="regular" style={styles.watchMessageSubtitle}>
+                  워치 활용 가이드 보러가기 →
                 </Text>
               </View>
-              <View style={styles.giftMessageImageContainer}>
+              <View style={styles.watchGuideImageContainer}>
                 <Image
-                  source={require('../assets/images/home_gift.png')}
-                  style={styles.giftMessageImage}
+                  source={require('../assets/images/watch_guide.png')}
+                  style={styles.watchGuideImage}
                   resizeMode="contain"
                 />
               </View>
@@ -200,147 +755,5 @@ const HomeScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 2,
-    paddingTop: 0,
-  },
-  contentContainer: {
-    paddingTop: 0,
-    paddingBottom: 30,
-  },
-  welcomeSection: {
-    paddingHorizontal: 8,
-    alignItems: 'flex-start',
-    marginBottom: 5,
-  },
-  welcomeText: {
-    letterSpacing: -0.3,
-  },
-  // giftListText: {
-  //   paddingHorizontal: 8,
-  //   letterSpacing: -0.3,
-  //   marginLeft: 5,
-  //   marginTop: 10,
-  // },
-  giftListContainer: {
-    marginBottom: 3,
-    paddingHorizontal: 2,
-  },
-  giftListContent: {
-    paddingTop: 10,
-    paddingLeft: 5,
-    paddingRight: 10,
-    paddingBottom: 10,
-  },
-  middleCardSection: {
-    marginBottom: 5,
-    paddingHorizontal: 5,
-  },
-  middleCardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    marginBottom: 8,
-  },
-  giftCard: {
-    width: '100%',
-    height: 180,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 5,
-    overflow: 'visible',
-  },
-  giftImageContainer: {
-    width: '100%',
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 5,
-  },
-  giftImage: {
-    width: '55%',
-    height: '85%',
-  },
-  giftBrand: {
-    color: '#000000',
-    textAlign: 'center',
-    marginTop: 2,
-    letterSpacing: -0.2,
-  },
-  giftName: {
-    color: '#000000',
-    textAlign: 'center',
-    paddingHorizontal: 10,
-    letterSpacing: -0.1,
-  },
-  dDayContainer: {
-    backgroundColor: '#FCD9D9',
-    width: '45%',
-    paddingHorizontal: 10,
-    paddingVertical: 1,
-    borderRadius: 5,
-    alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 6,
-  },
-  dDayText: {
-    color: '#D33434',
-    alignSelf: 'center',
-    letterSpacing: -0.1,
-  },
-  bottomCardSection: {
-    paddingHorizontal: 5,
-  },
-  giftMessageCard: {
-    backgroundColor: '#E5F4FE',
-    borderRadius: 15,
-    padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    height: 130,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  giftMessageTextContainer: {
-    flex: 1.5,
-    paddingRight: 10,
-    justifyContent: 'flex-end',
-    height: '100%',
-    paddingBottom: 5,
-  },
-  giftMessageTitle: {
-    marginBottom: 2,
-    letterSpacing: -0.5,
-  },
-  giftMessageSubtitle: {
-    color: '#333',
-    letterSpacing: -0.3,
-  },
-  giftMessageImageContainer: {
-    flex: 1,
-    alignItems: 'flex-end',
-    marginTop: -20,
-    marginBottom: -10,
-  },
-  giftMessageImage: {
-    width: 100,
-    height: 100,
-  },
-  shadowContainer: {
-    borderRadius: 12,
-    width: '100%',
-  },
-  giftItemContainer: {
-    width: 180,
-    marginRight: 10,
-  },
-  interactiveCard: {
-    // Add any necessary styles for the interactive card
-  },
-});
 
 export default HomeScreen;

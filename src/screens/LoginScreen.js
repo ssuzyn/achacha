@@ -86,7 +86,13 @@ const LoginScreen = () => {
                     style={styles.buttonIcon}
                     resizeMode="contain"
                   />
-                  <Text variant="button" weight="bold" size={18} color={theme.colors.textBrown}>
+                  <Text
+                    variant="button"
+                    weight="bold"
+                    size={18}
+                    color={theme.colors.textBrown}
+                    style={styles.loginText}
+                  >
                     카카오톡 로그인
                   </Text>
                 </View>
@@ -108,7 +114,13 @@ const LoginScreen = () => {
                   <View style={styles.googleIconContainer}>
                     <GoogleIcon />
                   </View>
-                  <Text variant="button" weight="bold" size={18} color="#5F6368">
+                  <Text
+                    variant="button"
+                    weight="bold"
+                    size={18}
+                    color="#5F6368"
+                    style={styles.loginText}
+                  >
                     Google 로그인
                   </Text>
                 </View>
@@ -149,6 +161,7 @@ const styles = StyleSheet.create({
   },
   subText: {
     marginBottom: 3,
+    fontFamily: 'Pretendard-Regular',
   },
   divider: {
     width: '40%',
@@ -182,6 +195,9 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  loginText: {
+    fontFamily: 'Pretendard-SemiBold',
   },
 });
 

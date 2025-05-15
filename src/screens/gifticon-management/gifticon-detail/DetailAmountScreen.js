@@ -24,7 +24,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import AlertDialog from '../../../components/ui/AlertDialog';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
-import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxApi';
+import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxService';
 
 // 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
 const getImageSource = path => {
@@ -768,10 +768,11 @@ const DetailAmountScreen = () => {
                       {/* 쉐어박스이고 내가 공유한 경우에만 공유 취소 아이콘 표시 */}
                       {scope === 'SHARE_BOX' && isSharer && (
                         <TouchableOpacity
-                          style={styles.actionIconButton}
+                          style={styles.actionRemoveButton}
                           onPress={handleCancelShare}
                         >
-                          <Icon name="person-remove" type="material" size={24} color="#718096" />
+                          <Icon name="arrow-downward" type="material" size={20} color="#718096" />
+                          <Text style={styles.actionRemoveText}>내리기</Text>
                         </TouchableOpacity>
                       )}
                     </View>
@@ -819,6 +820,7 @@ const DetailAmountScreen = () => {
                       ]}
                     >
                       <Text
+                        weight="bold"
                         style={[
                           styles.ddayButtonText,
                           typeof calculateDaysLeft(gifticonData.gifticonExpiryDate) === 'string' &&
@@ -845,17 +847,19 @@ const DetailAmountScreen = () => {
 
               <View style={styles.infoContainer}>
                 <Text style={styles.brandText}>{gifticonData.brandName}</Text>
-                <Text style={styles.nameText}>{gifticonData.gifticonName}</Text>
+                <Text style={styles.nameText} weight="bold">
+                  {gifticonData.gifticonName}
+                </Text>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>유효기간</Text>
                   <Text style={styles.infoValue}>
-                    ~ {formatDate(gifticonData.gifticonExpiryDate)}
+                    {formatDate(gifticonData.gifticonExpiryDate)}
                   </Text>
                 </View>
 
                 <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>등록일</Text>
+                  <Text style={styles.infoLabel}>등록일시</Text>
                   <Text style={styles.infoValue}>
                     {formatDateTime(gifticonData.gifticonCreatedAt)}
                   </Text>
@@ -901,7 +905,7 @@ const DetailAmountScreen = () => {
                 <View style={styles.amountInfoRow}>
                   <Text style={styles.amountLabel}>총 금액</Text>
                   <View style={styles.amountValueContainer}>
-                    <Text style={styles.amountValue}>
+                    <Text weight="bold" style={styles.amountValue}>
                       {formatAmount(gifticonData.gifticonOriginalAmount)}
                     </Text>
                   </View>
@@ -910,7 +914,10 @@ const DetailAmountScreen = () => {
                 <View style={styles.amountInfoRow}>
                   <Text style={styles.amountLabel}>잔액</Text>
                   <View style={styles.amountValueContainer}>
-                    <Text style={[styles.amountValue, !isUsed && styles.remainingAmount]}>
+                    <Text
+                      weight="bold"
+                      style={[styles.amountValue, !isUsed && styles.remainingAmount]}
+                    >
                       {formatAmount(isUsed ? 0 : gifticonData.gifticonRemainingAmount)}
                     </Text>
                   </View>
@@ -1059,25 +1066,31 @@ const DetailAmountScreen = () => {
                       <View style={styles.buttonRow}>
                         <TouchableOpacity
                           onPress={
-                            gifticonData.gifticonOriginalAmount === gifticonData.gifticonRemainingAmount
+                            gifticonData.gifticonOriginalAmount ===
+                            gifticonData.gifticonRemainingAmount
                               ? handleShare
                               : undefined
                           }
-                          disabled={gifticonData.gifticonOriginalAmount !== gifticonData.gifticonRemainingAmount}
+                          disabled={
+                            gifticonData.gifticonOriginalAmount !==
+                            gifticonData.gifticonRemainingAmount
+                          }
                           style={{
                             flex: 1,
                             marginRight: 4,
                             borderRadius: 8,
                             height: 56,
                             backgroundColor:
-                              gifticonData.gifticonOriginalAmount === gifticonData.gifticonRemainingAmount
+                              gifticonData.gifticonOriginalAmount ===
+                              gifticonData.gifticonRemainingAmount
                                 ? '#EEEEEE'
                                 : '#F2F2F2',
                             justifyContent: 'center',
                             alignItems: 'center',
                             flexDirection: 'row',
                             opacity:
-                              gifticonData.gifticonOriginalAmount === gifticonData.gifticonRemainingAmount
+                              gifticonData.gifticonOriginalAmount ===
+                              gifticonData.gifticonRemainingAmount
                                 ? 1
                                 : 0.5,
                           }}
@@ -1203,7 +1216,9 @@ const DetailAmountScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>사용 금액 입력</Text>
+            <Text weight="bold" style={styles.modalTitle}>
+              사용 금액 입력
+            </Text>
 
             <View style={styles.inputContainer}>
               <TextInput
@@ -1313,13 +1328,30 @@ const DetailAmountScreen = () => {
                       )}
                     </View>
                     <Text style={styles.checkboxLabel}>{box.shareBoxName}</Text>
+                    <View style={styles.ownerContainer}>
+                      <Icon
+                        name="person"
+                        type="material"
+                        size={14}
+                        color={box.isOwner ? '#4A90E2' : '#999'}
+                      />
+                      <Text style={[styles.ownerText, box.isOwner && styles.ownerTextHighlight]}>
+                        {box.ownerName || box.shareBoxUserName || '나'}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               )}
+              style={styles.boxSection}
+              maxHeight={250}
               showsVerticalScrollIndicator={false}
               removeClippedSubviews={false}
-              style={styles.boxSection}
-              ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>쉐어박스가 없습니다.</Text>}
+              contentContainerStyle={{ paddingBottom: 10 }}
+              ListEmptyComponent={
+                <Text style={{ textAlign: 'center', color: '#999', marginTop: 20 }}>
+                  쉐어박스가 없습니다.
+                </Text>
+              }
             />
             <View style={styles.boxButtonContainer}>
               <TouchableOpacity style={styles.cancelShareButton} onPress={handleCloseShareModal}>
@@ -1417,7 +1449,6 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontSize: 20,
-    fontWeight: 'bold',
     color: '#333',
     marginBottom: 20,
     textAlign: 'center',
@@ -1430,14 +1461,15 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     width: 80,
-    fontSize: 15,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 16,
+    color: '#737373',
+    marginRight: 8,
   },
   infoValue: {
     flex: 1,
-    fontSize: 15,
-    color: '#333',
+    fontSize: 16,
+    color: '#000',
+    textAlign: 'right',
   },
 
   divider: {
@@ -1449,13 +1481,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
-    marginBottom: 12,
+    marginBottom: 8,
   },
   amountLabel: {
     width: 80,
     fontSize: 16,
-    color: '#555',
-    fontWeight: '500',
+    color: '#737373',
+    marginRight: 8,
   },
   amountValueContainer: {
     flex: 1,
@@ -1463,12 +1495,12 @@ const styles = StyleSheet.create({
   amountValue: {
     fontSize: 16,
     color: '#333',
-    fontWeight: 'bold',
+    textAlign: 'right',
   },
   remainingAmount: {
     color: '#278CCC',
-    fontWeight: 'bold',
     fontSize: 16,
+    textAlign: 'right',
   },
   buttonContainer: {
     marginTop: 10,
@@ -1537,7 +1569,6 @@ const styles = StyleSheet.create({
   usedText: {
     color: 'white',
     fontSize: 28,
-    fontWeight: 'bold',
     textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -1556,7 +1587,6 @@ const styles = StyleSheet.create({
   ddayButtonText: {
     color: '#D33434',
     fontSize: 18,
-    fontWeight: 'semibold',
   },
   expiredButtonContainer: {
     backgroundColor: 'rgba(153, 153, 153, 0.8)',
@@ -1572,11 +1602,9 @@ const styles = StyleSheet.create({
   },
   urgentDDayText: {
     color: '#EA5455',
-    fontWeight: 'bold',
   },
   normalDDayText: {
     color: '#72BFFF',
-    fontWeight: 'bold',
   },
   loadingContent: {
     flex: 1,
@@ -1745,7 +1773,7 @@ const styles = StyleSheet.create({
   },
   amountInput: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     textAlign: 'right',
     width: 200,
     marginRight: 5,
@@ -1827,6 +1855,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
+  actionRemoveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F9F9F9',
+    marginLeft: 8,
+  },
+  actionRemoveText: {
+    fontSize: 14,
+    color: '#718096',
+    marginLeft: 4,
+    fontWeight: '500',
+  },
   // 공유 모달 관련 스타일
   shareModalOverlay: {
     flex: 1,
@@ -1852,7 +1895,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 15,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E6E6E6',
@@ -1873,8 +1916,26 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   checkboxLabel: {
+    flex: 1,
     fontSize: 16,
     color: '#333333',
+  },
+  ownerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderLeftWidth: 1,
+    borderLeftColor: '#E0E0E0',
+  },
+  ownerText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#999',
+  },
+  ownerTextHighlight: {
+    color: '#4A90E2',
+    fontWeight: '500',
   },
   boxButtonContainer: {
     flexDirection: 'row',

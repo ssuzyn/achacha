@@ -4,6 +4,43 @@ import { CheckBox as RNECheckBox } from 'react-native-elements';
 import { useTheme } from '../../hooks/useTheme';
 
 /**
+ * react-native-elements CheckBox의 defaultProps 경고를 방지하기 위한 래퍼 컴포넌트
+ */
+const CheckBoxWrapper = ({
+  title,
+  checked,
+  onPress,
+  size,
+  iconType,
+  checkedIcon,
+  uncheckedIcon,
+  checkedColor,
+  uncheckedColor,
+  containerStyle,
+  textStyle,
+  disabled,
+  ...props
+}) => {
+  return (
+    <RNECheckBox
+      title={title}
+      checked={checked}
+      onPress={onPress}
+      size={size}
+      iconType={iconType}
+      checkedIcon={checkedIcon}
+      uncheckedIcon={uncheckedIcon}
+      checkedColor={checkedColor}
+      uncheckedColor={uncheckedColor}
+      containerStyle={containerStyle}
+      textStyle={textStyle}
+      disabled={disabled}
+      {...props}
+    />
+  );
+};
+
+/**
  * 체크박스 컴포넌트
  *
  * @param {Object} props - 컴포넌트 props
@@ -39,7 +76,7 @@ const CheckBox = ({
 
   return (
     <View style={[styles.container, containerStyle]}>
-      <RNECheckBox
+      <CheckBoxWrapper
         title={title}
         checked={checked}
         onPress={disabled ? undefined : onPress}

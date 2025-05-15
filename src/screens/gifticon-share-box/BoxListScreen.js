@@ -22,10 +22,12 @@ import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { fetchAvailableGifticons, fetchUsedGifticons, fetchShareBoxSettings } from '../../api/shareBoxApi';
+import {
+  fetchAvailableGifticons,
+  fetchUsedGifticons,
+  fetchShareBoxSettings,
+} from '../../api/shareBoxService';
 import { API_BASE_URL } from '../../api/config';
-
-
 
 const BoxListScreen = () => {
   const { theme } = useTheme();
@@ -163,7 +165,6 @@ const BoxListScreen = () => {
       fontSize: 14,
       marginRight: 5,
       color: '#333',
-      fontFamily: theme.fonts.fontWeight.regular,
     },
     sortDropdown: {
       position: 'absolute',
@@ -189,11 +190,9 @@ const BoxListScreen = () => {
     sortOptionText: {
       fontSize: 14,
       color: '#333',
-      fontFamily: theme.fonts.fontWeight.regular,
     },
     sortOptionTextSelected: {
       color: '#56AEE9',
-      fontFamily: theme.fonts.fontWeight.bold,
     },
     scrollView: {
       flex: 1,
@@ -214,7 +213,6 @@ const BoxListScreen = () => {
     emptyText: {
       fontSize: 16,
       color: '#737373',
-      fontFamily: theme.fonts.fontWeight.regular,
     },
     gifticonItem: {
       width: '100%',
@@ -225,7 +223,8 @@ const BoxListScreen = () => {
       marginBottom: 10,
     },
     imageContainer: {
-      marginRight: 10,
+      marginLeft: 8,
+      marginRight: 12,
     },
     gifticonImage: {
       width: 60,
@@ -245,17 +244,15 @@ const BoxListScreen = () => {
     },
     brandText: {
       fontSize: 16,
-      fontWeight: 'bold',
       color: '#333',
-      marginBottom: 2,
-      fontFamily: theme.fonts.fontWeight.bold,
+      marginTop: 2,
+      marginBottom: 1,
     },
     nameText: {
       fontSize: 14,
       color: '#666',
-      marginBottom: 0,
-      paddingRight: 80, // D-day 태그를 위한 여백 확보
-      fontFamily: theme.fonts.fontWeight.regular,
+      marginBottom: 1,
+      paddingRight: 80,
     },
     shareBoxInfoContainer: {
       flexDirection: 'row',
@@ -268,9 +265,7 @@ const BoxListScreen = () => {
     sharedByText: {
       fontSize: 12,
       color: '#278CCC',
-      fontWeight: 'bold',
       fontStyle: 'normal',
-      fontFamily: theme.fonts.fontWeight.bold,
     },
     dDayContainer: {
       position: 'absolute',
@@ -287,8 +282,6 @@ const BoxListScreen = () => {
     },
     dDayText: {
       fontSize: 14,
-      fontWeight: 'bold',
-      fontFamily: theme.fonts.fontWeight.bold,
     },
     urgentDDayText: {
       color: '#EA5455',
@@ -326,9 +319,7 @@ const BoxListScreen = () => {
     actionText: {
       color: 'white',
       fontSize: 12,
-      fontWeight: 'bold',
       marginTop: 4,
-      fontFamily: theme.fonts.fontWeight.semiBold,
     },
     bookmarkContainer: {
       position: 'absolute',
@@ -341,8 +332,6 @@ const BoxListScreen = () => {
     },
     expiredDDayText: {
       color: '#737373',
-      fontWeight: 'bold',
-      fontFamily: theme.fonts.fontWeight.bold,
     },
   });
 
@@ -592,15 +581,26 @@ const BoxListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={styles.gifticonContent}>
+            <View
+              style={[
+                styles.gifticonContent,
+                isExpired && { opacity: 0.7 },
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+                <Image
+                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                  style={styles.gifticonImage}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
               <View style={styles.textContainer}>
-                <Text style={styles.brandText}>{item.brandName}</Text>
+                <Text style={styles.brandText} weight="bold">
+                  {item.brandName}
+                </Text>
                 <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
                   {item.gifticonName}
                 </Text>
@@ -615,7 +615,9 @@ const BoxListScreen = () => {
                       color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
-                    <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+                    <Text style={styles.sharedByText} weight="bold">
+                      {item.userName}님 공유
+                    </Text>
                   </View>
                 )}
 
@@ -629,17 +631,12 @@ const BoxListScreen = () => {
                       color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
-                    <Text style={styles.sharedByText}>{item.usedBy}님 사용</Text>
+                    <Text style={styles.sharedByText} weight="bold">
+                      {item.usedBy}님 사용
+                    </Text>
                   </View>
                 )}
               </View>
-
-              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
 
               {/* D-day 또는 사용일자 태그 */}
               <View
@@ -650,6 +647,7 @@ const BoxListScreen = () => {
                     styles.dDayText,
                     isUrgent ? styles.urgentDDayText : styles.normalDDayText,
                   ]}
+                  weight="bold"
                 >
                   {item.scope === 'USED' ? formatDate(item.usedAt) : `D-${daysLeft}`}
                 </Text>
@@ -674,7 +672,13 @@ const BoxListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={[styles.gifticonContent, { opacity: 0.7 }]}>
+            <View
+              style={[
+                styles.gifticonContent,
+                isExpired && { opacity: 0.7 },
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
                 <Image
@@ -685,7 +689,9 @@ const BoxListScreen = () => {
 
               {/* 텍스트 정보 영역 */}
               <View style={styles.textContainer}>
-                <Text style={styles.brandText}>{item.brandName}</Text>
+                <Text style={styles.brandText} weight="bold">
+                  {item.brandName}
+                </Text>
                 <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
                   {item.gifticonName}
                 </Text>
@@ -700,21 +706,18 @@ const BoxListScreen = () => {
                       color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
-                    <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+                    <Text style={styles.sharedByText} weight="bold">
+                      {item.userName}님 공유
+                    </Text>
                   </View>
                 )}
               </View>
 
-              {/* 공유 북마크 아이콘 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
-
               {/* 만료 태그 */}
               <View style={[styles.dDayContainer, styles.expiredDDay]}>
-                <Text style={[styles.dDayText, styles.expiredDDayText]}>{daysLeft}</Text>
+                <Text style={[styles.dDayText, styles.expiredDDayText]} weight="bold">
+                  {daysLeft}
+                </Text>
               </View>
             </View>
           </Shadow>
@@ -758,15 +761,26 @@ const BoxListScreen = () => {
               offset={[0, 1]}
               style={styles.shadowContainer}
             >
-              <View style={styles.gifticonContent}>
+              <View
+                style={[
+                  styles.gifticonContent,
+                  isExpired && { opacity: 0.7 },
+                  isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+                ]}
+              >
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                  <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+                  <Image
+                    source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                    style={styles.gifticonImage}
+                  />
                 </View>
 
                 {/* 텍스트 정보 영역 */}
                 <View style={styles.textContainer}>
-                  <Text style={styles.brandText}>{item.brandName}</Text>
+                  <Text style={styles.brandText} weight="bold">
+                    {item.brandName}
+                  </Text>
                   <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
                     {item.gifticonName}
                   </Text>
@@ -781,17 +795,12 @@ const BoxListScreen = () => {
                         color="#278CCC"
                         containerStyle={styles.shareBoxIcon}
                       />
-                      <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+                      <Text style={styles.sharedByText} weight="bold">
+                        {item.userName}님 공유
+                      </Text>
                     </View>
                   )}
                 </View>
-
-                {/* 공유 북마크 아이콘 */}
-                {isSharedByOther && (
-                  <View style={styles.bookmarkContainer}>
-                    <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                  </View>
-                )}
 
                 {/* D-day 태그 */}
                 <View
@@ -809,6 +818,7 @@ const BoxListScreen = () => {
                           ? styles.urgentDDayText
                           : styles.normalDDayText,
                     ]}
+                    weight="bold"
                   >
                     {typeof daysLeft === 'string' ? daysLeft : isDDay ? 'D-day' : `D-${daysLeft}`}
                   </Text>
@@ -857,15 +867,26 @@ const BoxListScreen = () => {
             offset={[0, 1]}
             style={styles.shadowContainer}
           >
-            <View style={styles.gifticonContent}>
+            <View
+              style={[
+                styles.gifticonContent,
+                isExpired && { opacity: 0.7 },
+                isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
+              ]}
+            >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+                <Image
+                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                  style={styles.gifticonImage}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
               <View style={styles.textContainer}>
-                <Text style={styles.brandText}>{item.brandName}</Text>
+                <Text style={styles.brandText} weight="bold">
+                  {item.brandName}
+                </Text>
                 <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
                   {item.gifticonName}
                 </Text>
@@ -880,17 +901,12 @@ const BoxListScreen = () => {
                       color="#278CCC"
                       containerStyle={styles.shareBoxIcon}
                     />
-                    <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+                    <Text style={styles.sharedByText} weight="bold">
+                      {item.userName}님 공유
+                    </Text>
                   </View>
                 )}
               </View>
-
-              {/* 공유 북마크 아이콘 - 다른 사람이 공유한 기프티콘인 경우에만 표시 */}
-              {isSharedByOther && (
-                <View style={styles.bookmarkContainer}>
-                  <Icon name="bookmark" type="material" size={28} color="#278CCC" />
-                </View>
-              )}
 
               {/* D-day 또는 사용일자 태그 */}
               <View
@@ -908,6 +924,7 @@ const BoxListScreen = () => {
                         ? styles.urgentDDayText
                         : styles.normalDDayText,
                   ]}
+                  weight="bold"
                 >
                   {typeof daysLeft === 'string' ? daysLeft : isDDay ? 'D-day' : `D-${daysLeft}`}
                 </Text>
@@ -938,7 +955,9 @@ const BoxListScreen = () => {
         <RectButton style={styles.actionButton} onPress={() => showUseCompleteDialog(item)}>
           <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
             <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
-            <Text style={styles.actionText}>사용 완료</Text>
+            <Text style={styles.actionText} weight="semiBold">
+              사용 완료
+            </Text>
           </Animated.View>
         </RectButton>
       </Animated.View>
@@ -963,7 +982,9 @@ const BoxListScreen = () => {
         <RectButton style={styles.actionButton} onPress={() => handleBarcodeView(item)}>
           <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
             <Icon name="qr-code-scanner" type="material" color="#FFFFFF" size={24} />
-            <Text style={styles.actionText}>바코드 조회</Text>
+            <Text style={styles.actionText} weight="semiBold">
+              바코드 조회
+            </Text>
           </Animated.View>
         </RectButton>
       </Animated.View>
@@ -1169,6 +1190,7 @@ const BoxListScreen = () => {
                         styles.sortOptionText,
                         sortBy[selectedCategory] === option.id && styles.sortOptionTextSelected,
                       ]}
+                      weight={sortBy[selectedCategory] === option.id ? 'bold' : 'regular'}
                     >
                       {option.title}
                     </Text>
@@ -1186,26 +1208,27 @@ const BoxListScreen = () => {
           contentContainerStyle={styles.scrollViewContent}
         >
           <View style={styles.gifticonList}>
-            {selectedCategory === 'available'
-              ? (loading
-                  ? <Text>로딩 중...</Text>
-                  : availableGifticons.length > 0
-                    ? availableGifticons.map(item => {
-                        console.log('이미지 URL:', getImageUrl(item.thumbnailPath));
-                        return renderGifticonItem({ ...item, scope: 'SHARE_BOX' });
-                      })
-                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text></View>
-                )
-              : (usedLoading
-                  ? <Text>로딩 중...</Text>
-                  : usedGifticons.length > 0
-                    ? usedGifticons.map(item => {
-                        console.log('이미지 URL:', getImageUrl(item.thumbnailPath));
-                        return renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName });
-                      })
-                    : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text></View>
-                )
-            }
+            {selectedCategory === 'available' ? (
+              loading ? (
+                <Text>로딩 중...</Text>
+              ) : availableGifticons.length > 0 ? (
+                availableGifticons.map(item => renderGifticonItem({ ...item, scope: 'SHARE_BOX' }))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text>
+                </View>
+              )
+            ) : usedLoading ? (
+              <Text>로딩 중...</Text>
+            ) : usedGifticons.length > 0 ? (
+              usedGifticons.map(item =>
+                renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName })
+              )
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text>
+              </View>
+            )}
           </View>
         </ScrollView>
 
