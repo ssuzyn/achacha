@@ -87,7 +87,6 @@ class GifticonAppServiceImplTest {
 		Gifticon savedGifticon = Gifticon.builder().id(1).build();
 
 		// BDDMockito를 사용한 mock 설정
-
 		willDoNothing().given(fileDomainService).validateImageFile(any(MultipartFile.class));
 		willDoNothing().given(gifticonDomainService).validateGifticonAmount(any(), anyInt());
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -147,7 +146,6 @@ class GifticonAppServiceImplTest {
 		Gifticon savedGifticon = Gifticon.builder().id(1).build();
 
 		// BDDMockito를 사용한 mock 설정
-
 		willDoNothing().given(fileDomainService).validateImageFile(any(MultipartFile.class));
 		willDoNothing().given(gifticonDomainService).validateGifticonAmount(any(), any());
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
