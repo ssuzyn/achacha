@@ -340,7 +340,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		GifticonOwnerHistory findOwnerHistory = gifticonOwnerHistoryRepository.getGifticonOwnerHistoryDetail(
 			userId, findGifticon.getId());
-		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		UsageHistory findUsageHistory = usageHistoryRepository.findLatestByUserIdAndGifticonId(userId,
+			findGifticon.getId());
 
 		// 둘 다 없을 경우 사용하지 않은 기프티콘으로 간주
 		if (findOwnerHistory == null && findUsageHistory == null) {
@@ -463,7 +464,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		validateGifticonAccess(findGifticon, userId);
 
 		// 해당 기프티콘에 대한 사용 내역 조회
-		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		UsageHistory findUsageHistory = usageHistoryRepository.findLatestByUserIdAndGifticonId(userId,
+			findGifticon.getId());
 		if (findUsageHistory == null) {
 			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
 		}

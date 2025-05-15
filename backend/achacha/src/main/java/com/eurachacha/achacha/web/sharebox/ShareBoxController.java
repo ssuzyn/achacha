@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
@@ -23,6 +24,7 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.response.Share
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 
 import jakarta.validation.Valid;
@@ -135,6 +137,21 @@ public class ShareBoxController {
 
 		AvailableGifticonsResponseDto responseDto =
 			shareBoxAppService.getShareBoxGifticons(shareBoxId, type, sort, page, size);
+
+		return ResponseEntity.ok(responseDto);
+	}
+
+	// 쉐어박스 내 사용완료된 기프티콘 목록 조회
+	@GetMapping("/{shareBoxId}/used-gifticons")
+	public ResponseEntity<UsedGifticonsResponseDto> getShareBoxUsedGifticons(
+		@PathVariable Integer shareBoxId,
+		@RequestParam(required = false) GifticonType type,
+		@RequestParam(required = false, defaultValue = "USED_DESC") GifticonUsedSortType sort,
+		@RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+		@RequestParam(required = false, defaultValue = "10") @Min(1) Integer size) {
+
+		UsedGifticonsResponseDto responseDto =
+			shareBoxAppService.getShareBoxUsedGifticons(shareBoxId, type, sort, page, size);
 
 		return ResponseEntity.ok(responseDto);
 	}
