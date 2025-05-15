@@ -99,6 +99,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	}
 
 	@Override
+	@Transactional
 	public GifticonPresentResponseDto presentGifticon(Integer gifticonId,
 		GifticonPresentRequestDto gifticonPresentRequestDto) {
 		User user = securityServicePort.getLoggedInUser();
