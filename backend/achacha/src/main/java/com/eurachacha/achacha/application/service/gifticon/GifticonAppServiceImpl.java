@@ -309,10 +309,10 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
 		// 쿼리 실행
-		Slice<UsedGifticonResponseDto> gifticonSlice =
+		Slice<Gifticon> gifticonSlice =
 			gifticonRepository.getUsedGifticons(userId, type, pageable);
 
-		List<UsedGifticonResponseDto> usedGifticonResponseDtos = getUsedGifticonResponseDtos(gifticonSlice);
+		List<UsedGifticonResponseDto> usedGifticonResponseDtos = getUsedGifticonResponseDtos(userId, gifticonSlice);
 
 		log.info("사용완료 기프티콘 조회 완료");
 
@@ -580,11 +580,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.toList();
 
 		// 파일을 한번에 조회
-		List<File> thumbs = fileRepository.findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(
-			"gifticon", ids, FileType.THUMBNAIL);
-
-		Map<Integer, String> pathMap = thumbs.stream()
-			.collect(Collectors.toMap(File::getReferenceEntityId, File::getPath));
+		Map<Integer, String> pathMap = getFilePathMap(ids);
 
 		return gifticons.getContent().stream()
 			.map(dto -> AvailableGifticonResponseDto.builder()
@@ -606,34 +602,114 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.toList();
 	}
 
-	private List<UsedGifticonResponseDto> getUsedGifticonResponseDtos(
-		Slice<UsedGifticonResponseDto> gifticonSlice) {
+	private List<UsedGifticonResponseDto> getUsedGifticonResponseDtos(Integer userId,
+		Slice<Gifticon> gifticons) {
 
 		// 기프티콘 id 추출
-		List<Integer> ids = gifticonSlice.getContent().stream()
-			.map(UsedGifticonResponseDto::getGifticonId)
+		List<Integer> ids = gifticons.getContent().stream()
+			.map(Gifticon::getId)
 			.toList();
 
+		Map<Integer, String> pathMap = getFilePathMap(ids);
+
+		Map<Integer, GifticonOwnerHistory> ownerHistoryMap = getOwnerHistoryMap(userId, ids);
+
+		Map<Integer, UsageHistory> usageHistoryMap = getUsageHistoryMap(userId, ids);
+
+		return gifticons.getContent().stream()
+			.map(dto -> {
+				Integer gifticonId = dto.getId();
+				UsageHistory usageHistory = usageHistoryMap.get(gifticonId);
+				GifticonOwnerHistory ownerHistory = ownerHistoryMap.get(gifticonId);
+
+				// 사용 유형과 시간 결정
+				UsageType usageType;
+				LocalDateTime usedAt;
+
+				if (usageHistory != null) {
+					// 사용 이력이 있으면 SELF_USE로 처리
+					usageType = UsageType.SELF_USE;
+					usedAt = usageHistory.getCreatedAt();
+				} else if (ownerHistory != null) {
+					// 소유권 이력이 있으면 해당 전송 타입으로 처리
+					usageType = convertTransferTypeToUsageType(ownerHistory.getTransferType());
+					usedAt = ownerHistory.getCreatedAt();
+				} else {
+					// 이상적으로는 이 조건에 도달하지 않아야 함 (쿼리 조건에 의해)
+					// 하지만 만약을 위해 기본값 제공
+					usageType = UsageType.SELF_USE;
+					usedAt = dto.getUpdatedAt();
+				}
+
+				// 썸네일 경로 처리
+				String thumbnailPath = null;
+				if (pathMap.containsKey(gifticonId)) {
+					thumbnailPath = getSignedUrl(pathMap.get(gifticonId), FileType.THUMBNAIL);
+				}
+
+				return UsedGifticonResponseDto.builder()
+					.gifticonId(gifticonId)
+					.gifticonName(dto.getName())
+					.gifticonType(dto.getType())
+					.gifticonExpiryDate(dto.getExpiryDate())
+					.brandId(dto.getBrand().getId())
+					.brandName(dto.getBrand().getName())
+					.usageType(usageType)
+					.usedAt(usedAt)
+					.thumbnailPath(thumbnailPath)
+					.build();
+			})
+			.toList();
+	}
+
+	private Map<Integer, UsageHistory> getUsageHistoryMap(Integer userId, List<Integer> ids) {
+		// 사용 내역을 한번에 조회
+		List<UsageHistory> usageHistories = usageHistoryRepository.findLatestForEachGifticonByIdsAndUserId(ids, userId);
+
+		// 사용 내역 맵 생성 (gifticonId -> 사용 내역)
+		Map<Integer, UsageHistory> usageHistoryMap = usageHistories.stream()
+			.collect(Collectors.toMap(
+				history -> history.getGifticon().getId(),
+				history -> history,
+				// 만약 중복된 키가 있을 경우, 가장 최근 기록을 유지
+				(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt())
+					? existing : replacement
+			));
+		return usageHistoryMap;
+	}
+
+	private Map<Integer, GifticonOwnerHistory> getOwnerHistoryMap(Integer userId, List<Integer> ids) {
+		// 소유자 변경 내역을 한번에 조회
+		List<GifticonOwnerHistory> ownerHistories = gifticonOwnerHistoryRepository.findLatestForEachGifticonByIdsAndFromUserId(
+			ids, userId);
+
+		// 소유권 이력 맵 생성 (gifticonId -> 소유권 이력)
+		Map<Integer, GifticonOwnerHistory> ownerHistoryMap = ownerHistories.stream()
+			.collect(Collectors.toMap(
+				history -> history.getGifticon().getId(),
+				history -> history,
+				// 만약 중복된 키가 있을 경우, 가장 최근 기록을 유지
+				(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt())
+					? existing : replacement
+			));
+		return ownerHistoryMap;
+	}
+
+	private Map<Integer, String> getFilePathMap(List<Integer> ids) {
 		// 파일을 한번에 조회
 		List<File> thumbs = fileRepository.findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(
 			"gifticon", ids, FileType.THUMBNAIL);
 
+		// 경로 맵 생성 (gifticonId -> 썸네일 경로)
 		Map<Integer, String> pathMap = thumbs.stream()
 			.collect(Collectors.toMap(File::getReferenceEntityId, File::getPath));
+		return pathMap;
+	}
 
-		return gifticonSlice.getContent().stream()
-			.map(dto -> UsedGifticonResponseDto.builder()
-				.gifticonId(dto.getGifticonId())
-				.gifticonName(dto.getGifticonName())
-				.gifticonType(dto.getGifticonType())
-				.gifticonExpiryDate(dto.getGifticonExpiryDate())
-				.brandId(dto.getBrandId())
-				.brandName(dto.getBrandName())
-				.usageType(dto.getUsageType())
-				.usedAt(dto.getUsedAt())
-				.thumbnailPath(pathMap.get(dto.getGifticonId()) != null ?
-					getSignedUrl(pathMap.get(dto.getGifticonId()), FileType.THUMBNAIL) : null)
-				.build())
-			.toList();
+	private UsageType convertTransferTypeToUsageType(TransferType transferType) {
+		return switch (transferType) {
+			case GIVE_AWAY -> UsageType.GIVE_AWAY;
+			case PRESENT -> UsageType.PRESENT;
+		};
 	}
 }
