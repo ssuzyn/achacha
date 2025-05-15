@@ -45,6 +45,9 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 
 	private final GifticonRepository gifticonRepository;
 	private final GifticonDomainService gifticonDomainService;
+	private final BleTokenRepository bleTokenRepository;
+	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
+	private final SecurityServicePort securityServicePort;
 	private final GifticonGiveDomainService gifticonGiveDomainService;
 	private final UserRepository userRepository;
 	private final BleTokenRepository bleTokenRepository;
@@ -58,7 +61,9 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	@Transactional
 	public void giveAwayGifticon(Integer gifticonId, List<String> uuids) {
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
@@ -81,15 +86,12 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		// 받는 사람 객체
 		User receiverUser = findToken.getUser();
 
-		// 주는 사람 객체
-		User senderUser = userRepository.findById(userId); // 유저 로직 추가 시 변경 필요
-
 		// 기프티콘 소유권 업데이트
 		findGifticon.updateUser(receiverUser);
 
 		GifticonOwnerHistory newGifticonOwnerHistory = GifticonOwnerHistory.builder()
 			.gifticon(findGifticon)
-			.fromUser(senderUser) // 유저 로직 추가 시 변경 필요
+			.fromUser(loggedInUser) // 유저 로직 추가 시 변경 필요
 			.toUser(receiverUser)
 			.transferType(TransferType.GIVE_AWAY)
 			.build();
