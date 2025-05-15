@@ -8,10 +8,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.amazonaws.Response;
 import com.eurachacha.achacha.application.port.input.present.PresentAppService;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorInfoResponseDto;
-import com.eurachacha.achacha.application.port.input.present.dto.response.TemplateDetailResponseDto;
+import com.eurachacha.achacha.application.port.input.present.dto.response.PresentTemplateDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.TemplatesResponseDto;
 
 import lombok.RequiredArgsConstructor;
@@ -29,7 +28,7 @@ public class PresentController {
 	}
 
 	@GetMapping("/templates/{templateId}")
-	public ResponseEntity<TemplateDetailResponseDto> getTemplateDetail(@PathVariable Integer templateId) {
+	public ResponseEntity<PresentTemplateDetailResponseDto> getTemplateDetail(@PathVariable Integer templateId) {
 		return ResponseEntity.ok(presentAppService.getTemplateDetail(templateId));
 	}
 

@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eurachacha.achacha.application.port.input.present.PresentAppService;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorCardInfoDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorInfoResponseDto;
-import com.eurachacha.achacha.application.port.input.present.dto.response.TemplateDetailResponseDto;
+import com.eurachacha.achacha.application.port.input.present.dto.response.PresentTemplateDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.TemplatesResponseDto;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
@@ -85,12 +85,12 @@ public class PresentAppServiceImpl implements PresentAppService {
 	}
 
 	@Override
-	public TemplateDetailResponseDto getTemplateDetail(Integer templateId) {
+	public PresentTemplateDetailResponseDto getTemplateDetail(Integer templateId) {
 		// 1. 템플릿 정보 조회
 		PresentTemplate template = presentTemplateRepository.findById(templateId);
 
 		// 2. 템플릿 카테고리와 ID로 기본 DTO 빌더 생성
-		TemplateDetailResponseDto.TemplateDetailResponseDtoBuilder builder = TemplateDetailResponseDto.builder()
+		PresentTemplateDetailResponseDto.PresentTemplateDetailResponseDtoBuilder builder = PresentTemplateDetailResponseDto.builder()
 			.presentTemplateId(templateId)
 			.presentTemplateCategory(template.getCategory().name());
 
