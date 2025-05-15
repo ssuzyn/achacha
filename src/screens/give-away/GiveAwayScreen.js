@@ -26,12 +26,12 @@ import useAuthStore from '../../store/authStore';
 import { PermissionsAndroid } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
-const giveAwayButtonImg = require('../assets/images/giveaway_button.png');
-const emoji1 = require('../assets/images/emoji1.png');
-const emoji2 = require('../assets/images/emoji2.png');
-const emoji3 = require('../assets/images/emoji3.png');
-const emoji4 = require('../assets/images/emoji4.png');
-const emoji5 = require('../assets/images/emoji5.png');
+const giveAwayButtonImg = require('../../assets/images/giveaway_button.png');
+const emoji1 = require('../../assets/images/emoji1.png');
+const emoji2 = require('../../assets/images/emoji2.png');
+const emoji3 = require('../../assets/images/emoji3.png');
+const emoji4 = require('../../assets/images/emoji4.png');
+const emoji5 = require('../../assets/images/emoji5.png');
 
 // 더미 사용자 데이터를 상수로 선언
 const DUMMY_USERS = [
