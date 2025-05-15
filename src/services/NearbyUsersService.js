@@ -582,26 +582,38 @@ class NearbyUsersService {
       await BleManager.connect(peripheral.id);
       console.log('기기에 연결됨, 서비스 조회 중:', peripheral.id);
 
-      // 같은 앱을 사용하는 사용자인지 확인 (서비스 UUID로 필터링)
+      // 같은 앱을 사용하는 사용자인지 확인 (Short UUID로 필터링)
       const peripheralInfo = await BleManager.retrieveServices(peripheral.id);
       console.log('기기 서비스 목록:', peripheralInfo.services?.map(s => s.uuid) || '서비스 없음');
 
+      // Short UUID 생성 (스캔할 때와 동일한 방식)
+      const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
+      const shortUuidHex = uuidNoHyphens.substring(0, 4);
+      const expectedShortUUID = `0000${shortUuidHex}-0000-1000-8000-00805f9b34fb`.toLowerCase();
+
+      // 발견된 서비스들의 UUID를 로깅
+      console.log('Short UUID 비교:');
+      console.log('- 예상 Short UUID:', expectedShortUUID);
+      if (peripheralInfo.services) {
+        peripheralInfo.services.forEach(service => {
+          console.log('- 발견된 UUID:', service.uuid.toLowerCase());
+        });
+      }
+
       if (
         peripheralInfo.services &&
-        peripheralInfo.services.some(
-          service => service.uuid.toLowerCase() === SERVICE_UUID.toLowerCase()
-        )
+        peripheralInfo.services.some(service => service.uuid.toLowerCase() === expectedShortUUID)
       ) {
-        console.log('일치하는 SERVICE_UUID 발견:', SERVICE_UUID);
+        console.log('일치하는 Short UUID 발견:', expectedShortUUID);
 
         // 앱 UUID 읽기 시도
         try {
-          const serviceUUID = peripheralInfo.services.find(
-            service => service.uuid === SERVICE_UUID
-          ).uuid;
+          const matchingService = peripheralInfo.services.find(
+            service => service.uuid.toLowerCase() === expectedShortUUID
+          );
           const characteristic = await BleManager.read(
             peripheral.id,
-            serviceUUID,
+            matchingService.uuid,
             CHARACTERISTIC_UUID
           );
 
@@ -629,7 +641,7 @@ class NearbyUsersService {
           console.error('UUID 읽기 실패:', error);
         }
       } else {
-        console.log('SERVICE_UUID 불일치. 찾는 UUID:', SERVICE_UUID);
+        console.log('SERVICE_UUID 불일치. 찾는 UUID:', expectedShortUUID);
       }
 
       // 연결 해제
