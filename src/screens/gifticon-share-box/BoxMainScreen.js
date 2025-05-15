@@ -78,7 +78,6 @@ const BoxMainScreen = () => {
   // 무한스크롤용 데이터 로딩
   const loadShareBoxes = async (nextPage = 0) => {
     if (loading || (!hasNextPage && nextPage !== 0)) return;
-    console.log('[무한스크롤] loadShareBoxes 호출, nextPage:', nextPage, 'hasNextPage:', hasNextPage);
     setLoading(true);
     try {
       const data = await fetchShareBoxes({ page: nextPage, size: 8 });

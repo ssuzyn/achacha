@@ -282,30 +282,25 @@ const gifticonService = {
     try {
       // 사용 가능/사용 완료 여부에 따라 다른 엔드포인트 사용
       const isUsed = scope === 'USED';
-
       const endpoint = isUsed
         ? `/api/used-gifticons/${gifticonId}`
         : `/api/available-gifticons/${gifticonId}`;
-
       console.log('[API] 기프티콘 상세 정보 조회 요청:', endpoint, '(scope:', scope, ')');
-      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      const response = await apiClient.get(endpoint);
       console.log('[API] 기프티콘 상세 정보 조회 성공:', response.data);
       return response.data;
     } catch (error) {
       console.error('[API] 기프티콘 상세 정보 조회 실패:', error);
-
       // 에러 처리 로직 (오류 유형에 따른 처리)
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
-
         if (status === 403) {
           console.error('기프티콘 접근 권한 없음:', data);
         } else if (status === 404) {
           console.error('기프티콘을 찾을 수 없음:', data);
         }
       }
-
       throw error;
     }
   },
@@ -317,25 +312,20 @@ const gifticonService = {
    */
   async getAvailableGifticonBarcode(gifticonId) {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/available-gifticons/${gifticonId}/barcode`
-      );
+      const response = await apiClient.get(`/api/available-gifticons/${gifticonId}/barcode`);
       return response.data;
     } catch (error) {
       console.error('[API] 사용 가능 기프티콘 바코드 조회 실패:', error);
-
       // 에러 처리 로직
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
-
         if (status === 403) {
           console.error('기프티콘 접근 권한 없음:', data);
         } else if (status === 404) {
           console.error('기프티콘을 찾을 수 없음:', data);
         }
       }
-
       throw error;
     }
   },
@@ -348,30 +338,24 @@ const gifticonService = {
   async getUsedGifticonBarcode(gifticonId) {
     try {
       console.log('[API] 사용 완료 기프티콘 바코드 조회 요청:', gifticonId);
-
       const endpoint = `/api/used-gifticons/${gifticonId}/barcode`;
-      console.log('[API] 사용 완료 기프티콘 바코드 조회 요청 URL:', `${API_BASE_URL}${endpoint}`);
-
-      const response = await axios.get(`${API_BASE_URL}${endpoint}`);
+      console.log('[API] 사용 완료 기프티콘 바코드 조회 요청 URL:', endpoint);
+      const response = await apiClient.get(endpoint);
       console.log('[API] 사용 완료 기프티콘 바코드 조회 성공:', response.data);
-
       // 응답 데이터 확인
       if (!response.data.gifticonBarcodeNumber || !response.data.barcodePath) {
         console.warn('[API] 바코드 정보가 누락된 응답:', response.data);
       }
-
       return {
         gifticonBarcodeNumber: response.data.gifticonBarcodeNumber || '',
         barcodePath: response.data.barcodePath || '',
       };
     } catch (error) {
       console.error('[API] 사용 완료 기프티콘 바코드 조회 실패:', error);
-
       // 에러 처리 로직
       if (error.response) {
         const status = error.response.status;
         const data = error.response.data;
-
         if (status === 403) {
           console.error('기프티콘 접근 권한 없음:', data);
           throw new Error('해당 기프티콘에 접근 권한이 없습니다.');
@@ -390,7 +374,6 @@ const gifticonService = {
           }
         }
       }
-
       // 네트워크 에러 등 기타 에러
       throw new Error('바코드 정보를 조회하는 중 오류가 발생했습니다.');
     }
@@ -404,11 +387,9 @@ const gifticonService = {
    */
   async markGifticonAsUsed(gifticonId, usageType = 'SELF_USE') {
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/available-gifticons/${gifticonId}/use`,
-        {
-          usageType,
-        }
+      const response = await apiClient.post(
+        `/api/available-gifticons/${gifticonId}/use`,
+        { usageType }
       );
       return response.data;
     } catch (error) {
