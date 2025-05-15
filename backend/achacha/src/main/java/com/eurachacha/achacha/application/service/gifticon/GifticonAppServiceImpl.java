@@ -235,10 +235,11 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
 		// 기프티콘 조회 쿼리 실행
-		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
+		Slice<Gifticon> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
 			scope, type, pageable);
 
-		List<AvailableGifticonResponseDto> availableGifticonResponseDtos = getAvailableGifticonResponseDtos(
+		// entity -> dto 변환
+		List<AvailableGifticonResponseDto> availableGifticonResponseDtos = getAvailableGifticonResponseDto(
 			gifticonSlice);
 
 		log.info("사용가능 기프티콘 조회 완료");
@@ -570,12 +571,12 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		}
 	}
 
-	private List<AvailableGifticonResponseDto> getAvailableGifticonResponseDtos(
-		Slice<AvailableGifticonResponseDto> gifticonSlice) {
+	private List<AvailableGifticonResponseDto> getAvailableGifticonResponseDto(
+		Slice<Gifticon> gifticons) {
 
 		// 기프티콘 id 추출
-		List<Integer> ids = gifticonSlice.getContent().stream()
-			.map(AvailableGifticonResponseDto::getGifticonId)
+		List<Integer> ids = gifticons.getContent().stream()
+			.map(Gifticon::getId)
 			.toList();
 
 		// 파일을 한번에 조회
@@ -585,21 +586,22 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Map<Integer, String> pathMap = thumbs.stream()
 			.collect(Collectors.toMap(File::getReferenceEntityId, File::getPath));
 
-		return gifticonSlice.getContent().stream()
+		return gifticons.getContent().stream()
 			.map(dto -> AvailableGifticonResponseDto.builder()
-				.gifticonId(dto.getGifticonId())
-				.gifticonName(dto.getGifticonName())
-				.gifticonType(dto.getGifticonType())
-				.gifticonExpiryDate(dto.getGifticonExpiryDate())
-				.brandId(dto.getBrandId())
-				.brandName(dto.getBrandName())
-				.scope(dto.getScope())
-				.userId(dto.getUserId())
-				.userName(dto.getUserName())
-				.shareboxId(dto.getShareboxId())
-				.shareboxName(dto.getShareboxName())
-				.thumbnailPath(pathMap.get(dto.getGifticonId()) != null ?
-					getSignedUrl(pathMap.get(dto.getGifticonId()), FileType.THUMBNAIL) : null)
+				.gifticonId(dto.getId())
+				.gifticonName(dto.getName())
+				.gifticonType(dto.getType())
+				.gifticonExpiryDate(dto.getExpiryDate())
+				.brandId(dto.getBrand().getId())
+				.brandName(dto.getBrand().getName())
+				.scope(dto.getSharebox() == null ? "MY_BOX" : "SHARE_BOX")
+				.userId(dto.getUser().getId())
+				.userName(dto.getUser().getName())
+				.shareboxId(dto.getSharebox() == null ? null : dto.getSharebox().getId())
+				.shareboxName(dto.getSharebox() == null ? null : dto.getSharebox().getName())
+				.thumbnailPath(
+					pathMap.get(dto.getId()) != null ? getSignedUrl(pathMap.get(dto.getId()), FileType.THUMBNAIL) :
+						null)
 				.build())
 			.toList();
 	}
