@@ -45,6 +45,9 @@ public interface GifticonDomainService {
 	// 기프티콘 뿌리기에 대한 검증
 	void validateGifticonForGiveAway(Integer userId, Gifticon gifticon);
 
+	// 기프티콘 선물에 대한 검증
+	void validateGifticonForPresent(Integer userId, Gifticon gifticon);
+
 	// 기프티콘 타입 검증(상품형)
 	void validateProductGifticonType(Gifticon gifticon);
 

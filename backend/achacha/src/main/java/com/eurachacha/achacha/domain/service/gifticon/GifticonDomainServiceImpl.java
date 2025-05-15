@@ -177,6 +177,29 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
+	public void validateGifticonForPresent(Integer userId, Gifticon gifticon) {
+		// 사용 여부
+		if (isUsed(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_USED);
+		}
+
+		// 유효기간
+		validateGifticonExpiryDate(gifticon.getExpiryDate(), LocalDate.now());
+
+		// 본인 소유인지 확인
+		boolean isOwner = hasAccess(userId, gifticon.getUser().getId());
+		if (!isOwner) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+
+		// 쉐어박스에 공유중인지 확인
+		boolean alreadyShared = isAlreadyShared(gifticon);
+		if (alreadyShared) {
+			throw new CustomException(ErrorCode.GIFTICON_ALREADY_SHARED);
+		}
+	}
+
+	@Override
 	public void validateProductGifticonType(Gifticon gifticon) {
 		if (gifticon.getType() != GifticonType.PRODUCT) {
 			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
