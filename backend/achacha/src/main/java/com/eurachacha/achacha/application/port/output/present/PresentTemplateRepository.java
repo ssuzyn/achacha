@@ -6,5 +6,7 @@ import com.eurachacha.achacha.domain.model.present.PresentTemplate;
 
 public interface PresentTemplateRepository {
 
+	PresentTemplate findById(Integer id);
+
 	List<PresentTemplate> findAll();
 }

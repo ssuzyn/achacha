@@ -95,7 +95,7 @@ public enum ErrorCode {
 	UNAUTHORIZED_SHAREBOX_OWNER_ACCESS(HttpStatus.FORBIDDEN, "SHAREBOX_012", "해당 쉐어박스 방장만 접근 가능합니다."),
 
 	// Present 관련 에러 코드
-	COLOR_NOT_FOUND(HttpStatus.NOT_FOUND, "PRESENT_001", "선물 카드 템플릿 색상을 찾을 수 없습니다."),
+	PRESENT_TEMPLATE_NOT_FOUND(HttpStatus.NOT_FOUND, "PRESENT_001", "선물 카드 템플릿 디자인을 찾을 수 없습니다."),
 
 	// GIVEAWAY 관련 에러코드
 	NO_NEARBY_PEOPLES(HttpStatus.NOT_FOUND, "GIVEAWAY_001", "주변에 감지된 사용자가 없습니다.");
