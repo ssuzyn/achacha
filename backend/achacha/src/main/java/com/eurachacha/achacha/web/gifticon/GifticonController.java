@@ -68,9 +68,10 @@ public class GifticonController {
 
 	@PostMapping("/{gifticonId}/present")
 	public ResponseEntity<GifticonPresentResponseDto> presentGifticon(@PathVariable Integer gifticonId,
-		@RequestBody GifticonPresentRequestDto gifticonPresentRequestDto) {
+		@RequestBody @Valid GifticonPresentRequestDto gifticonPresentRequestDto) {
 
-		GifticonPresentResponseDto result = gifticonGiveAppService.presentGifticon(gifticonId, gifticonPresentRequestDto);
+		GifticonPresentResponseDto result = gifticonGiveAppService.presentGifticon(gifticonId,
+			gifticonPresentRequestDto);
 
 		return ResponseEntity.ok(result);
 	}
