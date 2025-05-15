@@ -94,15 +94,17 @@ public class PresentAppServiceImpl implements PresentAppService {
 			.presentTemplateId(templateId)
 			.presentTemplateCategory(template.getCategory().name());
 
-		// 3. 템플릿 타입에 따라 다른 필드 추가
+		// 3. GENERAL 템플릿인 경우 색상별 카드 이미지 추가 후 반환
 		if (template.getCategory() == TemplateCategory.GENERAL) {
-			builder.colorCards(getColorPaletteBasedCardImages(templateId));
-		} else {
-			builder.cardImagePath(getTemplateBasedCardImagePath(templateId));
+			return builder
+				.colorCards(getColorPaletteBasedCardImages(templateId))
+				.build();
 		}
 
-		// 4. 완성된 DTO 반환
-		return builder.build();
+		// 4. 일반 템플릿인 경우 단일 카드 이미지 경로 추가 후 반환
+		return builder
+			.cardImagePath(getTemplateBasedCardImagePath(templateId))
+			.build();
 	}
 
 	/**
