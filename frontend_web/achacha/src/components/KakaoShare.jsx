@@ -18,6 +18,8 @@ const KakaoShare = () => {
     };
     document.body.appendChild(script);
 
+    let timer = null;
+
     function sendKakaoLink() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
@@ -28,12 +30,17 @@ const KakaoShare = () => {
             invite_code: code,
           },
         });
+        // 2초 후 마켓으로 이동 (카카오톡 미설치 시)
+        timer = setTimeout(() => {
+          window.location.href = 'https://play.google.com/store/apps/details?id=com.kakao.talk';
+        }, 2000);
       }
     }
 
     // cleanup
     return () => {
       document.body.removeChild(script);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
