@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.application.service.present;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,17 +13,23 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eurachacha.achacha.application.port.input.present.PresentAppService;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorCardInfoDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorInfoResponseDto;
+import com.eurachacha.achacha.application.port.input.present.dto.response.PresentCardResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.PresentTemplateDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.TemplatesResponseDto;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.present.ColorPaletteRepository;
+import com.eurachacha.achacha.application.port.output.present.PresentCardRepository;
 import com.eurachacha.achacha.application.port.output.present.PresentTemplateRepository;
 import com.eurachacha.achacha.domain.model.file.File;
 import com.eurachacha.achacha.domain.model.file.enums.FileType;
+import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.present.ColorPalette;
+import com.eurachacha.achacha.domain.model.present.PresentCard;
 import com.eurachacha.achacha.domain.model.present.PresentTemplate;
 import com.eurachacha.achacha.domain.model.present.enums.TemplateCategory;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class PresentAppServiceImpl implements PresentAppService {
 
+	private final PresentCardRepository presentCardRepository;
 	private final PresentTemplateRepository presentTemplateRepository;
 	private final ColorPaletteRepository colorPaletteRepository;
 	private final FileRepository fileRepository;
@@ -104,6 +112,58 @@ public class PresentAppServiceImpl implements PresentAppService {
 		// 4. 일반 템플릿인 경우 단일 카드 이미지 경로 추가 후 반환
 		return builder
 			.cardImagePath(getTemplateBasedCardImagePath(templateId))
+			.build();
+	}
+
+	@Override
+	public PresentCardResponseDto getPresentCard(String presentCardCode) {
+		// 선물 카드 조회
+		PresentCard presentCard = presentCardRepository.findByPresentCardCode(presentCardCode);
+
+		// 만료 여부를 먼저 확인하고 만료된 경우 즉시 예외 발생
+		if (LocalDateTime.now().isAfter(presentCard.getExpiryDateTime())) {
+			throw new CustomException(ErrorCode.PRESENT_CARD_EXPIRED);
+		}
+
+		Gifticon gifticon = presentCard.getGifticon();
+		PresentTemplate presentTemplate = presentCard.getPresentTemplate();
+
+		// 기프티콘 썸네일, 원본 사진 조회
+		File gifticonOriginalFile = fileRepository.findFile(gifticon.getId(), "gifticon", FileType.ORIGINAL);
+		File gifticonThumbnailFile = fileRepository.findFile(gifticon.getId(), "gifticon", FileType.THUMBNAIL);
+
+		// 기프티콘 이미지 URL 생성
+		String gifticonOriginalPath = fileStoragePort.generateFileUrl(
+			gifticonOriginalFile.getPath(), FileType.ORIGINAL);
+		String gifticonThumbnailPath = fileStoragePort.generateFileUrl(
+			gifticonThumbnailFile.getPath(), FileType.THUMBNAIL);
+
+		// 템플릿 카드 이미지 URL 생성 (템플릿 카테고리에 따라 다른 방식으로 조회)
+		String templateCardPath;
+
+		if (presentTemplate.getCategory() == TemplateCategory.GENERAL) {
+			// GENERAL 템플릿인 경우 색상 팔레트로 조회
+			ColorPalette colorPalette = presentCard.getColorPalette();
+			File cardFile = fileRepository.findFile(
+				colorPalette.getId(), "color_palette", FileType.PRESENT_CARD);
+			templateCardPath = fileStoragePort.generateFileUrl(
+				cardFile.getPath(), FileType.PRESENT_CARD);
+		} else {
+			// 기타 템플릿인 경우 템플릿 ID로 조회
+			File cardFile = fileRepository.findFile(
+				presentTemplate.getId(), "present_template", FileType.PRESENT_CARD);
+			templateCardPath = fileStoragePort.generateFileUrl(
+				cardFile.getPath(), FileType.PRESENT_CARD);
+		}
+
+		// 응답 DTO 생성
+		return PresentCardResponseDto.builder()
+			.presentCardCode(presentCard.getCode())
+			.message(presentCard.getMessage())
+			.gifticonOriginalPath(gifticonOriginalPath)
+			.gifticonThumbnailPath(gifticonThumbnailPath)
+			.templateCardPath(templateCardPath)
+			.expiryDateTime(presentCard.getExpiryDateTime())
 			.build();
 	}
 
