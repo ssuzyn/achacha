@@ -538,19 +538,10 @@ const BoxListScreen = () => {
 
   // 기프티콘 클릭 핸들러
   const handleGifticonPress = item => {
-    console.log('아이템 클릭:', item);
     if (item.gifticonType === 'PRODUCT') {
-      console.log('BoxDetailProduct로 이동, 전달 params:', item);
-      navigation.navigate('BoxDetailProduct', {
-        gifticon: item,
-      });
+      navigation.navigate('BoxDetailProduct', { gifticon: item });
     } else if (item.gifticonType === 'AMOUNT') {
-      navigation.navigate('BoxDetailAmount', {
-        id: item.gifticonId,
-        barcodeNumber: item.gifticonId + '-' + Math.floor(Math.random() * 10000000), // 임시 바코드 번호
-        brandName: item.brandName,
-        gifticonName: item.gifticonName,
-      });
+      navigation.navigate('BoxDetailAmount', { gifticon: item });
     }
   };
 

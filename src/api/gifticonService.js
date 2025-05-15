@@ -597,7 +597,7 @@ const gifticonService = {
       }
 
       // 직접 axios 호출로 요청 수행
-      const response = await axios.put(url, requestData, { headers });
+      const response = await axios.patch(url, requestData, { headers });
 
       console.log('[API] 금액형 기프티콘 사용내역 수정 성공:', response.data);
       return response.data;
@@ -649,9 +649,8 @@ const gifticonService = {
   // 상품형 기프티콘 사용완료 처리
   async markProductGifticonAsUsed(gifticonId) {
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/product-gifticons/${gifticonId}/use`
-      );
+      const url = API_CONFIG.ENDPOINTS.PRODUCT_GIFTICON_USE(gifticonId);
+      const response = await axios.post(`${API_BASE_URL}${url}`);
       return response.data;
     } catch (error) {
       console.error('[API] 상품형 기프티콘 사용완료 처리 실패:', error);

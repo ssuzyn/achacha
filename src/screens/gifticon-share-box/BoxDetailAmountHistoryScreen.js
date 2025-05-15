@@ -17,6 +17,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
 import { useRoute } from '@react-navigation/native';
+import gifticonService from '../../api/gifticonService';
 
 const BoxDetailAmountHistoryScreen = () => {
   const insets = useSafeAreaInsets();
@@ -28,12 +29,15 @@ const BoxDetailAmountHistoryScreen = () => {
   const [editValue, setEditValue] = useState('');
   const [scope, setScope] = useState('SHARE_BOX'); // 기본값을 SHARE_BOX로 변경
   const [usageType, setUsageType] = useState(null);
+  const [gifticonData, setGifticonData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 바텀탭 표시
+  // 바텀탭 표시 및 데이터 로드
   useEffect(() => {
     showTabBar();
 
-    // 라우트 파라미터에서 scope와 usageType 정보 가져오기
+    // 라우트 파라미터에서 scope와 usageType, id 정보 가져오기
+    let gifticonId = null;
     if (route.params) {
       if (route.params.scope) {
         setScope(route.params.scope);
@@ -41,56 +45,44 @@ const BoxDetailAmountHistoryScreen = () => {
       if (route.params.usageType) {
         setUsageType(route.params.usageType);
       }
+      if (route.params.id) {
+        gifticonId = route.params.id;
+      }
     }
 
-    // 더미 기프티콘 데이터 초기화
-    const transactionsData = [
-      {
-        id: '1',
-        userName: '홍길동',
-        date: '2025.01.10 14:30',
-        amount: 3000,
-        type: 'payment',
-        timestamp: new Date('2025-01-10T14:30:00').getTime(),
-      },
-      {
-        id: '2',
-        userName: '김철수',
-        date: '2025.01.20 16:45',
-        amount: 5000,
-        type: 'payment',
-        timestamp: new Date('2025-01-20T16:45:00').getTime(),
-      },
-      {
-        id: '3',
-        userName: '박지민',
-        date: '2025.01.25 10:15',
-        amount: 20000,
-        type: 'payment',
-        timestamp: new Date('2025-01-25T10:15:00').getTime(),
-      },
-    ];
-
-    // 일자별 내림차순(최신순)으로 정렬
-    const sortedTransactions = [...transactionsData].sort((a, b) => b.timestamp - a.timestamp);
-
-    setTransactions(sortedTransactions);
+    if (gifticonId) {
+      // 실제 API 호출
+      (async () => {
+        setIsLoading(true);
+        try {
+          const data = await gifticonService.getAmountGifticonUsageHistory(gifticonId);
+          // usageHistories 변환
+          const transactions = (data.usageHistories || []).map(item => ({
+            id: item.usageHistoryId?.toString(),
+            userName: item.userName,
+            amount: item.usageAmount,
+            date: formatDateTime(item.usageHistoryCreatedAt), // YYYY.MM.DD HH:mm
+            type: 'payment',
+            timestamp: new Date(item.usageHistoryCreatedAt).getTime(),
+          })).sort((a, b) => b.timestamp - a.timestamp);
+          setTransactions(transactions);
+          setGifticonData(data);
+        } catch (e) {
+          setTransactions([]);
+          setGifticonData(null);
+          Alert.alert('오류', '기프티콘 사용내역을 불러오지 못했습니다.');
+        } finally {
+          setIsLoading(false);
+        }
+      })();
+    } else {
+      setIsLoading(false);
+    }
   }, []);
-
-  // 더미 기프티콘 데이터
-  const gifticonData = {
-    id: '1',
-    brand: '스타벅스',
-    name: 'APP전용 e카드 3만원 교환권',
-    amount: 30000,
-    totalBalance: 30000,
-    usedAmount: 28000,
-    remainingBalance: 2000,
-  };
 
   // 숫자에 천단위 콤마 추가
   const formatNumber = number => {
-    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return number ? number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',') : '0';
   };
 
   // 뒤로가기 함수
@@ -114,22 +106,56 @@ const BoxDetailAmountHistoryScreen = () => {
   };
 
   // 수정 저장 함수
-  const handleSaveEdit = transactionId => {
+  const handleSaveEdit = async transactionId => {
     const amount = parseInt(editValue, 10);
     if (isNaN(amount) || amount <= 0) {
       Alert.alert('유효하지 않은 금액', '올바른 금액을 입력하세요.');
       return;
     }
 
-    setTransactions(prev => {
-      const updatedTransactions = prev.map(item =>
-        item.id === transactionId ? { ...item, amount } : item
-      );
-      // 정렬 유지
-      return [...updatedTransactions].sort((a, b) => b.timestamp - a.timestamp);
-    });
-    setEditingId(null);
-    setEditValue('');
+    // gifticonId, usageHistoryId 필요
+    const usageHistoryId = transactionId;
+    const gifticonId = gifticonData.gifticonId || gifticonData.id;
+
+    try {
+      await gifticonService.updateAmountGifticonUsageHistory(gifticonId, usageHistoryId, amount);
+      Alert.alert('수정 완료', '사용내역이 성공적으로 수정되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 목록 새로고침
+            if (gifticonId) {
+              (async () => {
+                setIsLoading(true);
+                try {
+                  const data = await gifticonService.getAmountGifticonUsageHistory(gifticonId);
+                  const transactions = (data.usageHistories || []).map(item => ({
+                    id: item.usageHistoryId?.toString(),
+                    userName: item.userName,
+                    amount: item.usageAmount,
+                    date: formatDateTime(item.usageHistoryCreatedAt),
+                    type: 'payment',
+                    timestamp: new Date(item.usageHistoryCreatedAt).getTime(),
+                  })).sort((a, b) => b.timestamp - a.timestamp);
+                  setTransactions(transactions);
+                  setGifticonData(data);
+                } catch (e) {
+                  setTransactions([]);
+                  setGifticonData(null);
+                  Alert.alert('오류', '기프티콘 사용내역을 불러오지 못했습니다.');
+                } finally {
+                  setIsLoading(false);
+                }
+              })();
+            }
+            setEditingId(null);
+            setEditValue('');
+          },
+        },
+      ]);
+    } catch (e) {
+      Alert.alert('수정 실패', '사용내역 수정에 실패했습니다.');
+    }
   };
 
   // 삭제하기 함수
@@ -141,12 +167,36 @@ const BoxDetailAmountHistoryScreen = () => {
       },
       {
         text: '삭제',
-        onPress: () => {
-          setTransactions(prev => {
-            const filteredTransactions = prev.filter(item => item.id !== transactionId);
-            // 정렬 유지 (여기서는 이미 정렬된 상태에서 항목만 제거하므로 재정렬 필요 없음)
-            return filteredTransactions;
-          });
+        onPress: async () => {
+          const usageHistoryId = transactionId;
+          const gifticonId = gifticonData.gifticonId || gifticonData.id;
+          try {
+            await gifticonService.deleteAmountGifticonUsageHistory(gifticonId, usageHistoryId);
+            // 삭제 성공 시 목록 새로고침
+            setIsLoading(true);
+            try {
+              const data = await gifticonService.getAmountGifticonUsageHistory(gifticonId);
+              const transactions = (data.usageHistories || []).map(item => ({
+                id: item.usageHistoryId?.toString(),
+                userName: item.userName,
+                amount: item.usageAmount,
+                date: formatDateTime(item.usageHistoryCreatedAt),
+                type: 'payment',
+                timestamp: new Date(item.usageHistoryCreatedAt).getTime(),
+              })).sort((a, b) => b.timestamp - a.timestamp);
+              setTransactions(transactions);
+              setGifticonData(data);
+            } catch (e) {
+              setTransactions([]);
+              setGifticonData(null);
+              Alert.alert('오류', '기프티콘 사용내역을 불러오지 못했습니다.');
+            } finally {
+              setIsLoading(false);
+            }
+            Alert.alert('삭제 완료', '거래 내역이 성공적으로 삭제되었습니다.');
+          } catch (e) {
+            Alert.alert('삭제 실패', '거래 내역 삭제에 실패했습니다.');
+          }
         },
         style: 'destructive',
       },
@@ -158,6 +208,35 @@ const BoxDetailAmountHistoryScreen = () => {
     const prefix = type === 'payment' ? '-' : '';
     return `${prefix}${formatNumber(amount)}원`;
   };
+
+  const formatDateTime = dateString => {
+    const date = new Date(dateString);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
+  };
+
+  console.log('[HISTORY PAGE] brandName:', route.params?.brandName, 'gifticonName:', route.params?.gifticonName);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background, flex: 1, justifyContent: 'center', alignItems: 'center' }]}> 
+        <Text style={{ color: '#666', fontSize: 16 }}>로딩 중...</Text>
+      </View>
+    );
+  }
+
+  // gifticonData가 없으면 안내
+  if (!gifticonData) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.colors.background, flex: 1, justifyContent: 'center', alignItems: 'center' }]}> 
+        <Text style={{ color: '#666', fontSize: 16 }}>기프티콘 정보를 불러올 수 없습니다.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -188,9 +267,11 @@ const BoxDetailAmountHistoryScreen = () => {
           <View style={styles.contentContainer}>
             <View style={styles.infoHeaderContainer}>
               <Text weight="bold" style={styles.brandText}>
-                {gifticonData.brand}
+                {route.params?.brandName || gifticonData.brandName || gifticonData.brand || '-'}
               </Text>
-              <Text style={styles.nameText}>{gifticonData.name}</Text>
+              <Text style={styles.nameText}>
+                {route.params?.gifticonName || gifticonData.gifticonName || gifticonData.name || '-'}
+              </Text>
             </View>
 
             {/* 잔액 정보 */}
@@ -198,19 +279,19 @@ const BoxDetailAmountHistoryScreen = () => {
               <View style={styles.balanceRow}>
                 <Text style={styles.balanceLabel}>총 금액</Text>
                 <Text weight="bold" style={styles.balanceValue}>
-                  {formatNumber(gifticonData.totalBalance)}원
+                  {formatNumber(gifticonData.gifticonOriginalAmount || gifticonData.amount)}원
                 </Text>
               </View>
               <View style={styles.balanceRow}>
                 <Text style={styles.balanceLabel}>사용 금액</Text>
                 <Text weight="bold" style={styles.balanceValue}>
-                  {formatNumber(gifticonData.usedAmount)}원
+                  {formatNumber(gifticonData.gifticonUsedAmount || gifticonData.usedAmount)}원
                 </Text>
               </View>
               <View style={styles.balanceRow}>
                 <Text style={styles.balanceLabel}>남은 금액</Text>
                 <Text weight="bold" style={[styles.balanceValue, { color: '#56AEE9' }]}>
-                  {formatNumber(gifticonData.remainingBalance)}원
+                  {formatNumber(gifticonData.gifticonRemainingAmount || gifticonData.remainingBalance)}원
                 </Text>
               </View>
             </View>
