@@ -5,9 +5,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.ble.BleAppService;
 import com.eurachacha.achacha.application.port.input.ble.dto.response.BleTokenResponseDto;
+import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
-import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.ble.BleToken;
+import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.ble.BleTokenDomainService;
 
 import lombok.RequiredArgsConstructor;
@@ -19,15 +20,17 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class BleAppServiceImpl implements BleAppService {
 
-	private final UserRepository userRepository;
 	private final BleTokenRepository bleTokenRepository;
 	private final BleTokenDomainService bleTokenDomainService;
+	private final SecurityServicePort securityServicePort;
 
 	@Override
 	@Transactional
 	public BleTokenResponseDto generateBleToken(String value) {
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		bleTokenRepository.deleteByUserIdAndValue(userId, value);
 
@@ -36,7 +39,7 @@ public class BleAppServiceImpl implements BleAppService {
 
 		// 새 토큰 저장
 		BleToken bleToken = BleToken.builder()
-			.user(userRepository.findById(userId))
+			.user(loggedInUser)
 			.value(newTokenValue)
 			.build();
 
