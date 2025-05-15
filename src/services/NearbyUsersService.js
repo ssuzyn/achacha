@@ -10,7 +10,6 @@ import apiClient from '../api/apiClient';
 // BLE 서비스 및 특성 UUID
 const SERVICE_UUID = '1bf0cbce-7af3-4b59-93f2-0c4c6d170164'; // 하이픈 포함된 형식
 const SERVICE_UUID_NO_HYPHENS = SERVICE_UUID.replace(/-/g, ''); // 하이픈 제거된 형식
-const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // 하이픈 포함된 형식
 
 class NearbyUsersService {
   constructor() {
@@ -474,21 +473,19 @@ class NearbyUsersService {
       console.log('\n=== BLE 스캔 시작 ===');
       console.log('현재 디바이스 ID:', this.deviceId);
       console.log('스캔 시간:', this.SCAN_DURATION, '초');
-
-      // Full UUID와 Short UUID 모두 출력
       console.log('원본 서비스 UUID:', this.serviceUUID);
 
-      // Short UUID 생성 (16비트 UUID 포맷)
+      // Short UUID 생성 (BleModule.kt와 동일한 방식)
       const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
-      const shortUuidPrefix = uuidNoHyphens.substring(0, 4); // 앞 4자리(2바이트)만 사용
-      const shortUUID = `0000${shortUuidPrefix}-0000-1000-8000-00805f9b34fb`;
-      console.log('변환된 Short UUID:', shortUUID);
-      console.log(
-        'Short UUID 형식 확인:',
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortUUID)
-      );
+      const shortUuidHex = uuidNoHyphens.substring(0, 4); // 앞 4자리(2바이트)만 사용
+      const shortUUID = `0000${shortUuidHex}-0000-1000-8000-00805f9b34fb`;
 
-      // Short UUID로 스캔 (16비트 UUID)
+      console.log('Short UUID 변환 과정:');
+      console.log('1. UUID 하이픈 제거:', uuidNoHyphens);
+      console.log('2. 앞 4자리 추출:', shortUuidHex);
+      console.log('3. 최종 Short UUID:', shortUUID);
+
+      // Short UUID로 스캔
       console.log('Short UUID로 스캔 시작');
       await BleManager.scan([shortUUID], this.SCAN_DURATION, true);
 
@@ -578,75 +575,57 @@ class NearbyUsersService {
         return;
       }
 
-      console.log('새 기기에 연결 시도:', peripheral.id);
+      // Short UUID 생성 (스캔할 때와 동일한 방식)
+      const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
+      const shortUuidHex = uuidNoHyphens.substring(0, 4);
+      const expectedShortUUID = `0000${shortUuidHex}-0000-1000-8000-00805f9b34fb`.toLowerCase();
 
-      // 연결 시도
-      await BleManager.connect(peripheral.id);
-      console.log('기기에 연결됨, 서비스 조회 중:', peripheral.id);
-
-      // 같은 앱을 사용하는 사용자인지 확인 (서비스 UUID로 필터링)
-      const peripheralInfo = await BleManager.retrieveServices(peripheral.id);
-      console.log('기기 서비스 목록:', peripheralInfo.services?.map(s => s.uuid) || '서비스 없음');
-
+      // 광고 데이터에서 서비스 UUID 확인
       if (
-        peripheralInfo.services &&
-        peripheralInfo.services.some(
-          service => service.uuid.toLowerCase() === SERVICE_UUID.toLowerCase()
-        )
+        peripheral.advertising &&
+        peripheral.advertising.serviceUUIDs &&
+        peripheral.advertising.serviceUUIDs.some(uuid => uuid.toLowerCase() === expectedShortUUID)
       ) {
-        console.log('일치하는 SERVICE_UUID 발견:', SERVICE_UUID);
+        console.log('일치하는 Short UUID 발견:', expectedShortUUID);
 
-        // 앱 UUID 읽기 시도
-        try {
-          const serviceUUID = peripheralInfo.services.find(
-            service => service.uuid === SERVICE_UUID
-          ).uuid;
-          const characteristic = await BleManager.read(
-            peripheral.id,
-            serviceUUID,
-            CHARACTERISTIC_UUID
+        // 서비스 데이터에서 토큰 추출
+        let deviceUUID = 'unknown';
+        if (peripheral.advertising.serviceData) {
+          // 서비스 데이터 키가 Short UUID와 일치하는지 확인
+          const serviceDataKey = Object.keys(peripheral.advertising.serviceData).find(
+            key => key.toLowerCase() === expectedShortUUID
           );
 
-          // 읽은 데이터 처리 (앱 UUID)
-          const deviceUUID = this.decodeUUID(characteristic);
-
-          // 거리 계산
-          const distance = this.calculateDistance(peripheral.rssi);
-
-          // 근처 사용자 목록에 추가
-          const user = {
-            id: peripheral.id,
-            name: peripheral.name || '알 수 없음',
-            deviceUUID: deviceUUID, // 앱 UUID
-            rssi: peripheral.rssi,
-            distance: distance, // 미터 단위의 대략적인 거리
-            timestamp: new Date().getTime(),
-          };
-
-          this.nearbyUsers.push(user);
-
-          // 콜백 호출
-          if (onUserFound) onUserFound(user);
-        } catch (error) {
-          console.error('UUID 읽기 실패:', error);
+          if (serviceDataKey) {
+            const data = peripheral.advertising.serviceData[serviceDataKey];
+            // 바이트 배열을 문자열로 변환
+            deviceUUID = this.decodeUUID(data);
+            console.log('추출된 deviceUUID:', deviceUUID);
+          }
         }
+
+        // 거리 계산
+        const distance = this.calculateDistance(peripheral.rssi);
+
+        // 근처 사용자 목록에 추가
+        const user = {
+          id: peripheral.id,
+          name: peripheral.name || '알 수 없음',
+          uuid: deviceUUID, // 앱 UUID
+          rssi: peripheral.rssi,
+          distance: distance, // 미터 단위의 대략적인 거리
+          timestamp: new Date().getTime(),
+        };
+
+        this.nearbyUsers.push(user);
+
+        // 콜백 호출
+        if (onUserFound) onUserFound(user);
       } else {
-        console.log('SERVICE_UUID 불일치. 찾는 UUID:', SERVICE_UUID);
+        console.log('Short UUID 불일치. 다른 앱의 기기로 판단');
       }
-
-      // 연결 해제
-      console.log('기기 연결 해제:', peripheral.id);
-      await BleManager.disconnect(peripheral.id);
     } catch (error) {
-      console.error('기기 정보 조회 실패:', error);
-
-      // 연결되어 있는 경우 연결 해제 시도
-      try {
-        console.log('오류 후 연결 해제 시도:', peripheral.id);
-        await BleManager.disconnect(peripheral.id);
-      } catch (disconnectError) {
-        // 무시
-      }
+      console.error('기기 처리 중 오류:', error);
     }
   }
 
