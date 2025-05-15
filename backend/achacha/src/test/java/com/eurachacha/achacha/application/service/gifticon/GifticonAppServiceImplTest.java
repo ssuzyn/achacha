@@ -80,9 +80,7 @@ class GifticonAppServiceImplTest {
 		MultipartFile thumbnailImage = mock(MultipartFile.class);
 		MultipartFile barcodeImage = mock(MultipartFile.class);
 
-		Integer userId = 1;
-
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 		Brand brand = Brand.builder().id(1).name("테스트 브랜드").build();
 		Gifticon savedGifticon = Gifticon.builder().id(1).build();
 
@@ -139,9 +137,7 @@ class GifticonAppServiceImplTest {
 		MultipartFile thumbnailImage = mock(MultipartFile.class);
 		MultipartFile barcodeImage = mock(MultipartFile.class);
 
-		Integer userId = 1;
-
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 		Brand brand = Brand.builder().id(1).name("테스트 브랜드").build();
 		Gifticon savedGifticon = Gifticon.builder().id(1).build();
 

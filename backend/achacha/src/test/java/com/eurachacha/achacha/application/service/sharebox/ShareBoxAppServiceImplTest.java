@@ -63,9 +63,8 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 1;
 		Integer gifticonId = 1;
-		Integer userId = 1;
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 공유박스").build();
 		Gifticon gifticon = Gifticon.builder()
 			.id(gifticonId)
@@ -75,6 +74,8 @@ class ShareBoxAppServiceImplTest {
 			.remainingAmount(10000)
 			.user(user)
 			.build();
+
+		Integer userId = user.getId();
 
 		// BDDMockito를 사용한 mock 설정
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -109,11 +110,12 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 1;
 		Integer gifticonId = 1;
-		Integer userId = 1;
 
 		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 공유박스").build();
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		// BDDMockito를 사용한 mock 설정
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -135,10 +137,9 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 1;
 		Integer gifticonId = 1;
-		Integer userId = 1;
 		Integer otherUserId = 2;
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 		User otherUser = User.builder().id(otherUserId).name("다른 사용자").build();
 		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 공유박스").build();
 		Gifticon gifticon = Gifticon.builder()
@@ -146,6 +147,8 @@ class ShareBoxAppServiceImplTest {
 			.name("테스트 기프티콘")
 			.user(otherUser)
 			.build();
+
+		Integer userId = user.getId();
 
 		// BDDMockito를 사용한 mock 설정
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -169,15 +172,16 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 1;
 		Integer gifticonId = 1;
-		Integer userId = 1;
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 공유박스").build();
 		Gifticon gifticon = Gifticon.builder()
 			.id(gifticonId)
 			.name("테스트 기프티콘")
 			.user(user)
 			.build();
+
+		Integer userId = user.getId();
 
 		// BDDMockito를 사용한 mock 설정
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -203,10 +207,9 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 1;
 		Integer gifticonId = 1;
-		Integer userId = 1;
 
 		User user = User.builder()
-			.id(userId)
+			.id(1)
 			.name("테스트 사용자")
 			.build();
 		ShareBox shareBox = ShareBox.builder()
@@ -221,6 +224,8 @@ class ShareBoxAppServiceImplTest {
 			.user(user)
 			.sharebox(shareBox)
 			.build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.existsById(shareBoxId)).willReturn(true);
@@ -248,9 +253,8 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 999;
 		Integer gifticonId = 1;
-		Integer userId = 1;
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.existsById(shareBoxId)).willReturn(false);
@@ -271,9 +275,10 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 3;
 		Integer gifticonId = 2;
-		Integer userId = 1;
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.existsById(shareBoxId)).willReturn(true);
@@ -295,10 +300,9 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 3;
 		Integer gifticonId = 2;
-		Integer userId = 1;
 		Integer otherUserId = 2;
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 		User otherUser = User.builder().id(otherUserId).name("다른 사용자").build();
 		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 쉐어박스").build();
 		Gifticon gifticon = Gifticon.builder()
@@ -307,6 +311,8 @@ class ShareBoxAppServiceImplTest {
 			.user(otherUser)
 			.sharebox(shareBox)
 			.build();
+
+		Integer userId = user.getId();
 
 		// BDDMockito를 사용한 mock 설정
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -331,9 +337,8 @@ class ShareBoxAppServiceImplTest {
 		// given
 		Integer shareBoxId = 1;
 		Integer gifticonId = 1;
-		Integer userId = 1;
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
 		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 공유박스").build();
 		Gifticon gifticon = Gifticon.builder()
 			.id(gifticonId)
@@ -341,6 +346,8 @@ class ShareBoxAppServiceImplTest {
 			.user(user)
 			.sharebox(null) // 공유되지 않은 기프티콘
 			.build();
+
+		Integer userId = user.getId();
 
 		// BDDMockito를 사용한 mock 설정
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -366,18 +373,19 @@ class ShareBoxAppServiceImplTest {
 	void updateParticipationSetting_WhenUserIsOwner_ThenSuccessfullyUpdate() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 		Boolean newSetting = true;
 
 		ShareBoxParticipationSettingRequestDto requestDto = new ShareBoxParticipationSettingRequestDto();
 		ReflectionTestUtils.setField(requestDto, "shareBoxAllowParticipation", newSetting);
 
 		User user = User.builder()
-			.id(userId)
+			.id(1)
 			.name("테스트 사용자")
 			.build();
 
 		ShareBox shareBox = mock(ShareBox.class);
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
@@ -399,7 +407,6 @@ class ShareBoxAppServiceImplTest {
 	void updateParticipationSetting_WhenUserIsNotOwner_ThenThrowException() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 		Boolean newSetting = true;
 
 		ShareBoxParticipationSettingRequestDto requestDto = new ShareBoxParticipationSettingRequestDto();
@@ -407,7 +414,9 @@ class ShareBoxAppServiceImplTest {
 
 		ShareBox shareBox = mock(ShareBox.class);
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
@@ -432,7 +441,6 @@ class ShareBoxAppServiceImplTest {
 	void getShareBoxSettings_WhenUserParticipating_ThenReturnSettings() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 
 		ShareBox shareBox = ShareBox.builder()
 			.id(shareBoxId)
@@ -441,7 +449,9 @@ class ShareBoxAppServiceImplTest {
 			.inviteCode("ACHACHA205")
 			.build();
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
@@ -462,7 +472,6 @@ class ShareBoxAppServiceImplTest {
 	void getShareBoxSettings_WhenUserNotParticipating_ThenThrowException() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 
 		ShareBox shareBox = ShareBox.builder()
 			.id(shareBoxId)
@@ -471,7 +480,9 @@ class ShareBoxAppServiceImplTest {
 			.inviteCode("ACHACHA205")
 			.build();
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
@@ -492,14 +503,15 @@ class ShareBoxAppServiceImplTest {
 	void updateShareBoxName_WhenUserIsOwner_ThenSuccessfullyUpdate() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 		String newName = "으라차차아차차";
 
 		ShareBoxNameUpdateRequestDto requestDto = new ShareBoxNameUpdateRequestDto(newName);
 
 		ShareBox shareBox = mock(ShareBox.class);
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
@@ -523,14 +535,15 @@ class ShareBoxAppServiceImplTest {
 	void updateShareBoxName_WhenUserIsNotOwner_ThenThrowException() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 		String newName = "으라차차아차차";
 
 		ShareBoxNameUpdateRequestDto requestDto = new ShareBoxNameUpdateRequestDto(newName);
 
 		ShareBox shareBox = mock(ShareBox.class);
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
@@ -554,11 +567,12 @@ class ShareBoxAppServiceImplTest {
 	void leaveShareBox_WhenUserIsOwner_ThenDeleteShareBox() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 
 		ShareBox shareBox = mock(ShareBox.class);
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
@@ -580,11 +594,12 @@ class ShareBoxAppServiceImplTest {
 	void leaveShareBox_WhenUserIsNotOwner_ThenDeleteParticipation() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 
 		ShareBox shareBox = mock(ShareBox.class);
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
@@ -606,11 +621,12 @@ class ShareBoxAppServiceImplTest {
 	void leaveShareBox_WhenUserNotParticipating_ThenThrowException() {
 		// given
 		Integer shareBoxId = 1;
-		Integer userId = 1;
 
 		ShareBox shareBox = mock(ShareBox.class);
 
-		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Integer userId = user.getId();
 
 		given(securityServicePort.getLoggedInUser()).willReturn(user);
 		given(shareBoxRepository.findById(shareBoxId)).willReturn(shareBox);
