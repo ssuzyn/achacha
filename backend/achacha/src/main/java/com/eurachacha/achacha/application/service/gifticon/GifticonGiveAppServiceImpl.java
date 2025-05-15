@@ -18,7 +18,6 @@ import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHisto
 import com.eurachacha.achacha.application.port.output.present.ColorPaletteRepository;
 import com.eurachacha.achacha.application.port.output.present.PresentCardRepository;
 import com.eurachacha.achacha.application.port.output.present.PresentTemplateRepository;
-import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.ble.BleToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
@@ -49,12 +48,8 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
 	private final SecurityServicePort securityServicePort;
 	private final GifticonGiveDomainService gifticonGiveDomainService;
-	private final UserRepository userRepository;
-	private final BleTokenRepository bleTokenRepository;
-	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
 	private final PresentTemplateRepository presentTemplateRepository;
 	private final ColorPaletteRepository colorPaletteRepository;
-	private final SecurityServicePort securityServicePort;
 	private final PresentCardRepository presentCardRepository;
 
 	@Override
