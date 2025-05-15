@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonGiveAppService;
+import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
-import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.ble.BleToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
@@ -31,15 +31,17 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 
 	private final GifticonRepository gifticonRepository;
 	private final GifticonDomainService gifticonDomainService;
-	private final UserRepository userRepository;
 	private final BleTokenRepository bleTokenRepository;
 	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
+	private final SecurityServicePort securityServicePort;
 
 	@Override
 	@Transactional
 	public void giveAwayGifticon(Integer gifticonId, List<String> uuids) {
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
@@ -62,15 +64,12 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		// 받는 사람 객체
 		User receiverUser = findToken.getUser();
 
-		// 주는 사람 객체
-		User senderUser = userRepository.findById(userId); // 유저 로직 추가 시 변경 필요
-
 		// 기프티콘 소유권 업데이트
 		findGifticon.updateUser(receiverUser);
 
 		GifticonOwnerHistory newGifticonOwnerHistory = GifticonOwnerHistory.builder()
 			.gifticon(findGifticon)
-			.fromUser(senderUser) // 유저 로직 추가 시 변경 필요
+			.fromUser(loggedInUser) // 유저 로직 추가 시 변경 필요
 			.toUser(receiverUser)
 			.transferType(TransferType.GIVE_AWAY)
 			.build();
