@@ -19,6 +19,7 @@ import AlertDialog from '../../components/ui/AlertDialog';
 import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
+import { ERROR_MESSAGES } from '../../constants/errorMessages';
 
 const BoxDetailProductScreen = () => {
   const insets = useSafeAreaInsets();
@@ -242,27 +243,31 @@ const BoxDetailProductScreen = () => {
   };
 
   // 공유 완료 처리
-  const handleShareConfirm = () => {
-    // 공유 위치 선택 확인
+  const handleShareConfirm = async () => {
     if (shareBoxType === 'SHARE_BOX' && !selectedShareBoxId) {
       Alert.alert('알림', '공유할 쉐어박스를 선택해주세요.');
       return;
     }
 
-    // 공유 API 호출 또는 처리 로직
-    // console.log('기프티콘 공유:', gifticonId, '위치:', shareBoxType, '쉐어박스:', getShareBoxName(selectedShareBoxId));
+    try {
+      // 실제 API 호출
+      await api.shareGifticon(selectedShareBoxId, gifticonId);
 
-    // 성공 메시지
-    Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
-      {
-        text: '확인',
-        onPress: () => {
-          // 모달 닫기
-          setShareModalVisible(false);
-          // 추가 로직이 필요하면 여기에 구현
+      Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            setShareModalVisible(false);
+          },
         },
-      },
-    ]);
+      ]);
+    } catch (error) {
+      // 에러코드 기반 메시지 처리
+      const errorCode = error?.response?.data?.code;
+      const errorMessage = ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.default;
+
+      Alert.alert('공유 실패', errorMessage);
+    }
   };
 
   // 공유 모달 닫기

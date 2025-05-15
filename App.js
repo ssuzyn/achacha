@@ -14,6 +14,8 @@ import { navigationRef } from './src/navigation/NavigationService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AppQueryClientProvider from './src/context/QueryClientProvider';
 import useAuthStore from './src/store/authStore';
+import { Linking } from 'react-native';
+import NavigationService from './src/navigation/NavigationService';
 
 // 특정 경고 무시 설정
 LogBox.ignoreLogs([
@@ -132,11 +134,41 @@ const AppWrapper = ({ children }) => {
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
+const linking = {
+  prefixes: ['achacha://'],
+  config: {
+    screens: {
+      Main: {
+        screens: {
+          TabSharebox: {
+            path: 'sharebox',
+            parse: {
+              code: (code) => code,
+            },
+          },
+          // ...다른 탭
+        },
+      },
+      // ...다른 스크린
+    },
+  },
+};
+
 export default function App() {
   const [isReady, setIsReady] = useState(false);
   // Zustand 스토어의 토큰 복원 함수
   const restoreAuth = useAuthStore(state => state.restoreAuth);
-
+  useEffect(() => {
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        NavigationService.handleDeepLink(url);
+      }
+    });
+    const subscription = Linking.addEventListener('url', (event) => {
+      NavigationService.handleDeepLink(event.url);
+    });
+    return () => subscription.remove();
+  }, []);
   // 폰트 및 인증 상태 로딩 함수
   const loadResources = async () => {
     try {
@@ -193,7 +225,7 @@ export default function App() {
               <View style={styles.container} onLayout={onLayoutRootView}>
                 <HeaderBarProvider>
                   <TabBarProvider>
-                    <NavigationContainer ref={navigationRef}>
+                    <NavigationContainer ref={navigationRef} linking={linking}>
                       <AppNavigator />
                       <StatusBar style="auto" />
                     </NavigationContainer>

@@ -538,13 +538,18 @@ const BoxListScreen = () => {
   const handleGifticonPress = item => {
     // 기프티콘 타입에 따라 다른 상세 화면으로 이동
     if (item.gifticonType === 'PRODUCT') {
+      console.log('[네비게이션] BoxDetailProduct로 이동', {
+        gifticonId: item.gifticonId,
+        scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
+        usageType: item.usageType,
+        usedAt: item.usedAt,
+      });
       navigation.navigate('BoxDetailProduct', {
         gifticonId: item.gifticonId,
         scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
         usageType: item.usageType,
         usedAt: item.usedAt,
       });
-    } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('BoxDetailAmount', {
         gifticonId: item.gifticonId,
         scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
@@ -677,7 +682,7 @@ const BoxListScreen = () => {
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
                 <Image
-                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                  source={{ uri: getImageUrl(item.thumbnailPath) }}
                   style={[styles.gifticonImage, { opacity: 0.7 }]}
                 />
               </View>
@@ -1103,6 +1108,16 @@ const BoxListScreen = () => {
       refreshAll();
     }, [shareBoxId, selectedCategory, selectedFilter, sortBy])
   );
+
+  const getImageUrl = (thumbnailPath) => {
+    if (!thumbnailPath) return null;
+    // 이미 http(s)로 시작하면 그대로 사용
+    if (thumbnailPath.startsWith('http://') || thumbnailPath.startsWith('https://')) {
+      return thumbnailPath;
+    }
+    // 아니면 API_BASE_URL을 붙여서 사용
+    return API_BASE_URL + thumbnailPath;
+  };
 
   return (
     <TouchableWithoutFeedback onPress={handleOutsidePress}>

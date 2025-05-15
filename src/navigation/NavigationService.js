@@ -91,6 +91,52 @@ export function getCurrentRoute() {
   return navigationRef.current?.getCurrentRoute();
 }
 
+/**
+ * 딥링크 URL을 파싱하는 함수
+ * @param {string} url - 딥링크 URL
+ * @returns {Object} 파싱된 정보 { screen, code, params }
+ */
+function parseUrl(url) {
+  // 예: achacha://sharebox?code=123456
+  try {
+    const urlObj = new URL(url);
+    if (urlObj.protocol === 'achacha:' && urlObj.hostname === 'sharebox') {
+      const code = urlObj.searchParams.get('code');
+      return { screen: 'sharebox', code, params: {} };
+    }
+  } catch (e) {
+    // fallback for react-native URL parsing
+    const match = url.match(/achacha:\/\/sharebox\?code=([A-Za-z0-9]+)/);
+    if (match) {
+      return { screen: 'sharebox', code: match[1], params: {} };
+    }
+  }
+  return {};
+}
+
+/**
+ * 딥링크 핸들러 - 항상 바텀탭이 보이게 Main → TabSharebox 순서로 이동
+ */
+export function handleDeepLink(url) {
+  const parsed = parseUrl(url);
+  if (parsed.screen === 'sharebox' && parsed.code) {
+    navigationRef.current?.navigate('Main');
+    setTimeout(() => {
+      navigationRef.current?.navigate('TabSharebox', { code: parsed.code });
+    }, 0);
+    return;
+  }
+  // ...다른 딥링크 처리
+}
+
+// 항상 바텀탭/헤더가 보이게 네비게이션
+function navigateWithBottomTab(screen, params) {
+  navigationRef.current?.navigate('Main'); // Main(바텀탭) 먼저
+  setTimeout(() => {
+    navigationRef.current?.navigate(screen, params); // 그 위에 원하는 화면
+  }, 0);
+}
+
 // 네비게이션 서비스 객체
 const NavigationService = {
   navigate,
@@ -100,6 +146,8 @@ const NavigationService = {
   resetTo,
   getCurrentRoute,
   navigationRef,
+  handleDeepLink,
+  navigateWithBottomTab,
 };
 
 export default NavigationService;

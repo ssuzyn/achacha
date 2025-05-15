@@ -60,6 +60,12 @@
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="com.koup28.achacha_app"/>
       </intent-filter>
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="achacha" android:host="sharebox" />
+      </intent-filter>
     </activity>
     <activity
         android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"

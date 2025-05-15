@@ -18,7 +18,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import { Icon } from 'react-native-elements';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 
@@ -70,6 +70,7 @@ const BoxMainScreen = () => {
   const [page, setPage] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const route = useRoute();
 
   // 무한스크롤용 데이터 로딩
   const loadShareBoxes = async (nextPage = 0) => {
@@ -97,6 +98,15 @@ const BoxMainScreen = () => {
       loadShareBoxes(0);
     }, [])
   );
+
+  useEffect(() => {
+    console.log('[딥링크 진입] route.params:', route.params);
+    if (route.params?.code) {
+      console.log('[딥링크 진입] code 파라미터 감지:', route.params.code);
+      setInviteCode(route.params.code);
+      setIsJoinModalVisible(true);
+    }
+  }, [route.params?.code]);
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {

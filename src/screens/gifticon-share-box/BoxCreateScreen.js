@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 // 쉐어박스 생성 스크린
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,8 @@ import {
   TextInput,
   Alert,
   Share,
+  Modal,
+  Button,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -24,10 +26,27 @@ import { API_CONFIG } from '../../api/config';
 import Clipboard from '@react-native-clipboard/clipboard';
 import { createShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
+import { useRoute } from '@react-navigation/native';
+import { WebView } from 'react-native-webview';
+
+const KakaoShareModal = ({ visible, onClose, inviteCode }) => (
+  <Modal visible={visible} transparent>
+    <WebView
+      source={{
+        uri: `https://k12d205.p.ssafy.io/kakao-share?code=${inviteCode}`,
+      }}
+      onNavigationStateChange={navState => {
+        // 공유 완료 후 닫기 등 처리 가능
+      }}
+    />
+    <Button title="닫기" onPress={onClose} />
+  </Modal>
+);
 
 const BoxCreateScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const route = useRoute();
 
   // 쉐어박스 이름
   const [boxName, setBoxName] = useState('');
@@ -35,6 +54,18 @@ const BoxCreateScreen = () => {
   const [inviteCode, setInviteCode] = useState('');
   // 화면 상태 (create: 생성 화면, share: 코드 공유 화면)
   const [screenState, setScreenState] = useState('create');
+  const [webViewVisible, setWebViewVisible] = useState(false);
+  const webViewRef = React.useRef(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  useEffect(() => {
+    if (route.params?.code) {
+      setInviteCode(route.params.code); // 입력란 자동 세팅
+      Clipboard.setStringAsync(route.params.code); // 클립보드 자동 복사
+      // 안내 메시지
+      Alert.alert('알림', '초대코드가 자동으로 입력되었습니다!');
+    }
+  }, [route.params?.code]);
 
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({
@@ -249,16 +280,9 @@ const BoxCreateScreen = () => {
     }
   };
 
-  // 카카오톡 공유 함수
-  const handleShareKakao = async () => {
-    try {
-      // 실제 구현에서는 카카오 SDK를 사용하겠지만, 여기서는 일반 공유 기능으로 대체
-      await Share.share({
-        message: `기프티콘 관리 서비스 아차차의 쉐어박스 '${boxName}'에 초대합니다! 지금 바로 참여해보세요. 초대 코드: ${inviteCode}`,
-      });
-    } catch (error) {
-      Alert.alert('공유 실패', '공유하는 중 오류가 발생했습니다.');
-    }
+  // 카카오톡 공유 함수 (WebView 방식)
+  const handleShareKakao = () => {
+    setModalVisible(true);
   };
 
   // 코드 복사 함수
@@ -415,6 +439,12 @@ const BoxCreateScreen = () => {
       </View>
 
       {screenState === 'create' ? renderCreateScreen() : renderShareScreen()}
+
+      <KakaoShareModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        inviteCode={inviteCode}
+      />
     </View>
   );
 };
