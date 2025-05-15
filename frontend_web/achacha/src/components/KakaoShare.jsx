@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 
 const KAKAO_JS_KEY = '8d54c485f1e1360ca3124ebb9f3978ab'; // 본인 JS 키로 변경
-const TEMPLATE_ID = 12345; // 본인 템플릿 ID로 변경
+const TEMPLATE_ID = 120597; // 본인 템플릿 ID로 변경
 
 const KakaoShare = () => {
   useEffect(() => {
