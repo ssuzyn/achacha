@@ -18,11 +18,11 @@ import com.eurachacha.achacha.application.port.output.notification.NotificationT
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
 import com.eurachacha.achacha.application.port.output.user.UserRepository;
+import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
 import com.eurachacha.achacha.domain.model.notification.NotificationType;
 import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
-import com.eurachacha.achacha.domain.model.user.FcmToken;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.web.common.exception.CustomException;
