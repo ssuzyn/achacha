@@ -1,4 +1,4 @@
-import axios from 'axios';
+import apiClient from '../api/apiClient';
 import { BASE_URL, API_CONFIG, handleApiError, endpointUrl } from '../api/config';
 import authService from '../api/authService';
 
@@ -13,8 +13,9 @@ const giveAwayService = {
     try {
       const token = await authService.getAccessToken();
 
-      // 개발 환경에서 토큰이 없을 경우 임시 토큰 생성
-      const authToken = token || authService.generateDevToken();
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다.');
+      }
 
       // API URL 생성
       const apiUrl = endpointUrl(BASE_URL, API_CONFIG.ENDPOINTS.GIVE_AWAY_GIFTICON(gifticonId));
@@ -23,16 +24,14 @@ const giveAwayService = {
       console.log('기프티콘 뿌리기 요청 URL:', apiUrl);
       console.log('요청 데이터:', { gifticonId, userIds });
 
-      // API 호출
-      const response = await axios.post(
+      // apiClient를 사용하여 API 호출
+      const response = await apiClient.post(
         apiUrl,
         { userIds },
         {
           headers: {
-            ...API_CONFIG.headers,
-            Authorization: `Bearer ${authToken}`,
+            Authorization: `Bearer ${token}`,
           },
-          timeout: API_CONFIG.TIMEOUT,
         }
       );
 
