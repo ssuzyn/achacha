@@ -10,6 +10,7 @@ import {
   StatusBar,
   PanResponder,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import GiveAwayGifticonList from '../../components/GiveAwayGifticonList';
@@ -24,6 +25,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useNavigation } from '@react-navigation/native';
 import useAuthStore from '../../store/authStore';
 import { PermissionsAndroid } from 'react-native';
+import { mapGifticonService } from '../../services/mapGifticonService';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../../assets/images/giveaway_button.png');
@@ -42,55 +44,6 @@ const DUMMY_USERS = [
   { id: 5, name: '류*문', emoji: emoji5 },
 ];
 
-const dummyGifticons = {
-  gifticons: [
-    {
-      gifticonId: 125,
-      gifticonName: '스타벅스 5000원권',
-      gifticonType: 'AMOUNT',
-      gifticonExpiryDate: '2025-06-15',
-      brandId: 45,
-      brandName: '스타벅스',
-      scope: 'MY_BOX',
-      userId: 78,
-      userName: '홍길동',
-      shareBoxId: null,
-      shareBoxName: null,
-      thumbnailPath: '/images/gifticons/thumbnail/125.jpg',
-    },
-    {
-      gifticonId: 129,
-      gifticonName: '자바칩 프라푸치노',
-      gifticonType: 'PRODUCT',
-      gifticonExpiryDate: '2025-07-10',
-      brandId: 45,
-      brandName: '스타벅스',
-      scope: 'MY_BOX',
-      userId: 78,
-      userName: '홍길동',
-      shareBoxId: null,
-      shareBoxName: null,
-      thumbnailPath: '/images/gifticons/thumbnail/129.jpg',
-    },
-    {
-      gifticonId: 127,
-      gifticonName: '바닐라 프라푸치노',
-      gifticonType: 'PRODUCT',
-      gifticonExpiryDate: '2025-08-22',
-      brandId: 45,
-      brandName: '스타벅스',
-      scope: 'MY_BOX',
-      userId: 78,
-      userName: '홍길동',
-      shareBoxId: null,
-      shareBoxName: null,
-      thumbnailPath: '/images/gifticons/thumbnail/127.jpg',
-    },
-  ],
-  hasNextPage: true,
-  nextPage: '1',
-};
-
 const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -108,6 +61,15 @@ const GiveAwayScreen = ({ onClose }) => {
   const [receivedUserAnim] = useState(new Animated.Value(0));
   const [showTooltip, setShowTooltip] = useState(false);
   const tooltipOpacity = useRef(new Animated.Value(0)).current;
+
+  // 기프티콘 목록 관련 상태 추가
+  const [giveAwayGifticons, setGiveAwayGifticons] = useState({
+    gifticons: [],
+    hasNextPage: false,
+    nextPage: null,
+  });
+  const [isLoadingGifticons, setIsLoadingGifticons] = useState(false);
+  // const [gifticonError, setGifticonError] = useState(null); // 필요시 에러 상태 추가
 
   // BLE 관련 상태
   const { bleToken } = useAuthStore();
@@ -575,8 +537,28 @@ const GiveAwayScreen = ({ onClose }) => {
     await startScanning();
   };
 
+  // 기프티콘 목록 로드 함수
+  const loadGiveAwayGifticons = async () => {
+    setIsLoadingGifticons(true);
+    try {
+      const response = await mapGifticonService.getMapGifticons();
+      if (response && response.gifticons) {
+        setGiveAwayGifticons(response);
+      } else {
+        setGiveAwayGifticons({ gifticons: [], hasNextPage: false, nextPage: null });
+      }
+    } catch (error) {
+      console.error('뿌리기용 기프티콘 목록 로드 실패:', error);
+      Alert.alert('오류', '기프티콘 목록을 불러오는 중 오류가 발생했습니다.');
+      setGiveAwayGifticons({ gifticons: [], hasNextPage: false, nextPage: null });
+    } finally {
+      setIsLoadingGifticons(false);
+    }
+  };
+
   // 선물 버튼 핸들러
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
+    await loadGiveAwayGifticons(); // 기프티콘 목록 로드
     setListVisible(true);
     setButtonVisible(false);
   };
@@ -808,10 +790,18 @@ const GiveAwayScreen = ({ onClose }) => {
             activeOpacity={1}
             onPress={e => e.stopPropagation()}
           >
-            <GiveAwayGifticonList
-              gifticons={dummyGifticons.gifticons}
-              onSelectGifticon={handleGifticonSelect}
-            />
+            {isLoadingGifticons ? (
+              <ActivityIndicator
+                size="large"
+                color={theme.colors.primary || '#007bff'}
+                style={{ flex: 1, justifyContent: 'center' }}
+              />
+            ) : (
+              <GiveAwayGifticonList
+                gifticons={giveAwayGifticons.gifticons}
+                onSelectGifticon={handleGifticonSelect}
+              />
+            )}
           </TouchableOpacity>
         )}
 
