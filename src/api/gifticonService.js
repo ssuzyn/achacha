@@ -645,6 +645,19 @@ const gifticonService = {
       throw error;
     }
   },
+
+  // 상품형 기프티콘 사용완료 처리
+  async markProductGifticonAsUsed(gifticonId) {
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/product-gifticons/${gifticonId}/use`
+      );
+      return response.data;
+    } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용완료 처리 실패:', error);
+      throw error;
+    }
+  },
 };
 
 export default gifticonService;

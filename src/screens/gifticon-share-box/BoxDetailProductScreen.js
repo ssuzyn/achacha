@@ -20,13 +20,19 @@ import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
+import useAuthStore from '../../store/authStore';
+import apiClient from '../../api/apiClient';
+import { cancelShareGifticon } from '../../api/shareBoxService';
+import gifticonService from '../../api/gifticonService';
 
 const BoxDetailProductScreen = () => {
+  console.log('🔥 BoxDetailProductScreen 진입!');
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
   const { showTabBar } = useTabBar();
+  const myUserId = useAuthStore(state => state.userId);
 
   // scope 상태 관리
   const [scope, setScope] = useState('SHARE_BOX'); // 'SHARE_BOX' 또는 'USED'
@@ -45,8 +51,6 @@ const BoxDetailProductScreen = () => {
   // AlertDialog 상태
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertType, setAlertType] = useState('delete'); // 'delete' 또는 'cancelShare'
-  // 공유자인지 확인 (공유박스에서 내가 공유한 것인지)
-  const [isSharer, setIsSharer] = useState(false);
   // 공유 모달 상태 관리
   const [isShareModalVisible, setShareModalVisible] = useState(false);
   // 공유 위치 선택 상태
@@ -87,10 +91,6 @@ const BoxDetailProductScreen = () => {
       if (route.params.usedAt) {
         setUsedAt(route.params.usedAt);
       }
-      // 공유박스에서 내가 공유한 것인지 확인
-      if (route.params.isSharer) {
-        setIsSharer(route.params.isSharer);
-      }
     }
   }, [route.params]);
 
@@ -117,6 +117,8 @@ const BoxDetailProductScreen = () => {
       //
       // 임시로 로딩만 false 처리
       setIsLoading(false);
+      console.log('등록일시:', gifticonData.gifticonCreatedAt);
+      console.log('바코드 이미지 URL:', gifticonData.barcodeImageUrl);
     } catch (error) {
       setIsLoading(false);
       // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
@@ -199,7 +201,7 @@ const BoxDetailProductScreen = () => {
 
     try {
       // 실제 API 호출
-      await api.shareGifticon(selectedShareBoxId, gifticonId);
+      await apiClient.post(`/api/share-boxes/${selectedShareBoxId}/gifticons/${gifticonId}`);
 
       Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
         {
@@ -223,34 +225,59 @@ const BoxDetailProductScreen = () => {
     setShareModalVisible(false);
   };
 
-  // // 박스명 가져오기
-  // const getShareBoxName = id => {
-  //   const box = shareBoxes.find(item => item.id === id);
-  //   return box ? box.name : '';
-  // };
-
   // 사용하기 기능
-  const handleUse = () => {
+  const handleUse = async () => {
     // 만료된 경우 바로 사용완료 처리
     const isExpired = calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨';
 
     if (isExpired || isUsing) {
-      // 이미 사용 중인 경우 또는 만료된 경우 바로 사용 완료 처리
-      // console.log('기프티콘 사용 완료');
-
-      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
-      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
-
-      // BoxListScreen으로 이동하면서 사용가능 탭으로 설정
-      navigation.navigate('BoxList', {
-        shareBoxId: gifticonData.shareBoxId,
-        shareBoxName: gifticonData.shareBoxName,
-        initialTab: 'available', // 사용가능 탭으로 이동
-        refresh: true,
-      });
+      // 이미 사용 중인 경우 또는 만료된 경우 실제 사용완료 API 호출
+      try {
+        setIsLoading(true);
+        if (gifticonData.gifticonType === 'PRODUCT') {
+          await gifticonService.markProductGifticonAsUsed(gifticonData.gifticonId);
+        } else {
+          await gifticonService.markGifticonAsUsed(gifticonData.gifticonId, 'SELF_USE');
+        }
+        Alert.alert('성공', '기프티콘이 사용완료 처리되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              navigation.navigate('BoxList', {
+                shareBoxId: gifticonData.shareBoxId,
+                shareBoxName: gifticonData.shareBoxName,
+                initialTab: 'available',
+                refresh: true,
+              });
+            },
+          },
+        ]);
+      } catch (error) {
+        Alert.alert('사용완료 실패', error?.response?.data?.message || '기프티콘 사용완료 처리에 실패했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
     } else {
-      // 만료되지 않은 경우 사용 모드로 전환
-      setIsUsing(true);
+      // 만료되지 않은 경우 바코드 이미지 조회 후 사용 모드로 전환
+      try {
+        setIsLoading(true);
+        const barcodeRes = await gifticonService.getAvailableGifticonBarcode(gifticonData.gifticonId);
+        setGifticonData(prev => {
+          const updated = {
+            ...prev,
+            barcodeImageUrl: barcodeRes.barcodePath,
+            barcodeNumber: barcodeRes.gifticonBarcodeNumber,
+          };
+          console.log('바코드 API 응답:', barcodeRes);
+          console.log('업데이트된 gifticonData:', updated);
+          return updated;
+        });
+        setIsUsing(true);
+      } catch (error) {
+        Alert.alert('바코드 조회 실패', error?.message || '바코드 이미지를 불러오지 못했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -286,7 +313,7 @@ const BoxDetailProductScreen = () => {
   };
 
   // 다이얼로그 확인 버튼 처리
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setAlertVisible(false);
 
     if (alertType === 'delete') {
@@ -298,11 +325,20 @@ const BoxDetailProductScreen = () => {
       navigation.goBack();
     } else if (alertType === 'cancelShare') {
       // 공유 취소 처리 로직
-      // 실제 구현에서는 API 호출로 공유 취소
-      // console.log('공유 취소:', gifticonId);
-
-      // 리스트 화면으로 이동
-      navigation.goBack();
+      try {
+        await cancelShareGifticon(gifticonData.shareBoxId, gifticonData.gifticonId);
+        Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => navigation.goBack(),
+          },
+        ]);
+      } catch (error) {
+        console.log('공유 취소 에러:', error?.response);
+        const errorCode = error?.response?.data?.code;
+        const errorMessage = ERROR_MESSAGES[errorCode] || error?.response?.data?.message || '알 수 없는 오류가 발생했습니다.';
+        Alert.alert('공유 취소 실패', errorMessage);
+      }
     }
   };
 
@@ -311,7 +347,28 @@ const BoxDetailProductScreen = () => {
     setAlertVisible(false);
   };
 
-  // 로딩 중이거나 데이터가 없는 경우 로딩 화면 표시
+  console.log('BoxDetailProductScreen 렌더링, route:', route);
+  console.log('BoxDetailProductScreen 렌더링, route.params:', route.params);
+
+  useEffect(() => {
+    if (route.params?.gifticon) {
+      const gifticon = route.params.gifticon;
+      const normalizedGifticon = {
+        ...gifticon,
+        shareBoxId: gifticon.shareBoxId || gifticon.shareboxId,
+        shareBoxName: gifticon.shareBoxName || gifticon.shareboxName,
+      };
+      setGifticonData(normalizedGifticon);
+      setScope(normalizedGifticon.scope || 'SHARE_BOX');
+      setIsLoading(false);
+    }
+  }, [route.params]);
+
+  useEffect(() => {
+    console.log('gifticonData 변경:', gifticonData);
+    console.log('isLoading 변경:', isLoading);
+  }, [gifticonData, isLoading]);
+
   if (isLoading || !gifticonData) {
     return (
       <View style={[styles.container, styles.loadingContainer]}>
@@ -362,7 +419,7 @@ const BoxDetailProductScreen = () => {
                 // 사용 모드일 때 바코드 표시
                 <View style={styles.barcodeContainer}>
                   <Image
-                    source={gifticonData.barcodeImageUrl}
+                    source={{ uri: gifticonData.barcodeImageUrl }}
                     style={styles.barcodeImage}
                     resizeMode="contain"
                   />
@@ -377,7 +434,7 @@ const BoxDetailProductScreen = () => {
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
                   <Image
-                    source={gifticonData.thumbnailPath}
+                    source={{ uri: gifticonData.thumbnailPath }}
                     style={[
                       styles.gifticonImage,
                       isUsed && styles.grayScaleImage,
@@ -399,7 +456,7 @@ const BoxDetailProductScreen = () => {
                       )}
 
                       {/* 쉐어박스이고 내가 공유한 경우에만 공유 취소 아이콘 표시 */}
-                      {scope === 'SHARE_BOX' && isSharer && (
+                      {scope === 'SHARE_BOX' && gifticonData.userId === Number(myUserId) && (
                         <TouchableOpacity
                           style={styles.actionIconButton}
                           onPress={handleCancelShare}
@@ -486,12 +543,17 @@ const BoxDetailProductScreen = () => {
                   </Text>
                 </View>
 
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>등록일시</Text>
-                  <Text style={styles.infoValue}>
-                    {formatDateTime(gifticonData.gifticonCreatedAt)}
-                  </Text>
-                </View>
+                {/* 등록일시: 마이박스(MY_BOX)일 때만 표시 */}
+                {scope === 'MY_BOX' && (
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>등록일시</Text>
+                    <Text style={styles.infoValue}>
+                      {gifticonData.gifticonCreatedAt
+                        ? formatDateTime(gifticonData.gifticonCreatedAt)
+                        : '-'}
+                    </Text>
+                  </View>
+                )}
 
                 {/* 등록자 정보 표시 (항상 표시) */}
                 {gifticonData.userName && (
