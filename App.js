@@ -138,11 +138,15 @@ const linking = {
   prefixes: ['achacha://'],
   config: {
     screens: {
-      // BoxMainScreen에서 초대코드 파라미터 받기
-      BoxMain: {
-        path: 'sharebox',
-        parse: {
-          code: (code) => code,
+      Main: {
+        screens: {
+          TabSharebox: {
+            path: 'sharebox',
+            parse: {
+              code: (code) => code,
+            },
+          },
+          // ...다른 탭
         },
       },
       // ...다른 스크린

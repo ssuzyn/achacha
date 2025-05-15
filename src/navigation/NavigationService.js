@@ -120,9 +120,7 @@ function parseUrl(url) {
 export function handleDeepLink(url) {
   const parsed = parseUrl(url);
   if (parsed.screen === 'sharebox' && parsed.code) {
-    // 1. Main(바텀탭)으로 이동
     navigationRef.current?.navigate('Main');
-    // 2. 약간의 딜레이 후 TabSharebox(쉐어박스 탭)로 이동하며 code 전달
     setTimeout(() => {
       navigationRef.current?.navigate('TabSharebox', { code: parsed.code });
     }, 0);
