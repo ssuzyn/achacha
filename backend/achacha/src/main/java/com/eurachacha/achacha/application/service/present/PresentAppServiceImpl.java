@@ -1,7 +1,8 @@
 package com.eurachacha.achacha.application.service.present;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -35,24 +36,41 @@ public class PresentAppServiceImpl implements PresentAppService {
 
 	@Override
 	public List<TemplatesResponseDto> getTemplates() {
+		// 모든 템플릿 조회
 		List<PresentTemplate> templates = presentTemplateRepository.findAll();
 
+		// 템플릿 ID 리스트 추출
+		List<Integer> templateIds = templates.stream()
+			.map(template -> template.getId().intValue())
+			.collect(Collectors.toList());
+
+		// 모든 템플릿의 썸네일 파일을 한 번에 조회
+		List<File> thumbnailFiles = fileRepository.findAllByReferenceEntityTypeAndReferenceEntityIdInAndType(
+			"present_template",
+			templateIds,
+			FileType.PRESENT_THUMBNAIL
+		);
+
+		// 파일 맵 생성 (템플릿 ID를 키로 사용)
+		Map<Integer, File> fileMap = new HashMap<>();
+		for (File file : thumbnailFiles) {
+			fileMap.put(file.getReferenceEntityId(), file);
+		}
+
+		// 템플릿과 파일 정보를 결합하여 응답 DTO 생성
 		return templates.stream()
 			.map(template -> {
 				Integer templateId = template.getId().intValue();
 
-				// 현재 템플릿에 대응하는 파일 찾기
-				Optional<File> thumbnailFile = fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(
-					"present_template",
-					templateId,
-					FileType.PRESENT_THUMBNAIL
-				);
+				// 템플릿 ID에 해당하는 파일 찾기
+				File thumbnailFile = fileMap.get(templateId);
 
 				// 파일이 있으면 URL 생성
-				String thumbnailUrl = thumbnailFile
-					.map(file -> fileStoragePort.generateFileUrl(file.getPath(), FileType.PRESENT_THUMBNAIL))
-					.orElse(null);
+				String thumbnailUrl = thumbnailFile != null ?
+					fileStoragePort.generateFileUrl(thumbnailFile.getPath(), FileType.PRESENT_THUMBNAIL) :
+					null;
 
+				// TemplatesResponseDto 생성
 				return TemplatesResponseDto.builder()
 					.presentTemplateId(templateId)
 					.presentTemplateCategory(template.getCategory().name())
