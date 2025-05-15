@@ -14,4 +14,6 @@ public interface UsageHistoryRepository {
 	UsageHistory findByIdAndGifticonIdAndUserId(Integer usageHistoryId, Integer gifticonId, Integer userId);
 
 	void delete(UsageHistory usageHistory);
+
+	List<UsageHistory> findLatestForEachGifticonByIdsAndUserId(List<Integer> ids, Integer userId);
 }
