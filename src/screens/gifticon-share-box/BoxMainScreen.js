@@ -13,6 +13,7 @@ import {
   StatusBar,
   ScrollView,
   RefreshControl,
+  FlatList,
 } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { Text } from '../../components/ui';
@@ -77,6 +78,7 @@ const BoxMainScreen = () => {
   // 무한스크롤용 데이터 로딩
   const loadShareBoxes = async (nextPage = 0) => {
     if (loading || (!hasNextPage && nextPage !== 0)) return;
+    console.log('[무한스크롤] loadShareBoxes 호출, nextPage:', nextPage, 'hasNextPage:', hasNextPage);
     setLoading(true);
     try {
       const data = await fetchShareBoxes({ page: nextPage, size: 8 });
@@ -180,18 +182,14 @@ const BoxMainScreen = () => {
     setRefreshing(false);
   };
 
-  // 쉐어박스 카드 렌더링
-  const renderShareBox = (item, index) => {
+  // FlatList의 렌더 함수로 분리
+  const renderShareBox = ({ item, index }) => {
     // 배경색과 아이콘 색상 설정
     const backgroundColor = BACKGROUND_COLORS[index % BACKGROUND_COLORS.length];
     const cardColor = CARD_COLORS[index % CARD_COLORS.length];
-
-    // 기프티콘 수에 따른 아이콘 선택
     const iconImage = getShareBoxIcon(item.gifticonCount);
-
     return (
       <TouchableOpacity
-        key={index}
         style={styles.boxWrapper}
         onPress={() => handleBoxPress(item)}
         activeOpacity={0.8}
@@ -289,35 +287,27 @@ const BoxMainScreen = () => {
         </View>
       </View>
 
-      {/* 쉐어박스 목록 - 헤더 아래로 이동 */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
+      {/* FlatList로 쉐어박스 목록 렌더링 */}
+      <FlatList
+        data={shareBoxes}
+        keyExtractor={(item, idx) => String(item.shareBoxId || idx)}
+        renderItem={renderShareBox}
+        numColumns={2}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-        onScroll={({ nativeEvent }) => {
-          const { layoutMeasurement, contentOffset, contentSize } = nativeEvent;
-          const paddingToBottom = 20;
-          const isCloseToBottom =
-            layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom;
-
-          if (isCloseToBottom && !loading && hasNextPage) {
-            loadShareBoxes(page);
-          }
+        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        onEndReached={() => {
+          if (!loading && hasNextPage) loadShareBoxes(page);
         }}
-        scrollEventThrottle={400}
-      >
-        <View style={styles.boxesContainer}>
-          {shareBoxes.length > 0 ? (
-            shareBoxes.map((item, index) => renderShareBox(item, index))
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text variant="body1" style={styles.emptyText}>
-                쉐어박스가 없습니다.
-              </Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
+        onEndReachedThreshold={0.7}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text variant="body1" style={styles.emptyText}>
+              쉐어박스가 없습니다.
+            </Text>
+          </View>
+        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+      />
 
       {loading && (
         <View style={styles.loadingContainer}>
