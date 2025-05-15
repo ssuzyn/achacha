@@ -26,15 +26,6 @@ const NoUsersScreen = () => {
     });
   };
 
-  useEffect(() => {
-    // 3초 후에 툴팁 숨기기
-    const timer = setTimeout(() => {
-      setShowTooltip(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <View style={styles.noUsersContainer}>
       {showTooltip && (
@@ -52,7 +43,7 @@ const NoUsersScreen = () => {
           onPress={handleGoToShareBox}
           style={[styles.iconButton, styles.shareboxPosition]}
         >
-          <Image source={giveawayShareboxImg} style={styles.iconImage} />
+          <Image source={giveawayShareboxImg} style={[styles.iconImage, styles.shareboxImage]} />
           <Text style={styles.iconText}>쉐어박스</Text>
         </TouchableOpacity>
 
@@ -60,7 +51,10 @@ const NoUsersScreen = () => {
           onPress={handleGoToManagement}
           style={[styles.iconButton, styles.managementPosition]}
         >
-          <Image source={giveawayManagementImg} style={styles.iconImage} />
+          <Image
+            source={giveawayManagementImg}
+            style={[styles.iconImage, styles.managementImage]}
+          />
           <Text style={styles.iconText}>기프티콘 관리</Text>
         </TouchableOpacity>
       </View>
@@ -92,14 +86,20 @@ const styles = StyleSheet.create({
     left: 0,
   },
   managementPosition: {
-    bottom: 0,
-    right: -13,
+    bottom: -20,
+    right: -12,
   },
   iconImage: {
-    width: 140,
-    height: 140,
     resizeMode: 'contain',
     marginBottom: 12,
+  },
+  shareboxImage: {
+    width: 130,
+    height: 130,
+  },
+  managementImage: {
+    width: 140,
+    height: 140,
   },
   iconText: {
     fontSize: 18,
@@ -109,22 +109,31 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: 'absolute',
-    top: '1%',
+    top: -150,
+    width: '100%',
     alignItems: 'center',
     zIndex: 10,
   },
   tooltipBubble: {
-    backgroundColor: 'rgba(85, 85, 85, 0.6)',
-    paddingHorizontal: 50,
-    paddingVertical: 18,
-    borderRadius: 20,
+    backgroundColor: '#E8F6FF',
+    paddingHorizontal: 60,
+    paddingVertical: 15,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 5,
   },
   tooltipText: {
-    color: 'white',
+    color: '#687278',
     fontSize: 19,
     fontFamily: 'Pretendard-Medium',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 28,
   },
 });
 
