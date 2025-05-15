@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.domain.model.present;
 
+import java.time.LocalDateTime;
+
 import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.user.User;
@@ -12,9 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,7 +39,8 @@ public class PresentCard extends TimeStampEntity {
 	private String message;
 
 	@NotNull
-	private LocalDateTime expiryDateTime;
+	@Builder.Default
+	private LocalDateTime expiryDateTime = LocalDateTime.now().plusHours(24);
 
 	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
@@ -56,14 +57,4 @@ public class PresentCard extends TimeStampEntity {
 	@ManyToOne
 	@JoinColumn(name = "color_palette_id")
 	private ColorPalette colorPalette;
-
-	@PrePersist
-	public void prePersist() {
-		// 생성 시 자동으로 만료 시간을 24시간 후로 설정
-		if (expiryDateTime == null) {
-			// TimeStampEntity에서 상속받은 createdAt은 아직 설정되지 않았으므로
-			// 현재 시간을 기준으로 24시간 후로 설정
-			expiryDateTime = LocalDateTime.now().plusHours(24);
-		}
-	}
 }
