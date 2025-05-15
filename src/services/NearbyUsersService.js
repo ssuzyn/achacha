@@ -474,21 +474,19 @@ class NearbyUsersService {
       console.log('\n=== BLE 스캔 시작 ===');
       console.log('현재 디바이스 ID:', this.deviceId);
       console.log('스캔 시간:', this.SCAN_DURATION, '초');
-
-      // Full UUID와 Short UUID 모두 출력
       console.log('원본 서비스 UUID:', this.serviceUUID);
 
-      // Short UUID 생성 (16비트 UUID 포맷)
+      // Short UUID 생성 (BleModule.kt와 동일한 방식)
       const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
-      const shortUuidPrefix = uuidNoHyphens.substring(0, 4); // 앞 4자리(2바이트)만 사용
-      const shortUUID = `0000${shortUuidPrefix}-0000-1000-8000-00805f9b34fb`;
-      console.log('변환된 Short UUID:', shortUUID);
-      console.log(
-        'Short UUID 형식 확인:',
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortUUID)
-      );
+      const shortUuidHex = uuidNoHyphens.substring(0, 4); // 앞 4자리(2바이트)만 사용
+      const shortUUID = `0000${shortUuidHex}-0000-1000-8000-00805f9b34fb`;
 
-      // Short UUID로 스캔 (16비트 UUID)
+      console.log('Short UUID 변환 과정:');
+      console.log('1. UUID 하이픈 제거:', uuidNoHyphens);
+      console.log('2. 앞 4자리 추출:', shortUuidHex);
+      console.log('3. 최종 Short UUID:', shortUUID);
+
+      // Short UUID로 스캔
       console.log('Short UUID로 스캔 시작');
       await BleManager.scan([shortUUID], this.SCAN_DURATION, true);
 
