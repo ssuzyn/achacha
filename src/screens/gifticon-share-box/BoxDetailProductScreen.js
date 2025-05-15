@@ -111,65 +111,13 @@ const BoxDetailProductScreen = () => {
     setIsLoading(true);
     try {
       // 실제 구현에서는 API 호출로 대체
-      // const response = await api.getGifticonDetail(id);
+      // 예시: const response = await api.getGifticonDetail(id);
       // setGifticonData(response.data);
-
-      // 더미 데이터 - API 명세에 맞춤 (테스트용)
-      // 실제 구현에서는 삭제하고 API 호출로 대체
-      setTimeout(() => {
-        let dummyData;
-
-        if (scope === 'USED') {
-          // 사용완료된 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id,
-            gifticonName: '아이스 카페 아메리카노 T',
-            gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-12-31',
-            brandId: 45,
-            brandName: '스타벅스',
-            scope: scope,
-            usageType: usageType || 'SELF_USE', // 사용유형
-            usageHistoryCreatedAt: usedAt || '2025-01-15T14:30:00', // 사용일시
-            usedBy: '김철수', // 사용한 사람 정보 추가
-            userName: '홍길동', // 등록자 정보 추가
-            thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-            originalImagePath:
-              usageType === 'SELF_USE' ? require('../../assets/images/dummy_starbucks.png') : null,
-            gifticonCreatedAt: '2025-01-01T10:30:00',
-            // 더미 데이터에 공유자 ID 추가
-            userId: 78, // 사용자 ID
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-          };
-        } else {
-          // 일반 기프티콘 더미 데이터
-          dummyData = {
-            gifticonId: id,
-            gifticonName: '아이스 카페 아메리카노 T',
-            gifticonType: 'PRODUCT',
-            gifticonExpiryDate: '2025-06-10',
-            brandId: 45,
-            brandName: '스타벅스',
-            scope: scope, // 파라미터에서 받은 scope 사용
-            userId: 78,
-            userName: '홍길동',
-            shareBoxId: scope === 'SHARE_BOX' ? 90 : null,
-            shareBoxName: scope === 'SHARE_BOX' ? '스터디 그룹' : null,
-            thumbnailPath: require('../../assets/images/dummy_starbucks.png'),
-            originalImagePath: require('../../assets/images/dummy_starbucks.png'),
-            gifticonCreatedAt: '2025-01-15T10:30:00',
-            barcodeNumber: '8013-7621-1234-5678', // 바코드 번호 (더미)
-            barcodeImageUrl: require('../../assets/images/barcode.png'), // 바코드 이미지 (더미)
-            // 더미 데이터에 공유자 ID 추가
-            isSharer: route.params?.isSharer || false, // 공유자 여부
-          };
-        }
-        setGifticonData(dummyData);
-        setIsSharer(dummyData.isSharer);
-        setIsLoading(false);
-      }, 500); // 0.5초 지연 (로딩 효과)
+      // setIsSharer(response.data.isSharer); // 필요시
+      //
+      // 임시로 로딩만 false 처리
+      setIsLoading(false);
     } catch (error) {
-      // console.error('기프티콘 데이터 로드 실패:', error);
       setIsLoading(false);
       // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
     }
