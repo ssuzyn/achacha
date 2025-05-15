@@ -15,7 +15,7 @@ public class BleTokenDomainServiceImpl implements BleTokenDomainService {
 	private static final int TOKEN_BYTES = 8;
 
 	// 기본 토큰 길이 - 9자리
-	private static final int TOKEN_LENGTH = 9;
+	private static final int TOKEN_LENGTH = 7;
 
 	// 랜덤 토큰 생성 및 Base62 인코딩
 	@Override
