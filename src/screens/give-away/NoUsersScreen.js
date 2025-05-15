@@ -1,5 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Image, Text, Dimensions } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Text,
+  Dimensions,
+  Animated,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
@@ -10,7 +18,39 @@ const giveawayShareboxImg = require('../../assets/images/giveaway_sharebox.png')
 
 const NoUsersScreen = () => {
   const navigation = useNavigation();
-  const [showTooltip, setShowTooltip] = useState(true);
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    // 페이드 아웃 후 페이드 인
+    const blink = () => {
+      Animated.sequence([
+        // 첫 번째 깜빡임
+        Animated.timing(opacity, {
+          toValue: 0.7,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        // 두 번째 깜빡임
+        Animated.timing(opacity, {
+          toValue: 0.5,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    };
+
+    blink(); // 바로 실행
+  }, []);
 
   const handleGoToShareBox = () => {
     // 메인 탭바로 이동 후, 쉐어박스 탭으로 이동
@@ -28,15 +68,13 @@ const NoUsersScreen = () => {
 
   return (
     <View style={styles.noUsersContainer}>
-      {showTooltip && (
-        <View style={styles.tooltipContainer}>
-          <View style={styles.tooltipBubble}>
-            <Text style={styles.tooltipText}>
-              주변에 사용자가 없습니다.{'\n'}다음에 다시 시도해주세요.
-            </Text>
-          </View>
+      <View style={styles.tooltipContainer}>
+        <View style={styles.tooltipBubble}>
+          <Animated.Text style={[styles.tooltipText, { opacity }]}>
+            주변에 사용자가 없습니다.{'\n'}다음에 다시 시도해주세요.
+          </Animated.Text>
         </View>
-      )}
+      </View>
 
       <View style={styles.circleContainer}>
         <TouchableOpacity
@@ -109,7 +147,7 @@ const styles = StyleSheet.create({
   },
   tooltipContainer: {
     position: 'absolute',
-    top: -150,
+    top: -180,
     width: '100%',
     alignItems: 'center',
     zIndex: 10,
@@ -117,7 +155,7 @@ const styles = StyleSheet.create({
   tooltipBubble: {
     backgroundColor: '#E8F6FF',
     paddingHorizontal: 60,
-    paddingVertical: 15,
+    paddingVertical: 20,
     borderRadius: 30,
     shadowColor: '#000',
     shadowOffset: {
