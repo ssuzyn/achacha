@@ -107,13 +107,14 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 
 		// 기프티콘 검증
 		gifticonDomainService.validateGifticonForPresent(user.getId(), gifticon);
-		
+
 		// 선물카드 템플릿 검증
-		PresentTemplate presentTemplate = presentTemplateRepository.findById(gifticonPresentRequestDto.getPresentTemplateId());
+		PresentTemplate presentTemplate = presentTemplateRepository.findById(
+			gifticonPresentRequestDto.getPresentTemplateId());
 
 		// GENERAL 타입인 경우 색상 정보 검증
 		ColorPalette colorPalette = null;
-		if(presentTemplate.getCategory().equals(TemplateCategory.GENERAL)){
+		if (presentTemplate.getCategory().equals(TemplateCategory.GENERAL)) {
 			colorPalette = colorPaletteRepository.findByColorPaletteId(gifticonPresentRequestDto.getColorPaletteId());
 		}
 
@@ -156,7 +157,8 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	}
 
 	// 고유한 선물카드 코드 생성 메서드
-	private String generateUniquePresentCardCode(){
+	private String generateUniquePresentCardCode() {
+
 		SecureRandom random = new SecureRandom();
 		String presentCardCode;
 		int attempts = 0;

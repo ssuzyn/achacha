@@ -3,8 +3,7 @@ package com.eurachacha.achacha.domain.service.gifticon;
 import org.springframework.stereotype.Service;
 
 @Service
-public class GifticonGiveDomainServiceImpl implements GifticonGiveDomainService{
-
+public class GifticonGiveDomainServiceImpl implements GifticonGiveDomainService {
 	private static final String ALLOWED_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	private static final int INVITE_CODE_LENGTH = 36;
 
