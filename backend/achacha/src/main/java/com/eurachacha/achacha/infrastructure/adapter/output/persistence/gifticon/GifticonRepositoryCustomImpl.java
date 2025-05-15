@@ -57,9 +57,7 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 			.join(qGifticon.user, qUser).fetchJoin()
 			.leftJoin(qGifticon.sharebox, qShareBox).fetchJoin()
 			.where(
-				qGifticon.isDeleted.eq(false),
 				qGifticon.isUsed.eq(false),
-				qGifticon.remainingAmount.gt(0).or(qGifticon.remainingAmount.isNull()),
 				scopeCondition(scope, userId, qGifticon, qParticipation),
 				typeCondition(type, qGifticon)
 			)
