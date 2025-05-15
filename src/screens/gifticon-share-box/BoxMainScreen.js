@@ -21,6 +21,7 @@ import { Icon } from 'react-native-elements';
 import { useNavigation, useFocusEffect, useRoute } from '@react-navigation/native';
 import { fetchShareBoxes, joinShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
+import useAuthStore from '../../store/authStore';
 
 // 배경색 배열 - Theme에서 가져온 색상에 30% 투명도 적용
 const BACKGROUND_COLORS = [
@@ -71,6 +72,7 @@ const BoxMainScreen = () => {
   const [hasNextPage, setHasNextPage] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const route = useRoute();
+  const isLoggedIn = useAuthStore(state => state.isLoggedIn);
 
   // 무한스크롤용 데이터 로딩
   const loadShareBoxes = async (nextPage = 0) => {
@@ -107,6 +109,12 @@ const BoxMainScreen = () => {
       setIsJoinModalVisible(true);
     }
   }, [route.params?.code]);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      navigation.replace('Login');
+    }
+  }, [isLoggedIn]);
 
   // 쉐어박스 참여 버튼 클릭 핸들러
   const handleJoinPress = () => {

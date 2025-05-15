@@ -1,6 +1,7 @@
 import { createRef } from 'react';
 import { CommonActions, StackActions } from '@react-navigation/native';
 import { InteractionManager } from 'react-native';
+import useAuthStore from '../store/authStore';
 
 /**
  * 네비게이션 Ref (네비게이터에 연결할 ref)
@@ -116,13 +117,23 @@ function parseUrl(url) {
 
 /**
  * 딥링크 핸들러 - 항상 바텀탭이 보이게 Main → TabSharebox 순서로 이동
+ * 로그인 안 되어 있으면 Login으로 보내고, 로그인 성공 시 목적지로 이동
  */
 export function handleDeepLink(url) {
   const parsed = parseUrl(url);
   if (parsed.screen === 'sharebox' && parsed.code) {
+    const isLoggedIn = useAuthStore.getState().isLoggedIn;
+    if (!isLoggedIn) {
+      // 로그인 안 되어 있으면 Login으로 이동, 목적지 정보도 같이 전달
+      navigationRef.current?.navigate('Login', {
+        redirectTo: { screen: 'TabSharebox', params: { code: parsed.code } },
+      });
+      return;
+    }
+    // 로그인 되어 있으면 Main → TabSharebox 순서로 이동
     navigationRef.current?.navigate('Main');
     setTimeout(() => {
-      navigationRef.current?.navigate('TabSharebox', { code: parsed.code });
+      navigationRef.current?.navigate('TabSharebox', { code: parsed.code, _ts: Date.now() });
     }, 0);
     return;
   }

@@ -159,15 +159,21 @@ export default function App() {
   // Zustand 스토어의 토큰 복원 함수
   const restoreAuth = useAuthStore(state => state.restoreAuth);
   useEffect(() => {
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        NavigationService.handleDeepLink(url);
-      }
-    });
-    const subscription = Linking.addEventListener('url', (event) => {
-      NavigationService.handleDeepLink(event.url);
-    });
-    return () => subscription.remove();
+    const init = async () => {
+      await restoreAuth(); // Zustand의 토큰 복원(비동기)
+      // 복원이 끝난 뒤에만 딥링크 처리
+      Linking.getInitialURL().then((url) => {
+        if (url) {
+          NavigationService.handleDeepLink(url);
+        }
+      });
+      // 실시간 딥링크(앱 실행 중)도 동일하게 처리
+      const subscription = Linking.addEventListener('url', (event) => {
+        NavigationService.handleDeepLink(event.url);
+      });
+      return () => subscription.remove();
+    };
+    init();
   }, []);
   // 폰트 및 인증 상태 로딩 함수
   const loadResources = async () => {
