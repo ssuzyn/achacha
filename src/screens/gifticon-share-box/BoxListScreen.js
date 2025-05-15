@@ -1010,6 +1010,7 @@ const BoxListScreen = () => {
   }, [selectedCategory, selectedFilter, sortBy.available, shareBoxId]);
 
   useEffect(() => {
+    console.log('[selectedCategory]', selectedCategory);
     if (selectedCategory !== 'used') return;
 
     const fetchData = async () => {
@@ -1018,15 +1019,16 @@ const BoxListScreen = () => {
         const res = await fetchUsedGifticons({
           shareBoxId,
           type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
-          sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+          sort: 'USED_DESC',
           page: undefined, // 첫 페이지
           size: 20,
         });
+        console.log('[USED API 응답]', res);
         setUsedGifticons(res.gifticons);
         setUsedHasNextPage(res.hasNextPage);
         setUsedNextPage(res.nextPage);
       } catch (e) {
-        // 에러 처리
+        console.log('[USED API 에러]', e);
       } finally {
         setUsedLoading(false);
       }
