@@ -23,6 +23,9 @@ import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchAvailableGifticons, fetchUsedGifticons, fetchShareBoxSettings } from '../../api/shareBoxApi';
+import { API_BASE_URL } from '../../api/config';
+
+
 
 const BoxListScreen = () => {
   const { theme } = useTheme();
@@ -546,13 +549,18 @@ const BoxListScreen = () => {
   const handleGifticonPress = item => {
     // 기프티콘 타입에 따라 다른 상세 화면으로 이동
     if (item.gifticonType === 'PRODUCT') {
+      console.log('[네비게이션] BoxDetailProduct로 이동', {
+        gifticonId: item.gifticonId,
+        scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
+        usageType: item.usageType,
+        usedAt: item.usedAt,
+      });
       navigation.navigate('BoxDetailProduct', {
         gifticonId: item.gifticonId,
         scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
         usageType: item.usageType,
         usedAt: item.usedAt,
       });
-    } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('BoxDetailAmount', {
         gifticonId: item.gifticonId,
         scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
@@ -587,7 +595,7 @@ const BoxListScreen = () => {
             <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
+                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -670,7 +678,7 @@ const BoxListScreen = () => {
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
                 <Image
-                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
+                  source={{ uri: getImageUrl(item.thumbnailPath) }}
                   style={[styles.gifticonImage, { opacity: 0.7 }]}
                 />
               </View>
@@ -753,7 +761,7 @@ const BoxListScreen = () => {
               <View style={styles.gifticonContent}>
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                  <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
+                  <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
                 </View>
 
                 {/* 텍스트 정보 영역 */}
@@ -852,7 +860,7 @@ const BoxListScreen = () => {
             <View style={styles.gifticonContent}>
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: API_BASE_URL + item.thumbnailPath }} style={styles.gifticonImage} />
+                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -1080,6 +1088,16 @@ const BoxListScreen = () => {
     }, [shareBoxId, selectedCategory, selectedFilter, sortBy])
   );
 
+  const getImageUrl = (thumbnailPath) => {
+    if (!thumbnailPath) return null;
+    // 이미 http(s)로 시작하면 그대로 사용
+    if (thumbnailPath.startsWith('http://') || thumbnailPath.startsWith('https://')) {
+      return thumbnailPath;
+    }
+    // 아니면 API_BASE_URL을 붙여서 사용
+    return API_BASE_URL + thumbnailPath;
+  };
+
   return (
     <TouchableWithoutFeedback onPress={handleOutsidePress}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1172,13 +1190,19 @@ const BoxListScreen = () => {
               ? (loading
                   ? <Text>로딩 중...</Text>
                   : availableGifticons.length > 0
-                    ? availableGifticons.map(item => renderGifticonItem({ ...item, scope: 'SHARE_BOX' }))
+                    ? availableGifticons.map(item => {
+                        console.log('이미지 URL:', getImageUrl(item.thumbnailPath));
+                        return renderGifticonItem({ ...item, scope: 'SHARE_BOX' });
+                      })
                     : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text></View>
                 )
               : (usedLoading
                   ? <Text>로딩 중...</Text>
                   : usedGifticons.length > 0
-                    ? usedGifticons.map(item => renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName }))
+                    ? usedGifticons.map(item => {
+                        console.log('이미지 URL:', getImageUrl(item.thumbnailPath));
+                        return renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName });
+                      })
                     : <View style={styles.emptyContainer}><Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text></View>
                 )
             }

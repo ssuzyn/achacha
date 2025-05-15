@@ -62,11 +62,11 @@ export const fetchAvailableGifticons = async ({
 // 사용완료 기프티콘 목록 조회 API
 export const fetchUsedGifticons = async ({
   shareBoxId,
-  type,    // 'PRODUCT' | 'AMOUNT' | undefined
-  sort,    // 'CREATED_DESC' | 'EXPIRY_ASC' | undefined
-  page,    // string | undefined
-  size,    // number | undefined
-}) => {
+  type,
+  sort = 'USED_DESC',
+  page,
+  size,
+} = {}) => {
   const params = {};
   if (type) params.type = type;
   if (sort) params.sort = sort;

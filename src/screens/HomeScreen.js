@@ -6,6 +6,7 @@ import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
 import NavigationService from '../navigation/NavigationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 // 샘플 데이터 - 실제 앱에서는 API 또는 Redux 스토어에서 가져올 것입니다.
 const SAMPLE_GIFTICONS = [
@@ -35,6 +36,8 @@ const SAMPLE_GIFTICONS = [
 const HomeScreen = () => {
   const { theme } = useTheme();
   const username = '으라차차'; // 실제 앱에서는 로그인된 사용자 이름을 가져옵니다
+  const navigation = useNavigation();
+  const route = useRoute();
 
   useEffect(() => {
     const printTokens = async () => {
@@ -48,7 +51,11 @@ const HomeScreen = () => {
       console.log('User ID:', userId);
     };
     printTokens();
-  }, []);
+
+    if (route.params?.code) {
+      navigation.navigate('BoxMain', { code: route.params.code });
+    }
+  }, [route.params?.code]);
 
   // 날짜 간격 계산 함수
   const calculateDaysLeft = expiryDate => {

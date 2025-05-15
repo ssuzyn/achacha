@@ -33,7 +33,7 @@ const KakaoShareModal = ({ visible, onClose, inviteCode }) => (
   <Modal visible={visible} transparent>
     <WebView
       source={{
-        uri: `https://yourdomain.com/kakao-share.html?code=${inviteCode}`,
+        uri: `https://k12d205.p.ssafy.io/kakao-share?code=${inviteCode}`,
       }}
       onNavigationStateChange={navState => {
         // 공유 완료 후 닫기 등 처리 가능
