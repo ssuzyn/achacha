@@ -20,7 +20,7 @@ public interface FileJpaRepository extends JpaRepository<File, Integer> {
 		AND f.type = :type
 		""")
 	Optional<File> findFile(@Param("id") Integer referenceEntityId, @Param("referenceType") String referenceEntityType,
-		@Param("type") FileType fileType);
+		@Param("type") FileType type);
 
 	Optional<File> findByReferenceEntityTypeAndReferenceEntityIdAndType(
 		String referenceEntityType, Integer referenceEntityId, FileType type);
