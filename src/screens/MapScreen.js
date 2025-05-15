@@ -12,7 +12,7 @@ import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import geofencingService from '../services/GeofencingService';
 import { useNavigation } from '@react-navigation/native';
-import { useMapGifticons } from '../hooks/useMapGifticons'; // 리액트 쿼리 훅
+import { mapGifticonService } from '../services/mapGifticonService';
 
 const MapScreen = () => {
   const navigation = useNavigation();
@@ -20,9 +20,23 @@ const MapScreen = () => {
   const mapRef = useRef(null);
   const geofencingServiceRef = useRef();
   const appState = useRef(AppState.currentState);
-  const { data } = useMapGifticons();
+  const [gifticons, setGifticons] = useState([]);
 
-  const gifticons = data?.gifticons || [];
+  // 기프티콘 데이터 로드
+  const loadGifticons = async () => {
+    try {
+      const response = await mapGifticonService.getMapGifticons();
+      setGifticons(response.gifticons || []);
+    } catch (error) {
+      console.error('기프티콘 목록 로드 실패:', error);
+      setGifticons([]);
+    }
+  };
+
+  // 컴포넌트 마운트 시 데이터 로드
+  useEffect(() => {
+    loadGifticons();
+  }, []);
 
   // 기프티콘 목록에서 브랜드 정보 추출(중복 없이)
   const getUniqueBrands = () => {
