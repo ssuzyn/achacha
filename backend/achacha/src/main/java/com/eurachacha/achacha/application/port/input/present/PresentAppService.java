@@ -3,8 +3,11 @@ package com.eurachacha.achacha.application.port.input.present;
 import java.util.List;
 
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorInfoResponseDto;
+import com.eurachacha.achacha.application.port.input.present.dto.response.TemplatesResponseDto;
 
 public interface PresentAppService {
 
-	List<ColorInfoResponseDto> getColors(Integer presentTemplateId);
+	List<TemplatesResponseDto> getTemplates();
+
+	List<ColorInfoResponseDto> getColors(Integer templateId);
 }
