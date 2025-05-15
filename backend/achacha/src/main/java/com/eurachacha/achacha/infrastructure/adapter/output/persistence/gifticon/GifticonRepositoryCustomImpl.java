@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.brand.QBrand;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.QGifticon;
@@ -19,7 +18,6 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.history.QGifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.QUsageHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
-import com.eurachacha.achacha.domain.model.history.enums.UsageType;
 import com.eurachacha.achacha.domain.model.sharebox.QParticipation;
 import com.eurachacha.achacha.domain.model.sharebox.QShareBox;
 import com.eurachacha.achacha.domain.model.user.QUser;
@@ -76,79 +74,47 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 	}
 
 	@Override
-	public Slice<UsedGifticonResponseDto> findUsedGifticons(
+	public Slice<Gifticon> findUsedGifticons(
 		Integer userId,
 		GifticonType type,
 		Pageable pageable) {
 
 		QGifticon qGifticon = QGifticon.gifticon;
 		QBrand qBrand = QBrand.brand;
-		QGifticonOwnerHistory qOwner = QGifticonOwnerHistory.gifticonOwnerHistory;
-		QUsageHistory qUsage = QUsageHistory.usageHistory;
+		QGifticonOwnerHistory qOwnerHistory = QGifticonOwnerHistory.gifticonOwnerHistory;
+		QUsageHistory qUsageHistory = QUsageHistory.usageHistory;
 
-		// 1) usageHistory 중 MAX(createdAt) aggregation
-		DateTimeExpression<LocalDateTime> maxUsageTime = qUsage.createdAt.max();
-
-		// 2) CASE: 소유권 이력(createdAt) 있으면 그것, 없으면 maxUsageTime
+		// CASE 표현식으로 사용 시간 결정
 		DateTimeExpression<LocalDateTime> usedAtExpr = Expressions.cases()
-			.when(qOwner.id.isNotNull()).then(qOwner.createdAt)
-			.otherwise(maxUsageTime);
-
-		// usageType 표현식은 그대로
-		StringExpression usageTypeStrExpr = createTransferTypeExpression(qOwner);
-
-		List<Tuple> tuples = jpaQueryFactory
-			.select(
-				qGifticon.id,
-				qGifticon.name,
-				qGifticon.type,
-				qGifticon.expiryDate,
-				qBrand.id,
-				qBrand.name,
-				usageTypeStrExpr,
-				usedAtExpr
+			.when(qOwnerHistory.id.isNotNull().and(qUsageHistory.id.isNotNull()))
+			.then(
+				Expressions.cases()
+					.when(qOwnerHistory.createdAt.after(qUsageHistory.createdAt))
+					.then(qOwnerHistory.createdAt)
+					.otherwise(qUsageHistory.createdAt)
 			)
-			.from(qGifticon)
-			.join(qGifticon.brand, qBrand)
-			.leftJoin(qOwner)
-			.on(qGifticon.id.eq(qOwner.gifticon.id)
-				.and(qOwner.fromUser.id.eq(userId)))
-			.leftJoin(qUsage)
-			.on(qGifticon.id.eq(qUsage.gifticon.id)
-				.and(qUsage.user.id.eq(userId)))
+			.when(qOwnerHistory.id.isNotNull())
+			.then(qOwnerHistory.createdAt)
+			.otherwise(qUsageHistory.createdAt); // 위 조건에 해당하지 않으면 qUsageHistory.createdAt 사용
+
+		List<Gifticon> content = jpaQueryFactory
+			.selectFrom(qGifticon)
+			.join(qGifticon.brand, qBrand).fetchJoin()
+			.leftJoin(qOwnerHistory)
+			.on(qGifticon.id.eq(qOwnerHistory.gifticon.id)
+				.and(qOwnerHistory.fromUser.id.eq(userId)))
+			.leftJoin(qUsageHistory)
+			.on(qGifticon.id.eq(qUsageHistory.gifticon.id)
+				.and(qUsageHistory.user.id.eq(userId)))
 			.where(
-				createUsedGifticonCondition(userId, qGifticon, qOwner, qUsage),
-				qGifticon.isDeleted.eq(false),
+				qGifticon.remainingAmount.eq(0).or(qGifticon.remainingAmount.isNull()),
+				qOwnerHistory.id.isNotNull().or(qUsageHistory.id.isNotNull()),
 				typeCondition(type, qGifticon)
 			)
-			// 그룹핑에 owner.createdAt과 MAX(createdAt) aggregate를 뺄 수 없으니
-			// owner.id, owner.transferType, owner.createdAt 만 groupBy
-			.groupBy(
-				qGifticon.id,
-				qBrand.id,
-				qOwner.id,
-				qOwner.transferType,
-				qOwner.createdAt
-			)
-			.orderBy(usedAtExpr.desc())
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize() + 1)
+			.orderBy(usedAtExpr.desc())
 			.fetch();
-
-		// DTO 매핑, Slice 처리 로직은 그대로
-		List<UsedGifticonResponseDto> content = tuples.stream()
-			.map(tuple -> UsedGifticonResponseDto.builder()
-				.gifticonId(tuple.get(qGifticon.id))
-				.gifticonName(tuple.get(qGifticon.name))
-				.gifticonType(tuple.get(qGifticon.type))
-				.gifticonExpiryDate(tuple.get(qGifticon.expiryDate))
-				.brandId(tuple.get(qBrand.id))
-				.brandName(tuple.get(qBrand.name))
-				.usageType(UsageType.valueOf(tuple.get(usageTypeStrExpr)))
-				.usedAt(tuple.get(usedAtExpr))
-				.thumbnailPath(null)
-				.build()
-			).toList();
 
 		boolean hasNext = content.size() > pageable.getPageSize();
 		if (hasNext)
