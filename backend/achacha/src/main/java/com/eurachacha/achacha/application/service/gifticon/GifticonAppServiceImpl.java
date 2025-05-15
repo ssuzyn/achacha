@@ -240,8 +240,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
 		// 기프티콘 조회 쿼리 실행
-		Slice<Gifticon> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
-			scope, type, pageable);
+		Slice<Gifticon> gifticonSlice = gifticonRepository.findAvailableGifticons(userId, scope, type, pageable);
 
 		// entity -> dto 변환
 		List<AvailableGifticonResponseDto> availableGifticonResponseDtos = getAvailableGifticonResponseDto(
@@ -318,8 +317,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
 		// 쿼리 실행
-		Slice<Gifticon> gifticonSlice =
-			gifticonRepository.getUsedGifticons(userId, type, pageable);
+		Slice<Gifticon> gifticonSlice = gifticonRepository.getUsedGifticons(userId, type, pageable);
 
 		List<UsedGifticonResponseDto> usedGifticonResponseDtos = getUsedGifticonResponseDtos(userId, gifticonSlice);
 
