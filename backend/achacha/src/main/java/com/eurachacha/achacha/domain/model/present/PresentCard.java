@@ -32,7 +32,7 @@ public class PresentCard extends TimeStampEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 
-	@Column(length = 20, nullable = false)
+	@Column(length = 40, nullable = false)
 	private String code;
 
 	@Column(length = 100, nullable = false)
