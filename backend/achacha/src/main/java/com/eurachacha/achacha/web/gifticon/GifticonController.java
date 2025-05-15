@@ -15,8 +15,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.GifticonGiveAppService;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonGiveAwayRequestDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonPresentRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonPresentResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 
 import jakarta.validation.Valid;
@@ -62,5 +64,14 @@ public class GifticonController {
 		@RequestBody GifticonGiveAwayRequestDto uuids) {
 		gifticonGiveAppService.giveAwayGifticon(gifticonId, uuids.getUuids());
 		return ResponseEntity.ok("기프티콘을 뿌리기 하였습니다.");
+	}
+
+	@PostMapping("/{gifticonId}/present")
+	public ResponseEntity<GifticonPresentResponseDto> presentGifticon(@PathVariable Integer gifticonId,
+		@RequestBody GifticonPresentRequestDto gifticonPresentRequestDto) {
+
+		GifticonPresentResponseDto result = gifticonGiveAppService.presentGifticon(gifticonId, gifticonPresentRequestDto);
+
+		return ResponseEntity.ok(result);
 	}
 }
