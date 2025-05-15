@@ -6,4 +6,6 @@ public interface PresentCardRepository {
 	PresentCard save(PresentCard presentCard);
 
 	boolean existsByPresentCardCode(String presentCardCode);
+
+	PresentCard findByPresentCardCode(String presentCardCode);
 }
