@@ -13,11 +13,17 @@ const NoUsersScreen = () => {
   const [showTooltip, setShowTooltip] = useState(true);
 
   const handleGoToShareBox = () => {
-    navigation.navigate('BoxMain');
+    // 메인 탭바로 이동 후, 쉐어박스 탭으로 이동
+    navigation.navigate('Main', {
+      screen: 'TabSharebox',
+    });
   };
 
   const handleGoToManagement = () => {
-    navigation.navigate('ManageList');
+    // 메인 탭바로 이동 후, 기프티콘 관리 탭으로 이동
+    navigation.navigate('Main', {
+      screen: 'TabGifticonManage',
+    });
   };
 
   useEffect(() => {
@@ -55,7 +61,7 @@ const NoUsersScreen = () => {
           style={[styles.iconButton, styles.managementPosition]}
         >
           <Image source={giveawayManagementImg} style={styles.iconImage} />
-          <Text style={styles.iconText}>기프티콘</Text>
+          <Text style={styles.iconText}>기프티콘 관리</Text>
         </TouchableOpacity>
       </View>
     </View>
