@@ -153,18 +153,19 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   tooltipBubble: {
-    backgroundColor: '#E8F6FF',
+    backgroundColor: '#EDF8FF',
     paddingHorizontal: 60,
     paddingVertical: 20,
     borderRadius: 30,
+    // 그림자 효과 수정
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 0, // 수직 오프셋을 0으로 변경
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.08, // 더 은은하게 조정
+    shadowRadius: 20, // 더 넓게 확산
+    elevation: 10, // 안드로이드용 그림자 더 강화
   },
   tooltipText: {
     color: '#687278',
