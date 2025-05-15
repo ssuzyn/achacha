@@ -594,7 +594,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				.gifticonExpiryDate(dto.getExpiryDate())
 				.brandId(dto.getBrand().getId())
 				.brandName(dto.getBrand().getName())
-				.scope(dto.getSharebox() == null ? "MY_BOX" : "SHARE_BOX")
+				.scope(dto.getSharebox() == null ? GifticonScopeType.MY_BOX.name() : GifticonScopeType.SHARE_BOX.name())
 				.userId(dto.getUser().getId())
 				.userName(dto.getUser().getName())
 				.shareboxId(dto.getSharebox() == null ? null : dto.getSharebox().getId())
