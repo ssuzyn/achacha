@@ -39,6 +39,3 @@ out/
 
 ### env ###
 .env
-
-### fcm api key ###
-src/main/resources/firebase/serviceAccountKey.json
