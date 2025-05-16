@@ -49,6 +49,7 @@
     "react-native-image-crop-picker": "^0.42.0",
     "react-native-image-crop-tools": "^1.6.4",
     "react-native-image-picker": "^8.2.1",
+    "react-native-kakao-share-link": "^1.0.12",
     "react-native-orientation-locker": "^1.7.0",
     "react-native-permissions": "^5.4.0",
     "react-native-photo-manipulator": "^1.9.2",

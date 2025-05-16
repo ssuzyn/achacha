@@ -194,4 +194,6 @@ dependencies {
 
     // ML Kit 바코드 스캐닝 모듈 추가
     implementation 'com.google.android.gms:play-services-mlkit-barcode-scanning:18.3.1'
+
+    implementation 'com.google.code.gson:gson:2.8.5'
 }

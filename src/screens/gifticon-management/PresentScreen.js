@@ -13,6 +13,9 @@ import {
   // 현재 width는 사용하지 않지만 향후 확장성을 위해 import 유지
   Dimensions,
   Alert,
+  Button,
+  Modal,
+  Linking,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -23,6 +26,8 @@ import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
 import { getPresentTemplates, getPresentTemplateColors, getPresentTemplateDetail, presentGifticon } from '../../api/presentService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
+import { WebView } from 'react-native-webview';
+import KakaoShareLink from 'react-native-kakao-share-link';
 
 // 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
 const getImageSource = path => {
@@ -198,20 +203,9 @@ const PresentScreen = () => {
         selectedTemplateId === 1 ? selectedColorVariant : null,
         message
       );
-      Alert.alert(
-        '선물 완료',
-        `선물이 성공적으로 전송되었습니다!\n\n카드코드: ${res.presentCardCode}\n${res.brandName} - ${res.gifticonName}`,
-        [
-          {
-            text: '확인',
-            onPress: () => NavigationService.goBack(),
-          },
-        ]
-      );
+      await handleOpenKakaoShare(res.presentCardCode, res.gifticonName, res.brandName);
     } catch (e) {
-      let msg = '선물하기에 실패했습니다.';
-      if (e?.response?.data?.message) msg = e.response.data.message;
-      Alert.alert('에러', msg);
+      Alert.alert('에러', '선물하기에 실패했습니다.');
     }
   };
 
@@ -252,6 +246,24 @@ const PresentScreen = () => {
       setSelectedColorVariant(colorPalettes[0].colorPaletteId);
     }
   }, [colorPalettes, selectedTemplateId]);
+
+  const handleOpenKakaoShare = async (presentCardCode, gifticonName, brandName) => {
+    try {
+      await KakaoShareLink.sendCustom({
+        templateId: 120645,
+        templateArgs: [
+          { key: 'present_card_code', value: presentCardCode },
+          { key: 'gifticon_name', value: gifticonName },
+          { key: 'brand_name', value: brandName },
+        ],
+      });
+      // 카카오톡 공유 후 앱으로 돌아오면 이전 화면으로 2단계 pop
+      navigation.pop(2);
+    } catch (err) {
+      console.log('카카오톡 공유 실패:', err);
+      Alert.alert('에러', '카카오톡 공유에 실패했습니다.');
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
