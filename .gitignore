@@ -30,6 +30,7 @@ yarn-error.*
 *.pem
 
 # env files
+env
 .env
 .env.*
 # typescript
