@@ -113,3 +113,11 @@ export const shareGifticonToShareBox = async (shareBoxId, gifticonId) => {
   );
   return response.data;
 };
+
+// 쉐어박스에서 기프티콘 공유 취소 API
+export const cancelShareGifticon = async (shareBoxId, gifticonId) => {
+  const response = await apiClient.delete(
+    API_CONFIG.ENDPOINTS.SHARE_BOX_GIFTICON(shareBoxId, gifticonId)
+  );
+  return response.data;
+};

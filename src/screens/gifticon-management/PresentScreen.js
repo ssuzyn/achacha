@@ -21,6 +21,20 @@ import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
+import { getPresentTemplates, getPresentTemplateColors, getPresentTemplateDetail, presentGifticon } from '../../api/presentService';
+import { ERROR_MESSAGES } from '../../constants/errorMessages';
+
+// 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
+const getImageSource = path => {
+  if (!path) {
+    return require('../../assets/images/adaptive_icon.png');
+  }
+  if (typeof path === 'string' && path.startsWith('http')) {
+    return { uri: path };
+  }
+  // BASE_URL이 필요한 경우 추가 가능
+  return path;
+};
 
 // eslint-disable-next-line no-unused-vars
 const { width } = Dimensions.get('window');
@@ -33,60 +47,17 @@ const PresentScreen = () => {
   const route = useRoute();
   const { hideTabBar } = useTabBar();
 
-  // 템플릿 썸네일 목록 (고정 값이라 상태 변경자는 사용하지 않음)
-  const [thumbnails] = useState([
-    { id: 1, source: require('../../assets/images/present/thumbnail/thumbnail1.png') },
-    { id: 2, source: require('../../assets/images/present/thumbnail/thumbnail2.png') },
-    { id: 3, source: require('../../assets/images/present/thumbnail/thumbnail3.png') },
-    { id: 4, source: require('../../assets/images/present/thumbnail/thumbnail4.png') },
-    { id: 5, source: require('../../assets/images/present/thumbnail/thumbnail5.png') },
-  ]);
+  // 템플릿 썸네일 목록 (API 연동)
+  const [thumbnails, setThumbnails] = useState([]);
 
   // 선택된 템플릿 ID
   const [selectedTemplateId, setSelectedTemplateId] = useState(1);
 
-  // 템플릿 배경 이미지 목록 (고정 값이라 상태 변경자는 사용하지 않음)
-  const [templates] = useState({
-    1: require('../../assets/images/present/template/template1_1.png'),
-    2: require('../../assets/images/present/template/template2.png'),
-    3: require('../../assets/images/present/template/template3.png'),
-    4: require('../../assets/images/present/template/template4.png'),
-    5: require('../../assets/images/present/template/template5.png'),
-  });
+  // 템플릿 상세 정보 (API 연동)
+  const [templateDetail, setTemplateDetail] = useState(null);
 
-  // 첫 번째 템플릿의 색상 변형 이미지들
-  const template1Variants = [
-    {
-      id: 1,
-      source: require('../../assets/images/present/template/template1_1.png'),
-      color: '#ED4141',
-    },
-    {
-      id: 2,
-      source: require('../../assets/images/present/template/template1_2.png'),
-      color: '#FFDC4F',
-    },
-    {
-      id: 3,
-      source: require('../../assets/images/present/template/template1_3.png'),
-      color: '#FC7BBD',
-    },
-    {
-      id: 4,
-      source: require('../../assets/images/present/template/template1_4.png'),
-      color: '#68DB7D',
-    },
-    {
-      id: 5,
-      source: require('../../assets/images/present/template/template1_5.png'),
-      color: '#85D1FF',
-    },
-    {
-      id: 6,
-      source: require('../../assets/images/present/template/template1_6.png'),
-      color: '#414141',
-    },
-  ];
+  // 템플릿 색상 팔레트 (API 연동)
+  const [colorPalettes, setColorPalettes] = useState([]);
 
   // 선택된 템플릿 색상 변형 (템플릿 1에서만 사용)
   const [selectedColorVariant, setSelectedColorVariant] = useState(1);
@@ -110,15 +81,85 @@ const PresentScreen = () => {
   useEffect(() => {
     if (route.params?.gifticonId) {
       // 실제 구현에서는 API 호출
-      // 더미 데이터로 대체
+      // gifticonId와 thumbnailPath를 파라미터로 받아서 세팅
       setGifticonData({
         id: route.params.gifticonId,
-        name: '맥도날드 2만원 금액권',
-        brandName: '맥도날드',
-        thumbnailPath: require('../../assets/images/dummy_mc.png'),
+        // name, brandName은 필요시 추가 API 호출로 보완
+        thumbnailPath: route.params.thumbnailPath || require('../../assets/images/dummy_mc.png'),
       });
     }
   }, [route.params]);
+
+  // 템플릿 썸네일 API 호출
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const data = await getPresentTemplates();
+        setThumbnails(data);
+      } catch (e) {
+        let message = '템플릿 목록을 불러오지 못했습니다.';
+        const errorCode = e?.response?.data?.errorCode;
+        if (errorCode && ERROR_MESSAGES[errorCode]) {
+          message = ERROR_MESSAGES[errorCode];
+        } else if (e?.response?.data?.message) {
+          message = e.response.data.message;
+        }
+        Alert.alert('에러', message);
+        setThumbnails([]);
+      }
+    };
+    fetchTemplates();
+  }, []);
+
+  // 1번 템플릿(GENERAL) 선택 시 색상 팔레트 API 호출
+  useEffect(() => {
+    const fetchColors = async () => {
+      if (selectedTemplateId === 1) {
+        try {
+          const colors = await getPresentTemplateColors(1);
+          setColorPalettes(colors);
+        } catch (e) {
+          let message = '색상 팔레트를 불러오지 못했습니다.';
+          const errorCode = e?.response?.data?.errorCode;
+          if (errorCode && ERROR_MESSAGES[errorCode]) {
+            message = ERROR_MESSAGES[errorCode];
+          } else if (e?.response?.data?.message) {
+            message = e.response.data.message;
+          }
+          Alert.alert('에러', message);
+          setColorPalettes([]);
+        }
+      } else {
+        setColorPalettes([]);
+      }
+    };
+    fetchColors();
+  }, [selectedTemplateId]);
+
+  // 템플릿 상세 정보 API 호출
+  useEffect(() => {
+    const fetchTemplateDetail = async () => {
+      if (selectedTemplateId) {
+        try {
+          const detail = await getPresentTemplateDetail(selectedTemplateId);
+          setTemplateDetail(detail);
+        } catch (e) {
+          let message = '템플릿 상세 정보를 불러오지 못했습니다.';
+          const errorCode = e?.response?.data?.errorCode;
+          if (errorCode && ERROR_MESSAGES[errorCode]) {
+            message = ERROR_MESSAGES[errorCode];
+          } else if (e?.response?.data?.message) {
+            message = e.response.data.message;
+          }
+          Alert.alert('에러', message);
+          setTemplateDetail(null);
+        }
+      } else {
+        setTemplateDetail(null);
+      }
+    };
+    fetchTemplateDetail();
+  }, [selectedTemplateId]);
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
@@ -145,33 +186,72 @@ const PresentScreen = () => {
   };
 
   // 선물하기 처리 함수
-  const handleSendGift = () => {
-    Alert.alert('선물하기', '선물이 성공적으로 전송되었습니다.');
-    // 선물 성공 후 뒤로 가기
-    setTimeout(() => {
-      NavigationService.goBack();
-    }, 1500);
+  const handleSendGift = async () => {
+    if (!gifticonData?.id) {
+      Alert.alert('에러', '기프티콘 정보가 없습니다.');
+      return;
+    }
+    try {
+      const res = await presentGifticon(
+        gifticonData.id,
+        selectedTemplateId,
+        selectedTemplateId === 1 ? selectedColorVariant : null,
+        message
+      );
+      Alert.alert(
+        '선물 완료',
+        `선물이 성공적으로 전송되었습니다!\n\n카드코드: ${res.presentCardCode}\n${res.brandName} - ${res.gifticonName}`,
+        [
+          {
+            text: '확인',
+            onPress: () => NavigationService.goBack(),
+          },
+        ]
+      );
+    } catch (e) {
+      let msg = '선물하기에 실패했습니다.';
+      if (e?.response?.data?.message) msg = e.response.data.message;
+      Alert.alert('에러', msg);
+    }
   };
 
   // 현재 선택된 템플릿 이미지 가져오기
   const getSelectedTemplateImage = () => {
-    if (selectedTemplateId === 1) {
-      // 템플릿 1은 색상 변형이 있음
-      const variant = template1Variants.find(v => v.id === selectedColorVariant);
-      return variant ? variant.source : template1Variants[0].source;
+    if (templateDetail) {
+      if (templateDetail.presentTemplateCategory === 'GENERAL' && templateDetail.colorCards) {
+        // GENERAL 템플릿: colorPaletteId에 맞는 cardImagePath
+        const card = templateDetail.colorCards.find(
+          v => v.colorPaletteId === selectedColorVariant
+        );
+        if (card) return { uri: card.cardImagePath };
+        // fallback: 첫 번째 카드
+        if (templateDetail.colorCards.length > 0) {
+          return { uri: templateDetail.colorCards[0].cardImagePath };
+        }
+      } else if (templateDetail.cardImagePath) {
+        // 그 외 템플릿: cardImagePath 사용
+        return { uri: templateDetail.cardImagePath };
+      }
     }
-    return templates[selectedTemplateId];
+    // fallback: 흰색 배경
+    return { uri: '' };
   };
 
   // 렌더링 템플릿 썸네일 아이템
   const renderThumbnailItem = ({ item }) => (
     <TouchableOpacity
-      style={[styles.thumbnailItem, selectedTemplateId === item.id && styles.selectedThumbnailItem]}
-      onPress={() => handleSelectTemplate(item.id)}
+      style={[styles.thumbnailItem, selectedTemplateId === item.presentTemplateId && styles.selectedThumbnailItem]}
+      onPress={() => handleSelectTemplate(item.presentTemplateId)}
     >
-      <Image source={item.source} style={styles.thumbnailImage} resizeMode="contain" />
+      <Image source={{ uri: item.thumbnailPath }} style={styles.thumbnailImage} resizeMode="contain" />
     </TouchableOpacity>
   );
+
+  useEffect(() => {
+    if (selectedTemplateId === 1 && colorPalettes.length > 0) {
+      setSelectedColorVariant(colorPalettes[0].colorPaletteId);
+    }
+  }, [colorPalettes, selectedTemplateId]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -197,24 +277,24 @@ const PresentScreen = () => {
           <FlatList
             data={thumbnails}
             renderItem={renderThumbnailItem}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={item => item.presentTemplateId.toString()}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.thumbnailList}
           />
         </View>
         {/* 색상 선택 팔레트 (템플릿 1에서만 표시) */}
-        {selectedTemplateId === 1 && (
+        {selectedTemplateId === 1 && colorPalettes.length > 0 && (
           <View style={styles.colorPaletteContainer}>
-            {template1Variants.map(variant => (
+            {colorPalettes.map(variant => (
               <TouchableOpacity
-                key={variant.id}
+                key={variant.colorPaletteId}
                 style={[
                   styles.colorOption,
-                  { backgroundColor: variant.color },
-                  selectedColorVariant === variant.id && styles.selectedColorOption,
+                  { backgroundColor: variant.colorPaletteCode },
+                  selectedColorVariant === variant.colorPaletteId && styles.selectedColorOption,
                 ]}
-                onPress={() => handleSelectColorVariant(variant.id)}
+                onPress={() => handleSelectColorVariant(variant.colorPaletteId)}
               />
             ))}
           </View>
@@ -253,7 +333,7 @@ const PresentScreen = () => {
                 <View style={styles.gifticonImageContainer}>
                   {gifticonData && (
                     <Image
-                      source={gifticonData.thumbnailPath}
+                      source={getImageSource(gifticonData.thumbnailPath)}
                       style={styles.gifticonImage}
                       resizeMode="contain"
                     />

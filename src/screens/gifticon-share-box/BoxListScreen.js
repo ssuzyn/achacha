@@ -11,6 +11,7 @@ import {
   StatusBar,
   Animated,
   TouchableWithoutFeedback,
+  FlatList,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
@@ -449,6 +450,7 @@ const BoxListScreen = () => {
 
   // 필터 선택 핸들러
   const handleSelectFilter = filterId => {
+    console.log('필터 선택됨:', filterId);
     setSelectedFilter(filterId);
   };
 
@@ -536,26 +538,10 @@ const BoxListScreen = () => {
 
   // 기프티콘 클릭 핸들러
   const handleGifticonPress = item => {
-    // 기프티콘 타입에 따라 다른 상세 화면으로 이동
     if (item.gifticonType === 'PRODUCT') {
-      console.log('[네비게이션] BoxDetailProduct로 이동', {
-        gifticonId: item.gifticonId,
-        scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
-        usageType: item.usageType,
-        usedAt: item.usedAt,
-      });
-      navigation.navigate('BoxDetailProduct', {
-        gifticonId: item.gifticonId,
-        scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
-        usageType: item.usageType,
-        usedAt: item.usedAt,
-      });
-      navigation.navigate('BoxDetailAmount', {
-        gifticonId: item.gifticonId,
-        scope: item.scope === 'USED' ? 'USED' : 'SHARE_BOX',
-        usageType: item.usageType,
-        usedAt: item.usedAt,
-      });
+      navigation.navigate('BoxDetailProduct', { gifticon: item });
+    } else if (item.gifticonType === 'AMOUNT') {
+      navigation.navigate('BoxDetailAmount', { gifticon: item });
     }
   };
 
@@ -590,10 +576,8 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
-                  style={styles.gifticonImage}
-                />
+              <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -681,10 +665,8 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: getImageUrl(item.thumbnailPath) }}
-                  style={[styles.gifticonImage, { opacity: 0.7 }]}
-                />
+              <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -770,10 +752,8 @@ const BoxListScreen = () => {
               >
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: API_BASE_URL + item.thumbnailPath }}
-                    style={styles.gifticonImage}
-                  />
+                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+
                 </View>
 
                 {/* 텍스트 정보 영역 */}
@@ -876,10 +856,8 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: API_BASE_URL + item.thumbnailPath }}
-                  style={styles.gifticonImage}
-                />
+              <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -1002,21 +980,27 @@ const BoxListScreen = () => {
   useEffect(() => {
     if (selectedCategory !== 'available') return;
 
+    console.log('API 호출 - available', {
+      shareBoxId,
+      type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+      sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+    });
+
     const fetchData = async () => {
       setLoading(true);
       try {
         const res = await fetchAvailableGifticons({
           shareBoxId,
-          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
           sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
-          page: undefined, // 첫 페이지
-          size: 20, // 원하는 페이지 크기
+          page: undefined,
+          size: 20,
         });
         setAvailableGifticons(res.gifticons);
         setHasNextPage(res.hasNextPage);
         setNextPage(res.nextPage);
       } catch (e) {
-        // 에러 처리
+        console.log('API 에러:', e);
       } finally {
         setLoading(false);
       }
@@ -1026,6 +1010,7 @@ const BoxListScreen = () => {
   }, [selectedCategory, selectedFilter, sortBy.available, shareBoxId]);
 
   useEffect(() => {
+    console.log('[selectedCategory]', selectedCategory);
     if (selectedCategory !== 'used') return;
 
     const fetchData = async () => {
@@ -1034,15 +1019,16 @@ const BoxListScreen = () => {
         const res = await fetchUsedGifticons({
           shareBoxId,
           type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
-          sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+          sort: 'USED_DESC',
           page: undefined, // 첫 페이지
           size: 20,
         });
+        console.log('[USED API 응답]', res);
         setUsedGifticons(res.gifticons);
         setUsedHasNextPage(res.hasNextPage);
         setUsedNextPage(res.nextPage);
       } catch (e) {
-        // 에러 처리
+        console.log('[USED API 에러]', e);
       } finally {
         setUsedLoading(false);
       }
@@ -1119,6 +1105,47 @@ const BoxListScreen = () => {
     return API_BASE_URL + thumbnailPath;
   };
 
+  // FlatList 데이터 준비
+  const getGifticonData = () => {
+    if (selectedCategory === 'available') return availableGifticons.map(item => ({ ...item, scope: 'SHARE_BOX' }));
+    if (selectedCategory === 'used') return usedGifticons.map(item => ({ ...item, scope: 'USED', usedBy: item.userName }));
+    return [];
+  };
+  const isListLoading = selectedCategory === 'available' ? loading : usedLoading;
+  const isListRefreshing = refreshing;
+  const hasMore = selectedCategory === 'available' ? hasNextPage : usedHasNextPage;
+  const nextPageNum = selectedCategory === 'available' ? nextPage : usedNextPage;
+
+  // 무한스크롤 핸들러
+  const handleLoadMore = () => {
+    if (isListLoading || !hasMore) return;
+    if (selectedCategory === 'available') {
+      fetchAvailableGifticons({
+        shareBoxId,
+        type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+        sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+        page: nextPageNum,
+        size: 20,
+      }).then(res => {
+        setAvailableGifticons(prev => [...prev, ...res.gifticons]);
+        setHasNextPage(res.hasNextPage);
+        setNextPage(res.nextPage);
+      });
+    } else if (selectedCategory === 'used') {
+      fetchUsedGifticons({
+        shareBoxId,
+        type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+        sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+        page: nextPageNum,
+        size: 20,
+      }).then(res => {
+        setUsedGifticons(prev => [...prev, ...res.gifticons]);
+        setUsedHasNextPage(res.hasNextPage);
+        setUsedNextPage(res.nextPage);
+      });
+    }
+  };
+
   return (
     <TouchableWithoutFeedback onPress={handleOutsidePress}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -1155,8 +1182,8 @@ const BoxListScreen = () => {
           <View style={styles.filterContainer}>
             <TabFilter
               tabs={filterTabs}
-              selectedId={selectedFilter}
-              onSelectTab={handleSelectFilter}
+              initialTabId={selectedFilter}
+              onTabChange={handleSelectFilter}
             />
           </View>
 
@@ -1201,36 +1228,25 @@ const BoxListScreen = () => {
           </View>
         </View>
 
-        {/* 기프티콘 목록 */}
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
+        {/* 기프티콘 목록 (FlatList) */}
+        <FlatList
+          data={getGifticonData()}
+          keyExtractor={item => String(item.gifticonId)}
+          renderItem={({ item }) => renderGifticonItem(item)}
           contentContainerStyle={styles.scrollViewContent}
-        >
-          <View style={styles.gifticonList}>
-            {selectedCategory === 'available' ? (
-              loading ? (
-                <Text>로딩 중...</Text>
-              ) : availableGifticons.length > 0 ? (
-                availableGifticons.map(item => renderGifticonItem({ ...item, scope: 'SHARE_BOX' }))
-              ) : (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>사용가능한 기프티콘이 없습니다</Text>
-                </View>
-              )
-            ) : usedLoading ? (
-              <Text>로딩 중...</Text>
-            ) : usedGifticons.length > 0 ? (
-              usedGifticons.map(item =>
-                renderGifticonItem({ ...item, scope: 'USED', usedBy: item.userName })
-              )
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>사용완료한 기프티콘이 없습니다</Text>
-              </View>
-            )}
-          </View>
-        </ScrollView>
+          refreshing={isListRefreshing}
+          onRefresh={handleLoadMore}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.7}
+          ListFooterComponent={isListLoading ? <Text style={{ textAlign: 'center', margin: 16 }}>로딩 중...</Text> : null}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                {selectedCategory === 'available' ? '사용가능한 기프티콘이 없습니다' : '사용완료한 기프티콘이 없습니다'}
+              </Text>
+            </View>
+          }
+        />
 
         {/* 사용 완료 확인 다이얼로그 */}
         {selectedGifticon && (

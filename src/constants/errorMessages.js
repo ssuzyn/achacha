@@ -59,6 +59,12 @@ export const SERVER_ERROR_MESSAGES = {
   X003: '서버 에러가 발생했습니다.',
 };
 
+// 선물(카드) 관련 에러 메시지
+export const PRESENT_ERROR_MESSAGES = {
+  PRESENT_001: '선물 카드 템플릿 디자인을 찾을 수 없습니다.',
+};
+
+
 // 쉐어박스 관련 에러 메시지 (생성/참여 등)
 export const SHAREBOX_ERROR_MESSAGES = {
   SHAREBOX_001: '쉐어박스를 찾을 수 없습니다.',
@@ -84,6 +90,7 @@ export const ERROR_MESSAGES = {
   ...RESOURCE_ERROR_MESSAGES,
   ...SHAREBOX_ERROR_MESSAGES,
   ...SERVER_ERROR_MESSAGES,
+  ...PRESENT_ERROR_MESSAGES,
 };
 
 // 기본 에러 메시지

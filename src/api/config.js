@@ -53,9 +53,17 @@ export const API_CONFIG = {
 
     // 상품형 기프티콘 관련 엔드포인트
     PRODUCT_GIFTICONS: '/api/product-gifticons', // 상품형 기프티콘 API 기본 경로
+    PRODUCT_GIFTICON_USE: gifticonId => `/api/product-gifticons/${gifticonId}/use`,
 
     // 브랜드 관련 엔드포인트
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
+
+
+    // 선물 엔드포인트
+    PRESENT_TEMPLATES: '/api/presents/templates',
+    PRESENT_TEMPLATE_COLORS: templateId => `/api/presents/templates/${templateId}/colors`,
+    PRESENT_TEMPLATE_DETAIL: templateId => `/api/presents/templates/${templateId}`,
+    PRESENT_GIFTICON: gifticonId => `/api/gifticons/${gifticonId}/present`,
 
 
     // 기타 엔드포인트들을 여기에 추가합니다.
