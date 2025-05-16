@@ -134,24 +134,7 @@ public class PresentAppServiceImpl implements PresentAppService {
 		String gifticonThumbnailPath = getFileUrl("gifticon", gifticon.getId(), FileType.THUMBNAIL);
 
 		// 템플릿 카드 이미지 URL 생성 (템플릿 카테고리에 따라 다른 방식으로 조회)
-		String templateCardPath;
-
-		if (presentTemplate.getCategory() == TemplateCategory.GENERAL) {
-			// GENERAL 템플릿인 경우 색상 팔레트로 조회
-			ColorPalette colorPalette = presentCard.getColorPalette();
-			log.info("GENERAL 템플릿 - 색상 팔레트 ID: {}", colorPalette != null ? colorPalette.getId() : "없음");
-
-			if (colorPalette != null) {
-				templateCardPath = getFileUrl("color_palette", colorPalette.getId(), FileType.PRESENT_CARD);
-			} else {
-				log.warn("색상 팔레트가 없음: presentCardId={}", presentCard.getId());
-				templateCardPath = null;
-			}
-		} else {
-			// 기타 템플릿인 경우 템플릿 ID로 조회
-			log.info("일반 템플릿 - 템플릿 ID: {}", presentTemplate.getId());
-			templateCardPath = getFileUrl("present_template", presentTemplate.getId(), FileType.PRESENT_CARD);
-		}
+		String templateCardPath = getTemplateCardPath(presentCard, presentTemplate);
 
 		return PresentCardResponseDto.builder()
 			.presentCardCode(presentCard.getCode())
@@ -161,6 +144,25 @@ public class PresentAppServiceImpl implements PresentAppService {
 			.templateCardPath(templateCardPath)
 			.expiryDateTime(presentCard.getExpiryDateTime())
 			.build();
+	}
+
+	private String getTemplateCardPath(PresentCard presentCard, PresentTemplate presentTemplate) {
+		if (presentTemplate.getCategory() == TemplateCategory.GENERAL) {
+			// GENERAL 템플릿인 경우 색상 팔레트로 조회
+			ColorPalette colorPalette = presentCard.getColorPalette();
+			log.info("GENERAL 템플릿 - 색상 팔레트 ID: {}", colorPalette != null ? colorPalette.getId() : "없음");
+
+			if (colorPalette != null) {
+				return getFileUrl("color_palette", colorPalette.getId(), FileType.PRESENT_CARD);
+			}
+
+			log.warn("색상 팔레트가 없음: presentCardId={}", presentCard.getId());
+			return null;
+		}
+
+		// 기타 템플릿인 경우 템플릿 ID로 조회
+		log.info("일반 템플릿 - 템플릿 ID: {}", presentTemplate.getId());
+		return getFileUrl("present_template", presentTemplate.getId(), FileType.PRESENT_CARD);
 	}
 
 	/**
