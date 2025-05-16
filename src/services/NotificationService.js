@@ -6,10 +6,10 @@ const saveFcmTokenToServer = async token => {
   try {
     // 서버 API 엔드포인트에 토큰 전송 구현
     // 예: await api.post('/users/fcm-token', { token });
-    console.log('FCM 토큰이 서버에 저장되었습니다:', token);
+    console.log('알림 FCM 토큰이 서버에 저장되었습니다:', token);
     return true;
   } catch (error) {
-    console.error('FCM 토큰 서버 저장 실패:', error);
+    console.error('알림 FCM 토큰 서버 저장 실패:', error);
     return false;
   }
 };
@@ -22,7 +22,7 @@ export const requestUserPermission = async () => {
     authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
   if (enabled) {
-    console.log('푸시 권한 허용:', authStatus);
+    console.log('알림 푸시 권한 허용:', authStatus);
     await getFcmToken();
     return true;
   }
@@ -48,6 +48,8 @@ export const getFcmToken = async () => {
 };
 
 // 포그라운드 메시지 수신 처리
+// 사용자가 현재 앱을 보고 있는 상태
+// 앱에서 직접 알림 UI 처리 필요 (onMessage)
 export const handleForegroundMessage = () => {
   const unsubscribe = messaging().onMessage(async remoteMessage => {
     console.log('포그라운드 메시지 수신:', remoteMessage);
@@ -62,6 +64,10 @@ export const handleForegroundMessage = () => {
 };
 
 // 백그라운드 & 종료 상태 메시지 처리 설정
+// 백그라운드 - 앱이 켜져 있지만 화면에 없고, 다른 앱이 보임
+// 앱이 알림 클릭 시 특정 화면 이동 가능
+// 종료 상태 - 앱이 완전히 꺼져 있음(프로세스 없음)
+// 앱 실행 시 알림 데이터 확인 가능
 export const setupBackgroundHandler = () => {
   // 앱이 백그라운드에 있을 때 FCM 메시지 처리
   messaging().setBackgroundMessageHandler(async remoteMessage => {
