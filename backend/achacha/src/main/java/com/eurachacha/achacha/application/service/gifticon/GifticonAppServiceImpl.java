@@ -2,6 +2,7 @@ package com.eurachacha.achacha.application.service.gifticon;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -629,50 +630,67 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		Map<Integer, UsageHistory> usageHistoryMap = getUsageHistoryMap(userId, ids);
 
-		return gifticons.getContent().stream()
-			.map(dto -> {
-				Integer gifticonId = dto.getId();
-				UsageHistory usageHistory = usageHistoryMap.get(gifticonId);
-				GifticonOwnerHistory ownerHistory = ownerHistoryMap.get(gifticonId);
+		List<UsedGifticonResponseDto> responseDtos = new ArrayList<>();
 
-				// 사용 유형과 시간 결정
-				UsageType usageType;
-				LocalDateTime usedAt;
+		for (Gifticon gifticon : gifticons) {
 
-				if (usageHistory != null) {
-					// 사용 이력이 있으면 SELF_USE로 처리
-					usageType = UsageType.SELF_USE;
-					usedAt = usageHistory.getCreatedAt();
-				} else if (ownerHistory != null) {
-					// 소유권 이력이 있으면 해당 전송 타입으로 처리
-					usageType = convertTransferTypeToUsageType(ownerHistory.getTransferType());
-					usedAt = ownerHistory.getCreatedAt();
-				} else {
-					// 이상적으로는 이 조건에 도달하지 않아야 함 (쿼리 조건에 의해)
-					// 하지만 만약을 위해 기본값 제공
-					usageType = UsageType.SELF_USE;
-					usedAt = dto.getUpdatedAt();
-				}
+			Integer gifticonId = gifticon.getId();
+			UsageHistory usageHistory = usageHistoryMap.get(gifticonId);
+			GifticonOwnerHistory ownerHistory = ownerHistoryMap.get(gifticonId);
 
-				// 썸네일 경로 처리
-				String thumbnailPath = null;
-				if (pathMap.containsKey(gifticonId)) {
-					thumbnailPath = getSignedUrl(pathMap.get(gifticonId), FileType.THUMBNAIL);
-				}
+			// 사용시간, 타입 처리
+			UsageInfo usageInfo = getUsageInfo(usageHistory, ownerHistory);
 
-				return UsedGifticonResponseDto.builder()
-					.gifticonId(gifticonId)
-					.gifticonName(dto.getName())
-					.gifticonType(dto.getType())
-					.gifticonExpiryDate(dto.getExpiryDate())
-					.brandId(dto.getBrand().getId())
-					.brandName(dto.getBrand().getName())
-					.usageType(usageType)
-					.usedAt(usedAt)
-					.thumbnailPath(thumbnailPath)
-					.build();
-			})
-			.toList();
+			// 썸네일 경로 처리
+			String thumbnailPath = getThumbnailPath(pathMap, gifticonId);
+
+			UsedGifticonResponseDto newDto = UsedGifticonResponseDto.builder()
+				.gifticonId(gifticon.getId())
+				.gifticonName(gifticon.getName())
+				.gifticonType(gifticon.getType())
+				.gifticonExpiryDate(gifticon.getExpiryDate())
+				.brandId(gifticon.getBrand().getId())
+				.brandName(gifticon.getBrand().getName())
+				.usageType(usageInfo.usageType())
+				.usedAt(usageInfo.usedAt())
+				.thumbnailPath(thumbnailPath)
+				.build();
+
+			responseDtos.add(newDto);
+		}
+
+		return responseDtos;
+	}
+
+	private UsageInfo getUsageInfo(UsageHistory usageHistory, GifticonOwnerHistory ownerHistory) {
+		UsageType usageType;
+		LocalDateTime usedAt;
+
+		if (usageHistory != null) {
+			// 사용 이력이 있으면 SELF_USE로 처리
+			usageType = UsageType.SELF_USE;
+			usedAt = usageHistory.getCreatedAt();
+
+			return new UsageInfo(usageType, usedAt);
+		}
+
+		// 소유권 이력이 있으면 해당 전송 타입으로 처리
+		usageType = convertTransferTypeToUsageType(ownerHistory.getTransferType());
+		usedAt = ownerHistory.getCreatedAt();
+
+		return new UsageInfo(usageType, usedAt);
+
+	}
+
+	private record UsageInfo(UsageType usageType, LocalDateTime usedAt) {
+	}
+
+	private String getThumbnailPath(Map<Integer, String> pathMap, Integer gifticonId) {
+		String thumbnailPath = null;
+		if (pathMap.containsKey(gifticonId)) {
+			thumbnailPath = getSignedUrl(pathMap.get(gifticonId), FileType.THUMBNAIL);
+		}
+		return thumbnailPath;
 	}
 
 	private Map<Integer, UsageHistory> getUsageHistoryMap(Integer userId, List<Integer> ids) {
