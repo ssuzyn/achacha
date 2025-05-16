@@ -32,6 +32,10 @@ export const loginWithKakao = async kakaoAccessToken => {
   });
   const { user, accessToken, refreshToken } = response.data;
 
+  // accessToken, refreshToken을 먼저 저장
+  await AsyncStorage.setItem('accessToken', accessToken);
+  await AsyncStorage.setItem('refreshToken', refreshToken);
+
   // ✅ accessToken에서 userId 추출 및 저장
   const payload = parseJwt(accessToken);
   const userId = payload?.sub || payload?.userId || payload?.id;
@@ -39,7 +43,11 @@ export const loginWithKakao = async kakaoAccessToken => {
     await AsyncStorage.setItem('userId', String(userId));
   }
 
-  // 2. BLE 토큰 요청 (이전 bleToken 있으면 전달)
+  // BLE 토큰 요청 직전 accessToken 로그
+  const accessTokenForBle = await AsyncStorage.getItem('accessToken');
+  console.log('[BLE 요청 전 accessToken]', accessTokenForBle);
+
+  // 2. BLE 토큰 요청
   const prevBleToken = await AsyncStorage.getItem('bleToken');
   const bleRes = await apiClient.post('/api/ble', {
     bleTokenValue: prevBleToken || undefined,

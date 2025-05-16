@@ -59,6 +59,13 @@ export const API_CONFIG = {
     SEARCH_BRANDS: '/api/brands', // 브랜드 검색 API
 
 
+    // 선물 엔드포인트
+    PRESENT_TEMPLATES: '/api/presents/templates',
+    PRESENT_TEMPLATE_COLORS: templateId => `/api/presents/templates/${templateId}/colors`,
+    PRESENT_TEMPLATE_DETAIL: templateId => `/api/presents/templates/${templateId}`,
+    PRESENT_GIFTICON: gifticonId => `/api/gifticons/${gifticonId}/present`,
+
+
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
     //     CREATE_USER: '/api/users',

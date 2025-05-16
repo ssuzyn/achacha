@@ -74,6 +74,11 @@ export const SERVER_ERRORS = {
   X003: 'X003', // 서버 에러가 발생함
 };
 
+// 선물(카드) 관련 에러 코드
+export const PRESENT_ERRORS = {
+  PRESENT_001: 'PRESENT_001', // 선물 카드 템플릿 디자인을 찾을 수 없음
+};
+
 // 모든 에러 코드를 하나의 객체로 합침
 export const ERROR_CODES = {
   ...AUTH_ERRORS,
@@ -84,6 +89,7 @@ export const ERROR_CODES = {
   ...RESOURCE_ERRORS,
   ...SHAREBOX_ERRORS,
   ...SERVER_ERRORS,
+  ...PRESENT_ERRORS,
 };
 
 // HTTP 상태 코드에 따른 에러 코드 매핑

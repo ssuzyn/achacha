@@ -36,6 +36,7 @@ const mapGifticonService = {
       });
 
       console.log('기프티콘 목록 조회 응답:', response.data);
+      console.log('[mapGifticonService] Authorization:', `Bearer ${authToken}`);
       return response.data;
     } catch (error) {
       console.error('기프티콘 목록 조회 API 오류:', error);

@@ -380,6 +380,7 @@ const DetailProductScreen = () => {
     // 선물하기 화면으로 이동
     navigation.navigate('PresentScreen', {
       gifticonId: gifticonData.gifticonId,
+      thumbnailPath: gifticonData.thumbnailPath,
     });
   };
 
