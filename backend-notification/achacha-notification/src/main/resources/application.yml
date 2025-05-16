@@ -3,10 +3,10 @@ spring:
     name: achacha-notification
 
   rabbitmq:
-    host: ${RABBITMQ_HOST:localhost}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
     listener:
       simple:
         retry:
@@ -15,6 +15,9 @@ spring:
           max-attempts: 3 # 최대 재시도 횟수,  3회 이후에는 DLQ로 보냄
           max-interval: 10000 # 재시도 간 최대 대기 시간
           multiplier: 2 # 각 재시도마다 대기 시간을 곱할 배수 (지수 백오프)
+
+firebase:
+  path: ${FIREBASE_PATH}
 #
 #server:
 #  port: 8081
