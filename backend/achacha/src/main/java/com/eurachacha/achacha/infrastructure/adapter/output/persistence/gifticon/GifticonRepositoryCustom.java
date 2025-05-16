@@ -25,11 +25,18 @@ public interface GifticonRepositoryCustom {
 		GifticonType type,
 		Pageable pageable);
 
-	// 쉐어박스 내 기프티콘 조회
+	// 쉐어박스 내 사용가능 기프티콘 조회
 	Slice<Gifticon> findGifticonsByShareBoxId(
 		Integer shareBoxId,
 		GifticonType type,
 		Pageable pageable);
+
+	// 쉐어박스 내 사용완료 기프티콘 조회
+	Slice<Gifticon> findUsedGifticonsByShareBoxId(
+		Integer shareBoxId,
+		GifticonType type,
+		Pageable pageable
+	);
 
 	Map<Integer, Long> countGifticonsByShareBoxIds(List<Integer> shareBoxIds);
 }

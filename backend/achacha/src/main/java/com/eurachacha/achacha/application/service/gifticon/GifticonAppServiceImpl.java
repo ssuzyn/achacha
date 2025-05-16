@@ -25,6 +25,7 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedG
 import com.eurachacha.achacha.application.port.output.ai.AIServicePort;
 import com.eurachacha.achacha.application.port.output.ai.OcrTrainingDataRepository;
 import com.eurachacha.achacha.application.port.output.ai.dto.response.GifticonMetadataDto;
+import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
@@ -35,7 +36,6 @@ import com.eurachacha.achacha.application.port.output.history.UsageHistoryReposi
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
-import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.ai.OcrTrainingData;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.file.File;
@@ -82,7 +82,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final FileRepository fileRepository;
 	private final FileDomainService fileDomainService;
 	private final ShareBoxRepository shareBoxRepository;
-	private final UserRepository userRepository; // 유저 로직 추가 시 변경 필요
+	private final SecurityServicePort securityServicePort;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -173,6 +173,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			}
 		}
 
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+
 		// 도메인 객체 생성
 		Gifticon newGifticon = Gifticon.builder()
 			.name(requestDto.getGifticonName())
@@ -183,7 +186,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			.remainingAmount(requestDto.getGifticonAmount())
 			.sharebox(shareBox)
 			.brand(brand)
-			.user(userRepository.findById(1)) // 인증 구현 시 현재 사용자 설정
+			.user(loggedInUser)
 			.build();
 
 		// 저장소를 통한 영속화
@@ -229,14 +232,16 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		log.info("사용가능 기프티콘 조회 시작");
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 페이징 처리
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
 
 		// 기프티콘 조회 쿼리 실행
-		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.findAvailableGifticons(userId,
-			scope, type, pageable);
+		Slice<AvailableGifticonResponseDto> gifticonSlice = gifticonRepository.findAvailableGifticons(
+			userId, scope, type, pageable);
 
 		List<AvailableGifticonResponseDto> availableGifticonResponseDtos = getAvailableGifticonResponseDtos(
 			gifticonSlice);
@@ -255,7 +260,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		log.info("사용가능 기프티콘 상세 조회 시작");
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
 
@@ -302,7 +309,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		log.info("사용완료 기프티콘 조회 시작");
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 페이징 처리
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
@@ -327,7 +336,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		log.info("사용완료 기프티콘 상세 조회 시작");
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 해당 기프티콘 조회
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
@@ -340,7 +351,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		GifticonOwnerHistory findOwnerHistory = gifticonOwnerHistoryRepository.getGifticonOwnerHistoryDetail(
 			userId, findGifticon.getId());
-		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		UsageHistory findUsageHistory = usageHistoryRepository.findLatestByUserIdAndGifticonId(userId,
+			findGifticon.getId());
 
 		// 둘 다 없을 경우 사용하지 않은 기프티콘으로 간주
 		if (findOwnerHistory == null && findUsageHistory == null) {
@@ -413,7 +425,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		log.info("사용가능 기프티콘 바코드 조회 시작");
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
 
@@ -427,11 +441,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
-		User findUser = userRepository.findById(userId); // 유저 로직 추가 시 변경 필요
-
 		// 바코드 조회 내역 생성
 		BarcodeHistory newBarcodeHistory = BarcodeHistory.builder()
-			.user(findUser) // 유저 로직 추가 시 변경 필요
+			.user(loggedInUser) // 유저 로직 추가 시 변경 필요
 			.gifticon(findGifticon)
 			.build();
 
@@ -451,7 +463,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		log.info("사용완료 기프티콘 바코드 조회 시작");
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 해당 기프티콘 조회
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
@@ -463,7 +477,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		validateGifticonAccess(findGifticon, userId);
 
 		// 해당 기프티콘에 대한 사용 내역 조회
-		UsageHistory findUsageHistory = usageHistoryRepository.getUsageHistoryDetail(userId, findGifticon.getId());
+		UsageHistory findUsageHistory = usageHistoryRepository.findLatestByUserIdAndGifticonId(userId,
+			findGifticon.getId());
 		if (findUsageHistory == null) {
 			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
 		}
@@ -480,7 +495,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	@Transactional
 	public void deleteGifticon(Integer gifticonId) {
 
-		Integer userId = 1; // 유저 로직 추가 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 해당 기프티콘 조회
 		Gifticon findGifticon = gifticonRepository.findById(gifticonId);

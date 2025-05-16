@@ -26,6 +26,7 @@ import com.eurachacha.achacha.domain.model.sharebox.QShareBox;
 import com.eurachacha.achacha.domain.model.user.QUser;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.QueryUtils;
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
@@ -208,6 +209,45 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 			.offset(pageable.getOffset())
 			.limit(pageable.getPageSize() + 1)
 			.orderBy(QueryUtils.getOrderSpecifier(pageable.getSort(), qGifticon))
+			.fetch();
+
+		boolean hasNext = false;
+		if (gifticons.size() > pageable.getPageSize()) {
+			gifticons = gifticons.subList(0, pageable.getPageSize());
+			hasNext = true;
+		}
+
+		return new SliceImpl<>(gifticons, pageable, hasNext);
+	}
+
+	@Override
+	public Slice<Gifticon> findUsedGifticonsByShareBoxId(
+		Integer shareBoxId,
+		GifticonType type,
+		Pageable pageable) {
+
+		QGifticon qGifticon = QGifticon.gifticon;
+		QBrand qBrand = QBrand.brand;
+		QUser qUser = QUser.user;
+		QShareBox qShareBox = QShareBox.shareBox;
+
+		OrderSpecifier<LocalDateTime> orderBy = qGifticon.updatedAt.desc();
+
+		// 메인 쿼리 실행
+		List<Gifticon> gifticons = jpaQueryFactory
+			.selectFrom(qGifticon)
+			.join(qGifticon.brand, qBrand).fetchJoin()
+			.join(qGifticon.user, qUser).fetchJoin()
+			.join(qGifticon.sharebox, qShareBox).fetchJoin()
+			.where(
+				qGifticon.sharebox.id.eq(shareBoxId),
+				qGifticon.isDeleted.eq(false),
+				qGifticon.isUsed.eq(true),  // 사용된 기프티콘만 조회
+				typeCondition(type, qGifticon)
+			)
+			.offset(pageable.getOffset())
+			.limit(pageable.getPageSize() + 1)
+			.orderBy(orderBy)
 			.fetch();
 
 		boolean hasNext = false;

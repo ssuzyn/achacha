@@ -20,7 +20,7 @@ public interface UsageHistoryJpaRepository extends JpaRepository<UsageHistory, I
 		ORDER BY uh.createdAt DESC
 		LIMIT 1
 		""")
-	UsageHistory findUsageHistoryDetailByUserIdAndGifticonId(
+	UsageHistory findLatestByUserIdAndGifticonId(
 		@Param("userId") Integer userId,
 		@Param("gifticonId") Integer gifticonId);
 

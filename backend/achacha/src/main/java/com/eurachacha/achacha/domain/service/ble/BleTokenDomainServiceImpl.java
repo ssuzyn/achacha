@@ -11,8 +11,11 @@ public class BleTokenDomainServiceImpl implements BleTokenDomainService {
 	// 토큰 생성에 사용할 문자셋
 	private static final String CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-	// 기본 토큰 길이 - 8바이트(64비트)
+	// 기본 토큰 크기 - 8바이트(64비트)
 	private static final int TOKEN_BYTES = 8;
+
+	// 기본 토큰 길이 - 9자리
+	private static final int TOKEN_LENGTH = 7;
 
 	// 랜덤 토큰 생성 및 Base62 인코딩
 	@Override
@@ -32,12 +35,19 @@ public class BleTokenDomainServiceImpl implements BleTokenDomainService {
 			sb.append(CHARS.charAt(digit));
 		}
 
-		// 길이가 너무 짧은 경우 패딩 추가
-		while (sb.length() < 10) { // 64비트는 약 10-11자리 Base62 문자열
-			sb.append(CHARS.charAt(0));
+		StringBuilder result = new StringBuilder(sb.reverse().toString());
+
+		// 길이가 9자리보다 짧은 경우 패딩 추가
+		while (result.length() < TOKEN_LENGTH) {
+			result.insert(0, CHARS.charAt(0));
 		}
 
-		return sb.reverse().toString();
+		// 길이가 9자리보다 긴 경우 잘라내기
+		if (result.length() > TOKEN_LENGTH) {
+			result = new StringBuilder(result.substring(0, TOKEN_LENGTH));
+		}
+
+		return result.toString();
 	}
 
 }

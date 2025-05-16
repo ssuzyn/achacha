@@ -15,6 +15,7 @@ import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
 import com.eurachacha.achacha.domain.model.notification.NotificationType;
 import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
+import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.notification.NotificationSettingDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
@@ -33,8 +34,10 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 
 	@Override
 	public List<NotificationSettingDto> getUserNotificationSettings() {
-		// User user = securityServicePort.getLoggedInUser();
-		Integer userId = 1;
+
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		List<NotificationSetting> settings = notificationSettingRepository.findAllByUserId(userId);
 
@@ -52,8 +55,10 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 	@Override
 	@Transactional
 	public void updateNotificationSetting(NotificationTypeCode typeCode, Boolean isEnabled) {
-		// User user = securityServicePort.getLoggedInUser();
-		Integer userId = 1;
+
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 알림 타입 찾기
 		NotificationType notificationType = notificationTypeRepository.findByCode(typeCode);
@@ -68,8 +73,10 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 	@Override
 	@Transactional
 	public void updateExpirationCycle(ExpirationCycle expirationCycle) {
-		// User user = securityServicePort.getLoggedInUser();
-		Integer userId = 1;
+
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 알림 타입 찾기
 		NotificationType notificationType = notificationTypeRepository.findByCode(NotificationTypeCode.EXPIRY_DATE);

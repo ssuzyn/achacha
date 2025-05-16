@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.application.service.sharebox;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonsResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.ShareBoxAppService;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxCreateRequestDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.request.ShareBoxJoinRequestDto;
@@ -23,17 +26,21 @@ import com.eurachacha.achacha.application.port.input.sharebox.dto.response.Share
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxSettingsResponseDto;
 import com.eurachacha.achacha.application.port.input.sharebox.dto.response.ShareBoxesResponseDto;
+import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
+import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
-import com.eurachacha.achacha.application.port.output.user.UserRepository;
 import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
+import com.eurachacha.achacha.domain.model.history.UsageHistory;
+import com.eurachacha.achacha.domain.model.history.enums.UsageType;
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
@@ -58,11 +65,12 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	private final GifticonDomainService gifticonDomainService;
 	private final ShareBoxRepository shareBoxRepository;
 	private final GifticonRepository gifticonRepository;
-	private final UserRepository userRepository;
 	private final ParticipationRepository participationRepository;
 	private final PageableFactory pageableFactory;
 	private final FileRepository fileRepository;
 	private final FileStoragePort fileStoragePort;
+	private final UsageHistoryRepository usageHistoryRepository;
+	private final SecurityServicePort securityServicePort;
 
 	@Transactional
 	@Override
@@ -72,9 +80,8 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		// 쉐어박스 이름 유효성 검증 - 도메인 서비스 활용
 		shareBoxDomainService.validateShareBoxName(requestDto.getShareBoxName());
 
-		// 현재 사용자 조회 (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
-		User user = userRepository.findById(userId);
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
 
 		// 고유한 초대 코드 생성
 		String inviteCode = generateUniqueInviteCode();
@@ -84,14 +91,14 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 			.name(requestDto.getShareBoxName())
 			.inviteCode(inviteCode)
 			.allowParticipation(true)
-			.user(user)
+			.user(loggedInUser)
 			.build();
 
 		// 저장소를 통한 영속화
 		ShareBox savedShareBox = shareBoxRepository.save(shareBox);
 
 		// 쉐어박스 생성자를 참여자로 추가
-		saveParticipation(user, savedShareBox);
+		saveParticipation(loggedInUser, savedShareBox);
 
 		log.info("쉐어박스 생성 완료 (ID: {}, 초대 코드: {})", savedShareBox.getId(), savedShareBox.getInviteCode());
 
@@ -105,9 +112,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	public void joinShareBox(ShareBoxJoinRequestDto requestDto) {
 		log.info("쉐어박스 참여 시작 - 초대 코드: {}", requestDto.getShareBoxInviteCode());
 
-		// 현재 사용자 조회 (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
-		User user = userRepository.findById(userId);
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 조회
 		ShareBox shareBox = shareBoxRepository.findByInviteCode(requestDto.getShareBoxInviteCode());
@@ -126,7 +133,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 		// 참여 정보 저장
 		Participation participation = Participation.builder()
-			.user(user)
+			.user(loggedInUser)
 			.sharebox(shareBox)
 			.build();
 
@@ -140,8 +147,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	public void shareGifticon(Integer shareBoxId, Integer gifticonId) {
 		log.info("기프티콘 공유 시작 - 쉐어박스 ID: {}, 기프티콘 ID: {}", shareBoxId, gifticonId);
 
-		// 현재 사용자 조회 (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 조회
 		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
@@ -176,8 +184,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	public void unshareGifticon(Integer shareBoxId, Integer gifticonId) {
 		log.info("기프티콘 공유 해제 시작 - 쉐어박스 ID: {}, 기프티콘 ID: {}", shareBoxId, gifticonId);
 
-		// 현재 사용자 조회 (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 존재 여부 확인
 		if (!shareBoxRepository.existsById(shareBoxId)) {
@@ -210,8 +219,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	public ShareBoxesResponseDto getShareBoxes(ShareBoxSortType sort, Integer page, Integer size) {
 		log.info("쉐어박스 목록 조회 시작");
 
-		// 현재 사용자 조회 (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 페이징 처리
 		Pageable pageable = pageableFactory.createPageable(page, size, sort);
@@ -262,8 +272,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		log.info("쉐어박스 참여 설정 변경 시작 - 쉐어박스 ID: {}, 참여 허용: {}",
 			shareBoxId, requestDto.getShareBoxAllowParticipation());
 
-		// 현재 사용자 ID (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 조회
 		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
@@ -283,8 +294,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		log.info("쉐어박스 이름 변경 시작 - 쉐어박스 ID: {}, 새 이름: {}",
 			shareBoxId, requestDto.getShareBoxName());
 
-		// 현재 사용자 ID (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 조회
 		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
@@ -306,8 +318,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	public void leaveShareBox(Integer shareBoxId) {
 		log.info("쉐어박스 탈퇴 시작 - 쉐어박스 ID: {}", shareBoxId);
 
-		// 현재 사용자 ID (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 조회
 		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
@@ -356,8 +369,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 		log.info("쉐어박스 내 사용가능한 기프티콘 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
 
-		// 현재 사용자 ID (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 존재 여부 확인
 		if (!shareBoxRepository.existsById(shareBoxId)) {
@@ -404,12 +418,83 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 			.build();
 	}
 
+	// 쉐어박스 내 사용완료 기프티콘 조회
+	@Override
+	public UsedGifticonsResponseDto getShareBoxUsedGifticons(
+		Integer shareBoxId,
+		GifticonType type,
+		GifticonUsedSortType sort,
+		Integer page,
+		Integer size) {
+
+		log.info("쉐어박스 내 사용완료 기프티콘 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
+
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
+
+		// 쉐어박스 존재 여부 확인
+		if (!shareBoxRepository.existsById(shareBoxId)) {
+			throw new CustomException(ErrorCode.SHAREBOX_NOT_FOUND);
+		}
+
+		// 참여 권한 검증
+		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
+		}
+
+		// 페이징 처리 - GifticonUsedSortType 사용
+		Pageable pageable = pageableFactory.createPageable(page, size, sort);
+
+		// 쉐어박스 내 사용된 기프티콘 조회
+		Slice<Gifticon> gifticonSlice = gifticonRepository.findUsedGifticonsByShareBoxId(
+			shareBoxId, type, pageable);
+
+		// 기프티콘 엔티티를 DTO로 변환 (사용 이력 포함)
+		List<UsedGifticonResponseDto> usedGifticonDtos = new ArrayList<>();
+
+		for (Gifticon gifticon : gifticonSlice.getContent()) {
+			// 각 기프티콘의 사용 이력 조회 (마지막 사용자)
+			List<UsageHistory> usageHistories = usageHistoryRepository.findAllByGifticonIdOrderByCreatedAtDesc(
+				gifticon.getId());
+
+			// 사용 이력이 있는 경우
+			if (!usageHistories.isEmpty()) {
+				UsageHistory lastUsage = usageHistories.get(0); // 가장 최근 사용 이력
+
+				usedGifticonDtos.add(UsedGifticonResponseDto.builder()
+					.gifticonId(gifticon.getId())
+					.gifticonName(gifticon.getName())
+					.gifticonType(gifticon.getType())
+					.gifticonExpiryDate(gifticon.getExpiryDate())
+					.brandId(gifticon.getBrand().getId())
+					.brandName(gifticon.getBrand().getName())
+					.userId(lastUsage.getUser().getId())       // 실제 사용한 사용자 ID
+					.userName(lastUsage.getUser().getName())   // 실제 사용한 사용자 이름
+					.usageType(UsageType.SELF_USE)             // 기본값으로 SELF_USE 설정
+					.usedAt(lastUsage.getCreatedAt())          // 사용 시간
+					.thumbnailPath(getGifticonThumbnailPath(gifticon.getId()))
+					.build());
+			}
+		}
+
+		log.info("쉐어박스 내 사용완료 기프티콘 조회 완료 - 쉐어박스 ID: {}, 조회된 기프티콘 수: {}",
+			shareBoxId, usedGifticonDtos.size());
+
+		return UsedGifticonsResponseDto.builder()
+			.gifticons(usedGifticonDtos)
+			.hasNextPage(gifticonSlice.hasNext())
+			.nextPage(gifticonSlice.hasNext() ? page + 1 : null)
+			.build();
+	}
+
 	@Override
 	public ShareBoxSettingsResponseDto getShareBoxSettings(Integer shareBoxId) {
 		log.info("쉐어박스 설정 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
 
-		// 현재 사용자 ID (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 조회
 		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
@@ -434,8 +519,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	public ShareBoxParticipantsResponseDto getShareBoxParticipants(Integer shareBoxId) {
 		log.info("쉐어박스 참여자 조회 시작 - 쉐어박스 ID: {}", shareBoxId);
 
-		// 현재 사용자 ID (인증 구현 시 변경 필요)
-		Integer userId = 1; // 인증 구현 시 변경 필요
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+		Integer userId = loggedInUser.getId();
 
 		// 쉐어박스 조회
 		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);

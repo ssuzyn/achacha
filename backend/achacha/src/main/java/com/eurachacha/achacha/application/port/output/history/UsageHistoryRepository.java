@@ -7,9 +7,9 @@ import com.eurachacha.achacha.domain.model.history.UsageHistory;
 public interface UsageHistoryRepository {
 	UsageHistory saveUsageHistory(UsageHistory usageHistory);
 
-	UsageHistory getUsageHistoryDetail(Integer userId, Integer gifticonId);
+	UsageHistory findLatestByUserIdAndGifticonId(Integer userId, Integer gifticonId);
 
-	List<UsageHistory> findAmountGifticonUsageHistories(Integer gifticonId);
+	List<UsageHistory> findAllByGifticonIdOrderByCreatedAtDesc(Integer gifticonId);
 
 	UsageHistory findByIdAndGifticonIdAndUserId(Integer usageHistoryId, Integer gifticonId, Integer userId);
 
