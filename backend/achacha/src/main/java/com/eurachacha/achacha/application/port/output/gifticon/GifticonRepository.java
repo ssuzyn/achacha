@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.application.port.output.gifticon;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -34,4 +35,7 @@ public interface GifticonRepository {
 	Slice<Gifticon> findGifticonsByShareBoxId(Integer shareBoxId, GifticonType type, Pageable pageable);
 
 	Slice<Gifticon> findUsedGifticonsByShareBoxId(Integer shareBoxId, GifticonType type, Pageable pageable);
+
+	// 만료 기간별 기프티콘 목록 조회
+	List<Gifticon> findGifticonsWithExpiryDates(List<LocalDate> expiryDates);
 }
