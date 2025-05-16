@@ -8,8 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Component;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -31,8 +29,8 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	}
 
 	@Override
-	public Slice<AvailableGifticonResponseDto> findAvailableGifticons(Integer userId, GifticonScopeType scope,
-		GifticonType type, Pageable pageable) {
+	public Slice<Gifticon> findAvailableGifticons(Integer userId, GifticonScopeType scope, GifticonType type,
+		Pageable pageable) {
 		return gifticonJpaRepository.findAvailableGifticons(userId, scope, type, pageable);
 	}
 
@@ -48,7 +46,7 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	}
 
 	@Override
-	public Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable) {
+	public Slice<Gifticon> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable) {
 		return gifticonJpaRepository.findUsedGifticons(userId, type, pageable);
 	}
 

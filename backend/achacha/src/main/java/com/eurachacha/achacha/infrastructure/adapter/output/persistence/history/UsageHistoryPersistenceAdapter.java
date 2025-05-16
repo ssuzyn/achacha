@@ -42,4 +42,9 @@ public class UsageHistoryPersistenceAdapter implements UsageHistoryRepository {
 	public void delete(UsageHistory usageHistory) {
 		usageHistoryJpaRepository.delete(usageHistory);
 	}
+
+	@Override
+	public List<UsageHistory> findLatestForEachGifticonByIdsAndUserId(List<Integer> ids, Integer userId) {
+		return usageHistoryJpaRepository.findLatestForEachGifticonByIdsAndUserId(ids, userId);
+	}
 }

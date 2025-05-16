@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.present.PresentAppService;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorInfoResponseDto;
+import com.eurachacha.achacha.application.port.input.present.dto.response.PresentCardResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.PresentTemplateDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.TemplatesResponseDto;
 
@@ -35,6 +36,11 @@ public class PresentController {
 	@GetMapping("/templates/{templateId}/colors")
 	public ResponseEntity<List<ColorInfoResponseDto>> getColors(@PathVariable Integer templateId) {
 		return ResponseEntity.ok(presentAppService.getColors(templateId));
+	}
+
+	@GetMapping("/cards/{presentCardCode}")
+	public ResponseEntity<PresentCardResponseDto> getPresentCard(@PathVariable String presentCardCode) {
+		return ResponseEntity.ok(presentAppService.getPresentCard(presentCardCode));
 	}
 
 }

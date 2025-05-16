@@ -6,8 +6,6 @@ import java.util.Map;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.AvailableGifticonResponseDto;
-import com.eurachacha.achacha.application.port.input.gifticon.dto.response.UsedGifticonResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
@@ -15,14 +13,14 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 public interface GifticonRepository {
 	Gifticon save(Gifticon gifticon);
 
-	Slice<AvailableGifticonResponseDto> findAvailableGifticons(Integer userId, GifticonScopeType scope,
+	Slice<Gifticon> findAvailableGifticons(Integer userId, GifticonScopeType scope,
 		GifticonType type, Pageable pageable);
 
 	Gifticon getGifticonDetail(Integer gifticonId);
 
 	boolean existsByBarcode(String barcode);
 
-	Slice<UsedGifticonResponseDto> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable);
+	Slice<Gifticon> getUsedGifticons(Integer userId, GifticonType type, Pageable pageable);
 
 	Gifticon findById(Integer gifticonId);
 

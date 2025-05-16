@@ -25,12 +25,6 @@ public class FilePersistenceAdapter implements FileRepository {
 	}
 
 	@Override
-	public File findFile(Integer referenceEntityId, String referenceEntityType, FileType type) {
-		return fileJpaRepository.findFile(referenceEntityId, referenceEntityType, type)
-			.orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
-	}
-
-	@Override
 	public Optional<File> findByReferenceEntityTypeAndReferenceEntityIdAndType(
 		String referenceEntityType, Integer referenceEntityId, FileType type) {
 		return fileJpaRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(
