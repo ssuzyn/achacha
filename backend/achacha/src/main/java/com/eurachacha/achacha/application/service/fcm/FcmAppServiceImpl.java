@@ -102,33 +102,41 @@ public class FcmAppServiceImpl implements FcmAppService {
 		// 알림 주기
 		int day = findSetting.getExpirationCycle().getDays();
 
-		// 날짜 확인
-		if (findGifticon.getExpiryDate().equals(today.plusDays(day))) {
+		List<LocalDate> expiryDates = getExpiryDates(today);
 
-			// fcm token 조회
-			List<FcmToken> findFcmTokens = fcmTokenRepository.findAllByUserId(findSetting.getUser().getId());
+		for (LocalDate expiryDate : expiryDates) {
 
-			for (FcmToken fcmToken : findFcmTokens) {
+			// 만료일 확인: 기프티콘의 만료일이 조회된 만료일 목록(1,2,3,7,30,60,90일 후)에 포함되고,
+			// 알림 주기 확인: 만료일이 사용자의 알림 설정 주기보다 이른 경우에만 알림 발송
+			if (findGifticon.getExpiryDate().equals(expiryDate) && findGifticon.getExpiryDate()
+				.isBefore(today.plusDays(day))) {
 
 				String title = findCode.getCode().getDisplayName();
 				String content = getContent(findGifticon, day);
 
-				NotificationEventDto dto = NotificationEventDto.builder()
-					.fcmToken(fcmToken.getValue())
-					.title(title)
-					.body(content)
-					.notificationTypeCode(findCode.getCode().name())
-					.referenceEntityId(findGifticon.getId())
-					.referenceEntityType("gifticon")
-					.build();
+				// 알림 저장
+				saveNotification(findGifticon, findCode, findSetting, title, content);
 
 				// 알림 설정 활성화 시 FCM 알림 전송
 				if (notificationSettingDomainService.isEnabled(findSetting)) {
-					notificationEventPort.sendNotificationEvent(dto);
-				}
+					
+					// fcm token 조회
+					List<FcmToken> findFcmTokens = fcmTokenRepository.findAllByUserId(findSetting.getUser().getId());
 
-				// 알림 저장
-				saveNotification(findGifticon, findCode, findSetting, title, content);
+					for (FcmToken fcmToken : findFcmTokens) {
+
+						NotificationEventDto dto = NotificationEventDto.builder()
+							.fcmToken(fcmToken.getValue())
+							.title(title)
+							.body(content)
+							.notificationTypeCode(findCode.getCode().name())
+							.referenceEntityId(findGifticon.getId())
+							.referenceEntityType("gifticon")
+							.build();
+
+						notificationEventPort.sendNotificationEvent(dto);
+					}
+				}
 			}
 		}
 	}
