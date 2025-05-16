@@ -698,7 +698,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		List<UsageHistory> usageHistories = usageHistoryRepository.findLatestForEachGifticonByIdsAndUserId(ids, userId);
 
 		// 사용 내역 맵 생성 (gifticonId -> 사용 내역)
-		Map<Integer, UsageHistory> usageHistoryMap = usageHistories.stream()
+		// 만약 중복된 키가 있을 경우, 가장 최근 기록을 유지
+		return usageHistories.stream()
 			.collect(Collectors.toMap(
 				history -> history.getGifticon().getId(),
 				history -> history,
@@ -706,7 +707,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt())
 					? existing : replacement
 			));
-		return usageHistoryMap;
 	}
 
 	private Map<Integer, GifticonOwnerHistory> getOwnerHistoryMap(Integer userId, List<Integer> ids) {
@@ -715,7 +715,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			ids, userId);
 
 		// 소유권 이력 맵 생성 (gifticonId -> 소유권 이력)
-		Map<Integer, GifticonOwnerHistory> ownerHistoryMap = ownerHistories.stream()
+		// 만약 중복된 키가 있을 경우, 가장 최근 기록을 유지
+		return ownerHistories.stream()
 			.collect(Collectors.toMap(
 				history -> history.getGifticon().getId(),
 				history -> history,
@@ -723,7 +724,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt())
 					? existing : replacement
 			));
-		return ownerHistoryMap;
 	}
 
 	private Map<Integer, String> getFilePathMap(List<Integer> ids) {
@@ -732,9 +732,8 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			"gifticon", ids, FileType.THUMBNAIL);
 
 		// 경로 맵 생성 (gifticonId -> 썸네일 경로)
-		Map<Integer, String> pathMap = thumbs.stream()
+		return thumbs.stream()
 			.collect(Collectors.toMap(File::getReferenceEntityId, File::getPath));
-		return pathMap;
 	}
 
 	private UsageType convertTransferTypeToUsageType(TransferType transferType) {
