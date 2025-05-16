@@ -1,11 +1,11 @@
-package com.eurachacha.achacha.infrastructure.adapter.output.persistence.user;
+package com.eurachacha.achacha.infrastructure.adapter.output.persistence.fcm;
+
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
-import com.eurachacha.achacha.domain.model.user.FcmToken;
-import com.eurachacha.achacha.web.common.exception.CustomException;
-import com.eurachacha.achacha.web.common.exception.ErrorCode;
+import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 
 import lombok.RequiredArgsConstructor;
 
@@ -16,9 +16,9 @@ public class FcmTokenPersistenceAdapter implements FcmTokenRepository {
 	private final FcmTokenJpaRepository fcmTokenJpaRepository;
 
 	@Override
-	public FcmToken findByUserId(Integer userId) {
-		return fcmTokenJpaRepository.findByUserId(userId)
-			.orElseThrow(() -> new CustomException(ErrorCode.FCM_TOKEN_NOT_FOUND));
+	public List<FcmToken> findAllByUserId(Integer userId) {
+
+		return fcmTokenJpaRepository.findAllByUser_Id(userId);
 	}
 
 	@Override

@@ -33,6 +33,12 @@ pipeline {
 
         // JWT secret 값
         JWT_SECRET = credentials('JWT_SECRET')
+
+        // RabbitMQ 환경 변수
+        RABBITMQ_HOST = credentials('RABBITMQ_HOST')
+        RABBITMQ_PORT = credentials('RABBITMQ_PORT')
+        RABBITMQ_USERNAME = credentials('RABBITMQ_USERNAME')
+        RABBITMQ_PASSWORD = credentials('RABBITMQ_PASSWORD')
     }
 
     stages {
@@ -115,6 +121,10 @@ pipeline {
                                       -e AWS_CLOUDFRONT_PRIVATE_KEY="${AWS_CLOUDFRONT_PRIVATE_KEY}" \\
                                       -e MONGODB_URI="${MONGODB_URI}" \\
                                       -e JWT_SECRET="${JWT_SECRET}" \\
+                                      -e RABBITMQ_HOST="${RABBITMQ_HOST}" \\
+                                      -e RABBITMQ_PORT="${RABBITMQ_PORT}" \\
+                                      -e RABBITMQ_USERNAME="${RABBITMQ_USERNAME}" \\
+                                      -e RABBITMQ_PASSWORD="${RABBITMQ_PASSWORD}" \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
                                       ${DOCKER_IMAGE}:latest;

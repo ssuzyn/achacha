@@ -1,4 +1,6 @@
-package com.eurachacha.achacha.domain.model.user;
+package com.eurachacha.achacha.domain.model.fcm;
+
+import com.eurachacha.achacha.domain.model.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
