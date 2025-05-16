@@ -155,8 +155,7 @@ public class PresentAppServiceImpl implements PresentAppService {
 			templateCardPath = getFileUrl("present_template", presentTemplate.getId(), FileType.PRESENT_CARD);
 		}
 
-		// 응답 DTO 생성
-		PresentCardResponseDto responseDto = PresentCardResponseDto.builder()
+		return PresentCardResponseDto.builder()
 			.presentCardCode(presentCard.getCode())
 			.message(presentCard.getMessage())
 			.gifticonOriginalPath(gifticonOriginalPath)
@@ -164,9 +163,6 @@ public class PresentAppServiceImpl implements PresentAppService {
 			.templateCardPath(templateCardPath)
 			.expiryDateTime(presentCard.getExpiryDateTime())
 			.build();
-
-		log.info("선물 카드 조회 완료: presentCardCode={}", presentCardCode);
-		return responseDto;
 	}
 
 	/**
