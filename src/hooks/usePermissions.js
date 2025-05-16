@@ -20,6 +20,7 @@ export const usePermissions = () => {
       const permissions = [
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+        PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       ];
       const statuses = await PermissionsAndroid.requestMultiple(permissions);
@@ -74,7 +75,9 @@ export const usePermissions = () => {
       try {
         let status;
         if (Platform.OS === 'android') {
-          status = await request(PERMISSIONS.ANDROID.READ_MEDIA_IMAGES || PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE);
+          status = await request(
+            PERMISSIONS.ANDROID.READ_MEDIA_IMAGES || PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE
+          );
         } else {
           status = await request(PERMISSIONS.IOS.PHOTO_LIBRARY);
         }
