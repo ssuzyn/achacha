@@ -1,9 +1,9 @@
 package com.eurachacha.achacha.application.service.present;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -12,17 +12,22 @@ import org.springframework.transaction.annotation.Transactional;
 import com.eurachacha.achacha.application.port.input.present.PresentAppService;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorCardInfoDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.ColorInfoResponseDto;
+import com.eurachacha.achacha.application.port.input.present.dto.response.PresentCardResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.PresentTemplateDetailResponseDto;
 import com.eurachacha.achacha.application.port.input.present.dto.response.TemplatesResponseDto;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.present.ColorPaletteRepository;
+import com.eurachacha.achacha.application.port.output.present.PresentCardRepository;
 import com.eurachacha.achacha.application.port.output.present.PresentTemplateRepository;
 import com.eurachacha.achacha.domain.model.file.File;
 import com.eurachacha.achacha.domain.model.file.enums.FileType;
+import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.present.ColorPalette;
+import com.eurachacha.achacha.domain.model.present.PresentCard;
 import com.eurachacha.achacha.domain.model.present.PresentTemplate;
 import com.eurachacha.achacha.domain.model.present.enums.TemplateCategory;
+import com.eurachacha.achacha.domain.service.present.PresentCardDomainService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class PresentAppServiceImpl implements PresentAppService {
 
+	private final PresentCardDomainService presentCardDomainService;
+	private final PresentCardRepository presentCardRepository;
 	private final PresentTemplateRepository presentTemplateRepository;
 	private final ColorPaletteRepository colorPaletteRepository;
 	private final FileRepository fileRepository;
@@ -103,8 +110,59 @@ public class PresentAppServiceImpl implements PresentAppService {
 
 		// 4. 일반 템플릿인 경우 단일 카드 이미지 경로 추가 후 반환
 		return builder
-			.cardImagePath(getTemplateBasedCardImagePath(templateId))
+			.cardImagePath(getFileUrl("present_template", templateId, FileType.PRESENT_CARD))
 			.build();
+	}
+
+	@Override
+	public PresentCardResponseDto getPresentCard(String presentCardCode) {
+		log.info("선물 카드 조회 시작: presentCardCode={}", presentCardCode);
+
+		// 선물 카드 조회
+		PresentCard presentCard = presentCardRepository.findByPresentCardCode(presentCardCode);
+		log.info("조회된 선물 카드: id={}, code={}", presentCard.getId(), presentCard.getCode());
+
+		// 만료 여부를 먼저 확인하고 만료된 경우 즉시 예외 발생
+		presentCardDomainService.validateExpiryDateTime(LocalDateTime.now(), presentCard.getExpiryDateTime());
+
+		Gifticon gifticon = presentCard.getGifticon();
+		PresentTemplate presentTemplate = presentCard.getPresentTemplate();
+		log.info("기프티콘 ID: {}, 템플릿 ID: {}", gifticon.getId(), presentTemplate.getId());
+
+		// 기프티콘 이미지 URL 생성
+		String gifticonOriginalPath = getFileUrl("gifticon", gifticon.getId(), FileType.ORIGINAL);
+		String gifticonThumbnailPath = getFileUrl("gifticon", gifticon.getId(), FileType.THUMBNAIL);
+
+		// 템플릿 카드 이미지 URL 생성 (템플릿 카테고리에 따라 다른 방식으로 조회)
+		String templateCardPath = getTemplateCardPath(presentCard, presentTemplate);
+
+		return PresentCardResponseDto.builder()
+			.presentCardCode(presentCard.getCode())
+			.presentCardMessage(presentCard.getMessage())
+			.gifticonOriginalPath(gifticonOriginalPath)
+			.gifticonThumbnailPath(gifticonThumbnailPath)
+			.templateCardPath(templateCardPath)
+			.expiryDateTime(presentCard.getExpiryDateTime())
+			.build();
+	}
+
+	private String getTemplateCardPath(PresentCard presentCard, PresentTemplate presentTemplate) {
+		if (presentTemplate.getCategory() == TemplateCategory.GENERAL) {
+			// GENERAL 템플릿인 경우 색상 팔레트로 조회
+			ColorPalette colorPalette = presentCard.getColorPalette();
+			log.info("GENERAL 템플릿 - 색상 팔레트 ID: {}", colorPalette != null ? colorPalette.getId() : "없음");
+
+			if (colorPalette != null) {
+				return getFileUrl("color_palette", colorPalette.getId(), FileType.PRESENT_CARD);
+			}
+
+			log.warn("색상 팔레트가 없음: presentCardId={}", presentCard.getId());
+			return null;
+		}
+
+		// 기타 템플릿인 경우 템플릿 ID로 조회
+		log.info("일반 템플릿 - 템플릿 ID: {}", presentTemplate.getId());
+		return getFileUrl("present_template", presentTemplate.getId(), FileType.PRESENT_CARD);
 	}
 
 	/**
@@ -155,23 +213,24 @@ public class PresentAppServiceImpl implements PresentAppService {
 	}
 
 	/**
-	 * 템플릿 기반 카드 이미지 경로를 조회합니다. (GENERAL이 아닌 템플릿용)
+	 * 파일 URL을 가져오는 통합 헬퍼 메서드
 	 *
-	 * @param templateId 템플릿 ID
-	 * @return 카드 이미지 URL
+	 * @param entityType 참조 엔티티 타입
+	 * @param entityId 참조 엔티티 ID
+	 * @param fileType 파일 타입
+	 * @return 파일 URL 또는 파일이 없는 경우 null
 	 */
-	private String getTemplateBasedCardImagePath(Integer templateId) {
-		// 템플릿에 해당하는 카드 이미지 조회
-		Optional<File> cardImageFile = fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(
-			"present_template",
-			templateId,
-			FileType.PRESENT_CARD
-		);
-
-		// 파일이 있으면 URL 생성
-		return cardImageFile
-			.map(file -> fileStoragePort.generateFileUrl(file.getPath(), FileType.PRESENT_CARD))
-			.orElse(null);
+	private String getFileUrl(String entityType, Integer entityId, FileType fileType) {
+		return fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(
+				entityType, entityId, fileType)
+			.map(file -> {
+				log.info("파일 조회 성공: id={}, path={}", file.getId(), file.getPath());
+				return fileStoragePort.generateFileUrl(file.getPath(), fileType);
+			})
+			.orElseGet(() -> {
+				log.warn("파일을 찾을 수 없음: entityType={}, entityId={}", entityType, entityId);
+				return null;
+			});
 	}
 
 	@Override

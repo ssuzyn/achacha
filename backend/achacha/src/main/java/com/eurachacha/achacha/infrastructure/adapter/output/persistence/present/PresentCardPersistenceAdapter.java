@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.present.PresentCardRepository;
 import com.eurachacha.achacha.domain.model.present.PresentCard;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,5 +22,11 @@ public class PresentCardPersistenceAdapter implements PresentCardRepository {
 	@Override
 	public boolean existsByPresentCardCode(String presentCardCode) {
 		return presentCardJpaRepository.existsByCode(presentCardCode);
+	}
+
+	@Override
+	public PresentCard findByPresentCardCode(String presentCardCode) {
+		return presentCardJpaRepository.findByCodeWithDetails(presentCardCode)
+			.orElseThrow(() -> new CustomException(ErrorCode.PRESENT_CARD_NOT_FOUND));
 	}
 }
