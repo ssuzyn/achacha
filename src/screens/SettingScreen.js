@@ -535,6 +535,27 @@ const SettingScreen = () => {
           </TouchableOpacity>
         </View>
 
+        {/* 개발자 옵션 섹션 */}
+        <Divider style={styles.sectionDivider} />
+        <View style={styles.section}>
+          <Text variant="h3" style={styles.sectionTitle}>
+            개발자 옵션
+          </Text>
+          <TouchableOpacity style={styles.watchItem} onPress={() => navigation.navigate('FCMTest')}>
+            <View style={styles.notificationInfo}>
+              <Text variant="body1" style={styles.notificationLabel}>
+                FCM 푸시 알림 테스트
+              </Text>
+              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                FCM 알림 설정 및 테스트
+              </Text>
+            </View>
+            <View style={styles.arrowContainer}>
+              <Text style={styles.arrowText}>{'>'}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* 버튼 영역 */}
         <View style={styles.footerButtonsWrapper}>
           <TouchableOpacity style={styles.withdrawTouchable}>

@@ -28,6 +28,8 @@ import BoxDetailProductScreen from '../screens/gifticon-share-box/BoxDetailProdu
 import BoxDetailAmountScreen from '../screens/gifticon-share-box/BoxDetailAmountScreen';
 import BoxDetailAmountHistoryScreen from '../screens/gifticon-share-box/BoxDetailAmountHistoryScreen';
 import BoxSettingScreen from '../screens/gifticon-share-box/BoxSettingScreen';
+// FCM 테스트 화면 추가
+import FCMTestScreen from '../screens/FCMTestScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -54,6 +56,17 @@ const AppNavigator = () => {
       <Stack.Screen
         name="Settings"
         component={SettingScreen}
+        options={{
+          animation: 'fade_from_bottom',
+          animationDuration: 150,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+        }}
+      />
+      {/* FCM 테스트 화면 */}
+      <Stack.Screen
+        name="FCMTest"
+        component={FCMTestScreen}
         options={{
           animation: 'fade_from_bottom',
           animationDuration: 150,
