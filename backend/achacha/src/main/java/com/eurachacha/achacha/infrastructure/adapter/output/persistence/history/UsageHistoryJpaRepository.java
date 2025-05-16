@@ -27,4 +27,19 @@ public interface UsageHistoryJpaRepository extends JpaRepository<UsageHistory, I
 	List<UsageHistory> findAllByGifticonIdOrderByCreatedAtDesc(Integer gifticonId);
 
 	Optional<UsageHistory> findByIdAndGifticonIdAndUserId(Integer usageHistoryId, Integer gifticonId, Integer userId);
+
+	@Query("""
+		SELECT uh1
+		FROM UsageHistory uh1
+		LEFT JOIN UsageHistory uh2
+		ON uh1.gifticon.id = uh2.gifticon.id
+		AND uh1.createdAt < uh2.createdAt
+		AND uh2.user.id = :userId
+		WHERE uh1.gifticon.id IN :ids
+		AND uh1.user.id = :userId
+		AND uh2.id IS NULL
+		""")
+	List<UsageHistory> findLatestForEachGifticonByIdsAndUserId(
+		@Param("ids") List<Integer> ids,
+		@Param("userId") Integer userId);
 }

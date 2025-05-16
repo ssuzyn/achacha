@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.history;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
@@ -21,5 +23,12 @@ public class GifticonOwnerHistoryPersistenceAdapter implements GifticonOwnerHist
 	@Override
 	public GifticonOwnerHistory save(GifticonOwnerHistory gifticonOwnerHistory) {
 		return gifticonOwnerHistoryJpaRepository.save(gifticonOwnerHistory);
+	}
+
+	@Override
+	public List<GifticonOwnerHistory> findLatestForEachGifticonByIdsAndFromUserId(List<Integer> ids,
+		Integer fromUserId) {
+		return gifticonOwnerHistoryJpaRepository.findLatestForEachGifticonByIdsAndFromUserId(ids,
+			fromUserId);
 	}
 }
