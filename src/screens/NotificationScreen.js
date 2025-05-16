@@ -16,47 +16,50 @@ import { Button, ListItem, Text } from '../components/ui';
 
 // 알림 타입에 따른 아이콘 정의
 const NOTIFICATION_ICONS = {
-  EXPIRY: 'calendar-month', // 유효기간 만료 알림
-  NEARBY: 'share-location', // 주변 매장 알림
-  USED: 'schedule', // 사용완료 여부 알림
-  SHARE: 'tap-and-play', // 기프티콘 뿌리기 알림
-  SHAREBOX: 'inventory-2', // 쉐어박스 알림
+  EXPIRY_DATE: 'calendar-month', // 유효기간 만료 알림
+  LOCATION_BASED: 'share-location', // 주변 매장 알림
+  USAGE_COMPLETE: 'schedule', // 사용완료 여부 알림
+  RECEIVE_GIFTICON: 'tap-and-play', // 기프티콘 뿌리기 수신
+  SHAREBOX_GIFTICON: 'inventory-2', // 쉐어박스 기프티콘 등록
+  SHAREBOX_USAGE_COMPLETE: 'inventory-2', // 쉐어박스 기프티콘 사용
+  SHAREBOX_MEMBER_JOIN: 'inventory-2', // 쉐어박스 멤버 참여
+  SHAREBOX_DELETED: 'inventory-2', // 쉐어박스 그룹 삭제
 };
 
 // 더미 알림 데이터
 const dummyNotifications = [
   {
     id: '1',
-    type: 'EXPIRY',
+    type: 'EXPIRY_DATE',
     title: '유효기간 만료 알림',
     message: '아이스 카페 아메리카노 T 의 유효기간이 7일 남았습니다.',
     time: '3분 전',
   },
   {
     id: '2',
-    type: 'NEARBY',
+    type: 'LOCATION_BASED',
     title: '주변 매장 알림',
     message: '반경 150m 내에 기프티콘을 사용할 수 있는 스타벅스 매장이 있어요!',
     time: '3시간 전',
   },
   {
     id: '3',
-    type: 'USED',
-    title: '사용완료 여부 알림',
+    type: 'USAGE_COMPLETE',
+    title: '사용 완료 여부 알림',
     message: '방금 기프티콘을 사용하셨나요? 완료 처리가 되지 않은 것 같아요. 확인해볼까요?',
     time: '어제',
   },
   {
     id: '4',
-    type: 'SHARE',
-    title: '기프티콘 뿌리기 알림',
+    type: 'RECEIVE_GIFTICON',
+    title: '기프티콘 뿌리기 수신',
     message: '뿌리기 성공! 아이스 카페 라떼 T가 무사히 나눔되었어요.',
     time: '2일 전',
   },
   {
     id: '5',
-    type: 'SHAREBOX',
-    title: '쉐어박스 알림',
+    type: 'SHAREBOX_MEMBER_JOIN',
+    title: '쉐어박스 멤버 참여',
     message: '으라차차 쉐어박스에 류잼문 님이 참여했어요. 기프티콘을 공유해볼까요?',
     time: '3일 전',
   },
@@ -108,15 +111,18 @@ const NotificationScreen = () => {
   // 알림 유형에 따른 아이콘 색상 가져오기
   const getIconColorByType = useCallback(type => {
     switch (type) {
-      case 'EXPIRY':
+      case 'EXPIRY_DATE':
         return '#EF9696';
-      case 'NEARBY':
+      case 'LOCATION_BASED':
         return '#8CDA8F';
-      case 'USED':
+      case 'USAGE_COMPLETE':
         return '#6BB2EA';
-      case 'SHARE':
+      case 'RECEIVE_GIFTICON':
         return '#D095EE';
-      case 'SHAREBOX':
+      case 'SHAREBOX_GIFTICON':
+      case 'SHAREBOX_USAGE_COMPLETE':
+      case 'SHAREBOX_MEMBER_JOIN':
+      case 'SHAREBOX_DELETED':
         return '#F1A9D5';
       default:
         return '#4B9CFF';

@@ -1,14 +1,36 @@
 package com.koup28.achacha_app;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.net.Uri;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.NotificationCompat;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.Map;
+
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     private static final String TAG = "MyFirebaseMessaging";
+
+    // 알림 타입 상수
+    private static final String TYPE_LOCATION_BASED = "LOCATION_BASED";          // 주변 매장 알림
+    private static final String TYPE_EXPIRY_DATE = "EXPIRY_DATE";                // 유효기간 만료 알림
+    private static final String TYPE_RECEIVE_GIFTICON = "RECEIVE_GIFTICON";      // 기프티콘 뿌리기 수신
+    private static final String TYPE_USAGE_COMPLETE = "USAGE_COMPLETE";          // 사용완료 여부 알림
+    private static final String TYPE_SHAREBOX_GIFTICON = "SHAREBOX_GIFTICON";    // 쉐어박스 기프티콘 등록
+    private static final String TYPE_SHAREBOX_USAGE = "SHAREBOX_USAGE_COMPLETE"; // 쉐어박스 기프티콘 사용
+    private static final String TYPE_SHAREBOX_JOIN = "SHAREBOX_MEMBER_JOIN";     // 쉐어박스 멤버 참여
+    private static final String TYPE_SHAREBOX_DELETED = "SHAREBOX_DELETED";      // 쉐어박스 그룹 삭제
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
@@ -20,11 +42,29 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // 데이터 페이로드가 있는 경우
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
+            Map<String, String> data = remoteMessage.getData();
+            
+            // FCM 메시지에서 알림 데이터 처리
+            String title = data.get("title");
+            String body = data.get("body");
+            String notificationType = data.get("type");
+            
+            // 데이터로부터 알림 생성
+            if (title != null && body != null) {
+                sendNotification(title, body, notificationType, data);
+            }
         }
 
         // 알림 페이로드가 있는 경우
         if (remoteMessage.getNotification() != null) {
             Log.d(TAG, "Message Notification Body: " + remoteMessage.getNotification().getBody());
+            
+            // FCM의 알림 페이로드로부터 알림 생성
+            String title = remoteMessage.getNotification().getTitle();
+            String body = remoteMessage.getNotification().getBody();
+            String notificationType = remoteMessage.getData().get("type");
+            
+            sendNotification(title, body, notificationType, remoteMessage.getData());
         }
     }
 
@@ -35,5 +75,125 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         
         // 토큰이 업데이트될 때 서버에 새 토큰을 보내는 로직을 구현할 수 있습니다
         // sendRegistrationToServer(token);
+    }
+    
+    /**
+     * 알림 타입에 따라 적절한 아이콘 리소스 ID를 반환합니다.
+     * 
+     * @param notificationType 알림 타입
+     * @return 해당 타입에 맞는 아이콘 리소스 ID
+     */
+    private int getNotificationIcon(String notificationType) {
+        if (notificationType == null) {
+            return R.drawable.adaptive_icon; // 기본 아이콘
+        }
+        
+        switch (notificationType) {
+            case TYPE_LOCATION_BASED:
+                return R.drawable.ic_share_location; // 주변 매장 알림
+            case TYPE_EXPIRY_DATE:
+                return R.drawable.ic_calendar_month; // 유효기간 만료 알림
+            case TYPE_RECEIVE_GIFTICON:
+                return R.drawable.ic_tap_and_play; // 기프티콘 뿌리기 알림
+            case TYPE_USAGE_COMPLETE:
+                return R.drawable.ic_schedule; // 사용완료 여부 알림
+            case TYPE_SHAREBOX_GIFTICON:
+            case TYPE_SHAREBOX_USAGE:
+            case TYPE_SHAREBOX_JOIN:
+            case TYPE_SHAREBOX_DELETED:
+                return R.drawable.ic_inventory; // 쉐어박스 관련 알림
+            default:
+                return R.drawable.adaptive_icon; // 기본 아이콘
+        }
+    }
+    
+    /**
+     * 알림 타입에 따른 색상을 반환합니다.
+     * 
+     * @param notificationType 알림 타입
+     * @return 해당 타입에 맞는 색상
+     */
+    private int getNotificationColor(String notificationType) {
+        if (notificationType == null) {
+            return Color.parseColor("#4B9CFF"); // 기본 색상
+        }
+        
+        switch (notificationType) {
+            case TYPE_EXPIRY_DATE:
+                return Color.parseColor("#EF9696");
+            case TYPE_LOCATION_BASED:
+                return Color.parseColor("#8CDA8F");
+            case TYPE_USAGE_COMPLETE:
+                return Color.parseColor("#6BB2EA");
+            case TYPE_RECEIVE_GIFTICON:
+                return Color.parseColor("#D095EE");
+            case TYPE_SHAREBOX_GIFTICON:
+            case TYPE_SHAREBOX_USAGE:
+            case TYPE_SHAREBOX_JOIN:
+            case TYPE_SHAREBOX_DELETED:
+                return Color.parseColor("#F1A9D5");
+            default:
+                return Color.parseColor("#4B9CFF");
+        }
+    }
+    
+    /**
+     * 알림을 생성하고 표시합니다.
+     */
+    private void sendNotification(String title, String body, String notificationType, Map<String, String> data) {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        
+        // FCM 데이터를 인텐트에 추가
+        for (Map.Entry<String, String> entry : data.entrySet()) {
+            intent.putExtra(entry.getKey(), entry.getValue());
+        }
+        
+        // 알림을 탭했을 때 실행될 PendingIntent
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+            this, 
+            0, 
+            intent, 
+            PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+        
+        String channelId = getString(R.string.default_notification_channel_id);
+        Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        
+        // 알림 타입에 따라 다른 아이콘과 색상 사용
+        int icon = getNotificationIcon(notificationType);
+        int color = getNotificationColor(notificationType);
+        
+        // 알림 생성
+        NotificationCompat.Builder notificationBuilder =
+            new NotificationCompat.Builder(this, channelId)
+                .setSmallIcon(icon)
+                .setContentTitle(title)
+                .setContentText(body)
+                .setAutoCancel(true)
+                .setSound(defaultSoundUri)
+                .setColor(color)
+                .setContentIntent(pendingIntent);
+        
+        NotificationManager notificationManager =
+            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        
+        // Android Oreo 이상에서는 채널 확인 (MainApplication에서 이미 생성됨)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = notificationManager.getNotificationChannel(channelId);
+            if (channel == null) {
+                // 채널이 없는 경우 생성 (대비책)
+                channel = new NotificationChannel(
+                    channelId,
+                    "아차차 알림",
+                    NotificationManager.IMPORTANCE_HIGH
+                );
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+        
+        // 알림 표시
+        int notificationId = (int) System.currentTimeMillis();
+        notificationManager.notify(notificationId, notificationBuilder.build());
     }
 } 
