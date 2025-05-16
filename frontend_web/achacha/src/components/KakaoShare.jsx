@@ -52,13 +52,40 @@ const KakaoShare = () => {
     try {
       // 최신 API 사용
       if (window.Kakao.Share) {
-        window.Kakao.Share.sendCustom({
-          templateId: TEMPLATE_ID,
-          templateArgs: {
-            invite_code: code,
-          },
-        });
-        setStatus('success');
+        // 카카오톡 앱 지원 여부 확인
+        if (window.Kakao.Share.isSupported()) {
+          // 카카오톡 앱으로 템플릿 전송
+          window.Kakao.Share.sendCustom({
+            templateId: TEMPLATE_ID,
+            templateArgs: {
+              invite_code: code,
+            },
+          });
+          
+          setStatus('success');
+          
+          // 성공 후 3초 뒤에 앱으로 돌아가기 시도
+          setTimeout(() => {
+            // 앱으로 돌아가기 (앱 스키마 사용)
+            window.location.href = `com.koup28.achacha_app://invite?code=${code}`;
+            
+            // 앱으로 돌아가지 못한 경우 플레이스토어로 이동
+            setTimeout(() => {
+              window.location.href = 'https://play.google.com/store/apps/details?id=com.koup28.achacha_app';
+            }, 1000);
+          }, 3000);
+        } else {
+          // 카카오톡 앱이 없는 경우 - 웹 공유 버튼 생성
+          window.Kakao.Share.createCustomButton({
+            container: '#kakao-share-container',
+            templateId: TEMPLATE_ID,
+            templateArgs: {
+              invite_code: code,
+            },
+          });
+          
+          setStatus('need-app');
+        }
       } else if (window.Kakao.Link) {
         // 구버전 API 대응
         window.Kakao.Link.sendCustom({
