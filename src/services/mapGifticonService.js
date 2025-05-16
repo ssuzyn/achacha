@@ -23,7 +23,6 @@ export const mapGifticonService = {
         },
       });
 
-      console.log('[API] 지도용 기프티콘 목록 조회 성공:', response.data);
       return response.data;
     } catch (error) {
       console.error('[API] 지도용 기프티콘 목록 조회 실패:', error);
