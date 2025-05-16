@@ -31,7 +31,6 @@ import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
-import com.eurachacha.achacha.application.port.output.history.BarcodeHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
@@ -46,7 +45,6 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonSortType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
-import com.eurachacha.achacha.domain.model.history.BarcodeHistory;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
@@ -77,7 +75,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final BrandRepository brandRepository;
 	private final GifticonOwnerHistoryRepository gifticonOwnerHistoryRepository;
 	private final UsageHistoryRepository usageHistoryRepository;
-	private final BarcodeHistoryRepository barcodeHistoryRepository;
 	private final OcrTrainingDataRepository ocrTrainingDataRepository;
 	private final FileStoragePort fileStoragePort;
 	private final FileRepository fileRepository;
@@ -440,15 +437,6 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
-
-		// 바코드 조회 내역 생성
-		BarcodeHistory newBarcodeHistory = BarcodeHistory.builder()
-			.user(loggedInUser) // 유저 로직 추가 시 변경 필요
-			.gifticon(findGifticon)
-			.build();
-
-		// 바코드 조회 내역 저장
-		barcodeHistoryRepository.saveBarcodeHistory(newBarcodeHistory);
 
 		log.info("사용가능 기프티콘 바코드 조회 종료");
 
