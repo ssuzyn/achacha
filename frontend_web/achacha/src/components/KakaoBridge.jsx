@@ -10,17 +10,12 @@ const KakaoBridge = () => {
     // 딥링크 호출
     window.location.href = `achacha://sharebox?code=${code}`;
 
-    // 2초 후 앱스토어로 이동 (앱 미설치 시)
-    const timer = setTimeout(() => {
-      window.location.href = 'https://play.google.com/store/apps/details?id=com.koup28.achacha_app';
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    // 앱스토어 이동 코드 제거됨
   }, []);
 
   return (
     <div style={{ textAlign: 'center', marginTop: 80 }}>
-      <p>앱으로 이동 중입니다...</p>
+      <p>아차차</p>
     </div>
   );
 };
