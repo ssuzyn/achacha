@@ -26,6 +26,53 @@ import { Svg, Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserById } from '../api/userInfo';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
+import notificationService from '../api/notificationService';
+
+// 알림 타입 enum (API와 일치)
+const NOTIFICATION_TYPES = {
+  LOCATION_BASED: 'LOCATION_BASED', // 근접 매장 알림
+  EXPIRY_DATE: 'EXPIRY_DATE', // 유효기간 만료 알림
+  RECEIVE_GIFTICON: 'RECEIVE_GIFTICON', // 선물 뿌리기 알림
+  USAGE_COMPLETE: 'USAGE_COMPLETE', // 사용완료 여부 알림
+  SHAREBOX_GIFTICON: 'SHAREBOX_GIFTICON', // 쉐어박스 기프티콘 등록 알림
+  SHAREBOX_USAGE_COMPLETE: 'SHAREBOX_USAGE_COMPLETE', // 쉐어박스 기프티콘 사용 알림
+  SHAREBOX_MEMBER_JOIN: 'SHAREBOX_MEMBER_JOIN', // 쉐어박스 멤버 참여 알림
+  SHAREBOX_DELETED: 'SHAREBOX_DELETED', // 쉐어박스 그룹 삭제 알림
+};
+
+// 알림 주기 enum (API와 일치)
+const EXPIRATION_CYCLES = {
+  ONE_DAY: 'ONE_DAY', // 1일
+  TWO_DAYS: 'TWO_DAYS', // 2일
+  THREE_DAYS: 'THREE_DAYS', // 3일
+  ONE_WEEK: 'ONE_WEEK', // 7일
+  ONE_MONTH: 'ONE_MONTH', // 30일
+  TWO_MONTHS: 'TWO_MONTHS', // 60일
+  THREE_MONTHS: 'THREE_MONTHS', // 90일
+};
+
+// 마커 값에 따른 알림 주기 매핑
+const MARKER_TO_CYCLE = {
+  0: EXPIRATION_CYCLES.ONE_DAY, // 당일 또는 1일
+  1: EXPIRATION_CYCLES.ONE_DAY, // 1일
+  2: EXPIRATION_CYCLES.TWO_DAYS, // 2일
+  3: EXPIRATION_CYCLES.THREE_DAYS, // 3일
+  7: EXPIRATION_CYCLES.ONE_WEEK, // 7일
+  30: EXPIRATION_CYCLES.ONE_MONTH, // 30일
+  60: EXPIRATION_CYCLES.TWO_MONTHS, // 60일
+  90: EXPIRATION_CYCLES.THREE_MONTHS, // 90일
+};
+
+// 알림 주기에 따른 마커 값 매핑
+const CYCLE_TO_MARKER = {
+  [EXPIRATION_CYCLES.ONE_DAY]: 1,
+  [EXPIRATION_CYCLES.TWO_DAYS]: 2,
+  [EXPIRATION_CYCLES.THREE_DAYS]: 3,
+  [EXPIRATION_CYCLES.ONE_WEEK]: 7,
+  [EXPIRATION_CYCLES.ONE_MONTH]: 30,
+  [EXPIRATION_CYCLES.TWO_MONTHS]: 60,
+  [EXPIRATION_CYCLES.THREE_MONTHS]: 90,
+};
 
 const SettingScreen = () => {
   const { theme } = useTheme();
@@ -38,16 +85,22 @@ const SettingScreen = () => {
   // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
   const keepTabBarVisible = route.params?.keepTabBarVisible || false;
 
+  // API 상태 관리
+  const [loading, setLoading] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState([]);
+  const [apiError, setApiError] = useState(null);
+
   // 상태 관리
-  const [expiryNotification, setExpiryNotification] = useState(true);
-  const [giftSharingNotification, setGiftSharingNotification] = useState(true);
+  const [expiryNotification, setExpiryNotification] = useState(false);
+  const [giftSharingNotification, setGiftSharingNotification] = useState(false);
   const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
-  const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(1);
-  const [usageCompletionNotification, setUsageCompletionNotification] = useState(true);
-  const [shareboxGiftRegistration, setShareboxGiftRegistration] = useState(true);
-  const [shareboxGiftUsage, setShareboxGiftUsage] = useState(true);
-  const [shareboxMemberJoin, setShareboxMemberJoin] = useState(true);
-  const [shareboxGroupDelete, setShareboxGroupDelete] = useState(true);
+  const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(7); // 기본값 7일
+  const [usageCompletionNotification, setUsageCompletionNotification] = useState(false);
+  const [shareboxGiftRegistration, setShareboxGiftRegistration] = useState(false);
+  const [shareboxGiftUsage, setShareboxGiftUsage] = useState(false);
+  const [shareboxMemberJoin, setShareboxMemberJoin] = useState(false);
+  const [shareboxGroupDelete, setShareboxGroupDelete] = useState(false);
   const [watchModalVisible, setWatchModalVisible] = useState(false);
   const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
 
@@ -59,10 +112,153 @@ const SettingScreen = () => {
   // 슬라이더 마커 값
   const markers = [0, 1, 2, 3, 7, 30, 60, 90];
 
+  // 알림 설정 조회
+  const fetchNotificationSettings = useCallback(async () => {
+    console.log('[알림설정] 알림 설정 조회 시작');
+    setLoadingSettings(true);
+    setApiError(null);
+
+    try {
+      const settings = await notificationService.getNotificationSettings();
+      console.log('[알림설정] 알림 설정 조회 결과:', JSON.stringify(settings, null, 2));
+      setNotificationSettings(settings);
+
+      // 각 알림 타입별 설정 값을 상태에 적용
+      settings.forEach(setting => {
+        switch (setting.notificationType) {
+          case NOTIFICATION_TYPES.LOCATION_BASED:
+            console.log('[알림설정] 근접 매장 알림 설정:', setting.isEnabled);
+            setNearbyStoreNotification(setting.isEnabled);
+            break;
+          case NOTIFICATION_TYPES.EXPIRY_DATE:
+            console.log('[알림설정] 유효기간 만료 알림 설정:', setting.isEnabled);
+            console.log('[알림설정] 알림 주기:', setting.expirationCycle);
+            setExpiryNotification(setting.isEnabled);
+            if (setting.expirationCycle && CYCLE_TO_MARKER[setting.expirationCycle]) {
+              setExpiryNotificationInterval(CYCLE_TO_MARKER[setting.expirationCycle]);
+            }
+            break;
+          case NOTIFICATION_TYPES.RECEIVE_GIFTICON:
+            console.log('[알림설정] 선물 뿌리기 알림 설정:', setting.isEnabled);
+            setGiftSharingNotification(setting.isEnabled);
+            break;
+          case NOTIFICATION_TYPES.USAGE_COMPLETE:
+            console.log('[알림설정] 사용완료 여부 알림 설정:', setting.isEnabled);
+            setUsageCompletionNotification(setting.isEnabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_GIFTICON:
+            console.log('[알림설정] 쉐어박스 기프티콘 등록 알림 설정:', setting.isEnabled);
+            setShareboxGiftRegistration(setting.isEnabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE:
+            console.log('[알림설정] 쉐어박스 기프티콘 사용 알림 설정:', setting.isEnabled);
+            setShareboxGiftUsage(setting.isEnabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN:
+            console.log('[알림설정] 쉐어박스 멤버 참여 알림 설정:', setting.isEnabled);
+            setShareboxMemberJoin(setting.isEnabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_DELETED:
+            console.log('[알림설정] 쉐어박스 그룹 삭제 알림 설정:', setting.isEnabled);
+            setShareboxGroupDelete(setting.isEnabled);
+            break;
+          default:
+            console.log(`[알림설정] 알 수 없는 알림 타입: ${setting.notificationType}`);
+        }
+      });
+    } catch (error) {
+      console.error('[알림설정] 알림 설정 조회 실패:', error);
+      const errorMessage =
+        error.response?.data?.message || '알림 설정을 조회하는 중 오류가 발생했습니다.';
+      setApiError(errorMessage);
+      Alert.alert('알림 설정 조회 실패', errorMessage);
+    } finally {
+      setLoadingSettings(false);
+    }
+  }, []);
+
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  // 알림 설정 토글 핸들러 함수
+  const handleNotificationToggle = useCallback(
+    async (type, enabled) => {
+      console.log(`[알림설정] ${type} 알림 상태 변경 요청:`, enabled);
+      setLoading(true);
+
+      try {
+        const result = await notificationService.updateNotificationTypeStatus(type, enabled);
+        console.log(`[알림설정] ${type} 알림 상태 변경 성공:`, result);
+
+        // 상태 업데이트 (즉각적인 UI 반영 위해)
+        switch (type) {
+          case NOTIFICATION_TYPES.LOCATION_BASED:
+            setNearbyStoreNotification(enabled);
+            break;
+          case NOTIFICATION_TYPES.EXPIRY_DATE:
+            setExpiryNotification(enabled);
+            break;
+          case NOTIFICATION_TYPES.RECEIVE_GIFTICON:
+            setGiftSharingNotification(enabled);
+            break;
+          case NOTIFICATION_TYPES.USAGE_COMPLETE:
+            setUsageCompletionNotification(enabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_GIFTICON:
+            setShareboxGiftRegistration(enabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE:
+            setShareboxGiftUsage(enabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN:
+            setShareboxMemberJoin(enabled);
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_DELETED:
+            setShareboxGroupDelete(enabled);
+            break;
+        }
+      } catch (error) {
+        console.error(`[알림설정] ${type} 알림 상태 변경 실패:`, error);
+        const errorMessage =
+          error.response?.data?.message || '알림 설정을 변경하는 중 오류가 발생했습니다.';
+        Alert.alert('알림 설정 실패', errorMessage);
+
+        // 실패 시 이전 상태로 롤백 (서버 상태와 동기화)
+        fetchNotificationSettings();
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchNotificationSettings]
+  );
+
+  // 알림 주기 변경 핸들러
+  const handleExpirationCycleChange = useCallback(
+    async value => {
+      const cycleValue = MARKER_TO_CYCLE[value];
+      console.log('[알림설정] 알림 주기 변경 요청:', value, '(', cycleValue, ')');
+      setLoading(true);
+
+      try {
+        const result = await notificationService.updateExpirationCycle(cycleValue);
+        console.log('[알림설정] 알림 주기 변경 성공:', result);
+        setExpiryNotificationInterval(value);
+      } catch (error) {
+        console.error('[알림설정] 알림 주기 변경 실패:', error);
+        const errorMessage =
+          error.response?.data?.message || '알림 주기 설정을 변경하는 중 오류가 발생했습니다.';
+        Alert.alert('알림 주기 설정 실패', errorMessage);
+
+        // 실패 시 이전 상태로 롤백 (서버 상태와 동기화)
+        fetchNotificationSettings();
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchNotificationSettings]
+  );
 
   // Google 로고 SVG 컴포넌트
   // eslint-disable-next-line react/no-unstable-nested-components
@@ -300,6 +496,11 @@ const SettingScreen = () => {
     };
   }, [hideTabBar, showTabBar, keepTabBarVisible]);
 
+  // 컴포넌트 마운트 시 알림 설정 조회
+  useEffect(() => {
+    fetchNotificationSettings();
+  }, [fetchNotificationSettings]);
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -407,7 +608,7 @@ const SettingScreen = () => {
                 <Slider
                   value={expiryNotificationInterval}
                   values={markers}
-                  onValueChange={value => setExpiryNotificationInterval(value)}
+                  onValueChange={handleExpirationCycleChange}
                   minimumTrackTintColor={theme.colors.primary}
                   maximumTrackTintColor={theme.colors.grey2}
                   showValue={false}
