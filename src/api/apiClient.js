@@ -56,6 +56,7 @@ apiClient.interceptors.request.use(
       const accessToken = await AsyncStorage.getItem('accessToken');
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
+        console.log('[요청 Authorization]', config.headers.Authorization);
       }
 
       // 요청 로그

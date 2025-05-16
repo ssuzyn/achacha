@@ -28,6 +28,11 @@ const useAuthStore = create((set, get) => ({
       if (tokens.bleToken) {
         await AsyncStorage.setItem('bleToken', tokens.bleToken);
       }
+      // 저장 후 바로 읽어서 로그 출력
+      const savedAccessToken = await AsyncStorage.getItem('accessToken');
+      const savedRefreshToken = await AsyncStorage.getItem('refreshToken');
+      console.log('[저장된 accessToken]', savedAccessToken);
+      console.log('[저장된 refreshToken]', savedRefreshToken);
       // userId도 AsyncStorage에서 불러와서 상태에 반영
       const userId = await AsyncStorage.getItem('userId');
       set({
