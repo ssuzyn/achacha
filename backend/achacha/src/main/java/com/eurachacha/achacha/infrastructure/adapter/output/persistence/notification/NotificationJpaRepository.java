@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 import com.eurachacha.achacha.domain.model.notification.Notification;
 
 @Repository
-public interface NotificationJpaRepository extends JpaRepository<Notification, Integer> {
+public interface NotificationJpaRepository extends JpaRepository<Notification, Integer>, NotificationRepositoryCustom {
 }
