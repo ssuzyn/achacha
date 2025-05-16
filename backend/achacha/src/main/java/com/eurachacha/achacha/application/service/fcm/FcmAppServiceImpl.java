@@ -82,11 +82,6 @@ public class FcmAppServiceImpl implements FcmAppService {
 
 		for (NotificationSetting findSetting : findSettings) {
 
-			// 비활성화 시 스킵
-			if (!notificationSettingDomainService.isEnabled(findSetting)) {
-				continue;
-			}
-
 			// 알림 전송
 			sendExpiryDateFcmNotification(findGifticon, findCode, today, findSetting);
 		}
@@ -97,11 +92,6 @@ public class FcmAppServiceImpl implements FcmAppService {
 		// 사용자 알림 설정 조회
 		NotificationSetting findSetting = notificationSettingRepository
 			.findByUserIdAndNotificationTypeId(findGifticon.getUser().getId(), findCode.getId());
-
-		// 비활성화 시 스킵
-		if (!notificationSettingDomainService.isEnabled(findSetting)) {
-			return;
-		}
 
 		// 알림 전송
 		sendExpiryDateFcmNotification(findGifticon, findCode, today, findSetting);
@@ -121,7 +111,7 @@ public class FcmAppServiceImpl implements FcmAppService {
 			for (FcmToken fcmToken : findFcmTokens) {
 
 				String title = findCode.getCode().getDisplayName();
-				String content = findGifticon.getName() + "의 유효기간이 " + day + "일 남았습니다.";
+				String content = getContent(findGifticon, day);
 
 				NotificationEventDto dto = NotificationEventDto.builder()
 					.fcmToken(fcmToken.getValue())
@@ -130,13 +120,19 @@ public class FcmAppServiceImpl implements FcmAppService {
 					.notificationTypeCode(findCode.getCode().name())
 					.build();
 
-				// FCM 알림 전송
-				notificationEventPort.sendNotificationEvent(dto);
+				// 알림 설정 활성화 시 FCM 알림 전송
+				if (notificationSettingDomainService.isEnabled(findSetting)) {
+					notificationEventPort.sendNotificationEvent(dto);
+				}
 
 				// 알림 저장
 				saveNotification(findGifticon, findCode, findSetting, title, content);
 			}
 		}
+	}
+
+	private static String getContent(Gifticon findGifticon, int day) {
+		return findGifticon.getName() + "의 유효기간이 " + day + "일 남았습니다.";
 	}
 
 	private void saveNotification(Gifticon findGifticon, NotificationType findCode, NotificationSetting findSetting,
