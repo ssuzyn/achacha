@@ -155,7 +155,7 @@ public class PresentAppServiceImpl implements PresentAppService {
 
 		return PresentCardResponseDto.builder()
 			.presentCardCode(presentCard.getCode())
-			.message(presentCard.getMessage())
+			.presentCardMessage(presentCard.getMessage())
 			.gifticonOriginalPath(gifticonOriginalPath)
 			.gifticonThumbnailPath(gifticonThumbnailPath)
 			.templateCardPath(templateCardPath)

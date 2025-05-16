@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 public class PresentCardResponseDto {
 
 	private String presentCardCode;
-	private String message;
+	private String presentCardMessage;
 	private String gifticonOriginalPath;
 	private String gifticonThumbnailPath;
 	private String templateCardPath;
