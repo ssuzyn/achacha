@@ -17,6 +17,8 @@
     "@react-native-clipboard/clipboard": "^1.16.2",
     "@react-native-community/datetimepicker": "^8.3.0",
     "@react-native-community/netinfo": "^11.4.1",
+    "@react-native-firebase/app": "^22.2.0",
+    "@react-native-firebase/messaging": "^22.2.0",
     "@react-native-ml-kit/barcode-scanning": "^1.4.1",
     "@react-native-seoul/kakao-login": "^5.4.1",
     "@react-navigation/bottom-tabs": "^7.3.10",
