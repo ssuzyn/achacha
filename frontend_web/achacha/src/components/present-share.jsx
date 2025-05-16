@@ -1,12 +1,11 @@
-// KakaoShare.jsx
 import React, { useEffect } from 'react';
 
-const KAKAO_JS_KEY = '8d54c485f1e1360ca3124ebb9f3978ab'; // 본인 JS 키로 변경
-const TEMPLATE_ID = 120597; // 본인 템플릿 ID로 변경
+const KAKAO_JS_KEY = '8d54c485f1e1360ca3124ebb9f3978ab'; // KakaoShare.jsx와 동일한 JS 키 사용
+const TEMPLATE_ID = 120645; // 실제 템플릿 ID로 변경 필요
 
-const KakaoShare = () => {
+function PresentSharePage() {
   useEffect(() => {
-    // Kakao SDK 스크립트 동적 로드
+    // Kakao SDK 동적 로드
     const script = document.createElement('script');
     script.src = 'https://developers.kakao.com/sdk/js/kakao.js';
     script.async = true;
@@ -23,12 +22,16 @@ const KakaoShare = () => {
     function sendKakaoLink() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
+      const name = params.get('name');
+      const brand = params.get('brand');
       if (window.Kakao && window.Kakao.Link) {
         window.Kakao.Link.sendCustom({
           templateId: TEMPLATE_ID,
           templateArgs: {
-            invite_code: code,
-          },
+            gifticon_name: name,
+            brand_name: brand,
+            card_link: `https://your-react-app-domain.com/link/${code}`
+          }
         });
         // 2초 후 마켓으로 이동 (카카오톡 미설치 시)
         timer = setTimeout(() => {
@@ -44,11 +47,8 @@ const KakaoShare = () => {
     };
   }, []);
 
-  return (
-    <div style={{ textAlign: 'center', marginTop: 80 }}>
-      <p>카카오톡 공유창을 여는 중입니다...</p>
-    </div>
-  );
-};
+  return <div>카카오톡 공유창을 여는 중입니다...</div>;
+}
 
-export default KakaoShare;
+export default PresentSharePage;
+
