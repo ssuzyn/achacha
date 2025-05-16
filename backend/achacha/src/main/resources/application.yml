@@ -15,10 +15,10 @@ spring:
       auto-index-creation: true
 
   rabbitmq:
-    host: ${RABBITMQ_HOST:rabbitmq}
-    port: ${RABBITMQ_PORT:5672}
-    username: ${RABBITMQ_USERNAME:guest}
-    password: ${RABBITMQ_PASSWORD:guest}
+    host: ${RABBITMQ_HOST}
+    port: ${RABBITMQ_PORT}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
   servlet:
     multipart:
