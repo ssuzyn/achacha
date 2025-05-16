@@ -1,6 +1,5 @@
 package com.eurachacha.achacha.application.service.present;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,8 +26,7 @@ import com.eurachacha.achacha.domain.model.present.ColorPalette;
 import com.eurachacha.achacha.domain.model.present.PresentCard;
 import com.eurachacha.achacha.domain.model.present.PresentTemplate;
 import com.eurachacha.achacha.domain.model.present.enums.TemplateCategory;
-import com.eurachacha.achacha.web.common.exception.CustomException;
-import com.eurachacha.achacha.web.common.exception.ErrorCode;
+import com.eurachacha.achacha.domain.service.present.PresentCardDomainService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class PresentAppServiceImpl implements PresentAppService {
 
+	private final PresentCardDomainService presentCardDomainService;
 	private final PresentCardRepository presentCardRepository;
 	private final PresentTemplateRepository presentTemplateRepository;
 	private final ColorPaletteRepository colorPaletteRepository;
@@ -123,9 +122,7 @@ public class PresentAppServiceImpl implements PresentAppService {
 		log.info("조회된 선물 카드: id={}, code={}", presentCard.getId(), presentCard.getCode());
 
 		// 만료 여부를 먼저 확인하고 만료된 경우 즉시 예외 발생
-		if (LocalDateTime.now().isAfter(presentCard.getExpiryDateTime())) {
-			throw new CustomException(ErrorCode.PRESENT_CARD_EXPIRED);
-		}
+		presentCardDomainService.validateExpiryDateTime(presentCard.getExpiryDateTime());
 
 		Gifticon gifticon = presentCard.getGifticon();
 		PresentTemplate presentTemplate = presentCard.getPresentTemplate();
