@@ -141,7 +141,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      * 알림을 생성하고 표시합니다.
      */
     private void sendNotification(String title, String body, String notificationType, Map<String, String> data) {
-        Intent intent = new Intent(this, MainActivity.class);
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         
         // FCM 데이터를 인텐트에 추가
@@ -151,13 +151,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         
         // 알림을 탭했을 때 실행될 PendingIntent
         PendingIntent pendingIntent = PendingIntent.getActivity(
-            this, 
+            getApplicationContext(), 
             0, 
             intent, 
             PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
         );
         
-        String channelId = getString(R.string.default_notification_channel_id);
+        String channelId = getApplicationContext().getString(R.string.default_notification_channel_id);
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         
         // 알림 타입에 따라 다른 아이콘과 색상 사용
@@ -166,7 +166,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         
         // 알림 생성
         NotificationCompat.Builder notificationBuilder =
-            new NotificationCompat.Builder(this, channelId)
+            new NotificationCompat.Builder(getApplicationContext(), channelId)
                 .setSmallIcon(icon)
                 .setContentTitle(title)
                 .setContentText(body)
@@ -176,7 +176,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                 .setContentIntent(pendingIntent);
         
         NotificationManager notificationManager =
-            (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
         
         // Android Oreo 이상에서는 채널 확인 (MainApplication에서 이미 생성됨)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
