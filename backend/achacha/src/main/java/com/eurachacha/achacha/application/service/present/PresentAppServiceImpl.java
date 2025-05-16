@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.application.service.present;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +123,7 @@ public class PresentAppServiceImpl implements PresentAppService {
 		log.info("조회된 선물 카드: id={}, code={}", presentCard.getId(), presentCard.getCode());
 
 		// 만료 여부를 먼저 확인하고 만료된 경우 즉시 예외 발생
-		presentCardDomainService.validateExpiryDateTime(presentCard.getExpiryDateTime());
+		presentCardDomainService.validateExpiryDateTime(LocalDateTime.now(), presentCard.getExpiryDateTime());
 
 		Gifticon gifticon = presentCard.getGifticon();
 		PresentTemplate presentTemplate = presentCard.getPresentTemplate();

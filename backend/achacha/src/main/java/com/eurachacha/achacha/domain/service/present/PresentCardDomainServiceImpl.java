@@ -11,8 +11,8 @@ import com.eurachacha.achacha.web.common.exception.ErrorCode;
 public class PresentCardDomainServiceImpl implements PresentCardDomainService {
 
 	@Override
-	public void validateExpiryDateTime(LocalDateTime expiryDateTime) {
-		if(LocalDateTime.now().isAfter(expiryDateTime)){
+	public void validateExpiryDateTime(LocalDateTime currentDateTime, LocalDateTime expiryDateTime) {
+		if(currentDateTime.isAfter(expiryDateTime)){
 			throw new CustomException(ErrorCode.PRESENT_CARD_EXPIRED);
 		}
 	}
