@@ -1,7 +1,7 @@
 /* eslint-disable react-native/no-inline-styles */
 // 쉐어박스 상세 금액형 스크린
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -60,6 +60,9 @@ const BoxDetailAmountScreen = () => {
   // 바코드 관리
   const [barcodeImageUrl, setBarcodeImageUrl] = useState(null);
   const [barcodeNumber, setBarcodeNumber] = useState(null);
+  const [isSharer, setIsSharer] = useState(false);
+
+  const latestRequestId = useRef(0);
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -110,18 +113,34 @@ const BoxDetailAmountScreen = () => {
     const id = route.params?.gifticonId || route.params?.gifticon?.gifticonId;
     const scopeParam = route.params?.scope || 'SHARE_BOX';
     if (id) {
+      const requestId = ++latestRequestId.current;
       setIsLoading(true);
       gifticonService.getGifticonDetail(id, scopeParam)
         .then(data => {
-          setGifticonData(data);
+          if (requestId === latestRequestId.current) {
+            setGifticonData(data);
+          }
         })
         .catch(e => {
-          // 에러 처리
-          setGifticonData(null);
+          if (requestId === latestRequestId.current) {
+            setGifticonData(null);
+          }
         })
-        .finally(() => setIsLoading(false));
+        .finally(() => {
+          if (requestId === latestRequestId.current) {
+            setIsLoading(false);
+          }
+        });
     }
   }, [route.params]);
+
+  useEffect(() => {
+    console.log('[DEBUG] gifticonData 변경:', gifticonData);
+  }, [gifticonData]);
+
+  useEffect(() => {
+    console.log('[DEBUG] isLoading 변경:', isLoading);
+  }, [isLoading]);
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
@@ -137,7 +156,6 @@ const BoxDetailAmountScreen = () => {
       setGifticonData(data);
       setIsSharer(data.isSharer);
     } catch (error) {
-      // 에러 처리
       setGifticonData(null);
     } finally {
       setIsLoading(false);
@@ -213,7 +231,6 @@ const BoxDetailAmountScreen = () => {
       try {
         setIsLoading(true);
         const res = await gifticonService.getAvailableGifticonBarcode(gifticonData.gifticonId);
-        console.log('바코드 API 응답:', res);
         setBarcodeImageUrl(res.barcodePath);
         setBarcodeNumber(res.gifticonBarcodeNumber);
         setIsUsing(true);
@@ -313,7 +330,6 @@ const BoxDetailAmountScreen = () => {
     // console.log('사용내역 조회');
     const brandName = route.params?.brandName || gifticonData.brandName || gifticonData.brand || '-';
     const gifticonName = route.params?.gifticonName || gifticonData.gifticonName || gifticonData.name || '-';
-    console.log('[HISTORY PAGE] brandName:', brandName, 'gifticonName:', gifticonName);
     navigation.navigate('BoxDetailAmountHistoryScreen', {
       id: gifticonData.gifticonId,
       scope: scope,
@@ -426,6 +442,7 @@ const BoxDetailAmountScreen = () => {
       })()
     : require('../../assets/images/dummy_starbuckscard.png');
 
+  // 렌더링 분기 직전 로그
   if (isLoading || !gifticonData) {
     // 로딩 중 표시
     return (
