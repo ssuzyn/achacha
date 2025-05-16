@@ -59,6 +59,21 @@ services:
     networks:
       - achacha-network
 
+  rabbitmq:
+    image: rabbitmq:4.1-management
+    restart: always
+    ports:
+      - "5672:5672"  # AMQP 프로토콜 포트
+      - "15672:15672"  # 관리 웹 인터페이스 포트
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+      TZ: Asia/Seoul
+    volumes:
+      - achacha-rabbitmq:/var/lib/rabbitmq
+    networks:
+      - achacha-network
+
 networks:
   achacha-network:
     name: achacha-network
@@ -66,4 +81,5 @@ networks:
 
 volumes:
   achacha-mysql:
-  achacha-mongodb: # MongoDB 볼륨 추가
+  achacha-mongodb:
+  achacha-rabbitmq:

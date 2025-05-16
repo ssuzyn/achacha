@@ -76,9 +76,8 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // FCM
-    implementation 'com.google.firebase:firebase-admin:9.4.3'
-    implementation 'com.google.firebase:firebase-messaging:24.1.1'
+    // rabbitMQ
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
     // 테스트에서도 Lombok을 사용하기 위한 설정
     testCompileOnly 'org.projectlombok:lombok'
