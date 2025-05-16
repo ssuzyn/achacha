@@ -35,15 +35,6 @@ const emoji3 = require('../../assets/images/emoji3.png');
 const emoji4 = require('../../assets/images/emoji4.png');
 const emoji5 = require('../../assets/images/emoji5.png');
 
-// 더미 사용자 데이터를 상수로 선언
-const DUMMY_USERS = [
-  { id: 1, name: '안*진', emoji: emoji1 },
-  { id: 2, name: 'Gw*ter', emoji: emoji2 },
-  { id: 3, name: '스타*명', emoji: emoji3 },
-  { id: 4, name: '정*은', emoji: emoji4 },
-  { id: 5, name: '류*문', emoji: emoji5 },
-];
-
 const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -69,7 +60,6 @@ const GiveAwayScreen = ({ onClose }) => {
     nextPage: null,
   });
   const [isLoadingGifticons, setIsLoadingGifticons] = useState(false);
-  // const [gifticonError, setGifticonError] = useState(null); // 필요시 에러 상태 추가
 
   // BLE 관련 상태
   const { bleToken } = useAuthStore();
@@ -549,7 +539,6 @@ const GiveAwayScreen = ({ onClose }) => {
       }
     } catch (error) {
       console.error('뿌리기용 기프티콘 목록 로드 실패:', error);
-      Alert.alert('오류', '기프티콘 목록을 불러오는 중 오류가 발생했습니다.');
       setGiveAwayGifticons({ gifticons: [], hasNextPage: false, nextPage: null });
     } finally {
       setIsLoadingGifticons(false);
