@@ -29,14 +29,15 @@ public interface UsageHistoryJpaRepository extends JpaRepository<UsageHistory, I
 	Optional<UsageHistory> findByIdAndGifticonIdAndUserId(Integer usageHistoryId, Integer gifticonId, Integer userId);
 
 	@Query("""
-		SELECT uh
-		FROM UsageHistory uh
-		WHERE (uh.gifticon.id, uh.createdAt) IN (
-		    SELECT uh2.gifticon.id, MAX(uh2.createdAt)
-		    FROM UsageHistory uh2
-		    WHERE uh2.gifticon.id IN :ids
-		    AND uh2.user.id = :userId
-		    GROUP BY uh2.gifticon.id)
+		SELECT uh1
+		FROM UsageHistory uh1
+		LEFT JOIN UsageHistory uh2
+		ON uh1.gifticon.id = uh2.gifticon.id
+		AND uh1.createdAt < uh2.createdAt
+		AND uh2.user.id = :userId
+		WHERE uh1.gifticon.id IN :ids
+		AND uh1.user.id = :userId
+		AND uh2.id IS NULL
 		""")
 	List<UsageHistory> findLatestForEachGifticonByIdsAndUserId(
 		@Param("ids") List<Integer> ids,
