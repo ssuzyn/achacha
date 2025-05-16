@@ -118,6 +118,8 @@ public class FcmAppServiceImpl implements FcmAppService {
 					.title(title)
 					.body(content)
 					.notificationTypeCode(findCode.getCode().name())
+					.referenceEntityId(findGifticon.getId())
+					.referenceEntityType("gifticon")
 					.build();
 
 				// 알림 설정 활성화 시 FCM 알림 전송
