@@ -5,6 +5,7 @@
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <uses-permission android:name="android.permission.VIBRATE"/>
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
   <!-- 카카오맵 SDK OpenGL ES 2.0 이상 지원 설정 -->
   <uses-feature android:glEsVersion="0x00020000" android:required="true" />
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" tools:replace="android:maxSdkVersion" />
@@ -42,6 +43,18 @@
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
     <meta-data android:name="android.webkit.WebView.EnableSafeBrowsing" android:value="true" />
+    
+    <!-- FCM 알림 관련 메타데이터 -->
+    <meta-data
+        android:name="com.google.firebase.messaging.default_notification_icon"
+        android:resource="@drawable/ic_stat_ic_notification" />
+    <meta-data
+        android:name="com.google.firebase.messaging.default_notification_color"
+        android:resource="@color/colorAccent" />
+    <meta-data
+        android:name="com.google.firebase.messaging.default_notification_channel_id"
+        android:value="@string/default_notification_channel_id" />
+        
     <activity 
       android:name=".MainActivity" 
       android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|uiMode" 
@@ -78,6 +91,16 @@
             <data android:scheme="kakaoc4f44eace8f605213e73d4e08941e6eb" android:host="oauth" />
         </intent-filter>
     </activity>
+    
+    <!-- Firebase 메시징 서비스 등록 -->
+    <service
+        android:name=".MyFirebaseMessagingService"
+        android:exported="false">
+        <intent-filter>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
+        </intent-filter>
+    </service>
+    
     <!-- ML Kit 바코드 스캐닝 모델 자동 다운로드 설정 -->
     <meta-data
       android:name="com.google.mlkit.vision.DEPENDENCIES"
