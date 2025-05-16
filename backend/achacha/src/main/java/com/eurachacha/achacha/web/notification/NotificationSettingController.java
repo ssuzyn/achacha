@@ -41,7 +41,7 @@ public class NotificationSettingController {
 		return ResponseEntity.ok("알림 허용 설정 변경 성공");
 	}
 
-	@PatchMapping("/expirationCycle")
+	@PatchMapping("/expiration-cycle")
 	public ResponseEntity<?> updateExpirationCycle(
 		@RequestBody ExpirationCycleUpdateRequestDto expirationCycleUpdateDto) {
 		notificationSettingAppService.updateExpirationCycle(expirationCycleUpdateDto.getExpirationCycle());
