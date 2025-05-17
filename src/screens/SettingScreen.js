@@ -27,6 +27,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserById } from '../api/userInfo';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
 import notificationService from '../api/notificationService';
+import useNotificationStore from '../store/notificationStore';
 
 // 알림 타입 enum (API와 일치)
 const NOTIFICATION_TYPES = {
@@ -85,21 +86,24 @@ const SettingScreen = () => {
   // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
   const keepTabBarVisible = route.params?.keepTabBarVisible || false;
 
-  // API 로딩 상태 관리
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 상태 관리
-  const [expiryNotification, setExpiryNotification] = useState(false);
-  const [giftSharingNotification, setGiftSharingNotification] = useState(false);
-  const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
-  const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(7); // 기본값 7일
-  const [usageCompletionNotification, setUsageCompletionNotification] = useState(false);
-  const [shareboxGiftRegistration, setShareboxGiftRegistration] = useState(false);
-  const [shareboxGiftUsage, setShareboxGiftUsage] = useState(false);
-  const [shareboxMemberJoin, setShareboxMemberJoin] = useState(false);
-  const [shareboxGroupDelete, setShareboxGroupDelete] = useState(false);
-  const [watchModalVisible, setWatchModalVisible] = useState(false);
-  const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
+  // Zustand 스토어에서 알림 설정 상태 및 함수 가져오기
+  const {
+    expiryNotification,
+    giftSharingNotification,
+    nearbyStoreNotification,
+    expiryNotificationInterval,
+    usageCompletionNotification,
+    shareboxGiftRegistration,
+    shareboxGiftUsage,
+    shareboxMemberJoin,
+    shareboxGroupDelete,
+    isLoading,
+    error,
+    fetchNotificationSettings,
+    updateNotificationTypeStatus,
+    updateExpirationCycle,
+    loadLocalExpirationCycle,
+  } = useNotificationStore();
 
   // 로그인 타입 (추후 API 연동 시 실제 데이터로 대체)
   // eslint-disable-next-line no-unused-vars
@@ -109,67 +113,9 @@ const SettingScreen = () => {
   // 슬라이더 마커 값
   const markers = [0, 1, 2, 3, 7, 30, 60, 90];
 
-  // 알림 설정 조회
-  const fetchNotificationSettings = useCallback(async () => {
-    console.log('[알림설정] 알림 설정 조회 시작');
-    setIsSubmitting(true);
-
-    try {
-      const settings = await notificationService.getNotificationSettings();
-      console.log('[알림설정] 알림 설정 조회 결과:', JSON.stringify(settings, null, 2));
-
-      // 각 알림 타입별 설정 값을 상태에 적용
-      settings.forEach(setting => {
-        switch (setting.notificationType) {
-          case NOTIFICATION_TYPES.LOCATION_BASED:
-            console.log('[알림설정] 근접 매장 알림 설정:', setting.isEnabled);
-            setNearbyStoreNotification(setting.isEnabled);
-            break;
-          case NOTIFICATION_TYPES.EXPIRY_DATE:
-            console.log('[알림설정] 유효기간 만료 알림 설정:', setting.isEnabled);
-            console.log('[알림설정] 알림 주기:', setting.expirationCycle);
-            setExpiryNotification(setting.isEnabled);
-            if (setting.expirationCycle && CYCLE_TO_MARKER[setting.expirationCycle]) {
-              setExpiryNotificationInterval(CYCLE_TO_MARKER[setting.expirationCycle]);
-            }
-            break;
-          case NOTIFICATION_TYPES.RECEIVE_GIFTICON:
-            console.log('[알림설정] 선물 뿌리기 알림 설정:', setting.isEnabled);
-            setGiftSharingNotification(setting.isEnabled);
-            break;
-          case NOTIFICATION_TYPES.USAGE_COMPLETE:
-            console.log('[알림설정] 사용완료 여부 알림 설정:', setting.isEnabled);
-            setUsageCompletionNotification(setting.isEnabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_GIFTICON:
-            console.log('[알림설정] 쉐어박스 기프티콘 등록 알림 설정:', setting.isEnabled);
-            setShareboxGiftRegistration(setting.isEnabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE:
-            console.log('[알림설정] 쉐어박스 기프티콘 사용 알림 설정:', setting.isEnabled);
-            setShareboxGiftUsage(setting.isEnabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN:
-            console.log('[알림설정] 쉐어박스 멤버 참여 알림 설정:', setting.isEnabled);
-            setShareboxMemberJoin(setting.isEnabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_DELETED:
-            console.log('[알림설정] 쉐어박스 그룹 삭제 알림 설정:', setting.isEnabled);
-            setShareboxGroupDelete(setting.isEnabled);
-            break;
-          default:
-            console.log(`[알림설정] 알 수 없는 알림 타입: ${setting.notificationType}`);
-        }
-      });
-    } catch (error) {
-      console.error('[알림설정] 알림 설정 조회 실패:', error);
-      const errorMessage =
-        error.response?.data?.message || '알림 설정을 조회하는 중 오류가 발생했습니다.';
-      Alert.alert('알림 설정 조회 실패', errorMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, []);
+  // 워치 모달 상태
+  const [watchModalVisible, setWatchModalVisible] = useState(false);
+  const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -180,78 +126,28 @@ const SettingScreen = () => {
   const handleNotificationToggle = useCallback(
     async (type, enabled) => {
       console.log(`[알림설정] ${type} 알림 상태 변경 요청:`, enabled);
-      setIsSubmitting(true);
+      const success = await updateNotificationTypeStatus(type, enabled);
 
-      try {
-        const result = await notificationService.updateNotificationTypeStatus(type, enabled);
-        console.log(`[알림설정] ${type} 알림 상태 변경 성공:`, result);
-
-        // 상태 업데이트 (즉각적인 UI 반영 위해)
-        switch (type) {
-          case NOTIFICATION_TYPES.LOCATION_BASED:
-            setNearbyStoreNotification(enabled);
-            break;
-          case NOTIFICATION_TYPES.EXPIRY_DATE:
-            setExpiryNotification(enabled);
-            break;
-          case NOTIFICATION_TYPES.RECEIVE_GIFTICON:
-            setGiftSharingNotification(enabled);
-            break;
-          case NOTIFICATION_TYPES.USAGE_COMPLETE:
-            setUsageCompletionNotification(enabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_GIFTICON:
-            setShareboxGiftRegistration(enabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE:
-            setShareboxGiftUsage(enabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN:
-            setShareboxMemberJoin(enabled);
-            break;
-          case NOTIFICATION_TYPES.SHAREBOX_DELETED:
-            setShareboxGroupDelete(enabled);
-            break;
-        }
-      } catch (error) {
-        console.error(`[알림설정] ${type} 알림 상태 변경 실패:`, error);
-        const errorMessage =
-          error.response?.data?.message || '알림 설정을 변경하는 중 오류가 발생했습니다.';
-        Alert.alert('알림 설정 실패', errorMessage);
-
-        // 실패 시 이전 상태로 롤백 (서버 상태와 동기화)
-        fetchNotificationSettings();
-      } finally {
-        setIsSubmitting(false);
+      if (!success && error) {
+        Alert.alert('알림 설정 실패', error);
       }
     },
-    [fetchNotificationSettings]
+    [updateNotificationTypeStatus, error]
   );
 
   // 알림 주기 변경 핸들러
   const handleExpirationCycleChange = useCallback(
     async value => {
-      const cycleValue = MARKER_TO_CYCLE[value];
-      console.log('[알림설정] 알림 주기 변경 요청:', value, '(', cycleValue, ')');
-      setIsSubmitting(true);
+      console.log('[알림설정] 알림 주기 변경 요청:', value);
+      const success = await updateExpirationCycle(value);
 
-      try {
-        const result = await notificationService.updateExpirationCycle(cycleValue);
-        console.log('[알림설정] 알림 주기 변경 성공:', result);
-        setExpiryNotificationInterval(value);
-      } catch (error) {
-        console.error('[알림설정] 알림 주기 변경 실패:', error);
-        const errorMessage =
-          error.response?.data?.message || '알림 주기 설정을 변경하는 중 오류가 발생했습니다.';
-        Alert.alert('알림 주기 설정 실패', errorMessage);
-
-        // 실패 시 이전 상태로 롤백 (서버 상태와 동기화)
-        fetchNotificationSettings();
-      } finally {
-        setIsSubmitting(false);
+      if (success) {
+        Alert.alert('설정 완료', '알림 주기 설정이 저장되었습니다.');
+      } else if (error) {
+        Alert.alert('알림 주기 설정 실패', error);
       }
     },
-    [fetchNotificationSettings]
+    [updateExpirationCycle, error]
   );
 
   // Google 로고 SVG 컴포넌트
@@ -474,6 +370,23 @@ const SettingScreen = () => {
     fetchUserName();
   }, []);
 
+  // 앱 시작 시 로컬 설정 및 서버 설정 로드
+  useEffect(() => {
+    const initSettings = async () => {
+      try {
+        // 로컬 저장소에서 알림 주기 값 로드
+        await loadLocalExpirationCycle();
+
+        // 서버에서 모든 알림 설정 로드
+        await fetchNotificationSettings();
+      } catch (e) {
+        console.error('[알림설정] 설정 초기화 실패:', e);
+      }
+    };
+
+    initSettings();
+  }, [loadLocalExpirationCycle, fetchNotificationSettings]);
+
   // 탭바 처리 - 화면 진입 시 및 이탈 시
   useEffect(() => {
     // 애니메이션이 완료된 후에 탭바 숨기기
@@ -489,11 +402,6 @@ const SettingScreen = () => {
       showTabBar();
     };
   }, [hideTabBar, showTabBar, keepTabBarVisible]);
-
-  // 컴포넌트 마운트 시 알림 설정 조회
-  useEffect(() => {
-    fetchNotificationSettings();
-  }, [fetchNotificationSettings]);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -519,7 +427,7 @@ const SettingScreen = () => {
       </View>
 
       {/* 로딩 인디케이터 */}
-      {isSubmitting && (
+      {isLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
@@ -612,7 +520,7 @@ const SettingScreen = () => {
 
               <View style={styles.customSliderContainer}>
                 <Slider
-                  value={expiryNotificationInterval}
+                  value={expiryNotificationInterval || 7}
                   values={markers}
                   onValueChange={handleExpirationCycleChange}
                   minimumTrackTintColor={theme.colors.primary}
@@ -620,6 +528,9 @@ const SettingScreen = () => {
                   showValue={false}
                   containerStyle={styles.sliderStyle}
                 />
+                <Text variant="caption" style={styles.currentValueText}>
+                  현재 설정: {expiryNotificationInterval || 7}일 전 알림
+                </Text>
               </View>
             </View>
           )}
@@ -1053,6 +964,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 999,
+  },
+  currentValueText: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    padding: 5,
+    color: '#333',
   },
 });
 

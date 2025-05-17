@@ -106,17 +106,28 @@ const notificationService = {
         throw new Error('유효하지 않은 알림 주기 값입니다.');
       }
 
-      console.log('[API] 요청 URL:', API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS_EXPIRATION_CYCLE);
+      const endpoint = API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS_EXPIRATION_CYCLE;
+      console.log('[API] 요청 URL:', endpoint);
 
       // API 요청 데이터
       const requestData = { expirationCycle };
+      console.log('[API] 요청 데이터:', JSON.stringify(requestData));
 
-      const response = await apiClient.patch(
-        API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS_EXPIRATION_CYCLE,
-        requestData
-      );
+      // 명시적 헤더 설정
+      const headers = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
 
-      console.log('[API] 알림 주기 설정 성공:', response.data);
+      // 토큰이 가장 최신 상태인지 확인
+      const token = await apiClient.defaults.headers.common['Authorization'];
+      console.log('[API] 현재 인증 토큰:', token ? '존재함' : '없음');
+
+      const response = await apiClient.patch(endpoint, requestData, { headers });
+
+      console.log('[API] 알림 주기 설정 응답:', response.status);
+      console.log('[API] 알림 주기 설정 응답 데이터:', JSON.stringify(response.data));
+
       return response.data;
     } catch (error) {
       console.error('[API] 알림 주기 설정 실패:', error);
@@ -124,14 +135,20 @@ const notificationService = {
       // 에러 상세 정보 로그
       if (error.response) {
         const { status, data } = error.response;
-        console.error('서버 응답 오류:', status, data);
+        console.error('[API] 서버 응답 오류:', status, JSON.stringify(data));
 
         // 특정 에러 코드에 대한 처리
         if (data.errorCode === 'NOTIFICATION_002') {
-          console.error('알림 설정을 찾을 수 없습니다.');
+          console.error('[API] 알림 설정을 찾을 수 없습니다.');
         } else if (data.errorCode === 'NOTIFICATION_003') {
-          console.error('비활성화된 알림입니다. 먼저 알림을 활성화해주세요.');
+          console.error('[API] 비활성화된 알림입니다. 먼저 알림을 활성화해주세요.');
         }
+      } else if (error.request) {
+        // 요청은 전송되었지만 응답이 수신되지 않음
+        console.error('[API] 서버 응답 없음:', JSON.stringify(error.request));
+      } else {
+        // 요청 설정 중 오류 발생
+        console.error('[API] 요청 설정 오류:', error.message);
       }
 
       throw error;
