@@ -154,15 +154,9 @@ const DetailProductScreen = () => {
     try {
       // 실제 구현에서는 API 호출로 대체
       const response = await gifticonService.getGifticonDetail(id, scope);
-      console.log(
-        '[DetailProductScreen] loadGifticonData API 응답:',
-        JSON.stringify(response, null, 2)
-      ); // API 응답 전체 확인
       setGifticonData(response);
       // gifticonData가 세팅된 후 경로 확인
       if (response) {
-        console.log('[DetailProductScreen] thumbnailPath:', response.thumbnailPath);
-        console.log('[DetailProductScreen] originalImagePath:', response.originalImagePath);
       }
       setIsSharer(response.isSharer);
 
@@ -177,13 +171,11 @@ const DetailProductScreen = () => {
             });
           }
         } catch (barcodeError) {
-          console.error('[DetailProductScreen] 바코드 정보 로드 실패:', barcodeError);
         }
       }
 
       setIsLoading(false);
     } catch (error) {
-      console.error('[DetailProductScreen] 기프티콘 데이터 로드 실패:', error);
       setIsLoading(false);
       // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
       Alert.alert('오류', '기프티콘 정보를 불러오는데 실패했습니다.');
@@ -275,7 +267,6 @@ const DetailProductScreen = () => {
     try {
       // API 호출로 바코드 정보 가져오기
       const response = await gifticonService.getGifticonBarcode(gifticonId, scope);
-      console.log('[DetailProductScreen] 바코드 정보 응답:', response);
 
       if (response) {
         setBarcodeInfo({
@@ -284,7 +275,6 @@ const DetailProductScreen = () => {
         });
       }
     } catch (error) {
-      console.error('[DetailProductScreen] 바코드 정보 로드 실패:', error);
 
       // 오류 메시지 처리
       let errorMessage = '바코드 정보를 불러오는데 실패했습니다.';
@@ -410,7 +400,6 @@ const DetailProductScreen = () => {
 
         // 삭제 처리 API 호출
         await gifticonService.deleteGifticon(gifticonId);
-        console.log('[DetailProductScreen] 기프티콘 삭제 성공:', gifticonId);
 
         // 성공 메시지
         Alert.alert('성공', '기프티콘이 성공적으로 삭제되었습니다.', [
@@ -425,7 +414,6 @@ const DetailProductScreen = () => {
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
         await gifticonService.cancelShareGifticon(gifticonId);
-        console.log('[DetailProductScreen] 기프티콘 공유 취소 성공:', gifticonId);
 
         // 성공 메시지
         Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
@@ -439,10 +427,6 @@ const DetailProductScreen = () => {
         ]);
       }
     } catch (error) {
-      console.error(
-        `[DetailProductScreen] ${alertType === 'delete' ? '삭제' : '공유 취소'} 실패:`,
-        error
-      );
 
       // 에러 메시지 처리
       let errorMessage = `기프티콘 ${alertType === 'delete' ? '삭제' : '공유 취소'} 중 오류가 발생했습니다.`;

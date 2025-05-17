@@ -156,7 +156,6 @@ const handleNavigationByType = (navigation, remoteMessage) => {
   ) {
     const gifticonId = data?.referenceEntityId || data?.gifticonId || data?.id;
     if (gifticonId) {
-      console.log('기프티콘 상세 정보로 이동:', gifticonId);
       try {
         // API 호출로 기프티콘 타입 확인 후 분기 처리
         apiClient

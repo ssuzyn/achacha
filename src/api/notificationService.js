@@ -220,7 +220,6 @@ const notificationService = {
       // 알림에서는 MY_BOX 기준으로 확인
       return await gifticonService.getGifticonDetail(gifticonId, 'MY_BOX');
     } catch (error) {
-      console.error('[NotificationService] 기프티콘 상세 정보 조회 실패:', error);
       throw error;
     }
   },

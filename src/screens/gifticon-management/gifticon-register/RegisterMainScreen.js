@@ -294,7 +294,6 @@ const RegisterMainScreen = () => {
           if (imageAsset && imageAsset.uri) {
             try {
               // 바코드 인식 먼저 시도
-              console.log('[메인] 바코드 인식 시도 시작');
 
               // 바코드 인식 유틸리티 불러오기
               const {
@@ -307,19 +306,15 @@ const RegisterMainScreen = () => {
 
               // BarcodeNativeModule을 사용하여 바코드 감지 (네이티브 모듈이 있는 경우)
               if (BarcodeNativeModule) {
-                console.log('[메인] 네이티브 모듈로 바코드 감지 시도');
                 try {
                   // 1. 바코드 감지 (네이티브)
                   barcodeResult = await detectBarcode(imageAsset.uri);
-                  console.log('[메인] 네이티브 바코드 감지 결과:', JSON.stringify(barcodeResult));
 
                   // 2. 바코드 크롭 (네이티브)
                   if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
-                    console.log('[메인] 네이티브 바코드 크롭 시도');
                     croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
                   }
                 } catch (nativeError) {
-                  console.error('[메인] 네이티브 바코드 처리 오류:', nativeError);
                   // 오류 발생 시 JS 방식으로 전환
                   barcodeResult = await detectBarcode(imageAsset.uri);
                   if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
@@ -328,10 +323,8 @@ const RegisterMainScreen = () => {
                 }
               } else {
                 // 네이티브 모듈이 없는 경우 JS 방식 사용
-                console.log('[메인] JS 방식으로 바코드 감지 시도');
                 // 1. 바코드 인식 (JS)
                 barcodeResult = await detectBarcode(imageAsset.uri);
-                console.log('[메인] 바코드 인식 결과:', JSON.stringify(barcodeResult));
 
                 // 2. 바코드 영역 크롭 시도 (JS)
                 if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
@@ -353,9 +346,7 @@ const RegisterMainScreen = () => {
 
                 // 코너 포인트 정보 추출 (더 정확한 바코드 영역 감지를 위해)
                 const cornerPoints = firstBarcode.cornerPoints;
-                console.log('[메인] 바코드 코너 포인트:', cornerPoints);
 
-                console.log('[메인] 바코드 인식 성공:', barcodeValue, barcodeFormat);
 
                 // 바코드 영역 크롭 성공했는지 확인
                 if (
@@ -364,26 +355,16 @@ const RegisterMainScreen = () => {
                   croppedBarcodeResult.croppedImageUri
                 ) {
                   barcodeImageUri = croppedBarcodeResult.croppedImageUri;
-                  console.log('[메인] 바코드 이미지 크롭 성공:', barcodeImageUri);
 
                   // 크롭 정보 로깅 (디버깅용)
                   if (croppedBarcodeResult.cropInfo) {
-                    console.log(
-                      '[메인] 바코드 크롭 정보:',
-                      JSON.stringify(croppedBarcodeResult.cropInfo)
-                    );
                   }
                 } else {
-                  console.warn(
-                    '[메인] 바코드 크롭 실패:',
-                    croppedBarcodeResult ? croppedBarcodeResult.message : '크롭 결과 없음'
-                  );
                 }
               }
 
               // 이미지 메타데이터 처리 추가
               try {
-                console.log('[메인] 이미지 메타데이터 조회 시작');
                 // gifticonService import 확인
                 const gifticonService = require('../../../api/gifticonService').default;
 
@@ -402,8 +383,6 @@ const RegisterMainScreen = () => {
 
                 // OCR 로딩 모달 숨김
                 setIsOcrLoading(false);
-
-                console.log('[메인] 이미지 메타데이터 조회 결과:', imageMetadata);
 
                 // 바코드 정보와 함께 바로 상세 화면으로 이동
                 setImageOptionVisible(false);
@@ -440,7 +419,6 @@ const RegisterMainScreen = () => {
                   thumbnailImage: { uri: imageAsset.uri }, // 원본 이미지와 동일한 URI 사용 (추후 리사이징 필요)
                 });
               } catch (metadataError) {
-                console.error('[메인] 이미지 메타데이터 조회 오류:', metadataError);
 
                 // OCR 로딩 모달 숨김
                 setIsOcrLoading(false);
@@ -485,11 +463,9 @@ const RegisterMainScreen = () => {
                 ]);
               }
             } catch (processingError) {
-              console.error('이미지 처리 중 오류:', processingError);
               Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
             }
           } else {
-            console.error('유효한 이미지 URI가 없습니다');
             Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
           }
         }
@@ -497,7 +473,6 @@ const RegisterMainScreen = () => {
 
       console.log('이미지 라이브러리 호출 후');
     } catch (error) {
-      console.error('이미지 선택 예외 발생:', error);
       Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
   }, [navigation, gifticonType, boxType, selectedShareBoxId]);
@@ -526,26 +501,18 @@ const RegisterMainScreen = () => {
         maxHeight: 2000,
       };
 
-      console.log('카메라 호출 전');
 
       // 카메라 호출
       launchCamera(options, async response => {
-        console.log('카메라 응답:', JSON.stringify(response));
 
         if (response.didCancel) {
-          console.log('사용자가 카메라 촬영을 취소했습니다');
         } else if (response.error) {
-          console.error('카메라 오류: ', response.error);
           Alert.alert('오류', '카메라를 사용하는 중 오류가 발생했습니다: ' + response.error);
         } else {
           // 직접 파일 경로 확인 로그
-          console.log('이미지 응답 전체:', response);
 
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
-
-          console.log('이미지 응답 처리:', imageAsset);
-          console.log('이미지 uri:', imageAsset.uri);
 
           if (imageAsset && imageAsset.uri) {
             try {
