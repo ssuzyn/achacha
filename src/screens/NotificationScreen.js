@@ -200,6 +200,34 @@ const NotificationScreen = () => {
     // 데이터 로딩
     loadNotifications();
 
+    // 화면 진입 시 모든 알림 읽음 처리
+    const markAllAsReadOnMount = async () => {
+      try {
+        // 알림 데이터 로드 후 약간의 딜레이를 주고 읽음 처리 실행
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        if (isMounted.current && unreadCount > 0) {
+          await notificationService.markAllNotificationsAsRead();
+
+          // 화면에 반영
+          setNotifications(prev =>
+            prev.map(notif => ({
+              ...notif,
+              notificationIsRead: true,
+            }))
+          );
+
+          // 읽지 않은 알림 개수 업데이트
+          setUnreadCount(0);
+          console.log('[NotificationScreen] 모든 알림을 자동으로 읽음 처리했습니다.');
+        }
+      } catch (err) {
+        console.error('[NotificationScreen] 자동 알림 읽음 처리 실패:', err);
+      }
+    };
+
+    markAllAsReadOnMount();
+
     // 애니메이션이 완료된 후에 탭바 숨기기
     const interactionComplete = InteractionManager.runAfterInteractions(() => {
       if (!keepTabBarVisible) {
@@ -213,7 +241,7 @@ const NotificationScreen = () => {
       interactionComplete.cancel();
       showTabBar();
     };
-  }, [hideTabBar, showTabBar, keepTabBarVisible, loadNotifications]);
+  }, [hideTabBar, showTabBar, keepTabBarVisible, loadNotifications, unreadCount]);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {

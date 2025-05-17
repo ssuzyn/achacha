@@ -54,7 +54,7 @@ const notificationService = {
       console.log('[API] 요청 URL:', endpoint);
 
       // API 요청 데이터
-      const requestData = { enabled };
+      const requestData = { isEnabled: enabled };
 
       const response = await apiClient.patch(endpoint, requestData);
       console.log(`[API] 알림 타입(${type}) 상태 업데이트 성공:`, response.data);
