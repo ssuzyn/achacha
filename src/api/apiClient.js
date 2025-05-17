@@ -48,6 +48,7 @@ apiClient.interceptors.request.use(
       // 네트워크 연결 체크
       const isConnected = await checkNetworkConnection();
       if (!isConnected) {
+        console.error('네트워크 연결이 없습니다. 요청을 중단합니다.');
         return Promise.reject(new Error('네트워크 연결이 없습니다.'));
       }
 
@@ -55,13 +56,30 @@ apiClient.interceptors.request.use(
       const accessToken = await AsyncStorage.getItem('accessToken');
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
+        console.log('[요청 Authorization]', config.headers.Authorization);
+      }
+
+      // 요청 로그
+      console.log(`요청: ${config.method.toUpperCase()} ${config.url}`);
+
+      // FormData 요청인 경우 로그 간소화
+      if (config.data instanceof FormData) {
+        console.log('FormData 요청 - 이미지 업로드 데이터 포함');
+      } else if (config.data) {
+        // 요청 데이터가 너무 큰 경우 로그 길이 제한
+        const dataStr = JSON.stringify(config.data);
+        console.log(
+          '요청 데이터:',
+          dataStr.length > 500 ? dataStr.substring(0, 500) + '...' : dataStr
+        );
       }
     } catch (e) {
-      // 요청 전처리 실패
+      console.error('요청 전처리 실패:', e);
     }
     return config;
   },
   error => {
+    console.error('요청 인터셉터 오류:', error);
     return Promise.reject(error);
   }
 );

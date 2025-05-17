@@ -19,6 +19,10 @@ const gifticonService = {
   async getGifticonImageMetadata(image, gifticonType) {
     const formData = new FormData();
 
+    // 이미지 타입 및 파일명 디버그 로그
+    console.log('[API] 이미지 타입:', image.type || 'image/jpeg');
+    console.log('[API] 파일명:', image.fileName || 'image.jpg');
+
     // 이미지 파일 추가
     formData.append('image', {
       uri: Platform.OS === 'android' ? image.uri : image.uri.replace('file://', ''),
@@ -30,6 +34,11 @@ const gifticonService = {
     formData.append('gifticonType', gifticonType);
 
     try {
+      console.log(
+        '[API] 기프티콘 메타데이터 요청 시작:',
+        `${API_CONFIG.ENDPOINTS.GIFTICON_IMAGE_METADATA}`
+      );
+
       // 타임아웃 설정 증가 및 요청 설정 개선
       const response = await apiClient.post(
         API_CONFIG.ENDPOINTS.GIFTICON_IMAGE_METADATA,
@@ -43,10 +52,26 @@ const gifticonService = {
         }
       );
 
+      console.log('[API] 기프티콘 메타데이터 응답 성공');
       return response.data;
     } catch (error) {
+      console.error('기프티콘 이미지 메타데이터 조회 실패:', error);
+
+      // 오류 상세 정보 로그
+      if (error.response) {
+        // 서버에서 응답이 왔지만 상태 코드가 2xx 범위를 벗어난 경우
+        console.error('서버 응답 오류:', error.response.status, error.response.data);
+      } else if (error.request) {
+        // 요청은 전송되었지만 응답이 수신되지 않은 경우
+        console.error('서버 응답 없음 (요청 정보):', error.request);
+      } else {
+        // 요청 설정 중 오류가 발생한 경우
+        console.error('요청 설정 오류:', error.message);
+      }
+
       // 임시 대응: 서버 응답이 없을 경우 임시 데이터 반환 (개발용)
       if (__DEV__ && !error.response) {
+        console.warn('[API] 개발 모드에서 임시 메타데이터 반환');
         return {
           brandName: '테스트 브랜드',
           gifticonName: '테스트 상품',
@@ -73,13 +98,16 @@ const gifticonService = {
     try {
       // JSON 문자열로 변환
       const jsonString = JSON.stringify(gifticonData);
+      console.log('[API] 기프티콘 등록 데이터:', jsonString);
 
       // 임시 파일 경로 생성
       const fileName = 'gifticon.json';
       const filePath = `${RNFS.TemporaryDirectoryPath}/${fileName}`;
+      console.log('[API] JSON 임시 파일 경로:', filePath);
 
       // JSON 문자열을 파일로 저장
       await RNFS.writeFile(filePath, jsonString, 'utf8');
+      console.log('[API] JSON 파일 저장 완료');
 
       // FormData 생성
       const formData = new FormData();
@@ -111,6 +139,7 @@ const gifticonService = {
           type: originalImage.type || 'image/jpeg',
           name: originalImage.fileName || 'original.jpg',
         });
+        console.log('[API] 원본 이미지 추가됨:', originalImage.uri);
       }
 
       if (thumbnailImage && thumbnailImage.uri) {
@@ -122,6 +151,7 @@ const gifticonService = {
           type: thumbnailImage.type || 'image/jpeg',
           name: thumbnailImage.fileName || 'thumbnail.jpg',
         });
+        console.log('[API] 썸네일 이미지 추가됨:', thumbnailImage.uri);
       }
 
       if (barcodeImage && barcodeImage.uri) {
@@ -131,11 +161,25 @@ const gifticonService = {
           type: barcodeImage.type || 'image/jpeg',
           name: barcodeImage.fileName || 'barcode.jpg',
         });
+        console.log('[API] 바코드 이미지 추가됨:', barcodeImage.uri);
+      }
+
+      // FormData 내용 확인 (디버깅용)
+      console.log('[API] FormData 내용:');
+      if (formData._parts) {
+        formData._parts.forEach((part, index) => {
+          console.log(
+            `[${index}] ${part[0]}: ${typeof part[1] === 'object' ? JSON.stringify(part[1]) : part[1]}`
+          );
+        });
       }
 
       // 다른 옵션: 직접 URLSearchParams 구성 시도
       const params = new URLSearchParams();
       params.append('jsonData', jsonString);
+
+      // API 요청 전송 (Content-Type 명시)
+      console.log('[API] 기프티콘 등록 요청 시작');
 
       // 요청 헤더 설정
       const headers = {
@@ -144,6 +188,7 @@ const gifticonService = {
       };
 
       // 요청 보내기
+      console.log('[API] 요청 헤더:', headers);
       const response = await apiClient.post(API_CONFIG.ENDPOINTS.REGISTER_GIFTICON, formData, {
         headers,
         timeout: 60000, // 이미지 처리를 위해 타임아웃 증가
@@ -153,42 +198,76 @@ const gifticonService = {
         },
       });
 
+      console.log('[API] 기프티콘 등록 응답 성공:', response.data);
+
+      // 임시 파일 삭제
+      try {
+        await RNFS.unlink(filePath);
+        console.log('[API] 임시 JSON 파일 삭제 완료');
+      } catch (cleanupError) {
+        console.warn('[API] 임시 파일 삭제 중 오류:', cleanupError);
+      }
+
       return response.data;
     } catch (error) {
+      console.error('기프티콘 등록 실패:', error);
+
+      // 오류 상세 정보 로깅
+      if (error.response) {
+        // 서버에서 응답이 왔지만 상태 코드가 2xx 범위를 벗어난 경우
+        console.error('서버 응답 오류:', error.response.status, error.response.data);
+        console.error('응답 헤더:', error.response.headers);
+      } else if (error.request) {
+        // 요청은 전송되었지만 응답이 수신되지 않은 경우
+        console.error('서버 응답 없음 (요청 정보):', error.request);
+      } else {
+        // 요청 설정 중 오류가 발생한 경우
+        console.error('요청 설정 오류:', error.message);
+      }
+
       throw error;
     }
   },
 
   /**
    * 사용 가능한 기프티콘 목록 조회
-   * @param {Object} params - 검색 파라미터
-   * @returns {Promise<Object>} 기프티콘 목록 및 페이지 정보
+   * @param {Object} params - 조회 파라미터
+   * @param {string} params.scope - 조회 범위 ('MY_BOX'/'SHARE_BOX'/'ALL')
+   * @param {string} params.type - 기프티콘 타입 필터 ('PRODUCT'/'AMOUNT')
+   * @param {string} params.sort - 정렬 방식 ('CREATED_DESC': 등록순, 'EXPIRY_ASC': 임박순)
+   * @param {number} params.page - 페이지 번호
+   * @param {number} params.size - 페이지당 항목 수
+   * @returns {Promise<Object>} - 기프티콘 목록 조회 결과
    */
   async getAvailableGifticons(params = {}) {
     try {
-      const queryParams = { ...params };
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.AVAILABLE_GIFTICONS, {
-        params: queryParams,
-      });
+      console.log('[API] 사용 가능 기프티콘 목록 조회 요청 파라미터:', params);
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_GIFTICONS, { params });
+      console.log('[API] 사용 가능 기프티콘 목록 조회 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 사용 가능 기프티콘 목록 조회 실패:', error);
       throw error;
     }
   },
 
   /**
    * 사용 완료된 기프티콘 목록 조회
-   * @param {Object} params - 검색 파라미터
-   * @returns {Promise<Object>} 기프티콘 목록 및 페이지 정보
+   * @param {Object} params - 조회 파라미터
+   * @param {string} params.type - 기프티콘 타입 필터 ('PRODUCT'/'AMOUNT')
+   * @param {string} params.sort - 정렬 방식 ('USED_DESC': 사용일 최신순)
+   * @param {number} params.page - 페이지 번호
+   * @param {number} params.size - 페이지당 항목 수
+   * @returns {Promise<Object>} - 사용 완료 기프티콘 목록 조회 결과
    */
   async getUsedGifticons(params = {}) {
     try {
-      const queryParams = { ...params };
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.USED_GIFTICONS, {
-        params: queryParams,
-      });
+      console.log('[API] 사용 완료 기프티콘 목록 조회 요청 파라미터:', params);
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_USED_GIFTICONS, { params });
+      console.log('[API] 사용 완료 기프티콘 목록 조회 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 사용 완료 기프티콘 목록 조회 실패:', error);
       throw error;
     }
   },
@@ -196,265 +275,377 @@ const gifticonService = {
   /**
    * 기프티콘 상세 정보 조회
    * @param {number} gifticonId - 기프티콘 ID
-   * @param {string} scope - 조회 범위 (MY_BOX, SHARE_BOX)
-   * @returns {Promise<Object>} 기프티콘 상세 정보
+   * @param {string} scope - 조회 범위 ('MY_BOX', 'SHARE_BOX', 'USED')
+   * @returns {Promise<Object>} - 기프티콘 상세 정보
    */
   async getGifticonDetail(gifticonId, scope = '') {
     try {
-      let endpoint = `${API_CONFIG.ENDPOINTS.GIFTICON_DETAIL}/${gifticonId}`;
-
-      // scope 파라미터가 있으면 URL에 추가
-      if (scope) {
-        endpoint += `?scope=${scope}`;
-      }
-
+      // 사용 가능/사용 완료 여부에 따라 다른 엔드포인트 사용
+      const isUsed = scope === 'USED';
+      const endpoint = isUsed
+        ? `/api/used-gifticons/${gifticonId}`
+        : `/api/available-gifticons/${gifticonId}`;
+      console.log('[API] 기프티콘 상세 정보 조회 요청:', endpoint, '(scope:', scope, ')');
       const response = await apiClient.get(endpoint);
+      console.log('[API] 기프티콘 상세 정보 조회 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 기프티콘 상세 정보 조회 실패:', error);
+      // 에러 처리 로직 (오류 유형에 따른 처리)
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        if (status === 403) {
+          console.error('기프티콘 접근 권한 없음:', data);
+        } else if (status === 404) {
+          console.error('기프티콘을 찾을 수 없음:', data);
+        }
+      }
       throw error;
     }
   },
 
   /**
-   * 사용 가능한 기프티콘 바코드 조회
+   * 사용 가능 기프티콘 바코드 조회
    * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<Object>} 바코드 정보
+   * @returns {Promise<Object>} - 바코드 정보
    */
   async getAvailableGifticonBarcode(gifticonId) {
     try {
-      const response = await apiClient.get(
-        `${API_CONFIG.ENDPOINTS.AVAILABLE_GIFTICON_BARCODE}/${gifticonId}`
-      );
+      const response = await apiClient.get(`/api/available-gifticons/${gifticonId}/barcode`);
       return response.data;
     } catch (error) {
+      console.error('[API] 사용 가능 기프티콘 바코드 조회 실패:', error);
+      // 에러 처리 로직
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        if (status === 403) {
+          console.error('기프티콘 접근 권한 없음:', data);
+        } else if (status === 404) {
+          console.error('기프티콘을 찾을 수 없음:', data);
+        }
+      }
       throw error;
     }
   },
 
   /**
-   * 사용 완료된 기프티콘 바코드 조회
+   * 사용 완료 기프티콘 바코드 조회
    * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<Object>} 바코드 정보
+   * @returns {Promise<Object>} - 바코드 정보
    */
   async getUsedGifticonBarcode(gifticonId) {
     try {
-      const response = await apiClient.get(
-        `${API_CONFIG.ENDPOINTS.USED_GIFTICON_BARCODE}/${gifticonId}`
-      );
-      return response.data;
+      console.log('[API] 사용 완료 기프티콘 바코드 조회 요청:', gifticonId);
+      const endpoint = `/api/used-gifticons/${gifticonId}/barcode`;
+      console.log('[API] 사용 완료 기프티콘 바코드 조회 요청 URL:', endpoint);
+      const response = await apiClient.get(endpoint);
+      console.log('[API] 사용 완료 기프티콘 바코드 조회 성공:', response.data);
+      // 응답 데이터 확인
+      if (!response.data.gifticonBarcodeNumber || !response.data.barcodePath) {
+        console.warn('[API] 바코드 정보가 누락된 응답:', response.data);
+      }
+      return {
+        gifticonBarcodeNumber: response.data.gifticonBarcodeNumber || '',
+        barcodePath: response.data.barcodePath || '',
+      };
     } catch (error) {
-      throw error;
+      console.error('[API] 사용 완료 기프티콘 바코드 조회 실패:', error);
+      // 에러 처리 로직
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        if (status === 403) {
+          console.error('기프티콘 접근 권한 없음:', data);
+          throw new Error('해당 기프티콘에 접근 권한이 없습니다.');
+        } else if (status === 404) {
+          console.error('기프티콘을 찾을 수 없음:', data);
+          if (data.errorCode === 'GIFTICON_004') {
+            throw new Error('이미 사용된 기프티콘입니다.');
+          } else if (data.errorCode === 'GIFTICON_005') {
+            throw new Error('삭제된 기프티콘입니다.');
+          } else if (data.errorCode === 'GIFTICON_009') {
+            throw new Error('해당 기프티콘에 대한 사용내역이 없습니다.');
+          } else if (data.errorCode === 'FILE_008') {
+            throw new Error('파일을 찾을 수 없습니다.');
+          } else {
+            throw new Error('기프티콘을 찾을 수 없습니다.');
+          }
+        }
+      }
+      // 네트워크 에러 등 기타 에러
+      throw new Error('바코드 정보를 조회하는 중 오류가 발생했습니다.');
     }
   },
 
   /**
-   * 기프티콘을 사용 완료 상태로 변경
+   * 기프티콘 사용 완료 처리
    * @param {number} gifticonId - 기프티콘 ID
-   * @param {string} usageType - 사용 유형 (SELF_USE, SHARE_USE)
-   * @returns {Promise<string>} 처리 결과 메시지
+   * @param {string} usageType - 사용 유형 ('SELF_USE', 'PRESENT', 'GIVE_AWAY')
+   * @returns {Promise<Object>} - 사용 완료 처리 결과
    */
   async markGifticonAsUsed(gifticonId, usageType = 'SELF_USE') {
     try {
-      const response = await apiClient.patch(
-        `${API_CONFIG.ENDPOINTS.MARK_GIFTICON_USED}/${gifticonId}`,
+      const response = await apiClient.post(
+        `/api/available-gifticons/${gifticonId}/use`,
         { usageType }
       );
       return response.data;
     } catch (error) {
+      console.error('[API] 기프티콘 사용 완료 처리 실패:', error);
       throw error;
     }
   },
 
   /**
    * 기프티콘 삭제
-   * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<string>} 처리 결과 메시지
+   * @param {string} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 삭제 결과
    */
   async deleteGifticon(gifticonId) {
     try {
+      console.log('[API] 기프티콘 삭제 요청:', gifticonId);
       const response = await apiClient.delete(
-        `${API_CONFIG.ENDPOINTS.DELETE_GIFTICON}/${gifticonId}`
+        `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}`
       );
+      console.log('[API] 기프티콘 삭제 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 기프티콘 삭제 실패:', error);
       throw error;
     }
   },
 
   /**
-   * 기프티콘을 쉐어박스에 공유
-   * @param {number} gifticonId - 기프티콘 ID
+   * 기프티콘 공유하기
+   * @param {string} gifticonId - 기프티콘 ID
    * @param {number} shareBoxId - 쉐어박스 ID
-   * @returns {Promise<string>} 처리 결과 메시지
+   * @returns {Promise<Object>} - 공유 결과
    */
   async shareGifticon(gifticonId, shareBoxId) {
     try {
+      console.log('[API] 기프티콘 공유 요청:', gifticonId, 'to', shareBoxId);
       const response = await apiClient.post(
-        `${API_CONFIG.ENDPOINTS.SHARE_GIFTICON}/${gifticonId}`,
-        { shareBoxId }
+        `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}/share`,
+        {
+          shareBoxId,
+        }
       );
+      console.log('[API] 기프티콘 공유 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 기프티콘 공유 실패:', error);
       throw error;
     }
   },
 
   /**
    * 기프티콘 공유 취소
-   * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<string>} 처리 결과 메시지
+   * @param {string} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 공유 취소 결과
    */
   async cancelShareGifticon(gifticonId) {
     try {
+      console.log('[API] 기프티콘 공유 취소 요청:', gifticonId);
       const response = await apiClient.delete(
-        `${API_CONFIG.ENDPOINTS.CANCEL_SHARE_GIFTICON}/${gifticonId}`
+        `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}/share`
       );
+      console.log('[API] 기프티콘 공유 취소 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 기프티콘 공유 취소 실패:', error);
       throw error;
     }
   },
 
-  /**
-   * 기프티콘 바코드 정보 조회 (범위 지정 가능)
-   * @param {number} gifticonId - 기프티콘 ID
-   * @param {string} scope - 조회 범위 (MY_BOX, SHARE_BOX)
-   * @returns {Promise<Object>} 바코드 정보
-   */
+  // 기프티콘 바코드 조회 API 함수 추가
+  // 주어진 gifticonId에 대한 바코드 정보를 가져옵니다.
   async getGifticonBarcode(gifticonId, scope = '') {
     try {
-      let endpoint = `${API_CONFIG.ENDPOINTS.GIFTICON_BARCODE}/${gifticonId}`;
+      console.log(
+        '[GifticonService] 기프티콘 바코드 조회 요청:',
+        gifticonId,
+        '(scope:',
+        scope,
+        ')'
+      );
 
-      // scope 파라미터가 있으면 URL에 추가
-      if (scope) {
-        endpoint += `?scope=${scope}`;
+      // 사용 완료 기프티콘인 경우 별도 함수 호출
+      if (scope === 'USED') {
+        return this.getUsedGifticonBarcode(gifticonId);
       }
 
-      const response = await apiClient.get(endpoint);
-      return response.data;
+      // 사용 가능 기프티콘 바코드 조회
+      return this.getAvailableGifticonBarcode(gifticonId);
     } catch (error) {
+      console.error('[GifticonService] 기프티콘 바코드 조회 실패:', error);
       throw error;
     }
   },
 
   /**
-   * 금액권 기프티콘 사용
+   * 금액형 기프티콘 사용
    * @param {number} gifticonId - 기프티콘 ID
    * @param {number} usageAmount - 사용 금액
-   * @returns {Promise<string>} 처리 결과 메시지
+   * @returns {Promise<string>} - 응답 메시지
    */
   async useAmountGifticon(gifticonId, usageAmount) {
     try {
+      console.log('[API] 금액형 기프티콘 사용 요청:', gifticonId, usageAmount);
       const response = await apiClient.post(
-        `${API_CONFIG.ENDPOINTS.USE_AMOUNT_GIFTICON}/${gifticonId}`,
+        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/use`,
         { usageAmount }
       );
+      console.log('[API] 금액형 기프티콘 사용 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용 실패:', error);
       throw error;
     }
   },
 
   /**
-   * 금액권 기프티콘 사용 내역 조회
+   * 금액형 기프티콘 사용내역 조회
    * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<Array>} 사용 내역 배열
+   * @returns {Promise<Object>} - 사용내역 정보
    */
   async getAmountGifticonUsageHistory(gifticonId) {
     try {
+      console.log('[API] 금액형 기프티콘 사용내역 조회 요청:', gifticonId);
       const response = await apiClient.get(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICON_USAGE_HISTORY}/${gifticonId}`
+        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history`
       );
+      console.log('[API] 금액형 기프티콘 사용내역 조회 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용내역 조회 실패:', error);
       throw error;
     }
   },
 
   /**
-   * 금액권 기프티콘 사용 내역 수정
+   * 금액형 기프티콘 사용내역 수정
    * @param {number} gifticonId - 기프티콘 ID
-   * @param {number} usageHistoryId - 사용 내역 ID
+   * @param {number} usageHistoryId - 사용내역 ID
    * @param {number} usageAmount - 수정할 사용 금액
-   * @returns {Promise<string>} 처리 결과 메시지
+   * @returns {Promise<string>} - 응답 메시지
    */
   async updateAmountGifticonUsageHistory(gifticonId, usageHistoryId, usageAmount) {
     try {
-      const response = await apiClient.patch(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICON_USAGE_HISTORY}/${gifticonId}/${usageHistoryId}`,
-        { usageAmount }
+      // 입력값을 명시적으로 숫자 타입으로 변환
+      const gId = parseInt(gifticonId, 10);
+      const hId = parseInt(usageHistoryId, 10);
+      const amount = parseInt(usageAmount, 10);
+
+      // 숫자 타입 검증
+      if (isNaN(gId) || isNaN(hId) || isNaN(amount)) {
+        throw new Error('인자 값이 유효한 숫자가 아닙니다.');
+      }
+
+      console.log(
+        '[API] 금액형 기프티콘 사용내역 수정 요청:',
+        '기프티콘ID:',
+        gId,
+        '사용내역ID:',
+        hId,
+        '사용금액:',
+        amount,
+        '타입:',
+        typeof amount
       );
+
+      // API 요청 URL
+      const url = `${API_BASE_URL}${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gId}/usage-history/${hId}`;
+      console.log('[API] 요청 URL:', url);
+
+      // 요청 데이터 생성 - 숫자형으로 전송
+      const requestData = { usageAmount: amount };
+      console.log('[API] 요청 데이터:', JSON.stringify(requestData));
+
+      // 인증 토큰 가져오기
+      const accessToken = await AsyncStorage.getItem('accessToken');
+
+      // 헤더 설정
+      const headers = {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      };
+
+      // 인증 토큰이 있으면 헤더에 추가
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
+      // 직접 axios 호출로 요청 수행
+      const response = await axios.patch(url, requestData, { headers });
+
+      console.log('[API] 금액형 기프티콘 사용내역 수정 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용내역 수정 실패:', error);
+
+      // 에러 상세 정보 기록
+      if (error.response) {
+        const status = error.response.status;
+        console.error('상태 코드:', status);
+        console.error('응답 데이터:', error.response.data);
+        console.error('응답 헤더:', error.response.headers);
+
+        // 서버 오류 메시지 확인
+        if (status === 500) {
+          console.error('서버 내부 오류가 발생했습니다. 서버 로그를 확인하세요.');
+          console.error('요청 데이터:', JSON.stringify({ usageAmount: parseInt(usageAmount, 10) }));
+        }
+      } else if (error.request) {
+        console.error('요청은 전송되었으나 응답이 없음:', error.request);
+      } else {
+        console.error('에러 메시지:', error.message);
+      }
+
       throw error;
     }
   },
 
   /**
-   * 기프티콘 뿌리기
-   * @param {Object} dropData - 뿌리기 정보
-   * @param {number} dropData.gifticonId - 기프티콘 ID
-   * @param {number} dropData.latitude - 위도
-   * @param {number} dropData.longitude - 경도
-   * @param {number} dropData.radius - 반경 (미터)
-   * @param {number} dropData.maxParticipants - 최대 참가자 수
-   * @param {string} dropData.expiryTime - 만료 시간 (ISO 형식)
-   * @returns {Promise<string>} 처리 결과 메시지
-   */
-  async dropGifticon(dropData) {
-    try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.DROP_GIFTICON, dropData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  /**
-   * 뿌려진 기프티콘 목록 조회
-   * @param {Object} params - 검색 파라미터
-   * @returns {Promise<Array>} 뿌려진 기프티콘 목록
-   */
-  async getDroppedGifticons(params = {}) {
-    try {
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.DROPPED_GIFTICONS, {
-        params,
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },
-
-  /**
-   * 금액권 기프티콘 사용 내역 삭제
+   * 금액형 기프티콘 사용내역 삭제
    * @param {number} gifticonId - 기프티콘 ID
-   * @param {number} usageHistoryId - 사용 내역 ID
-   * @returns {Promise<string>} 처리 결과 메시지
+   * @param {number} usageHistoryId - 삭제할 사용내역 ID
+   * @returns {Promise<string>} - 응답 메시지
    */
   async deleteAmountGifticonUsageHistory(gifticonId, usageHistoryId) {
     try {
+      console.log('[API] 금액형 기프티콘 사용내역 삭제 요청:', gifticonId, usageHistoryId);
       const response = await apiClient.delete(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICON_USAGE_HISTORY}/${gifticonId}/${usageHistoryId}`
+        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history/${usageHistoryId}`
       );
+      console.log('[API] 금액형 기프티콘 사용내역 삭제 성공:', response.data);
       return response.data;
     } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용내역 삭제 실패:', error);
       throw error;
     }
   },
 
-  /**
-   * 상품형 기프티콘 사용 완료 처리
-   * @param {number} gifticonId - 기프티콘 ID
-   * @returns {Promise<string>} 처리 결과 메시지
-   */
+  // 상품형 기프티콘 사용완료 처리
   async markProductGifticonAsUsed(gifticonId) {
     try {
-      const response = await apiClient.patch(
-        `${API_CONFIG.ENDPOINTS.USE_PRODUCT_GIFTICON}/${gifticonId}`
-      );
+      const url = API_CONFIG.ENDPOINTS.PRODUCT_GIFTICON_USE(gifticonId);
+      // accessToken 직접 읽기
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      console.log('[상품형 사용완료] accessToken:', accessToken);
+
+      // 헤더 직접 구성
+      const headers = {};
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+      console.log('[상품형 사용완료] Authorization 헤더:', headers.Authorization);
+
+      const response = await axios.post(`${API_BASE_URL}${url}`, null, { headers });
       return response.data;
     } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용완료 처리 실패:', error);
       throw error;
     }
   },

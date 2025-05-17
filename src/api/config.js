@@ -101,6 +101,7 @@ export const handleApiError = error => {
   if (error.response) {
     // 서버에서 응답이 왔지만 상태 코드가 2xx 범위를 벗어난 경우
     const { status, data } = error.response;
+    console.error(`API 오류 (${status}):`, data);
 
     return {
       status,
@@ -109,6 +110,8 @@ export const handleApiError = error => {
     };
   } else if (error.request) {
     // 요청은 전송되었지만 응답이 수신되지 않은 경우
+    console.error('API 요청 오류:', error.request);
+
     return {
       status: 0,
       errorCode: API_ERRORS.NETWORK_ERROR,
@@ -116,6 +119,8 @@ export const handleApiError = error => {
     };
   } else {
     // 요청 설정 중 오류가 발생한 경우
+    console.error('API 설정 오류:', error.message);
+
     return {
       status: 0,
       errorCode: API_ERRORS.UNKNOWN,
