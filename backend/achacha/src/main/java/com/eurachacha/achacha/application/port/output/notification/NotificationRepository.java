@@ -9,6 +9,4 @@ public interface NotificationRepository {
 	Notification save(Notification notification);
 
 	Slice<Notification> findNotifications(Integer userId, Pageable pageable);
-
-	int countByUserIdAndRead(Integer userId, boolean read);
 }
