@@ -43,11 +43,11 @@ fun SharingScreen(
     var scanJob by remember { mutableStateOf<Job?>(null) }
     var scannerRef by remember { mutableStateOf<BluetoothLeScanner?>(null) }
     var scanCallbackRef by remember { mutableStateOf<ScanCallback?>(null) }
+    val foundUserIds = remember { mutableSetOf<String>() }
 
     // BLE 스캔 및 API 호출 로직
     LaunchedEffect(gifticonId) {
         if (gifticonId == null) return@LaunchedEffect
-        val foundUserIds = mutableSetOf<String>()
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
         val scanner = bluetoothAdapter.bluetoothLeScanner
@@ -55,14 +55,15 @@ fun SharingScreen(
 
         val scanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
+                Log.d("BLE_SCAN", "모든 BLE 기기 광고를 수신 중. 서비스 UUID 매칭 여부 확인 중")
                 val scanRecord = result.scanRecord
                 val bleTokenBytes = scanRecord?.getServiceData(ParcelUuid(SERVICE_UUID))
                 val bleToken = bleTokenBytes?.toString(Charsets.UTF_8)
                 Log.d("BLE_SCAN", "스캔 결과: $bleToken (raw: $bleTokenBytes)")
-                if (!bleToken.isNullOrEmpty()) {
-                    foundUserIds.add(bleToken)
-                    Log.d("BLE_SCAN", "사용자 발견: $bleToken")
-                }
+                // 서비스 UUID와 상관없이 모든 기기 정보를 foundUserIds에 추가
+                val deviceInfo = bleToken ?: (result.device?.address ?: "알 수 없음")
+                foundUserIds.add(deviceInfo)
+                Log.d("BLE_SCAN", "기기 추가: $deviceInfo")
             }
             override fun onBatchScanResults(results: List<ScanResult>) {
                 Log.d("BLE_SCAN", "배치 스캔 결과: ${results.size}개")
@@ -74,7 +75,7 @@ fun SharingScreen(
         }
         scanCallbackRef = scanCallback
 
-        Log.d("BLE_SCAN", "BLE 스캔 시작")
+        Log.d("BLE_SCAN", "BLE 스캔 시작 (ScanFilter 없이 모든 BLE 기기 광고를 수신 중, 서비스 UUID는 소프트웨어적으로만 필터링)")
         scanner.startScan(null, ScanSettings.Builder().build(), scanCallback)
         scanJob = coroutineScope.launch {
             delay(5000)
@@ -136,6 +137,16 @@ fun SharingScreen(
             )
 
             RadarAnimation(modifier = Modifier.weight(1f).aspectRatio(1f).padding(8.dp)) // 레이더 애니메이션 영역
+
+            // 스캔된 모든 기기 리스트 표시
+            if (foundUserIds.isNotEmpty()) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    Text("스캔된 기기:", style = MaterialTheme.typography.body2)
+                    foundUserIds.forEach { deviceInfo ->
+                        Text(deviceInfo, style = MaterialTheme.typography.body2)
+                    }
+                }
+            }
 
             if (resultText.isNotEmpty()) {
                 Text(resultText, color = Color.Black, modifier = Modifier.padding(8.dp))

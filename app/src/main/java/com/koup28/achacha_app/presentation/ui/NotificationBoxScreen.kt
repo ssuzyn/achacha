@@ -68,7 +68,7 @@ fun NotificationBoxScreen(
     var notifications by remember { mutableStateOf<List<NotificationDto>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
-    var nextPage by remember { mutableStateOf<String?>(null) }
+    var nextPage by remember { mutableStateOf<Int?>(null) }
     var hasNextPage by remember { mutableStateOf(false) }
 
     // 시스템 뒤로가기 버튼 처리
@@ -90,7 +90,7 @@ fun NotificationBoxScreen(
             val response = apiService.getNotifications(
                 authorization = "Bearer $token",
                 type = null, // 전체
-                page = null,
+                page = nextPage?.toString(),
                 size = 6
             )
             if (response.isSuccessful) {
@@ -107,9 +107,14 @@ fun NotificationBoxScreen(
                     error = "알림 데이터를 불러올 수 없습니다."
                 }
             } else {
+                // 에러 바디 로그 추가
+                val errorBody = response.errorBody()?.string()
+                android.util.Log.e("NOTI_API", "알림 API 호출 실패: $errorBody")
                 error = "알림 API 호출 실패: ${response.code()}"
             }
         } catch (e: Exception) {
+            // 예외 발생 시 Raw 응답 로그 추가
+            android.util.Log.e("NOTI_API", "알림 불러오기 예외: ${e.localizedMessage}", e)
             error = "알림 불러오기 오류: ${e.localizedMessage}"
         } finally {
             isLoading = false

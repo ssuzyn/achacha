@@ -27,7 +27,7 @@ data class GiveAwayRequest(val uuids: List<String>)
 data class NotificationApiResponse(
     val notifications: List<NotificationDto>,
     val hasNextPage: Boolean,
-    val nextPage: String? = null
+    val nextPage: Int? = null
 )
 
 @Serializable
