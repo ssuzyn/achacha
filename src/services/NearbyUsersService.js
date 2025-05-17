@@ -623,20 +623,6 @@ class NearbyUsersService {
           }
         } else {
           console.log('Service Data가 없습니다.');
-
-          // 서비스 데이터가 없는 경우 대체 방법: 기기에 연결하여 특성 읽기 시도
-          console.log('기기에 연결하여 서비스 데이터 읽기 시도...');
-          try {
-            // 기기 연결 (선택적, 필요한 경우)
-            // const connectedDevice = await this.manager.connectToDevice(device.id);
-            // const services = await connectedDevice.discoverAllServicesAndCharacteristics();
-            // ... 기기 연결 및 특성 읽기 로직 ...
-
-            // 이 예제에서는 연결하지 않고 기본값 사용
-            console.log('연결 없이 진행, 기본값 사용');
-          } catch (connectionError) {
-            console.log('기기 연결 실패:', connectionError.message);
-          }
         }
 
         // 거리 계산
@@ -653,7 +639,7 @@ class NearbyUsersService {
         const emoji = emojiOptions[Math.floor(Math.random() * emojiOptions.length)];
 
         // 사용자 이름 생성 (bleToken 또는 기본값)
-        const userName = bleToken || `사용자${this.nearbyUsers.length + 1}`;
+        const userName = `사용자${this.nearbyUsers.length + 1}`;
 
         // 근처 사용자 목록에 추가
         const user = {
