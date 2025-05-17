@@ -38,4 +38,6 @@ public interface GifticonRepository {
 
 	// 만료 기간별 기프티콘 목록 조회
 	List<Gifticon> findGifticonsWithExpiryDates(List<LocalDate> expiryDates);
+
+	Gifticon findByIdAndUserId(Integer gifticonId, Integer userId);
 }
