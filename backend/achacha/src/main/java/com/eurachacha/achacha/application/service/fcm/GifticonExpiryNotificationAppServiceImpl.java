@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.eurachacha.achacha.application.port.input.fcm.FcmAppService;
+import com.eurachacha.achacha.application.port.input.fcm.GifticonExpiryNotificationAppService;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class FcmAppServiceImpl implements FcmAppService {
+public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryNotificationAppService {
 
 	private final GifticonRepository gifticonRepository;
 	private final GifticonDomainService gifticonDomainService;
@@ -63,11 +63,15 @@ public class FcmAppServiceImpl implements FcmAppService {
 		NotificationType findCode = notificationTypeRepository.findByCode(NotificationTypeCode.EXPIRY_DATE);
 
 		for (Gifticon findGifticon : findGifticons) {
-			if (gifticonDomainService.isAlreadyShared(findGifticon)) { // 이미 공유된 기프티콘일 경우
+
+			// 이미 공유된 기프티콘일 경우
+			if (gifticonDomainService.isAlreadyShared(findGifticon)) {
 				sharedGifticons(findGifticon, findCode, today);
-			} else { // 공유되지 않은 기프티콘일 경우
-				unsharedGifticons(findGifticon, findCode, today);
+				continue;
 			}
+
+			// 공유되지 않은 기프티콘일 경우
+			unsharedGifticons(findGifticon, findCode, today);
 		}
 	}
 
@@ -104,41 +108,43 @@ public class FcmAppServiceImpl implements FcmAppService {
 
 		List<LocalDate> expiryDates = getExpiryDates(today);
 
-		for (LocalDate expiryDate : expiryDates) {
+		boolean isExpiryMatch = expiryDates.stream()
+			.anyMatch(expiryDate -> isExpiryMath(findGifticon, today, expiryDate, day));
 
-			// 만료일 확인: 기프티콘의 만료일이 조회된 만료일 목록(1,2,3,7,30,60,90일 후)에 포함되고,
-			// 알림 주기 확인: 만료일이 사용자의 알림 설정 주기보다 이른 경우에만 알림 발송
-			if (findGifticon.getExpiryDate().equals(expiryDate) && !findGifticon.getExpiryDate()
-				.isAfter(today.plusDays(day))) {
+		// 만료일 확인: 기프티콘의 만료일이 조회된 만료일 목록(1,2,3,7,30,60,90일 후)에 포함되고,
+		// 알림 주기 확인: 만료일이 사용자의 알림 설정 주기보다 이른 경우에만 알림 발송
+		if (isExpiryMatch) {
+			String title = findCode.getCode().getDisplayName();
+			String content = getContent(findGifticon, day);
 
-				String title = findCode.getCode().getDisplayName();
-				String content = getContent(findGifticon, day);
+			// 알림 저장
+			saveNotification(findGifticon, findCode, findSetting, title, content);
 
-				// 알림 저장
-				saveNotification(findGifticon, findCode, findSetting, title, content);
+			// 알림 설정 활성화 시 FCM 알림 전송
+			if (notificationSettingDomainService.isEnabled(findSetting)) {
+				// fcm token 조회
+				List<FcmToken> findFcmTokens = fcmTokenRepository.findAllByUserId(findSetting.getUser().getId());
 
-				// 알림 설정 활성화 시 FCM 알림 전송
-				if (notificationSettingDomainService.isEnabled(findSetting)) {
+				findFcmTokens.forEach(fcmToken -> {
+					NotificationEventDto dto = NotificationEventDto.builder()
+						.fcmToken(fcmToken.getValue())
+						.title(title)
+						.body(content)
+						.notificationTypeCode(findCode.getCode().name())
+						.referenceEntityId(findGifticon.getId())
+						.referenceEntityType("gifticon")
+						.build();
 
-					// fcm token 조회
-					List<FcmToken> findFcmTokens = fcmTokenRepository.findAllByUserId(findSetting.getUser().getId());
-
-					for (FcmToken fcmToken : findFcmTokens) {
-
-						NotificationEventDto dto = NotificationEventDto.builder()
-							.fcmToken(fcmToken.getValue())
-							.title(title)
-							.body(content)
-							.notificationTypeCode(findCode.getCode().name())
-							.referenceEntityId(findGifticon.getId())
-							.referenceEntityType("gifticon")
-							.build();
-
-						notificationEventPort.sendNotificationEvent(dto);
-					}
-				}
+					notificationEventPort.sendNotificationEvent(dto);
+				});
 			}
 		}
+	}
+
+	private static boolean isExpiryMath(Gifticon findGifticon, LocalDate today, LocalDate expiryDate, int day) {
+		return findGifticon.getExpiryDate().equals(expiryDate) && (
+			findGifticon.getExpiryDate().isBefore(today.plusDays(day)) || findGifticon.getExpiryDate()
+				.isEqual(today.plusDays(day)));
 	}
 
 	private static String getContent(Gifticon findGifticon, int day) {
