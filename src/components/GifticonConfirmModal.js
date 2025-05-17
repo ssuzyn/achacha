@@ -16,8 +16,11 @@ const GifticonConfirmModal = ({ visible, selectedGifticon, onCancel, onConfirm }
           <Text style={styles.confirmModalSubtitle}>한 번 뿌린 기프티콘은 되돌릴 수 없습니다.</Text>
           {selectedGifticon && (
             <View style={styles.selectedGifticonCard}>
-              <Image source={StarbucksImg} style={styles.gifticonImage} />
-              <Text style={styles.gifticonBrand}>스타벅스</Text>
+              <Image
+                source={{ uri: selectedGifticon.thumbnailPath }}
+                style={styles.gifticonImage}
+              />
+              <Text style={styles.gifticonBrand}>{selectedGifticon.brandName}</Text>
               <Text style={styles.gifticonName}>{selectedGifticon.gifticonName}</Text>
             </View>
           )}
