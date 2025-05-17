@@ -33,11 +33,18 @@ import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
+import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
+import com.eurachacha.achacha.application.port.output.notification.dto.request.NotificationEventDto;
 import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
+import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.domain.model.ai.OcrTrainingData;
 import com.eurachacha.achacha.domain.model.brand.Brand;
+import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.file.File;
 import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
@@ -49,10 +56,16 @@ import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
 import com.eurachacha.achacha.domain.model.history.enums.UsageType;
+import com.eurachacha.achacha.domain.model.notification.Notification;
+import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
+import com.eurachacha.achacha.domain.model.notification.NotificationType;
+import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
+import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.file.FileDomainService;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
+import com.eurachacha.achacha.domain.service.notification.NotificationSettingDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
@@ -81,6 +94,12 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final FileDomainService fileDomainService;
 	private final ShareBoxRepository shareBoxRepository;
 	private final SecurityServicePort securityServicePort;
+	private final NotificationRepository notificationRepository;
+	private final FcmTokenRepository fcmTokenRepository;
+	private final NotificationTypeRepository notificationTypeRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
+	private final NotificationSettingDomainService notificationSettingDomainService;
+	private final NotificationEventPort notificationEventPort;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -222,6 +241,11 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		}
 
 		log.info("사용자 수정 메타데이터 저장 완료 (ID: {})", requestDto.getOcrTrainingDataId());
+
+		// 쉐어박스에 기프티콘이 등록된 경우 알림 전송
+		if (shareBox != null) {
+			sendGifticonRegisteredToShareBoxNotification(shareBox, savedGifticon);
+		}
 	}
 
 	@Override
@@ -729,5 +753,131 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 			case GIVE_AWAY -> UsageType.GIVE_AWAY;
 			case PRESENT -> UsageType.PRESENT;
 		};
+	}
+
+	/**
+	 * 기프티콘 쉐어박스 등록 알림을 전송합니다.
+	 */
+	private void sendGifticonRegisteredToShareBoxNotification(ShareBox shareBox, Gifticon gifticon) {
+		try {
+			log.info("기프티콘 쉐어박스 등록 알림 전송 시작 - 쉐어박스 ID: {}, 기프티콘 ID: {}",
+				shareBox.getId(), gifticon.getId());
+
+			// 알림 타입 조회
+			NotificationType notificationType = notificationTypeRepository.findByCode(
+				NotificationTypeCode.SHAREBOX_GIFTICON);
+			String title = notificationType.getCode().getDisplayName();
+
+			// 알림 내용 설정
+			String content = String.format("%s 쉐어박스에 %s이(가) 등록되었어요.",
+				shareBox.getName(), gifticon.getName());
+
+			// 해당 쉐어박스의 모든 참여자 조회
+			List<Participation> participations = participationRepository.findByShareBoxId(shareBox.getId());
+
+			for (Participation participation : participations) {
+				User participant = participation.getUser();
+				Integer participantId = participant.getId();
+
+				// 모든 참여자에게 알림 전송 (등록한 사용자 포함)
+				sendNotificationToUser(participantId, notificationType, title, content,
+					"sharebox", shareBox.getId());
+			}
+
+			log.info("기프티콘 쉐어박스 등록 알림 전송 완료 - 쉐어박스 ID: {}, 기프티콘 ID: {}",
+				shareBox.getId(), gifticon.getId());
+		} catch (Exception e) {
+			// 알림 전송 실패시 로그만 남기고 계속 진행
+			log.error("기프티콘 쉐어박스 등록 알림 전송 실패 - 쉐어박스 ID: {}, 기프티콘 ID: {}, 오류: {}",
+				shareBox.getId(), gifticon.getId(), e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * 지정된 사용자에게 알림을 전송합니다.
+	 */
+	private void sendNotificationToUser(Integer userId, NotificationType notificationType,
+		String title, String content,
+		String referenceEntityType, Integer referenceEntityId) {
+		// 항상 알림 정보는 데이터베이스에 저장
+		saveNotification(userId, notificationType, title, content, referenceEntityType, referenceEntityId);
+
+		// 사용자의 알림 설정 조회
+		try {
+			NotificationSetting setting = notificationSettingRepository.findByUserIdAndNotificationTypeId(
+				userId, notificationType.getId());
+
+			// 사용자가 해당 알림을 비활성화했으면 FCM 알림만 보내지 않음
+			if (!notificationSettingDomainService.isEnabled(setting)) {
+				log.info("사용자가 알림을 비활성화하여 FCM 알림은 전송하지 않음 - 알림 타입: {}, 사용자 ID: {}",
+					notificationType.getCode(), userId);
+				return;
+			}
+		} catch (CustomException e) {
+			// 알림 설정이 없는 경우 기본적으로 FCM 알림을 보내지 않음
+			if (e.getErrorCode() == ErrorCode.NOTIFICATION_SETTING_NOT_FOUND) {
+				log.info("사용자의 알림 설정을 찾을 수 없어 FCM 알림은 전송하지 않음 - 사용자 ID: {}", userId);
+				return;
+			}
+			throw e;
+		}
+
+		// FCM 토큰 조회 및 알림 전송
+		sendPushNotification(userId, title, content, notificationType.getCode(), referenceEntityType,
+			referenceEntityId);
+	}
+
+	/**
+	 * 알림 정보를 저장합니다.
+	 */
+	private void saveNotification(Integer userId, NotificationType notificationType,
+		String title, String content,
+		String referenceEntityType, Integer referenceEntityId) {
+		User user = User.builder().id(userId).build(); // 최소한의 정보만 포함
+
+		Notification notification = Notification.builder()
+			.title(title)
+			.content(content)
+			.referenceEntityType(referenceEntityType)
+			.referenceEntityId(referenceEntityId)
+			.notificationType(notificationType)
+			.user(user)
+			.isRead(false)
+			.build();
+
+		notificationRepository.save(notification);
+		log.debug("알림 정보 저장 완료 - 사용자 ID: {}, 알림 타입: {}", userId, notificationType.getCode());
+	}
+
+	/**
+	 * FCM을 통해 푸시 알림을 전송합니다.
+	 */
+	private void sendPushNotification(Integer userId, String title, String content,
+		NotificationTypeCode typeCode,
+		String referenceEntityType, Integer referenceEntityId) {
+		// FCM 토큰 조회
+		List<FcmToken> fcmTokens = fcmTokenRepository.findAllByUserId(userId);
+
+		if (fcmTokens.isEmpty()) {
+			log.info("사용자의 FCM 토큰이 없음 - 사용자 ID: {}", userId);
+			return;
+		}
+
+		// 사용자의 모든 기기에 알림 전송
+		for (FcmToken fcmToken : fcmTokens) {
+			NotificationEventDto eventDto = NotificationEventDto.builder()
+				.fcmToken(fcmToken.getValue())
+				.title(title)
+				.body(content)
+				.userId(userId)
+				.notificationTypeCode(typeCode.name())
+				.referenceEntityId(referenceEntityId)
+				.referenceEntityType(referenceEntityType)
+				.build();
+
+			notificationEventPort.sendNotificationEvent(eventDto);
+		}
+
+		log.debug("푸시 알림 전송 완료 - 사용자 ID: {}", userId);
 	}
 }
