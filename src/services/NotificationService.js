@@ -1,5 +1,7 @@
 import messaging from '@react-native-firebase/messaging';
 import { Alert } from 'react-native';
+import apiClient from '../api/apiClient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 알림 타입 상수
 export const NOTIFICATION_TYPES = {
@@ -25,12 +27,18 @@ export const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPES.SHAREBOX_DELETED]: 'inventory-2', // 쉐어박스 그룹 삭제
 };
 
-// FCM 토큰을 서버에 저장하는 함수 (실제 API 호출 필요)
+// FCM 토큰을 서버에 저장하는 함수
 const saveFcmTokenToServer = async token => {
   try {
-    // 서버 API 엔드포인트에 토큰 전송 구현
-    // 예: await api.post('/users/fcm-token', { token });
-    console.log('알림 FCM 토큰이 서버에 저장되었습니다:', token);
+    // 로그인 상태인지 확인
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    if (accessToken) {
+      // 서버 API 엔드포인트에 토큰 전송
+      await apiClient.post('/api/users/fcm-token', { fcmToken: token });
+      console.log('알림 FCM 토큰이 서버에 저장되었습니다:', token);
+    } else {
+      console.log('로그인 상태가 아니므로 FCM 토큰 저장은 로그인 시 처리됩니다.');
+    }
     return true;
   } catch (error) {
     console.error('알림 FCM 토큰 서버 저장 실패:', error);
