@@ -85,11 +85,8 @@ const SettingScreen = () => {
   // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
   const keepTabBarVisible = route.params?.keepTabBarVisible || false;
 
-  // API 상태 관리
-  const [loading, setLoading] = useState(false);
-  const [loadingSettings, setLoadingSettings] = useState(false);
-  const [notificationSettings, setNotificationSettings] = useState([]);
-  const [apiError, setApiError] = useState(null);
+  // API 로딩 상태 관리
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 상태 관리
   const [expiryNotification, setExpiryNotification] = useState(false);
@@ -115,13 +112,11 @@ const SettingScreen = () => {
   // 알림 설정 조회
   const fetchNotificationSettings = useCallback(async () => {
     console.log('[알림설정] 알림 설정 조회 시작');
-    setLoadingSettings(true);
-    setApiError(null);
+    setIsSubmitting(true);
 
     try {
       const settings = await notificationService.getNotificationSettings();
       console.log('[알림설정] 알림 설정 조회 결과:', JSON.stringify(settings, null, 2));
-      setNotificationSettings(settings);
 
       // 각 알림 타입별 설정 값을 상태에 적용
       settings.forEach(setting => {
@@ -170,10 +165,9 @@ const SettingScreen = () => {
       console.error('[알림설정] 알림 설정 조회 실패:', error);
       const errorMessage =
         error.response?.data?.message || '알림 설정을 조회하는 중 오류가 발생했습니다.';
-      setApiError(errorMessage);
       Alert.alert('알림 설정 조회 실패', errorMessage);
     } finally {
-      setLoadingSettings(false);
+      setIsSubmitting(false);
     }
   }, []);
 
@@ -186,7 +180,7 @@ const SettingScreen = () => {
   const handleNotificationToggle = useCallback(
     async (type, enabled) => {
       console.log(`[알림설정] ${type} 알림 상태 변경 요청:`, enabled);
-      setLoading(true);
+      setIsSubmitting(true);
 
       try {
         const result = await notificationService.updateNotificationTypeStatus(type, enabled);
@@ -228,7 +222,7 @@ const SettingScreen = () => {
         // 실패 시 이전 상태로 롤백 (서버 상태와 동기화)
         fetchNotificationSettings();
       } finally {
-        setLoading(false);
+        setIsSubmitting(false);
       }
     },
     [fetchNotificationSettings]
@@ -239,7 +233,7 @@ const SettingScreen = () => {
     async value => {
       const cycleValue = MARKER_TO_CYCLE[value];
       console.log('[알림설정] 알림 주기 변경 요청:', value, '(', cycleValue, ')');
-      setLoading(true);
+      setIsSubmitting(true);
 
       try {
         const result = await notificationService.updateExpirationCycle(cycleValue);
@@ -254,7 +248,7 @@ const SettingScreen = () => {
         // 실패 시 이전 상태로 롤백 (서버 상태와 동기화)
         fetchNotificationSettings();
       } finally {
-        setLoading(false);
+        setIsSubmitting(false);
       }
     },
     [fetchNotificationSettings]
@@ -524,6 +518,13 @@ const SettingScreen = () => {
         <View style={styles.emptyRightSpace} />
       </View>
 
+      {/* 로딩 인디케이터 */}
+      {isSubmitting && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      )}
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -589,7 +590,12 @@ const SettingScreen = () => {
                 유효기간 임박 시 알림
               </Text>
             </View>
-            <Switch value={expiryNotification} onValueChange={setExpiryNotification} />
+            <Switch
+              value={expiryNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.EXPIRY_DATE, value)
+              }
+            />
           </View>
 
           {/* 유효기간 알림 주기 설정 - 만료 알림이 활성화된 경우에만 표시 */}
@@ -628,7 +634,12 @@ const SettingScreen = () => {
                 각 매장 기준 50m 이내 접근 시 알림
               </Text>
             </View>
-            <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
+            <Switch
+              value={nearbyStoreNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.LOCATION_BASED, value)
+              }
+            />
           </View>
 
           {/* 사용 완료 여부 알림 */}
@@ -643,7 +654,9 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={usageCompletionNotification}
-              onValueChange={setUsageCompletionNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.USAGE_COMPLETE, value)
+              }
             />
           </View>
 
@@ -657,7 +670,12 @@ const SettingScreen = () => {
                 기프티콘 뿌리기 수신 알림
               </Text>
             </View>
-            <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
+            <Switch
+              value={giftSharingNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.RECEIVE_GIFTICON, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 기프티콘 등록 알림 */}
@@ -670,7 +688,12 @@ const SettingScreen = () => {
                 쉐어박스 신규 기프티콘 등록 시 알림
               </Text>
             </View>
-            <Switch value={shareboxGiftRegistration} onValueChange={setShareboxGiftRegistration} />
+            <Switch
+              value={shareboxGiftRegistration}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_GIFTICON, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 기프티콘 사용 알림 */}
@@ -683,7 +706,12 @@ const SettingScreen = () => {
                 쉐어박스 기프티콘 사용 완료 시 알림
               </Text>
             </View>
-            <Switch value={shareboxGiftUsage} onValueChange={setShareboxGiftUsage} />
+            <Switch
+              value={shareboxGiftUsage}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 멤버 참여 알림 */}
@@ -696,7 +724,12 @@ const SettingScreen = () => {
                 새 멤버 참여 시 알림
               </Text>
             </View>
-            <Switch value={shareboxMemberJoin} onValueChange={setShareboxMemberJoin} />
+            <Switch
+              value={shareboxMemberJoin}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 그룹 삭제 알림 */}
@@ -709,7 +742,12 @@ const SettingScreen = () => {
                 그룹 삭제 시 알림
               </Text>
             </View>
-            <Switch value={shareboxGroupDelete} onValueChange={setShareboxGroupDelete} />
+            <Switch
+              value={shareboxGroupDelete}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_DELETED, value)
+              }
+            />
           </View>
         </View>
 
@@ -1004,6 +1042,17 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 8,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
   },
 });
 

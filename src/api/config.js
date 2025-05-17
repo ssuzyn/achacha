@@ -68,7 +68,7 @@ export const API_CONFIG = {
     // 알림 설정 관련 엔드포인트
     NOTIFICATION_SETTINGS: '/api/notification-settings', // 알림 설정 조회
     NOTIFICATION_SETTINGS_TYPE: type => `/api/notifications-settings/types/${type}`, // 알림 타입별 on/off 설정
-    NOTIFICATION_SETTINGS_EXPIRATION_CYCLE: '/api/notifications-settings/expirationCycle', // 알림 주기 설정
+    NOTIFICATION_SETTINGS_EXPIRATION_CYCLE: '/api/notifications-settings/expiration-cycle', // 알림 주기 설정
 
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',

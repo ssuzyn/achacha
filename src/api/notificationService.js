@@ -1,9 +1,13 @@
 import apiClient from './apiClient';
 import { API_CONFIG } from './config';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
  * 알림 설정 관련 기능을 제공하는 서비스
+ *
+ * API 엔드포인트:
+ * - GET /api/notification-settings - 알림 설정 목록 조회
+ * - PATCH /api/notifications-settings/types/{type} - 알림 타입별 활성화/비활성화
+ * - PATCH /api/notifications-settings/expiration-cycle - 알림 주기 설정
  */
 const notificationService = {
   /**
@@ -44,6 +48,7 @@ const notificationService = {
 
       // API 엔드포인트 생성
       const endpoint = API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS_TYPE(type);
+      console.log('[API] 요청 URL:', endpoint);
 
       // API 요청 데이터
       const requestData = { enabled };
@@ -96,6 +101,8 @@ const notificationService = {
         console.error('[API] 유효하지 않은 알림 주기 값:', expirationCycle);
         throw new Error('유효하지 않은 알림 주기 값입니다.');
       }
+
+      console.log('[API] 요청 URL:', API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS_EXPIRATION_CYCLE);
 
       // API 요청 데이터
       const requestData = { expirationCycle };
