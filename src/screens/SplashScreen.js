@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Image, StatusBar, StyleSheet, View, SafeAreaView } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { useTheme } from 'react-native-elements';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 // import { checkIsFirstLaunch } from '../utils/appStorage'; // Temporarily disable first launch check
 
 const SPLASH_DURATION = 2000;
@@ -12,49 +13,47 @@ const SplashScreenComponent = ({ navigation }) => {
   const [timePassed, setTimePassed] = useState(false);
   const { theme } = useTheme();
 
-  // Always assume first launch for testing & start timer
   useEffect(() => {
     let timer = null;
 
-    // --- Temporarily disable first launch check ---
-    setIsFirstLaunch(true); // Always set to true for testing
-    // setIsLoadingStorage(false); // No longer needed
-
-    // Start timer immediately
-    timer = setTimeout(() => {
-      setTimePassed(true);
-    }, SPLASH_DURATION);
-    // --- End of temporary modification ---
-
-    /* --- Original First Launch Check Logic (Commented Out) ---
-    const performInitialCheck = async () => {
+    // 앱 실행 시 로그인 상태 및 온보딩 여부 확인
+    const checkAuthAndLaunch = async () => {
       try {
-        const firstLaunch = await checkIsFirstLaunch(); 
-        setIsFirstLaunch(firstLaunch);
-      } catch (error) {
-        setIsFirstLaunch(false);
-      } finally {
-        setIsLoadingStorage(false);
-        timer = setTimeout(() => {
-          setTimePassed(true);
-        }, SPLASH_DURATION);
+        // 1. 로그인 상태 확인
+        const accessToken = await AsyncStorage.getItem('accessToken');
+        if (accessToken) {
+          // 로그인 되어 있으면 바로 Main(홈)으로 이동
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Main' }],
+            })
+          );
+          return;
+        }
+        // 2. 온보딩(가이드) 여부 확인
+        // import { checkIsFirstLaunch } from '../utils/appStorage';
+        // const firstLaunch = await checkIsFirstLaunch();
+        // setIsFirstLaunch(firstLaunch);
+        // timer = setTimeout(() => setTimePassed(true), SPLASH_DURATION);
+        // (아래는 기존 테스트용 코드)
+        setIsFirstLaunch(true); // 실제 배포 시 위 주석 해제 필요
+        timer = setTimeout(() => setTimePassed(true), SPLASH_DURATION);
+      } catch (e) {
+        setIsFirstLaunch(true);
+        timer = setTimeout(() => setTimePassed(true), SPLASH_DURATION);
       }
     };
-    performInitialCheck();
-    */
+    checkAuthAndLaunch();
 
     return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
+      if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [navigation]);
 
-  // Navigate after timer complete (isFirstLaunch is always true in this test mode)
   useEffect(() => {
     if (timePassed && isFirstLaunch !== null) {
-      const nextRoute = isFirstLaunch ? 'GuideFirst' : 'Permission'; // Will always be GuideFirst now
-
+      const nextRoute = isFirstLaunch ? 'GuideFirst' : 'Permission';
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
