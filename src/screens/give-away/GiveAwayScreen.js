@@ -88,31 +88,45 @@ const GiveAwayScreen = ({ onClose }) => {
   // 두번째 원 직경 계산 (Lottie 애니메이션 크기로 사용)
   const secondCircleDiameter = radiusArray[1] * 2;
 
-  // 여러 거리에 사용자를 배치하여 원근감 부여
+  // 여러 거리에 사용자를 배치하여 원근감 부여 (랜덤성 추가)
   const calculateUserPositions = users => {
     if (userPositionsRef.current.length === users.length) {
       return userPositionsRef.current;
     }
+
     const positions = [];
-    const startAngle = Math.PI / 4;
+    // 랜덤 시작 각도 추가
+    const startAngle = Math.random() * Math.PI * 2;
     const angleStep = (2 * Math.PI) / users.length;
+
     for (let i = 0; i < users.length; i++) {
-      const distanceIndex = i % 3;
+      // 각 사용자마다 랜덤 거리 인덱스 할당
+      const distanceIndex = Math.floor(Math.random() * 3);
+
       let userRadius;
+      // 각 거리에 약간의 랜덤성 추가
+      const radiusVariation = Math.random() * 0.2 - 0.1; // -10% ~ +10% 변동
+
       if (distanceIndex === 0) {
-        userRadius = smallestRadius + circleSpacing * 0.7;
+        userRadius = (smallestRadius + circleSpacing * 0.7) * (1 + radiusVariation);
       } else if (distanceIndex === 1) {
-        userRadius = smallestRadius + circleSpacing * 1.5;
+        userRadius = (smallestRadius + circleSpacing * 1.5) * (1 + radiusVariation);
       } else {
-        userRadius = smallestRadius + circleSpacing * 2.2;
+        userRadius = (smallestRadius + circleSpacing * 2.2) * (1 + radiusVariation);
       }
-      const angle = startAngle + angleStep * i;
+
+      // 각도에 약간의 랜덤성 추가
+      const angleVariation = (Math.random() - 0.5) * (Math.PI / 12); // +/- 15도 랜덤 변동
+      const angle = startAngle + angleStep * i + angleVariation;
+
       const x = centerX + userRadius * Math.cos(angle);
       const y = centerY + userRadius * Math.sin(angle);
       const scale = 1 - distanceIndex * 0.15;
       const opacity = 1 - distanceIndex * 0.1;
+
       positions.push({ x, y, scale, opacity, distanceIndex });
     }
+
     userPositionsRef.current = positions;
     return positions;
   };
@@ -339,20 +353,16 @@ const GiveAwayScreen = ({ onClose }) => {
           const mappedUsers = allUsers
             .map((user, index) => {
               const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
-              const emoji = emojiOptions[index % emojiOptions.length];
+              // 랜덤 이모지 할당
+              const randomEmojiIndex = Math.floor(Math.random() * emojiOptions.length);
+              const emoji = emojiOptions[randomEmojiIndex];
 
-              // 더 자세한 로그
-              console.log('[BLE 스캔] 매핑된 사용자 정보:', {
-                uuid: user.uuid,
-                name: user.bleToken || user.name || `사용자${index + 1}`,
-                serviceUUID: user.serviceUUID,
-                bleToken: user.bleToken,
-                emoji,
-              });
+              // 사용자 이름을 간단히 "사용자 N" 형식으로 설정
+              const userName = `사용자 ${index + 1}`;
 
               return {
                 uuid: user.uuid,
-                name: user.bleToken || user.name || `사용자${index + 1}`, // bleToken을 이름으로 사용
+                name: userName,
                 emoji: emoji,
                 deviceId: user.deviceId,
               };
@@ -364,6 +374,22 @@ const GiveAwayScreen = ({ onClose }) => {
             사용자_목록: mappedUsers,
           });
 
+          // 사용자 목록이 변경되면 위치 캐시 초기화
+          if (users.length !== mappedUsers.length) {
+            userPositionsRef.current = []; // 캐시 초기화
+            console.log('[BLE 스캔] 사용자 수 변경, 위치 캐시 초기화됨');
+          } else {
+            // 사용자 수는 같지만 사용자가 바뀐 경우도 확인
+            const userIdsChanged = !users.every(
+              (user, idx) => idx < mappedUsers.length && user.uuid === mappedUsers[idx].uuid
+            );
+
+            if (userIdsChanged) {
+              userPositionsRef.current = []; // 캐시 초기화
+              console.log('[BLE 스캔] 사용자 ID 변경, 위치 캐시 초기화됨');
+            }
+          }
+
           // 상태 업데이트
           setUsers(mappedUsers);
           setButtonVisible(mappedUsers.length > 0);
@@ -373,6 +399,12 @@ const GiveAwayScreen = ({ onClose }) => {
           setUsers([]);
           setButtonVisible(false);
           setLoading(false);
+
+          // 사용자가 없을 때도 캐시 초기화
+          if (userPositionsRef.current.length > 0) {
+            userPositionsRef.current = [];
+            console.log('[BLE 스캔] 사용자 없음, 위치 캐시 초기화됨');
+          }
         }
       };
 
@@ -478,6 +510,9 @@ const GiveAwayScreen = ({ onClose }) => {
     if (isScanning) {
       return;
     }
+
+    // 새로고침 시 캐시 강제 초기화
+    userPositionsRef.current = [];
     await startScanning();
   };
 
@@ -684,7 +719,7 @@ const GiveAwayScreen = ({ onClose }) => {
                       }}
                     />
                   </View>
-                  <Text style={[styles.userName, { fontSize: 15 * position.scale }]}>
+                  <Text style={[styles.userName, { fontSize: 18 * position.scale }]}>
                     {user.name}
                   </Text>
                 </Animated.View>
@@ -816,14 +851,14 @@ const styles = StyleSheet.create({
   emojiContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 5,
+    marginBottom: 2,
   },
   emoji: {
     fontSize: 50,
   },
   userName: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-SemiBold',
     color: '#333',
     textAlign: 'center',
   },
@@ -915,7 +950,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-
   refreshButton: {
     padding: 0,
     backgroundColor: 'transparent',
