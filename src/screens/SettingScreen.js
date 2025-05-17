@@ -26,7 +26,6 @@ import { Svg, Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserById } from '../api/userInfo';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
-import notificationService from '../api/notificationService';
 import useNotificationStore from '../store/notificationStore';
 
 // 알림 타입 enum (API와 일치)
@@ -41,39 +40,12 @@ const NOTIFICATION_TYPES = {
   SHAREBOX_DELETED: 'SHAREBOX_DELETED', // 쉐어박스 그룹 삭제 알림
 };
 
-// 알림 주기 enum (API와 일치)
-const EXPIRATION_CYCLES = {
-  ONE_DAY: 'ONE_DAY', // 1일
-  TWO_DAYS: 'TWO_DAYS', // 2일
-  THREE_DAYS: 'THREE_DAYS', // 3일
-  ONE_WEEK: 'ONE_WEEK', // 7일
-  ONE_MONTH: 'ONE_MONTH', // 30일
-  TWO_MONTHS: 'TWO_MONTHS', // 60일
-  THREE_MONTHS: 'THREE_MONTHS', // 90일
-};
+// 알림 주기 enum (API와 일치) - 현재 코드에서는 직접 사용하지 않음/* const EXPIRATION_CYCLES = {  ONE_DAY: 'ONE_DAY', // 1일  TWO_DAYS: 'TWO_DAYS', // 2일  THREE_DAYS: 'THREE_DAYS', // 3일  ONE_WEEK: 'ONE_WEEK', // 7일  ONE_MONTH: 'ONE_MONTH', // 30일  TWO_MONTHS: 'TWO_MONTHS', // 60일  THREE_MONTHS: 'THREE_MONTHS', // 90일};*/
 
-// 마커 값에 따른 알림 주기 매핑
-const MARKER_TO_CYCLE = {
-  0: EXPIRATION_CYCLES.ONE_DAY, // 당일 또는 1일
-  1: EXPIRATION_CYCLES.ONE_DAY, // 1일
-  2: EXPIRATION_CYCLES.TWO_DAYS, // 2일
-  3: EXPIRATION_CYCLES.THREE_DAYS, // 3일
-  7: EXPIRATION_CYCLES.ONE_WEEK, // 7일
-  30: EXPIRATION_CYCLES.ONE_MONTH, // 30일
-  60: EXPIRATION_CYCLES.TWO_MONTHS, // 60일
-  90: EXPIRATION_CYCLES.THREE_MONTHS, // 90일
-};
+/* 현재 사용하지 않는 매핑// 마커 값에 따른 알림 주기 매핑const MARKER_TO_CYCLE = {  0: 'ONE_DAY', // 당일 또는 1일  1: 'ONE_DAY', // 1일  2: 'TWO_DAYS', // 2일  3: 'THREE_DAYS', // 3일  7: 'ONE_WEEK', // 7일  30: 'ONE_MONTH', // 30일  60: 'TWO_MONTHS', // 60일  90: 'THREE_MONTHS', // 90일};// 알림 주기에 따른 마커 값 매핑const CYCLE_TO_MARKER = {  'ONE_DAY': 1,  'TWO_DAYS': 2,  'THREE_DAYS': 3,  'ONE_WEEK': 7,  'ONE_MONTH': 30,  'TWO_MONTHS': 60,  'THREE_MONTHS': 90,};*/
 
-// 알림 주기에 따른 마커 값 매핑
-const CYCLE_TO_MARKER = {
-  [EXPIRATION_CYCLES.ONE_DAY]: 1,
-  [EXPIRATION_CYCLES.TWO_DAYS]: 2,
-  [EXPIRATION_CYCLES.THREE_DAYS]: 3,
-  [EXPIRATION_CYCLES.ONE_WEEK]: 7,
-  [EXPIRATION_CYCLES.ONE_MONTH]: 30,
-  [EXPIRATION_CYCLES.TWO_MONTHS]: 60,
-  [EXPIRATION_CYCLES.THREE_MONTHS]: 90,
-};
+// 슬라이더 마커 값
+const markers = [0, 1, 2, 3, 7, 30, 60, 90];
 
 const SettingScreen = () => {
   const { theme } = useTheme();
@@ -110,12 +82,14 @@ const SettingScreen = () => {
   const [loginType, setLoginType] = useState('kakao'); // 'kakao' 또는 'google'
   const [nickname, setNickname] = useState('');
 
-  // 슬라이더 마커 값
-  const markers = [0, 1, 2, 3, 7, 30, 60, 90];
-
   // 워치 모달 상태
   const [watchModalVisible, setWatchModalVisible] = useState(false);
   const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
+
+  // 편집 모드 상태 추가
+  const [editingInterval, setEditingInterval] = useState(false);
+  // 임시 값을 저장할 상태 추가
+  const [tempExpiryInterval, setTempExpiryInterval] = useState(7);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -135,20 +109,39 @@ const SettingScreen = () => {
     [updateNotificationTypeStatus, error]
   );
 
-  // 알림 주기 변경 핸들러
-  const handleExpirationCycleChange = useCallback(
-    async value => {
-      console.log('[알림설정] 알림 주기 변경 요청:', value);
-      const success = await updateExpirationCycle(value);
+  // 알림 주기 변경 핸들러 - 최적화
+  const handleExpirationCycleChange = useCallback(value => {
+    console.log('슬라이더 값 변경 트리거됨:', value);
+    // 슬라이더 값 즉시 업데이트
+    setTempExpiryInterval(value);
+  }, []);
+
+  // 수정/저장 버튼 클릭 핸들러
+  const handleEditSaveClick = useCallback(async () => {
+    if (editingInterval) {
+      // 저장 모드 - API 호출하여 서버에 저장
+      console.log('[알림설정] 알림 주기 변경 저장:', tempExpiryInterval);
+      const success = await updateExpirationCycle(tempExpiryInterval);
 
       if (success) {
         Alert.alert('설정 완료', '알림 주기 설정이 저장되었습니다.');
       } else if (error) {
         Alert.alert('알림 주기 설정 실패', error);
       }
-    },
-    [updateExpirationCycle, error]
-  );
+    } else {
+      // 수정 모드로 전환 - 현재 서버에 저장된 값으로 슬라이더 초기화
+      setTempExpiryInterval(expiryNotificationInterval);
+      console.log('[알림설정] 수정 모드 전환, 현재 값:', expiryNotificationInterval);
+    }
+    // 모드 전환
+    setEditingInterval(prev => !prev);
+  }, [
+    editingInterval,
+    tempExpiryInterval,
+    expiryNotificationInterval,
+    updateExpirationCycle,
+    error,
+  ]);
 
   // Google 로고 SVG 컴포넌트
   // eslint-disable-next-line react/no-unstable-nested-components
@@ -387,6 +380,12 @@ const SettingScreen = () => {
     initSettings();
   }, [loadLocalExpirationCycle, fetchNotificationSettings]);
 
+  // 앱 시작 시 tempExpiryInterval 초기화
+  useEffect(() => {
+    // 앱 시작 시 서버 값으로 tempExpiryInterval 초기화
+    setTempExpiryInterval(expiryNotificationInterval);
+  }, [expiryNotificationInterval]);
+
   // 탭바 처리 - 화면 진입 시 및 이탈 시
   useEffect(() => {
     // 애니메이션이 완료된 후에 탭바 숨기기
@@ -509,28 +508,48 @@ const SettingScreen = () => {
           {/* 유효기간 알림 주기 설정 - 만료 알림이 활성화된 경우에만 표시 */}
           {expiryNotification && (
             <View style={styles.sliderContainer}>
-              <View style={styles.notificationInfo}>
-                <Text variant="body1" style={styles.notificationLabel}>
-                  유효기간 알림 주기 설정
-                </Text>
-                <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-                  만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90일 단위
-                </Text>
+              <View style={styles.notificationTitleRow}>
+                <View style={styles.notificationInfo}>
+                  <Text variant="body1" style={styles.notificationLabel}>
+                    유효기간 알림 주기 설정
+                  </Text>
+                  <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                    만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90일 단위
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.editSaveButton,
+                    editingInterval ? styles.saveButton : styles.editButton,
+                  ]}
+                  onPress={handleEditSaveClick}
+                >
+                  {' '}
+                  <Text
+                    style={[
+                      styles.editSaveButtonText,
+                      editingInterval ? styles.saveButtonText : styles.editButtonText,
+                    ]}
+                  >
+                    {' '}
+                    {editingInterval ? '저장' : '수정'}{' '}
+                  </Text>{' '}
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.customSliderContainer}>
+              <View
+                style={[styles.customSliderContainer, !editingInterval && styles.disabledSlider]}
+              >
                 <Slider
-                  value={expiryNotificationInterval || 7}
+                  value={tempExpiryInterval}
                   values={markers}
                   onValueChange={handleExpirationCycleChange}
                   minimumTrackTintColor={theme.colors.primary}
                   maximumTrackTintColor={theme.colors.grey2}
                   showValue={false}
                   containerStyle={styles.sliderStyle}
+                  disabled={!editingInterval}
                 />
-                <Text variant="caption" style={styles.currentValueText}>
-                  현재 설정: {expiryNotificationInterval || 7}일 전 알림
-                </Text>
               </View>
             </View>
           )}
@@ -971,6 +990,40 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 5,
     color: '#333',
+  },
+  notificationTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  editSaveButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  editButton: {
+    backgroundColor: '#E6F7FF',
+    borderWidth: 1,
+    borderColor: '#A7DAF9',
+  },
+  saveButton: {
+    backgroundColor: '#56AEE9',
+  },
+  editSaveButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  editButtonText: {
+    color: '#278CCC',
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+  },
+  disabledSlider: {
+    opacity: 0.8,
+    pointerEvents: 'none',
   },
 });
 

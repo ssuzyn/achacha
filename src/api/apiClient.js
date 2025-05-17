@@ -3,7 +3,7 @@
 // - 응답 인터셉터: 토큰 만료 시 자동 갱신 처리
 
 import axios from 'axios';
-import { API_CONFIG, handleApiError } from './config'; // 설정 파일 import 경로 변경
+import { API_CONFIG } from './config'; // 설정 파일 import 경로 변경
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ERROR_CODES } from '../constants/errorCodes';
 import NetInfo from '@react-native-community/netinfo';
@@ -20,7 +20,6 @@ const apiClient = axios.create({
   timeout: API_CONFIG.TIMEOUT, // 설정 파일에서 Timeout 가져오기
   headers: {
     'Content-Type': 'application/json',
-    Accept: 'application/json',
     // 필요에 따라 다른 기본 헤더를 여기에 추가할 수 있습니다.
     // 예: 'X-Custom-Header': 'someValue'
   },
@@ -57,9 +56,6 @@ apiClient.interceptors.request.use(
       const accessToken = await AsyncStorage.getItem('accessToken');
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
-        console.log('[API Client] 요청에 토큰 추가됨');
-      } else {
-        console.log('[API Client] 토큰 없음, 인증되지 않은 요청 전송');
       }
 
       // FormData 요청인 경우 로그 간소화
@@ -68,20 +64,10 @@ apiClient.interceptors.request.use(
         // 요청 데이터가 너무 큰 경우 로그 길이 제한
         const dataStr = JSON.stringify(config.data);
       }
-    } catch (error) {
-      console.error('[API Client] 토큰 조회 중 오류:', error);
-    }
-
-    // 디버깅을 위한 로그
-    console.log(
-      `[API Client] 요청: ${config.method.toUpperCase()} ${config.url}`,
-      config.params || config.data
-    );
-
+    } catch (e) {}
     return config;
   },
   error => {
-    console.error('[API Client] 요청 인터셉터 오류:', error);
     return Promise.reject(error);
   }
 );
@@ -89,41 +75,77 @@ apiClient.interceptors.request.use(
 // 응답 인터셉터: 토큰 만료 시 자동 갱신 처리
 apiClient.interceptors.response.use(
   response => {
-    // 성공적인 응답 처리
-    console.log(
-      `[API Client] 응답: ${response.status} ${response.config.url}`,
-      response.data ? '데이터 수신' : '데이터 없음'
-    );
     return response;
   },
   async error => {
-    // 요청 디버깅 정보 로깅
-    if (error.config) {
-      console.error(
-        `[API Client] 요청 실패: ${error.config.method?.toUpperCase()} ${error.config.url}`
-      );
-    }
+    const originalRequest = error.config;
 
-    // 오류 응답 처리
-    if (error.response) {
-      console.error(`[API Client] 응답 오류: ${error.response.status}`, error.response.data);
+    // 401 에러이고, 토큰 만료 에러이며, 아직 재시도하지 않았을 경우
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      error.response.data &&
+      error.response.data.errorCode === ERROR_CODES.AUTH_02 &&
+      !originalRequest._retry
+    ) {
+      // 토큰 갱신 중이 아니라면 갱신 시작
+      if (!isRefreshing) {
+        isRefreshing = true;
+        originalRequest._retry = true;
 
-      // 토큰 만료 처리 (401 Unauthorized)
-      if (error.response.status === 401) {
-        console.log('[API Client] 인증 토큰 만료, 갱신 시도');
         try {
-          // 토큰 갱신 로직 추가 (필요시)
-          // ...
+          // 리프레시 토큰으로 새 액세스 토큰 요청
+          const refreshToken = await AsyncStorage.getItem('refreshToken');
+          const response = await axios.post(
+            `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.REFRESH_TOKEN}`,
+            { refreshToken }
+          );
+
+          const { accessToken, newRefreshToken } = response.data;
+
+          // 새 토큰 저장
+          await AsyncStorage.setItem('accessToken', accessToken);
+          if (newRefreshToken) {
+            await AsyncStorage.setItem('refreshToken', newRefreshToken);
+          }
+
+          // 헤더 업데이트
+          apiClient.defaults.headers.common.Authorization = `Bearer ${accessToken}`;
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+
+          // 대기 중인 요청들 처리
+          onRefreshed(accessToken);
+          isRefreshing = false;
+
+          // 원래 요청 재시도
+          return apiClient(originalRequest);
         } catch (refreshError) {
-          console.error('[API Client] 토큰 갱신 실패:', refreshError);
+          // 리프레시 토큰도 만료된 경우 로그아웃 처리
+          isRefreshing = false;
+
+          // AsyncStorage에서 모든 인증 관련 데이터 제거
+          await AsyncStorage.removeItem('accessToken');
+          await AsyncStorage.removeItem('refreshToken');
+
+          // 로그인 화면으로 이동 로직 (필요 시 네비게이션 혹은 이벤트 발생)
+          // RN 환경에서는 이벤트 발생 방식이 조금 다름
+          // 전역 이벤트 발행 (EventEmitter 사용시)
+          // global.eventEmitter.emit('logout');
+
+          return Promise.reject(refreshError);
         }
+      } else {
+        // 이미 토큰 갱신 중이라면 갱신된 토큰으로 요청 재시도를 예약
+        return new Promise(resolve => {
+          subscribeTokenRefresh(newToken => {
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            resolve(apiClient(originalRequest));
+          });
+        });
       }
-    } else if (error.request) {
-      console.error('[API Client] 서버 응답 없음:', error.request);
-    } else {
-      console.error('[API Client] 오류 발생:', error.message);
     }
 
+    // 다른 종류의 에러는 그대로 반환
     return Promise.reject(error);
   }
 );

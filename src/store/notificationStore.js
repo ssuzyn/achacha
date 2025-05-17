@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import notificationService from '../api/notificationService';
-import { API_CONFIG } from '../api/config';
 
 // 알림 타입 enum (API와 일치)
 const NOTIFICATION_TYPES = {

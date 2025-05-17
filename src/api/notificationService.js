@@ -120,7 +120,7 @@ const notificationService = {
       };
 
       // 토큰이 가장 최신 상태인지 확인
-      const token = await apiClient.defaults.headers.common['Authorization'];
+      const token = await apiClient.defaults.headers.common.Authorization;
       console.log('[API] 현재 인증 토큰:', token ? '존재함' : '없음');
 
       const response = await apiClient.patch(endpoint, requestData, { headers });
@@ -232,13 +232,9 @@ const notificationService = {
    * @returns {Promise<Object>} - 기프티콘 상세 정보
    */
   async getGifticonDetail(gifticonId) {
-    try {
-      // gifticonService를 사용하여 기프티콘 상세 정보 조회
-      // 알림에서는 MY_BOX 기준으로 확인
-      return await gifticonService.getGifticonDetail(gifticonId, 'MY_BOX');
-    } catch (error) {
-      throw error;
-    }
+    // gifticonService를 사용하여 기프티콘 상세 정보 조회
+    // 알림에서는 MY_BOX 기준으로 확인
+    return gifticonService.getGifticonDetail(gifticonId, 'MY_BOX');
   },
 
   /**
