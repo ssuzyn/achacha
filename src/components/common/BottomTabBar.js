@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Platform, Dimensions, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -6,7 +6,6 @@ import { useTabBar } from '../../context/TabBarContext';
 import HeaderBar from './HeaderBar';
 import { Icon, useTheme } from 'react-native-elements';
 import NavigationService from '../../navigation/NavigationService';
-import notificationService from '../../api/notificationService';
 
 // 임포트할 스크린들
 import HomeScreen from '../../screens/HomeScreen';
@@ -41,46 +40,10 @@ const HIDDEN_TAB_BAR_SCREENS = [
 // 헤더바가 포함된 스크린 컴포넌트
 const ScreenWithHeader = ({ children }) => {
   const { theme } = useTheme();
-  const [notificationCount, setNotificationCount] = useState(0);
-
-  // 미확인 알림 개수 로드 함수
-  const loadUnreadNotificationCount = useCallback(async () => {
-    try {
-      console.log('[BottomTabBar] 미확인 알림 개수 로드 요청');
-      const response = await notificationService.getUnreadNotificationsCount();
-      console.log('[BottomTabBar] 미확인 알림 개수 응답:', response);
-
-      if (response && typeof response.count === 'number') {
-        setNotificationCount(response.count);
-      } else {
-        setNotificationCount(0);
-      }
-    } catch (err) {
-      console.error('[BottomTabBar] 미확인 알림 개수 로드 실패:', err);
-      setNotificationCount(0); // 오류 시 0으로 설정
-    }
-  }, []);
-
-  // 컴포넌트 마운트 시 알림 개수 로드
-  useEffect(() => {
-    loadUnreadNotificationCount();
-
-    // 화면이 포커스될 때마다 알림 개수 업데이트
-    const unsubscribeFocus = NavigationService.navigationRef.current?.addListener(
-      'focus',
-      loadUnreadNotificationCount
-    );
-
-    return () => {
-      if (unsubscribeFocus) {
-        unsubscribeFocus();
-      }
-    };
-  }, [loadUnreadNotificationCount]);
 
   return (
     <View style={[styles.headerContainer, { backgroundColor: theme.colors.background }]}>
-      <HeaderBar notificationCount={notificationCount} />
+      <HeaderBar notificationCount={3} />
       <View style={[styles.contentContainer, { backgroundColor: theme.colors.background }]}>
         {children}
       </View>
