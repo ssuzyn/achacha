@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb904452-4e09-4cd1-bcac-a9f38dbb20c3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/navigation/AppNavigator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/navigation/AppNavigator.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/SettingScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SettingScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/NotificationScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/NotificationScreen.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +35,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "feat/S12P31D205-167-fcm-setting",
+    "git-widget-placeholder": "feat/S12P31D205-164-setting-api-connect",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "C:/Users/godls/Desktop/S12P31D205/android",
     "settings.editor.selected.configurable": "preferences.lookFeel"

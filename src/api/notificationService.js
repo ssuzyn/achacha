@@ -201,7 +201,7 @@ const notificationService = {
    */
   async markAllNotificationsAsRead() {
     try {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.NOTIFICATIONS_READ);
+      const response = await apiClient.patch(API_CONFIG.ENDPOINTS.NOTIFICATIONS_READ);
       return response.data;
     } catch (error) {
       console.error('[API] 모든 알림 읽음 처리 실패:', error);
