@@ -20,6 +20,12 @@ public interface NotificationSettingJpaRepository extends JpaRepository<Notifica
 		@Param("userId") Integer userId,
 		@Param("typeId") Integer typeId);
 
-	// 사용자별 type code 설정 목록 조회
-	List<NotificationSetting> findByUserIdInAndNotificationTypeId(List<Integer> userIds, Integer notificationTypeId);
+	@Query("""
+		SELECT ns
+		FROM NotificationSetting ns
+		JOIN FETCH ns.user
+		WHERE ns.user.id IN :userIds
+		AND ns.notificationType.id = :notificationTypeId
+		""")
+	List<NotificationSetting> findAllUserIdInAndNotificationTypeId(List<Integer> userIds, Integer notificationTypeId);
 }
