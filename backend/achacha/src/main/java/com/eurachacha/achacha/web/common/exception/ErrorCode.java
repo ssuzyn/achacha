@@ -13,14 +13,15 @@ public enum ErrorCode {
 	UNSUPPORTED_MEDIA_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "X005", "지원하지 않는 미디어 타입입니다."),
 
 	// Auth 관련 에러
-	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_001", "유효하지 않은 토큰입니다."),
-	EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_002", "만료된 토큰입니다."),
+	INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_001", "유효하지 않은 엑세스 토큰입니다."),
+	EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_002", "만료된 엑세스 토큰입니다."),
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "AUTH_003", "사용자를 찾을 수 없습니다."),
 	KAKAO_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH_004", "카카오 API 호출 중 오류가 발생했습니다."),
 	AUTH_TOKEN_MISMATCH(HttpStatus.UNAUTHORIZED, "AUTH_005", "토큰 정보가 일치하지 않습니다."),
 	INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_006", "유효하지 않은 리프레시 토큰입니다."),
 	NOT_AUTHENTICATED_USER(HttpStatus.UNAUTHORIZED, "AUTH_007", "인증 되지 않은 사용자입니다."),
 	UNAUTHORIZED_USER_ACCESS(HttpStatus.FORBIDDEN, "AUTH_008", "해당 사용자 정보에 접근할 권한이 없습니다."),
+	EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_009", "만료된 리프레시 토큰입니다."),
 
 	// FCM 토큰 관련 에러 코드
 	FCM_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "FCM_001", "FCM 토큰을 찾을 수 없습니다."),

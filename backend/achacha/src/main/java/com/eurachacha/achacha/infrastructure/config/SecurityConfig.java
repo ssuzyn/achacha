@@ -1,6 +1,5 @@
 package com.eurachacha.achacha.infrastructure.config;
 
-import com.eurachacha.achacha.infrastructure.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -9,6 +8,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
+
+import com.eurachacha.achacha.infrastructure.security.JwtAuthenticationFilter;
+import com.eurachacha.achacha.web.common.exception.FilterExceptionHandler;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,6 +32,9 @@ public class SecurityConfig {
 				//.anyRequest().authenticated()
 				.anyRequest().permitAll()
 			)
+			// 필터 예외 처리기 등록 (인증 필터보다 먼저 등록해야 함)
+			.addFilterBefore(new FilterExceptionHandler(), LogoutFilter.class)
+			// JWT 인증 필터 등록
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();

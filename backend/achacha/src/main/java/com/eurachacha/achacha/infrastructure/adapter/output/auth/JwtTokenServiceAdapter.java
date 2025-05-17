@@ -9,13 +9,18 @@ import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
 import com.eurachacha.achacha.infrastructure.config.JwtProperties;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenServiceAdapter implements TokenServicePort {
 
 	private final JwtProperties jwtProperties;
@@ -55,27 +60,43 @@ public class JwtTokenServiceAdapter implements TokenServicePort {
 	@Override
 	public Integer validateRefreshTokenAndGetUserId(String refreshToken) {
 		initializeKey();
-		return Integer.parseInt(
-			Jwts.parser()
-				.verifyWith(key)
-				.build()
-				.parseSignedClaims(refreshToken)
-				.getPayload()
-				.getSubject()
-		);
+		try {
+			return Integer.parseInt(
+				Jwts.parser()
+					.verifyWith(key)
+					.build()
+					.parseSignedClaims(refreshToken)
+					.getPayload()
+					.getSubject()
+			);
+		} catch (ExpiredJwtException e) {
+			log.error("리프레시 토큰 만료: {}", e.getMessage());
+			throw new CustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
+		} catch (Exception e) {
+			log.error("유효하지 않은 리프레시 토큰: {}", e.getMessage());
+			throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+		}
 	}
 
 	@Override
 	public Integer validateAccessTokenAndGetUserId(String accessToken) {
 		initializeKey();
-		return Integer.parseInt(
-			Jwts.parser()
-				.verifyWith(key)
-				.build()
-				.parseSignedClaims(accessToken)
-				.getPayload()
-				.getSubject()
-		);
+		try {
+			return Integer.parseInt(
+				Jwts.parser()
+					.verifyWith(key)
+					.build()
+					.parseSignedClaims(accessToken)
+					.getPayload()
+					.getSubject()
+			);
+		} catch (ExpiredJwtException e) {
+			log.error("액세스 토큰 만료: {}", e.getMessage());
+			throw new CustomException(ErrorCode.EXPIRED_ACCESS_TOKEN);
+		} catch (Exception e) {
+			log.error("유효하지 않은 액세스 토큰: {}", e.getMessage());
+			throw new CustomException(ErrorCode.INVALID_ACCESS_TOKEN);
+		}
 	}
 
 	@Override
