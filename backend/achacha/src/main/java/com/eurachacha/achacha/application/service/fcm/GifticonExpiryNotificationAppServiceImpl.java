@@ -87,7 +87,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 		for (NotificationSetting findSetting : findSettings) {
 
 			// 알림 전송
-			sendExpiryDateFcmNotification(findGifticon, findCode, today, findSetting);
+			saveAndSendNotification(findGifticon, findCode, today, findSetting);
 		}
 	}
 
@@ -97,11 +97,11 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 		NotificationSetting findSetting = notificationSettingRepository
 			.findByUserIdAndNotificationTypeId(findGifticon.getUser().getId(), findCode.getId());
 
-		// 알림 전송
-		sendExpiryDateFcmNotification(findGifticon, findCode, today, findSetting);
+		// 알림 저장 및 전송
+		saveAndSendNotification(findGifticon, findCode, today, findSetting);
 	}
 
-	private void sendExpiryDateFcmNotification(Gifticon findGifticon, NotificationType findCode, LocalDate today,
+	private void saveAndSendNotification(Gifticon findGifticon, NotificationType findCode, LocalDate today,
 		NotificationSetting findSetting) {
 		// 알림 주기
 		int day = findSetting.getExpirationCycle().getDays();
