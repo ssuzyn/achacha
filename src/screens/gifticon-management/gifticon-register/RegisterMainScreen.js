@@ -18,12 +18,13 @@ import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useTheme } from '../../../hooks/useTheme';
 import { Icon } from 'react-native-elements';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Shadow } from 'react-native-shadow-2';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import LottieView from 'lottie-react-native';
 import { fetchShareBoxes } from '../../../api/shareBoxService';
+import RNFS from 'react-native-fs';
 
 // 네이티브 모듈 가져오기
 const { BarcodeNativeModule } = NativeModules;
@@ -31,6 +32,7 @@ const { BarcodeNativeModule } = NativeModules;
 const RegisterMainScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
   const [isImageOptionVisible, setImageOptionVisible] = useState(false);
   const [isTypeModalVisible, setTypeModalVisible] = useState(false);
@@ -59,6 +61,169 @@ const RegisterMainScreen = () => {
   useEffect(() => {
     loadShareBoxes();
   }, []);
+
+  useEffect(() => {
+    if (route.params?.sharedImageUri) {
+      // 공유 인텐트가 있으면 타입/박스 선택 모달만 띄운다
+      setTypeModalVisible(true);
+    }
+  }, [route.params?.sharedImageUri]);
+
+  const handleSharedImage = async (imageUri) => {
+    try {
+      console.log('[공유 인텐트] handleSharedImage 진입:', imageUri);
+      let finalUri = imageUri;
+      // content:// URI라면 파일로 복사
+      if (imageUri.startsWith('content://')) {
+        try {
+          const destPath = `${RNFS.CachesDirectoryPath}/shared_image_${Date.now()}.jpg`;
+          await RNFS.copyFile(imageUri, destPath);
+          finalUri = 'file://' + destPath;
+          console.log('[공유 인텐트] content:// → file:// 변환:', finalUri);
+        } catch (copyErr) {
+          console.error('[공유 인텐트] content:// 파일 복사 실패:', copyErr);
+          // 복사 실패 시 원본 URI 사용 (이미지 미리보기 실패 가능)
+        }
+      }
+      // imageAsset 객체 생성
+      const imageAsset = {
+        uri: finalUri,
+        type: 'image/jpeg',
+        fileName: 'shared_image.jpg',
+      };
+      // 바코드 인식 유틸리티 불러오기
+      const { detectBarcode, detectAndCropBarcode } = require('../../../utils/BarcodeUtils');
+      let barcodeResult;
+      let croppedBarcodeResult;
+      // 바코드 인식
+      console.log('[공유 인텐트] 바코드 인식 시작');
+      if (BarcodeNativeModule) {
+        try {
+          barcodeResult = await detectBarcode(imageAsset.uri);
+          console.log('[공유 인텐트] 네이티브 바코드 감지 결과:', JSON.stringify(barcodeResult));
+          if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+            croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+          }
+        } catch (nativeError) {
+          console.error('[공유 인텐트] 네이티브 바코드 처리 오류:', nativeError);
+          barcodeResult = await detectBarcode(imageAsset.uri);
+          if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+            croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+          }
+        }
+      } else {
+        barcodeResult = await detectBarcode(imageAsset.uri);
+        console.log('[공유 인텐트] 바코드 인식 결과:', JSON.stringify(barcodeResult));
+        if (barcodeResult.success && barcodeResult.barcodes.length > 0) {
+          croppedBarcodeResult = await detectAndCropBarcode(imageAsset.uri);
+        }
+      }
+      let barcodeValue = null;
+      let barcodeFormat = null;
+      let barcodeBoundingBox = null;
+      let barcodeImageUri = null;
+      if (barcodeResult && barcodeResult.success && barcodeResult.barcodes.length > 0) {
+        const firstBarcode = barcodeResult.barcodes[0];
+        barcodeValue = firstBarcode.value;
+        barcodeFormat = firstBarcode.format;
+        barcodeBoundingBox = firstBarcode.boundingBox;
+        const cornerPoints = firstBarcode.cornerPoints;
+        console.log('[공유 인텐트] 바코드 코너 포인트:', cornerPoints);
+        console.log('[공유 인텐트] 바코드 인식 성공:', barcodeValue, barcodeFormat);
+        if (
+          croppedBarcodeResult &&
+          croppedBarcodeResult.success &&
+          croppedBarcodeResult.croppedImageUri
+        ) {
+          barcodeImageUri = croppedBarcodeResult.croppedImageUri;
+          console.log('[공유 인텐트] 바코드 이미지 크롭 성공:', barcodeImageUri);
+          if (croppedBarcodeResult.cropInfo) {
+            console.log('[공유 인텐트] 바코드 크롭 정보:', JSON.stringify(croppedBarcodeResult.cropInfo));
+          }
+        } else {
+          console.warn('[공유 인텐트] 바코드 크롭 실패:', croppedBarcodeResult ? croppedBarcodeResult.message : '크롭 결과 없음');
+        }
+      }
+      // 이미지 메타데이터 처리
+      try {
+        console.log('[공유 인텐트] 이미지 메타데이터 조회 시작');
+        const gifticonService = require('../../../api/gifticonService').default;
+        setIsOcrLoading(true);
+        const imageMetadata = await gifticonService.getGifticonImageMetadata(
+          {
+            uri: imageAsset.uri,
+            type: imageAsset.type,
+            fileName: imageAsset.fileName,
+          },
+          gifticonType
+        );
+        setIsOcrLoading(false);
+        console.log('[공유 인텐트] 이미지 메타데이터 조회 결과:', imageMetadata);
+        setImageOptionVisible(false);
+        navigation.navigate('RegisterDetail', {
+          selectedImage: { uri: imageAsset.uri },
+          originalImage: { uri: imageAsset.uri },
+          gifticonType: gifticonType,
+          boxType: boxType,
+          shareBoxId: selectedShareBoxId,
+          barcodeValue: barcodeValue,
+          barcodeFormat: barcodeFormat,
+          barcodeBoundingBox: barcodeBoundingBox,
+          barcodeImageUri: barcodeImageUri,
+          cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+          cropInfo: croppedBarcodeResult?.cropInfo || null,
+          gifticonMetadata: imageMetadata || null,
+          ocrTrainingDataId: imageMetadata?.ocrTrainingDataId || null,
+          brandName: imageMetadata?.brandName || null,
+          brandId: imageMetadata?.brandId || null,
+          gifticonName: imageMetadata?.gifticonName || null,
+          gifticonExpiryDate: imageMetadata?.gifticonExpiryDate || null,
+          gifticonOriginalAmount: imageMetadata?.gifticonOriginalAmount || null,
+          gifticonBarcodeNumber: imageMetadata?.gifticonBarcodeNumber || barcodeValue || null,
+          thumbnailImage: { uri: imageAsset.uri },
+        });
+      } catch (metadataError) {
+        console.error('[공유 인텐트] 이미지 메타데이터 조회 오류:', metadataError);
+        setIsOcrLoading(false);
+        const errorMessage =
+          metadataError.message?.includes('네트워크') ||
+          metadataError.message?.includes('Network')
+            ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+            : '기프티콘 정보 인식 중 오류가 발생했습니다.';
+        Alert.alert('메타데이터 조회 실패', errorMessage, [
+          {
+            text: '직접 입력하기',
+            onPress: () => {
+              setImageOptionVisible(false);
+              navigation.navigate('RegisterDetail', {
+                selectedImage: { uri: imageAsset.uri },
+                originalImage: { uri: imageAsset.uri },
+                gifticonType: gifticonType,
+                boxType: boxType,
+                shareBoxId: selectedShareBoxId,
+                barcodeValue: barcodeValue,
+                barcodeFormat: barcodeFormat,
+                barcodeBoundingBox: barcodeBoundingBox,
+                barcodeImageUri: barcodeImageUri,
+                cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+                cropInfo: croppedBarcodeResult?.cropInfo || null,
+                brandId: null,
+                thumbnailImage: { uri: imageAsset.uri },
+              });
+            },
+          },
+          {
+            text: '취소',
+            style: 'cancel',
+          },
+        ]);
+      }
+    } catch (e) {
+      setIsOcrLoading(false);
+      console.error('[공유 인텐트] 이미지 처리 중 오류:', e);
+      Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
+    }
+  };
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -873,7 +1038,13 @@ const RegisterMainScreen = () => {
                 variant="primary"
                 onPress={() => {
                   setTypeModalVisible(false);
-                  setImageOptionVisible(true);
+                  if (route.params?.sharedImageUri) {
+                    // 공유 인텐트 이미지가 있으면 바로 처리
+                    handleSharedImage(route.params.sharedImageUri);
+                  } else {
+                    // 기존처럼 이미지 선택 모달 노출
+                    setImageOptionVisible(true);
+                  }
                 }}
                 style={styles.typeModalButton}
               />

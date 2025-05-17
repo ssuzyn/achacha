@@ -14,6 +14,7 @@ import {
   Share,
   Modal,
   Button,
+  Linking,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -27,21 +28,7 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import { createShareBox } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import { useRoute } from '@react-navigation/native';
-import { WebView } from 'react-native-webview';
-
-const KakaoShareModal = ({ visible, onClose, inviteCode }) => (
-  <Modal visible={visible} transparent>
-    <WebView
-      source={{
-        uri: `https://k12d205.p.ssafy.io/kakao-share?code=${inviteCode}`,
-      }}
-      onNavigationStateChange={navState => {
-        // 공유 완료 후 닫기 등 처리 가능
-      }}
-    />
-    <Button title="닫기" onPress={onClose} />
-  </Modal>
-);
+import KakaoShareLink from 'react-native-kakao-share-link';
 
 const BoxCreateScreen = () => {
   const insets = useSafeAreaInsets();
@@ -280,14 +267,24 @@ const BoxCreateScreen = () => {
     }
   };
 
-  // 카카오톡 공유 함수 (WebView 방식)
-  const handleShareKakao = () => {
-    setModalVisible(true);
-  };
-
   // 코드 복사 함수
   const handleCopyCode = () => {
     Clipboard.setString(inviteCode);
+  };
+
+  // 카카오톡 공유 함수
+  const handleKakaoShare = async () => {
+    try {
+      await KakaoShareLink.sendCustom({
+        templateId: 120597, // 카카오 디벨로퍼스에서 발급받은 커스텀 템플릿 ID
+        templateArgs: [
+          { key: 'invite_code', value: inviteCode }, // 템플릿에서 ${invite_code}로 사용
+        ],
+      });
+    } catch (e) {
+      console.error(e);
+      Alert.alert('에러', '카카오톡 공유에 실패했습니다.');
+    }
   };
 
   // 생성 화면 렌더링
@@ -404,7 +401,7 @@ const BoxCreateScreen = () => {
         ]}
       >
         <View style={styles.rowButtonContainer}>
-          <TouchableOpacity style={styles.kakaoButton} onPress={handleShareKakao}>
+          <TouchableOpacity style={styles.kakaoButton} onPress={handleKakaoShare}>
             <Text variant="body1" weight="semiBold" color="#462000">
               카카오톡 공유
             </Text>
@@ -439,12 +436,6 @@ const BoxCreateScreen = () => {
       </View>
 
       {screenState === 'create' ? renderCreateScreen() : renderShareScreen()}
-
-      <KakaoShareModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        inviteCode={inviteCode}
-      />
     </View>
   );
 };
