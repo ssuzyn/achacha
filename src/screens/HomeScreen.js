@@ -19,6 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Carousel from 'react-native-reanimated-carousel';
 import Animated from 'react-native-reanimated';
 import gifticonService from '../api/gifticonService';
+import notificationService from '../api/notificationService';
+import { useHeaderBar } from '../context/HeaderBarContext';
 import { useNavigation } from '@react-navigation/native';
 
 // 캐러셀에 표시할 카드 데이터
@@ -53,6 +55,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const HomeScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const { updateNotificationCount } = useHeaderBar();
   const [nickname, setNickname] = useState('');
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -126,8 +129,36 @@ const HomeScreen = () => {
       }
     };
 
+    const loadNotificationCount = async () => {
+      try {
+        console.log('[HomeScreen] 미확인 알림 개수 로드 요청');
+        const response = await notificationService.getUnreadNotificationsCount();
+        console.log('[HomeScreen] 미확인 알림 개수 응답:', response);
+
+        if (response && response.count !== undefined) {
+          updateNotificationCount(response.count);
+        } else {
+          console.warn('[HomeScreen] 알림 개수 정보가 없습니다:', response);
+          updateNotificationCount(0);
+        }
+      } catch (err) {
+        console.error('[HomeScreen] 미확인 알림 개수 로드 실패:', err);
+        updateNotificationCount(0);
+      }
+    };
+
     loadExpiringGifticons();
-  }, []);
+    loadNotificationCount();
+
+    // 화면에 포커스될 때마다 알림 개수 갱신
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      loadNotificationCount();
+    });
+
+    return () => {
+      unsubscribeFocus();
+    };
+  }, [navigation, updateNotificationCount]);
 
   const calculateDaysLeft = expiryDate => {
     const today = new Date();

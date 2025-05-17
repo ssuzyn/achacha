@@ -14,6 +14,7 @@ import {
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
+import { useHeaderBar } from '../context/HeaderBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, ListItem, Text } from '../components/ui';
 import notificationService from '../api/notificationService';
@@ -41,6 +42,7 @@ const NotificationScreen = () => {
   const route = useRoute();
   const { theme } = useTheme();
   const { hideTabBar, showTabBar } = useTabBar();
+  const { updateNotificationCount } = useHeaderBar();
   const insets = useSafeAreaInsets(); // 안전 영역 정보 가져오기
 
   // 상태 관리
@@ -153,12 +155,14 @@ const NotificationScreen = () => {
     try {
       const result = await notificationService.getUnreadNotificationsCount();
       if (isMounted.current) {
-        setUnreadCount(result.count || 0);
+        const count = result.count || 0;
+        setUnreadCount(count);
+        updateNotificationCount(count); // HeaderBar의 알림 카운트도 업데이트
       }
     } catch (err) {
       console.error('미확인 알림 개수 조회 실패:', err);
     }
-  }, []);
+  }, [updateNotificationCount]);
 
   // 알림 일괄 읽음 처리
   const markAllAsRead = useCallback(async () => {
@@ -180,13 +184,14 @@ const NotificationScreen = () => {
 
       // 읽지 않은 알림 개수 업데이트
       setUnreadCount(0);
+      updateNotificationCount(0); // HeaderBar의 알림 카운트도 업데이트
 
       Alert.alert('알림', '모든 알림을 읽음으로 처리했습니다.');
     } catch (err) {
       console.error('알림 읽음 처리 실패:', err);
       Alert.alert('오류', '알림 읽음 처리에 실패했습니다.');
     }
-  }, [unreadCount]);
+  }, [unreadCount, updateNotificationCount]);
 
   // 사용자 새로고침 핸들러
   const handleRefresh = useCallback(() => {
@@ -219,6 +224,7 @@ const NotificationScreen = () => {
 
           // 읽지 않은 알림 개수 업데이트
           setUnreadCount(0);
+          updateNotificationCount(0); // HeaderBar의 알림 카운트도 업데이트
           console.log('[NotificationScreen] 모든 알림을 자동으로 읽음 처리했습니다.');
         }
       } catch (err) {
@@ -241,7 +247,14 @@ const NotificationScreen = () => {
       interactionComplete.cancel();
       showTabBar();
     };
-  }, [hideTabBar, showTabBar, keepTabBarVisible, loadNotifications, unreadCount]);
+  }, [
+    hideTabBar,
+    showTabBar,
+    keepTabBarVisible,
+    loadNotifications,
+    unreadCount,
+    updateNotificationCount,
+  ]);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
