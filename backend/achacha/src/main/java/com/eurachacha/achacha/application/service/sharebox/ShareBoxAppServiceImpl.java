@@ -31,8 +31,15 @@ import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
+import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
+import com.eurachacha.achacha.application.port.output.notification.dto.request.NotificationEventDto;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
+import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
+import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonScopeType;
@@ -41,11 +48,16 @@ import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonUsedSortType;
 import com.eurachacha.achacha.domain.model.history.UsageHistory;
 import com.eurachacha.achacha.domain.model.history.enums.UsageType;
+import com.eurachacha.achacha.domain.model.notification.Notification;
+import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
+import com.eurachacha.achacha.domain.model.notification.NotificationType;
+import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.sharebox.enums.ShareBoxSortType;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
+import com.eurachacha.achacha.domain.service.notification.NotificationSettingDomainService;
 import com.eurachacha.achacha.domain.service.sharebox.ShareBoxDomainService;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.util.PageableFactory;
 import com.eurachacha.achacha.web.common.exception.CustomException;
@@ -63,6 +75,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 	private final ShareBoxDomainService shareBoxDomainService;
 	private final GifticonDomainService gifticonDomainService;
+	private final NotificationSettingDomainService notificationSettingDomainService;
 	private final ShareBoxRepository shareBoxRepository;
 	private final GifticonRepository gifticonRepository;
 	private final ParticipationRepository participationRepository;
@@ -71,6 +84,11 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	private final FileStoragePort fileStoragePort;
 	private final UsageHistoryRepository usageHistoryRepository;
 	private final SecurityServicePort securityServicePort;
+	private final NotificationEventPort notificationEventPort;
+	private final NotificationRepository notificationRepository;
+	private final NotificationTypeRepository notificationTypeRepository;
+	private final NotificationSettingRepository notificationSettingRepository;
+	private final FcmTokenRepository fcmTokenRepository;
 
 	@Transactional
 	@Override
@@ -140,6 +158,9 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		participationRepository.save(participation);
 
 		log.info("쉐어박스 참여 완료 - 사용자 ID: {}, 쉐어박스 ID: {}", userId, shareBox.getId());
+
+		// 쉐어박스 멤버 참여 알림 전송
+		sendShareBoxMemberJoinNotification(shareBox, loggedInUser);
 	}
 
 	@Transactional
@@ -596,5 +617,158 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 				"gifticon", gifticonId, FileType.THUMBNAIL)
 			.map(file -> fileStoragePort.generateFileUrl(file.getPath(), FileType.THUMBNAIL))
 			.orElse(null);
+	}
+
+	/**
+	 * 쉐어박스 멤버 참여 알림을 전송합니다.
+	 */
+	private void sendShareBoxMemberJoinNotification(ShareBox shareBox, User newMember) {
+		try {
+			log.info("쉐어박스 멤버 참여 알림 전송 시작 - 쉐어박스 ID: {}, 신규 멤버 ID: {}", shareBox.getId(), newMember.getId());
+
+			// 알림 타입 조회
+			NotificationType notificationType = notificationTypeRepository.findByCode(
+				NotificationTypeCode.SHAREBOX_MEMBER_JOIN);
+			String title = notificationType.getCode().getDisplayName();
+
+			// 1. 기존 참여자들에게 알림 전송
+			sendNotificationToExistingMembers(shareBox, newMember, notificationType, title);
+
+			// 2. 신규 참여자에게 환영 알림 전송
+			sendWelcomeNotificationToNewMember(shareBox, newMember, notificationType, title);
+
+			log.info("쉐어박스 멤버 참여 알림 전송 완료 - 쉐어박스 ID: {}", shareBox.getId());
+		} catch (Exception e) {
+			// 알림 전송 실패시 로그만 남기고 계속 진행
+			log.error("쉐어박스 멤버 참여 알림 전송 실패 - 쉐어박스 ID: {}, 오류: {}",
+				shareBox.getId(), e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * 쉐어박스의 기존 참여자들에게 새 멤버 참여 알림을 전송합니다.
+	 */
+	private void sendNotificationToExistingMembers(ShareBox shareBox, User newMember, NotificationType notificationType,
+		String title) {
+		// 기존 참여자들에게 전송할 알림 내용
+		String content = String.format("%s 쉐어박스에 %s님이 참여했어요. 기프티콘을 공유해볼까요?",
+			shareBox.getName(), newMember.getName());
+
+		// 해당 쉐어박스의 모든 참여자 조회
+		List<Participation> participations = participationRepository.findByShareBoxId(shareBox.getId());
+
+		for (Participation participation : participations) {
+			User participant = participation.getUser();
+			Integer participantId = participant.getId();
+
+			// 신규 참여자에게는 알림을 보내지 않음
+			if (participantId.equals(newMember.getId())) {
+				continue;
+			}
+
+			// 참여자에게 알림 전송
+			sendNotificationToUser(participantId, notificationType, title, content, "sharebox", shareBox.getId());
+		}
+	}
+
+	/**
+	 * 새로 참여한 멤버에게 환영 알림을 전송합니다.
+	 */
+	private void sendWelcomeNotificationToNewMember(ShareBox shareBox, User newMember,
+		NotificationType notificationType, String title) {
+		// 신규 참여자에게 전송할 알림 내용
+		String content = String.format("%s 쉐어박스에 참여했어요. 기프티콘을 공유해볼까요?",
+			shareBox.getName());
+
+		// 신규 참여자에게 알림 전송
+		sendNotificationToUser(newMember.getId(), notificationType, title, content, "sharebox", shareBox.getId());
+	}
+
+	/**
+	 * 지정된 사용자에게 알림을 전송합니다.
+	 */
+	private void sendNotificationToUser(Integer userId, NotificationType notificationType,
+		String title, String content,
+		String referenceEntityType, Integer referenceEntityId) {
+		// 항상 알림 정보는 데이터베이스에 저장
+		saveNotification(userId, notificationType, title, content, referenceEntityType, referenceEntityId);
+
+		// 사용자의 알림 설정 조회
+		try {
+			NotificationSetting setting = notificationSettingRepository.findByUserIdAndNotificationTypeId(
+				userId, notificationType.getId());
+
+			// 사용자가 해당 알림을 비활성화했으면 FCM 알림만 보내지 않음
+			if (!notificationSettingDomainService.isEnabled(setting)) {
+				log.info("사용자가 알림을 비활성화하여 FCM 알림은 전송하지 않음 - 알림 타입: {}, 사용자 ID: {}",
+					notificationType.getCode(), userId);
+				return;
+			}
+		} catch (CustomException e) {
+			// 알림 설정이 없는 경우 기본적으로 FCM 알림을 보내지 않음
+			if (e.getErrorCode() == ErrorCode.NOTIFICATION_SETTING_NOT_FOUND) {
+				log.info("사용자의 알림 설정을 찾을 수 없어 FCM 알림은 전송하지 않음 - 사용자 ID: {}", userId);
+				return;
+			}
+			throw e;
+		}
+
+		// FCM 토큰 조회 및 알림 전송
+		sendPushNotification(userId, title, content, notificationType.getCode(), referenceEntityType,
+			referenceEntityId);
+	}
+
+	/**
+	 * 알림 정보를 저장합니다.
+	 */
+	private void saveNotification(Integer userId, NotificationType notificationType,
+		String title, String content,
+		String referenceEntityType, Integer referenceEntityId) {
+		User user = User.builder().id(userId).build(); // 최소한의 정보만 포함
+
+		Notification notification = Notification.builder()
+			.title(title)
+			.content(content)
+			.referenceEntityType(referenceEntityType)
+			.referenceEntityId(referenceEntityId)
+			.notificationType(notificationType)
+			.user(user)
+			.isRead(false)
+			.build();
+
+		notificationRepository.save(notification);
+		log.debug("알림 정보 저장 완료 - 사용자 ID: {}, 알림 타입: {}", userId, notificationType.getCode());
+	}
+
+	/**
+	 * FCM을 통해 푸시 알림을 전송합니다.
+	 */
+	private void sendPushNotification(Integer userId, String title, String content,
+		NotificationTypeCode typeCode,
+		String referenceEntityType, Integer referenceEntityId) {
+		// FCM 토큰 조회
+		List<FcmToken> fcmTokens = fcmTokenRepository.findAllByUserId(userId);
+
+		if (fcmTokens.isEmpty()) {
+			log.info("사용자의 FCM 토큰이 없음 - 사용자 ID: {}", userId);
+			return;
+		}
+
+		// 사용자의 모든 기기에 알림 전송
+		for (FcmToken fcmToken : fcmTokens) {
+			NotificationEventDto eventDto = NotificationEventDto.builder()
+				.fcmToken(fcmToken.getValue())
+				.title(title)
+				.body(content)
+				.userId(userId)
+				.notificationTypeCode(typeCode.name())
+				.referenceEntityId(referenceEntityId)
+				.referenceEntityType(referenceEntityType)
+				.build();
+
+			notificationEventPort.sendNotificationEvent(eventDto);
+		}
+
+		log.debug("푸시 알림 전송 완료 - 사용자 ID: {}", userId);
 	}
 }

@@ -18,4 +18,6 @@ public class NotificationEventDto {
 	private String body;
 	private Integer userId;
 	private String notificationTypeCode;
+	private Integer referenceEntityId;
+	private String referenceEntityType;
 }
