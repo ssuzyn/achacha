@@ -70,10 +70,6 @@ const HomeScreen = () => {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       const bleToken = await AsyncStorage.getItem('bleToken');
       const userId = await AsyncStorage.getItem('userId');
-      console.log('Access Token:', accessToken);
-      console.log('Refresh Token:', refreshToken);
-      console.log('BLE Token:', bleToken);
-      console.log('User ID:', userId);
     };
     printTokens();
 
@@ -82,11 +78,9 @@ const HomeScreen = () => {
         const storedNickname = await AsyncStorage.getItem('userNickname');
         if (storedNickname !== null) {
           setNickname(storedNickname);
-        } else {
-          console.log('[HomeScreen] AsyncStorage에서 닉네임을 찾을 수 없습니다.');
         }
       } catch (e) {
-        console.error('[HomeScreen] AsyncStorage에서 닉네임 로드 실패:', e);
+        // 닉네임 로드 실패
       }
     };
     loadNickname();
@@ -101,9 +95,7 @@ const HomeScreen = () => {
           sort: 'EXPIRY_ASC',
           scope: 'MY_BOX',
         };
-        console.log('[HomeScreen] 임박 기프티콘 로드 요청:', params);
         const response = await gifticonService.getAvailableGifticons(params);
-        console.log('[HomeScreen] API 응답:', response);
 
         if (response && response.gifticons) {
           const formattedGifticons = response.gifticons.map(item => ({
@@ -121,7 +113,6 @@ const HomeScreen = () => {
           setExpiringGifticons([]);
         }
       } catch (err) {
-        console.error('[HomeScreen] 임박 기프티콘 로드 실패:', err);
         setError(err.message || '기프티콘을 불러오는 데 실패했습니다.');
         setExpiringGifticons([]);
       } finally {
@@ -131,18 +122,14 @@ const HomeScreen = () => {
 
     const loadNotificationCount = async () => {
       try {
-        console.log('[HomeScreen] 미확인 알림 개수 로드 요청');
         const response = await notificationService.getUnreadNotificationsCount();
-        console.log('[HomeScreen] 미확인 알림 개수 응답:', response);
 
         if (response && response.count !== undefined) {
           updateNotificationCount(response.count);
         } else {
-          console.warn('[HomeScreen] 알림 개수 정보가 없습니다:', response);
           updateNotificationCount(0);
         }
       } catch (err) {
-        console.error('[HomeScreen] 미확인 알림 개수 로드 실패:', err);
         updateNotificationCount(0);
       }
     };
@@ -491,7 +478,6 @@ const HomeScreen = () => {
 
   const handleGifticonPress = item => {
     if (!item || !item.id || !item.gifticonType) {
-      console.warn('[HomeScreen] 상세 페이지 이동 불가: 필수 정보 부족', item);
       return;
     }
 
@@ -503,8 +489,6 @@ const HomeScreen = () => {
       NavigationService.navigate('DetailProduct', params);
     } else if (item.gifticonType === 'AMOUNT') {
       NavigationService.navigate('DetailAmount', params);
-    } else {
-      console.warn('[HomeScreen] 알 수 없는 기프티콘 유형:', item.gifticonType);
     }
   };
 
