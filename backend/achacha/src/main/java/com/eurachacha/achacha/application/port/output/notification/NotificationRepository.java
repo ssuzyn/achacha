@@ -11,4 +11,6 @@ public interface NotificationRepository {
 	Slice<Notification> findNotifications(Integer userId, Pageable pageable);
 
 	int countByUserIdAndRead(Integer userId, boolean read);
+
+	void updateAllNotificationsToRead(Integer userId);
 }

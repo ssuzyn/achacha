@@ -9,4 +9,6 @@ public interface NotificationAppService {
 	NotificationsResponseDto getNotifications(NotificationSortType sort, Integer page, Integer size);
 
 	NotificationCountResponseDto countUnreadNotifications(boolean read);
+
+	void markAllNotificationsAsRead();
 }

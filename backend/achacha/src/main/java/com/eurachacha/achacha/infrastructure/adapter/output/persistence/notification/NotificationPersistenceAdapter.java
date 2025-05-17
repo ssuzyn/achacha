@@ -29,4 +29,9 @@ public class NotificationPersistenceAdapter implements NotificationRepository {
 	public int countByUserIdAndRead(Integer userId, boolean read) {
 		return notificationJpaRepository.countByUserIdAndIsRead(userId, read);
 	}
+
+	@Override
+	public void updateAllNotificationsToRead(Integer userId) {
+		notificationJpaRepository.updateAllNotificationsToRead(userId);
+	}
 }

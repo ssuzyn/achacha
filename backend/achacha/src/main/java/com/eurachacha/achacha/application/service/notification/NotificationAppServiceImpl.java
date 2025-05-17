@@ -82,4 +82,11 @@ public class NotificationAppServiceImpl implements NotificationAppService {
 			.count(count)
 			.build();
 	}
+
+	@Override
+	@Transactional
+	public void markAllNotificationsAsRead() {
+		User user = securityServicePort.getLoggedInUser();
+		notificationRepository.updateAllNotificationsToRead(user.getId());
+	}
 }
