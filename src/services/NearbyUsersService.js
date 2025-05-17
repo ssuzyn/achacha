@@ -1,8 +1,7 @@
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { PermissionsAndroid, Platform, Alert, AppState } from 'react-native';
-import BleManager from 'react-native-ble-manager';
-import { NativeEventEmitter, NativeModules } from 'react-native';
+import { BleManager } from 'react-native-ble-plx';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import useAuthStore from '../store/authStore';
 import apiClient from '../api/apiClient';
@@ -17,20 +16,12 @@ class NearbyUsersService {
     this.tokenExpiry = null; // 토큰 만료 시간 저장용
     this.nearbyUsers = [];
     this.isScanning = false;
-    this.scanListener = null;
-    this.discoveryListener = null;
-    this.appStateListener = null;
     this.isAdvertising = false;
     this.serviceUUID = SERVICE_UUID; // 하이픈 포함된 UUID
     this.serviceUUIDNoHyphens = SERVICE_UUID_NO_HYPHENS; // 광고용 (하이픈 제거)
-    this.SCAN_DURATION = 5; // 스캔 시간 5초로 설정
-
-    // BleManager 초기화
-    BleManager.start({ showAlert: false });
-
-    // BLE 이벤트 리스너 설정
-    const BleManagerModule = NativeModules.BleManager;
-    this.bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+    this.SCAN_DURATION = 5000; // 스캔 시간 5초로 설정 (밀리초 단위)
+    this.scanSubscription = null;
+    this.manager = new BleManager();
 
     // 앱 상태 변경 이벤트 리스너 설정
     this.setupAppStateListener();
@@ -62,7 +53,7 @@ class NearbyUsersService {
         await this.stopScan();
       }
 
-      // 광고 중지
+      // 광고 중지 - BLE-PLX에서는 별도로 관리해야 함
       if (this.isAdvertising) {
         await this.stopAdvertising();
       }
@@ -120,9 +111,9 @@ class NearbyUsersService {
   // 블루투스 상태 확인 및 활성화 요청
   async checkBluetoothState() {
     try {
-      const state = await BleManager.checkState();
+      const state = await this.manager.state();
 
-      if (state === 'on') {
+      if (state === 'PoweredOn') {
         return true;
       } else {
         // iOS에서는 시스템 설정으로 이동하도록 안내
@@ -135,10 +126,17 @@ class NearbyUsersService {
           );
           return false;
         }
-        // Android에서는 블루투스 활성화 요청
+        // Android에서는 활성화 요청
         else {
-          const enable = await BleManager.enableBluetooth();
-          return true;
+          if (state === 'PoweredOff') {
+            Alert.alert(
+              '블루투스가 꺼져 있습니다',
+              '블루투스를 켜주세요.',
+              [{ text: '확인', onPress: () => console.log('OK Pressed') }],
+              { cancelable: false }
+            );
+          }
+          return false;
         }
       }
     } catch (error) {
@@ -205,26 +203,6 @@ class NearbyUsersService {
     }
   }
 
-  // 토큰 저장하기
-  async saveToken(token, days = 7) {
-    try {
-      // 토큰 저장
-      await AsyncStorage.setItem('bleToken', token);
-
-      // 만료일 설정 (기본 7일)
-      const expiry = new Date();
-      expiry.setDate(expiry.getDate() + days);
-      await AsyncStorage.setItem('bleTokenExpiry', expiry.toISOString());
-
-      this.deviceId = token;
-      this.tokenExpiry = expiry;
-
-      console.log('BLE 토큰 저장됨:', token, '만료일:', expiry);
-    } catch (error) {
-      console.error('BLE 토큰 저장 실패:', error);
-    }
-  }
-
   // BLE 토큰 생성 API 호출
   async generateBleToken() {
     try {
@@ -244,11 +222,9 @@ class NearbyUsersService {
         await useAuthStore.getState().updateTokens(null, null, tokenValue);
         this.deviceId = tokenValue;
 
-        // !!! 중요: 새 토큰의 만료 시간 설정 !!!
+        // 새 토큰의 만료 시간 설정
         const expiry = new Date();
-        // 서버에서 만료 시간을 준다면 해당 값을 사용, 아니라면 기본값 설정 (예: 7일)
-        // 예시: 서버가 expiresIn 필드를 초 단위로 준다면: expiry.setSeconds(expiry.getSeconds() + response.data.expiresIn);
-        expiry.setDate(expiry.getDate() + 7); // 지금은 임시로 7일 후 만료로 설정
+        expiry.setDate(expiry.getDate() + 7); // 7일 후 만료로 설정
         this.tokenExpiry = expiry;
         console.log('[generateBleToken] 새 토큰 만료 시간 설정됨:', this.tokenExpiry);
       } else {
@@ -262,23 +238,16 @@ class NearbyUsersService {
     }
   }
 
-  // 서비스 UUID 가져오기
-  async getServiceUUID() {
-    // 항상 고정된 SERVICE_UUID 사용
-    return SERVICE_UUID;
-  }
-
   // 블루투스 초기화 및 권한 설정
   async initialize() {
     console.log('NearbyUsersService: initialize 함수 시작');
 
-    // <<< 로그인 상태 확인 추가 >>>
-    const isLoggedIn = useAuthStore.getState().isLoggedIn; // 혹은 accessToken 유무로 판단
+    // 로그인 상태 확인
+    const isLoggedIn = useAuthStore.getState().isLoggedIn;
     if (!isLoggedIn) {
       console.log('[Initialize] 사용자가 로그인하지 않았습니다. BLE 초기화를 건너뜁니다.');
       return false;
     }
-    // <<< -- 로그인 상태 확인 끝 -- >>>
 
     if (AppState.currentState !== 'active') {
       console.log('[Initialize] 앱이 포그라운드 상태가 아닙니다. BLE 초기화를 건너뜁니다.');
@@ -299,7 +268,6 @@ class NearbyUsersService {
 
     try {
       const now = new Date();
-      // <<< 토큰 만료 조건 디버깅 로그 추가 >>>
       console.log('[Initialize] 토큰 유효성 검사 전:');
       console.log('[Initialize]   - this.deviceId:', this.deviceId);
       console.log('[Initialize]   - this.tokenExpiry:', this.tokenExpiry);
@@ -307,14 +275,11 @@ class NearbyUsersService {
       if (this.tokenExpiry) {
         console.log('[Initialize]   - 만료됨? (this.tokenExpiry < now):', this.tokenExpiry < now);
       }
-      // <<< -- 디버깅 로그 끝 -- >>>
 
       if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
         console.log('[Initialize] BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
-        const bleTokenResponse = await this.generateBleToken(); // generateBleToken 내부에서 this.deviceId와 this.tokenExpiry가 설정될 것임
-        // 추가적인 토큰 값 검증 로직이 필요하다면 여기에 추가
+        const bleTokenResponse = await this.generateBleToken();
         if (!this.deviceId) {
-          // generateBleToken 호출 후에도 deviceId가 없다면 문제
           console.error(
             '[Initialize] generateBleToken 호출 후에도 유효한 BLE 토큰을 얻지 못했습니다.'
           );
@@ -323,8 +288,8 @@ class NearbyUsersService {
       }
 
       console.log('[Initialize] 현재 사용할 BLE 토큰:', this.deviceId);
-      await this.startAdvertising();
-      // ... (기존 appStateListener 관련 코드) ...
+      // 광고 시작은 별도 API나 네이티브 구현이 필요하며, BLE-PLX는 기본적으로 지원하지 않음
+      // await this.startAdvertising();
       return true;
     } catch (error) {
       console.error('[Initialize] BLE 초기화 실패:', error);
@@ -334,123 +299,18 @@ class NearbyUsersService {
 
   // 광고 시작 (자신을 다른 기기에 알림)
   async startAdvertising() {
-    // 앱이 포그라운드인지 확인
-    if (AppState.currentState !== 'active') {
-      return;
-    }
-
-    try {
-      if (this.isAdvertising) {
-        console.log('이미 광고 중입니다.');
-        return;
-      }
-
-      console.log('\n=== BLE 광고 시작 - 상세 디버그 ===');
-      console.log('1. 광고할 디바이스 ID:', this.deviceId);
-
-      if (!this.deviceId) {
-        console.error('BLE 토큰이 없습니다. 먼저 로그인이 필요합니다.');
-        return false;
-      }
-
-      if (NativeModules.BleModule) {
-        // 토큰 크기 검사 (13바이트 제한)
-        const tokenBytes = new TextEncoder().encode(this.deviceId);
-
-        // UUID 문자열을 실제 바이트로 변환
-        const uuidBytes = new Uint8Array(16);
-        const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
-        for (let i = 0; i < 16; i++) {
-          uuidBytes[i] = parseInt(uuidNoHyphens.substr(i * 2, 2), 16);
-        }
-
-        console.log('\n2. 바이트 크기 분석:');
-        console.log('- BLE 토큰 바이트 크기:', tokenBytes.length);
-        console.log('- 토큰 원본:', this.deviceId);
-
-        console.log('\n3. UUID 분석:');
-        console.log('- Service UUID:', this.serviceUUID);
-        console.log('- UUID 바이트 크기:', uuidBytes.length);
-
-        // 최종 광고 데이터 생성 (UUID + Token 바이트 배열)
-        const finalBytes = new Uint8Array(uuidBytes.length + tokenBytes.length);
-        finalBytes.set(uuidBytes, 0); // UUID 바이트를 앞에 배치
-        finalBytes.set(tokenBytes, uuidBytes.length); // 토큰 바이트를 뒤에 배치
-
-        console.log('\n4. 최종 광고 데이터:');
-        console.log('- 전체 바이트 크기:', finalBytes.length);
-
-        if (tokenBytes.length > 13) {
-          console.error('\n❌ BLE 토큰이 너무 큽니다:', tokenBytes.length, '바이트');
-          return false;
-        }
-
-        try {
-          console.log('\n5. 네이티브 모듈로 전송되는 최종 데이터:');
-          console.log('- 바이트 배열:', Array.from(finalBytes));
-          console.log('- 최종 크기:', finalBytes.length, '바이트');
-
-          // Base64로 인코딩하여 optimized 메서드로 전송
-          const base64Data = btoa(String.fromCharCode.apply(null, finalBytes));
-          await NativeModules.BleModule.startAdvertisingOptimized(base64Data);
-          console.log('\n✅ 광고 시작됨');
-          this.isAdvertising = true;
-          return true;
-        } catch (error) {
-          console.error('\n❌ 광고 시작 실패:', error);
-          this.isAdvertising = false;
-          return false;
-        }
-      } else {
-        console.error('BleModule을 찾을 수 없습니다.');
-        return false;
-      }
-    } catch (error) {
-      console.error('광고 시작 실패:', error);
-      this.isAdvertising = false;
-      return false;
-    }
+    console.log('BLE-PLX에서는 광고를 직접 지원하지 않습니다. 네이티브 모듈을 사용하세요.');
+    return false;
   }
 
   // 광고 중지
   async stopAdvertising() {
-    if (!this.isAdvertising) return;
-
-    try {
-      // 각 플랫폼에 맞는 광고 중지 메서드 호출
-      if (Platform.OS === 'ios') {
-        // iOS에서는 Peripheral 모드 중지
-        await this.stopIosPeripheralMode();
-      } else {
-        // Android에서는 advertiseCallback 중지
-        await this.stopAndroidAdvertising();
-      }
-
-      this.isAdvertising = false;
-      console.log('광고 중지 완료');
-    } catch (error) {
-      console.error('광고 중지 실패:', error);
-    }
+    // BLE-PLX는 광고 중지 기능을 기본적으로 제공하지 않음
+    console.log('BLE-PLX에서는 광고 중지를 직접 지원하지 않습니다. 네이티브 모듈을 사용하세요.');
+    return false;
   }
 
-  // iOS에서 Peripheral 모드 중지
-  async stopIosPeripheralMode() {
-    // 별도 구현 필요
-  }
-
-  // Android에서 Advertising 중지
-  async stopAndroidAdvertising() {
-    try {
-      const BleModule = NativeModules.BleModule;
-      await BleModule.stopAdvertising();
-      console.log('Android Advertising 중지됨');
-    } catch (error) {
-      console.error('Android Advertising 중지 실패:', error);
-      throw error;
-    }
-  }
-
-  // BLE 스캔 시작
+  // BLE 스캔 시작 - BLE-PLX 버전
   async startScan(onUserFound, onScanComplete) {
     if (AppState.currentState !== 'active') {
       console.log('앱이 포그라운드 상태가 아닙니다. 스캔을 시작할 수 없습니다.');
@@ -464,17 +324,17 @@ class NearbyUsersService {
     }
 
     try {
-      // 블루투스 상태 한번 더 체크
-      const state = await BleManager.checkState();
+      // 블루투스 상태 확인
+      const state = await this.manager.state();
       console.log('블루투스 상태:', state);
 
-      if (state !== 'on') {
-        console.log('블루투스가 꺼져있습니다.');
+      if (state !== 'PoweredOn') {
+        console.log('블루투스가 켜져있지 않습니다. 현재 상태:', state);
         if (onScanComplete) onScanComplete([]);
         return;
       }
 
-      // 권한 다시 체크
+      // 권한 확인
       const hasPermissions = await this.requestBluetoothPermissions();
       console.log('블루투스 권한 상태:', hasPermissions);
 
@@ -490,57 +350,39 @@ class NearbyUsersService {
 
       console.log('\n=== BLE 스캔 시작 ===');
       console.log('현재 디바이스 ID:', this.deviceId);
-      console.log('스캔 시간:', this.SCAN_DURATION, '초');
-      console.log('원본 서비스 UUID:', this.serviceUUID);
+      console.log('스캔 시간:', this.SCAN_DURATION / 1000, '초');
+      console.log('서비스 UUID:', this.serviceUUID);
 
-      // Short UUID 생성 (BleModule.kt와 동일한 방식)
-      const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
-      const shortUuidHex = uuidNoHyphens.substring(0, 4); // 앞 4자리(2바이트)만 사용
-      const shortUUID = `0000${shortUuidHex}-0000-1000-8000-00805f9b34fb`;
-
-      console.log('최종 Short UUID:', shortUUID);
-
-      // Short UUID로 스캔
-      console.log('Short UUID로 스캔 시작');
-      await BleManager.scan([shortUUID], this.SCAN_DURATION, true);
-
-      // 디버깅을 위한 추가 로그
-      this.scanListener = this.bleManagerEmitter.addListener(
-        'BleManagerDiscoverPeripheral',
-        peripheral => {
-          console.log('\n=== 발견된 기기 상세 정보 ===');
-          console.log('기기 ID:', peripheral.id);
-          console.log('기기 이름:', peripheral.name || '이름 없음');
-          console.log('RSSI:', peripheral.rssi);
-          console.log('광고 데이터:', peripheral.advertising || '없음');
-          if (peripheral.advertising) {
-            console.log('서비스 UUID들:', peripheral.advertising.serviceUUIDs || '없음');
-            console.log('서비스 데이터:', peripheral.advertising.serviceData || '없음');
-            console.log('제조사 데이터:', peripheral.advertising.manufacturerData || '없음');
+      // 스캔 시작 - BLE-PLX 방식
+      this.scanSubscription = this.manager.startDeviceScan(
+        [this.serviceUUID], // 서비스 UUID로 필터링
+        // null, // null을 사용하여 모든 기기 스캔
+        { allowDuplicates: false }, // 중복 발견 방지
+        (error, device) => {
+          if (error) {
+            console.error('스캔 중 오류:', error);
+            return;
           }
-          console.log('전체 기기 정보:', JSON.stringify(peripheral, null, 2));
-          // 모든 기기 처리
-          this.handleDiscoveredDevice(peripheral, onUserFound);
+
+          if (device) {
+            console.log('기기 발견:', {
+              id: device.id,
+              name: device.name || '이름 없음',
+              rssi: device.rssi,
+            });
+
+            this.handleDiscoveredDevice(device, onUserFound);
+          }
         }
       );
 
-      // 스캔 완료 이벤트 처리
-      this.stopScanListener = this.bleManagerEmitter.addListener('BleManagerStopScan', () => {
+      // 지정된 시간 후 스캔 중지
+      setTimeout(() => {
+        this.stopScan();
         console.log('\n=== 스캔 완료 ===');
         console.log('총 발견된 기기 수:', this.nearbyUsers.length);
-
-        this.isScanning = false;
-        if (this.scanListener) {
-          this.scanListener.remove();
-          this.scanListener = null;
-        }
-        if (this.stopScanListener) {
-          this.stopScanListener.remove();
-          this.stopScanListener = null;
-        }
-
         if (onScanComplete) onScanComplete(this.nearbyUsers);
-      });
+      }, this.SCAN_DURATION);
     } catch (error) {
       console.error('스캔 시작 실패. 에러:', error);
       this.isScanning = false;
@@ -548,22 +390,16 @@ class NearbyUsersService {
     }
   }
 
-  // 스캔 중지
-  async stopScan() {
+  // 스캔 중지 - BLE-PLX 버전
+  stopScan() {
     if (!this.isScanning) return;
 
     try {
-      await BleManager.stopScan();
+      this.manager.stopDeviceScan();
       this.isScanning = false;
 
-      // 이벤트 리스너 제거
-      if (this.scanListener) {
-        this.scanListener.remove();
-        this.scanListener = null;
-      }
-      if (this.stopScanListener) {
-        this.stopScanListener.remove();
-        this.stopScanListener = null;
+      if (this.scanSubscription) {
+        this.scanSubscription = null;
       }
 
       console.log('스캔 중지 완료');
@@ -572,100 +408,52 @@ class NearbyUsersService {
     }
   }
 
-  // 발견된 기기 처리
-  async handleDiscoveredDevice(peripheral, onUserFound) {
+  // 발견된 기기 처리 - BLE-PLX 버전
+  async handleDiscoveredDevice(device, onUserFound) {
     try {
       console.log('기기 발견:', {
-        id: peripheral.id,
-        name: peripheral.name || '이름 없음',
-        rssi: peripheral.rssi,
+        id: device.id,
+        name: device.name || '이름 없음',
+        rssi: device.rssi,
       });
 
       // 이미 처리한 기기인지 확인
-      const existingIndex = this.nearbyUsers.findIndex(user => user.id === peripheral.id);
+      const existingIndex = this.nearbyUsers.findIndex(user => user.uuid === device.id);
       if (existingIndex !== -1) {
         // 이미 발견한 기기면 RSSI 업데이트
-        this.nearbyUsers[existingIndex].rssi = peripheral.rssi;
-        this.nearbyUsers[existingIndex].distance = this.calculateDistance(peripheral.rssi);
+        this.nearbyUsers[existingIndex].rssi = device.rssi;
+        this.nearbyUsers[existingIndex].distance = this.calculateDistance(device.rssi);
         return;
       }
 
-      // Short UUID 생성 (스캔할 때와 동일한 방식)
-      const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
-      const shortUuidHex = uuidNoHyphens.substring(0, 4);
-      const expectedShortUUID = `0000${shortUuidHex}-0000-1000-8000-00805f9b34fb`.toLowerCase();
+      // 서비스가 맞는지 확인
+      // 광고 데이터 추출 - BLE-PLX에서는 직접 접근할 수 없어 연결 필요할 수 있음
+      let deviceUUID = device.id;
+      let deviceName = device.name || '알 수 없음';
 
-      // 광고 데이터에서 서비스 UUID 확인
-      if (
-        peripheral.advertising &&
-        peripheral.advertising.serviceUUIDs &&
-        peripheral.advertising.serviceUUIDs.some(uuid => uuid.toLowerCase() === expectedShortUUID)
-      ) {
-        console.log('일치하는 Short UUID 발견:', expectedShortUUID);
+      // BLE-PLX에서는 제조업체 데이터를 직접 접근하는 방법이 제한적이므로,
+      // 필요하다면 연결 후 특성 읽기가 필요할 수 있음
 
-        // 서비스 데이터에서 토큰 추출
-        let deviceUUID = 'unknown';
-        if (peripheral.advertising.serviceData) {
-          // 서비스 데이터 키가 Short UUID와 일치하는지 확인
-          const serviceDataKey = Object.keys(peripheral.advertising.serviceData).find(
-            key => key.toLowerCase() === expectedShortUUID
-          );
+      // 거리 계산
+      const distance = this.calculateDistance(device.rssi);
 
-          if (serviceDataKey) {
-            const data = peripheral.advertising.serviceData[serviceDataKey];
-            // 바이트 배열을 문자열로 변환
-            deviceUUID = this.decodeUUID(data);
-            console.log('추출된 deviceUUID:', deviceUUID);
-          }
-        }
+      // 근처 사용자 목록에 추가
+      const user = {
+        id: device.id,
+        name: deviceName,
+        uuid: deviceUUID, // 앱 UUID
+        rssi: device.rssi,
+        distance: distance, // 미터 단위의 대략적인 거리
+        timestamp: new Date().getTime(),
+        deviceId: device.id, // GiveAwayScreen과 호환되도록 추가
+      };
 
-        // 거리 계산
-        const distance = this.calculateDistance(peripheral.rssi);
+      this.nearbyUsers.push(user);
 
-        // 근처 사용자 목록에 추가
-        const user = {
-          id: peripheral.id,
-          name: peripheral.name || '알 수 없음',
-          uuid: deviceUUID, // 앱 UUID
-          rssi: peripheral.rssi,
-          distance: distance, // 미터 단위의 대략적인 거리
-          timestamp: new Date().getTime(),
-        };
-
-        this.nearbyUsers.push(user);
-
-        // 콜백 호출
-        if (onUserFound) onUserFound(user);
-      } else {
-        console.log('Short UUID 불일치. 다른 앱의 기기로 판단');
-      }
+      // 콜백 호출
+      if (onUserFound) onUserFound(user);
     } catch (error) {
       console.error('기기 처리 중 오류:', error);
-    }
-  }
-
-  // UUID를 UTF-8로 인코딩
-  encodeUUID(uuid) {
-    try {
-      const encoder = new TextEncoder();
-      return Array.from(encoder.encode(uuid));
-    } catch (error) {
-      console.error('UUID 인코딩 실패:', error);
-      return [];
-    }
-  }
-
-  // UTF-8 데이터를 UUID로 디코딩
-  decodeUUID(data) {
-    try {
-      if (Array.isArray(data)) {
-        const decoder = new TextDecoder('utf-8');
-        return decoder.decode(new Uint8Array(data));
-      }
-      return String(data);
-    } catch (error) {
-      console.error('UUID 디코딩 실패:', error);
-      return 'unknown';
     }
   }
 
@@ -698,29 +486,29 @@ class NearbyUsersService {
 
   // 리소스 정리
   cleanup() {
-    // 이벤트 리스너 제거
-    if (this.scanListener) {
-      this.scanListener.remove();
-      this.scanListener = null;
-    }
-    if (this.stopScanListener) {
-      this.stopScanListener.remove();
-      this.stopScanListener = null;
-    }
-    if (this.appStateListener) {
-      this.appStateListener.remove();
-      this.appStateListener = null;
-    }
-
     // 스캔 중지
     if (this.isScanning) {
       this.stopScan();
     }
 
-    // 광고 중지
+    // 앱 상태 리스너 제거
+    if (this.appStateListener) {
+      this.appStateListener.remove();
+      this.appStateListener = null;
+    }
+
+    // 광고 중지 (네이티브 모듈 사용시)
     if (this.isAdvertising) {
       this.stopAdvertising();
     }
+
+    // 모든 구독 취소
+    if (this.scanSubscription) {
+      this.scanSubscription = null;
+    }
+
+    // BLE 매니저 파괴 (선택적)
+    this.manager.destroy();
   }
 }
 
