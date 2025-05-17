@@ -87,10 +87,9 @@ export const handleForegroundMessage = () => {
     // 알림 타입에 따른 특별 처리가 필요하면 여기서 구현
     const notificationType = remoteMessage.data?.type;
 
-    Alert.alert(
-      remoteMessage.notification?.title || '알림',
-      remoteMessage.notification?.body || '새로운 알림이 도착했습니다'
-    );
+    // Alert 팝업은 표시하지 않지만, 헤드업 알림이 클릭될 수 있도록 로컬 알림은 생성함
+    // 이는 notificationHelper.js의 handleForegroundNotification 함수에서 처리됨
+    // 알림 클릭 시 화면 이동은 setupLocalNotifications의 onNotification 콜백에서 처리됨
   });
 
   return unsubscribe;

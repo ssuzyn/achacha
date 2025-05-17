@@ -16,18 +16,23 @@ const NOTIFICATION_HANDLERS = {
   // 기프티콘 관련 알림 처리 함수
   handleGifticonNotification: async referenceEntityId => {
     try {
+      console.log('기프티콘 상세 정보 요청:', referenceEntityId);
+
       // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
       const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
+      console.log('기프티콘 정보 응답:', gifticonDetail?.gifticonType);
 
       // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
-      if (gifticonDetail.gifticonType === 'AMOUNT') {
+      if (gifticonDetail && gifticonDetail.gifticonType === 'AMOUNT') {
         // 금액형 기프티콘
+        console.log('금액형 기프티콘으로 이동:', referenceEntityId);
         NavigationService.navigate('DetailAmount', {
           gifticonId: referenceEntityId,
           scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
         });
       } else {
         // 상품형 기프티콘 (기본값)
+        console.log('상품형 기프티콘으로 이동:', referenceEntityId);
         NavigationService.navigate('DetailProduct', {
           gifticonId: referenceEntityId,
           scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
@@ -36,22 +41,32 @@ const NOTIFICATION_HANDLERS = {
     } catch (error) {
       console.error('기프티콘 알림 처리 중 오류 발생:', error);
       // 오류 발생 시 기본 화면으로 이동
+      console.log('오류로 인해 기프티콘 관리 탭으로 이동');
       NavigationService.navigate('Main', { screen: 'TabGifticonManage' });
+      throw error; // 상위 호출자에게 오류 전파
     }
   },
 
   // 쉐어박스 관련 알림 처리 함수
   handleShareboxNotification: async (referenceEntityId, notificationType) => {
     try {
+      console.log('쉐어박스 처리 시작:', referenceEntityId, notificationType);
+
+      // initialTab을 명시적으로 설정
+      const initialTab = notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available';
+      console.log('쉐어박스 화면으로 이동:', { shareBoxId: referenceEntityId, initialTab });
+
       // 쉐어박스 기프티콘 목록 화면으로 이동
       NavigationService.navigate('BoxList', {
         shareBoxId: referenceEntityId,
-        initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+        initialTab,
       });
     } catch (error) {
       console.error('쉐어박스 알림 처리 중 오류 발생:', error);
+      console.log('오류로 인해 쉐어박스 탭으로 이동');
       // 오류 발생 시 쉐어박스 탭으로 이동
       NavigationService.navigate('Main', { screen: 'TabSharebox' });
+      throw error; // 상위 호출자에게 오류 전파
     }
   },
 };
@@ -96,53 +111,72 @@ export const extractNavigationInfo = message => {
  * 추출한 정보를 바탕으로 적절한 화면으로 이동
  */
 export const handleNotificationNavigation = async navigationInfo => {
-  const { notificationType, referenceEntityType, referenceEntityId } = navigationInfo;
+  try {
+    const { notificationType, referenceEntityType, referenceEntityId } = navigationInfo;
 
-  console.log('화면 이동 처리 시작:', navigationInfo);
+    console.log('화면 이동 처리 시작:', navigationInfo);
 
-  if (!referenceEntityId) {
-    console.log('참조 ID가 없습니다:', navigationInfo);
-    // 기본 화면으로 이동
-    NavigationService.navigate('Main');
-    return;
-  }
+    // 강제 지연 추가 (네비게이션 안정화)
+    await new Promise(resolve => setTimeout(resolve, 500));
 
-  // 쉐어박스 삭제 알림은 메인 화면으로 이동
-  if (notificationType === 'SHAREBOX_DELETED') {
-    console.log('쉐어박스 삭제 알림: 메인 화면으로 이동');
-    NavigationService.navigate('Main');
-    return;
-  }
+    if (!referenceEntityId) {
+      console.log('참조 ID가 없습니다:', navigationInfo);
+      // 기본 화면으로 이동
+      NavigationService.navigate('Main');
+      return;
+    }
 
-  // referenceEntityType이 직접 지정된 경우 우선적으로 처리
-  if (referenceEntityType === REFERENCE_TYPES.GIFTICON) {
-    console.log('기프티콘 타입으로 직접 이동');
-    await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
-    return;
-  } else if (referenceEntityType === REFERENCE_TYPES.SHAREBOX) {
-    console.log('쉐어박스 타입으로 직접 이동');
-    await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
-    return;
-  }
+    // 쉐어박스 삭제 알림은 메인 화면으로 이동
+    if (notificationType === 'SHAREBOX_DELETED') {
+      console.log('쉐어박스 삭제 알림: 메인 화면으로 이동');
+      NavigationService.navigate('Main');
+      return;
+    }
 
-  // 이전 방식: 알림 타입에 따른 분기 처리
-  if (
-    ['EXPIRY_DATE', 'USAGE_COMPLETE', 'RECEIVE_GIFTICON', 'LOCATION_BASED'].includes(
-      notificationType
-    )
-  ) {
-    // 기프티콘 관련 알림
-    await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
-  } else if (
-    ['SHAREBOX_GIFTICON', 'SHAREBOX_USAGE_COMPLETE', 'SHAREBOX_MEMBER_JOIN'].includes(
-      notificationType
-    )
-  ) {
-    // 쉐어박스 관련 알림
-    await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
-  } else {
-    console.log('처리되지 않은 알림 타입:', notificationType);
-    // 기본 동작: 메인 화면으로 이동
+    console.log('화면 이동 처리 - Type:', referenceEntityType, 'ID:', referenceEntityId);
+
+    // referenceEntityType이 직접 지정된 경우 우선적으로 처리
+    if (
+      referenceEntityType === REFERENCE_TYPES.GIFTICON ||
+      ['EXPIRY_DATE', 'USAGE_COMPLETE', 'RECEIVE_GIFTICON', 'LOCATION_BASED'].includes(
+        notificationType
+      )
+    ) {
+      // 기프티콘 관련 알림
+      console.log('기프티콘 타입으로 이동');
+      await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
+      return;
+    } else if (
+      referenceEntityType === REFERENCE_TYPES.SHAREBOX ||
+      ['SHAREBOX_GIFTICON', 'SHAREBOX_USAGE_COMPLETE', 'SHAREBOX_MEMBER_JOIN'].includes(
+        notificationType
+      )
+    ) {
+      // 쉐어박스 관련 알림
+      console.log('쉐어박스 타입으로 이동');
+      await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
+      return;
+    } else {
+      // 타입이 명확하지 않을 경우 기프티콘으로 시도
+      console.log('알 수 없는 타입, 기프티콘으로 시도:', referenceEntityId);
+      try {
+        await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
+      } catch (err) {
+        console.log('기프티콘 처리 실패, 쉐어박스로 시도');
+        try {
+          await NOTIFICATION_HANDLERS.handleShareboxNotification(
+            referenceEntityId,
+            notificationType
+          );
+        } catch (err2) {
+          console.log('모든 처리 실패, 기본 화면으로 이동');
+          NavigationService.navigate('Main');
+        }
+      }
+    }
+  } catch (error) {
+    console.error('알림 화면 이동 중 오류 발생:', error);
+    // 오류 발생 시 기본 화면으로 이동
     NavigationService.navigate('Main');
   }
 };
@@ -151,8 +185,23 @@ export const handleNotificationNavigation = async navigationInfo => {
  * 앱 상태에 따른 알림 처리
  */
 export const handleForegroundNotification = message => {
-  // 앱이 활성화 상태일 때 로컬 푸시 알림 표시
+  // 앱이 포그라운드 상태일 때 알림 처리
+  console.log('포그라운드 알림 수신 (로컬 알림 생성):', message.notification?.title);
+
+  // 알림 데이터 추출
   const { title, body } = extractNavigationInfo(message);
+  const data = message.data || {};
+
+  // 알림 데이터 보강 (필요한 모든 필드 포함)
+  const notificationData = {
+    ...data,
+    // 핵심 필드들이 없을 경우 백업 필드로 설정
+    notificationType: data.notificationType || data.type,
+    referenceEntityType: data.referenceEntityType || data.type,
+    referenceEntityId: data.referenceEntityId || data.id || data.gifticonId || data.shareboxId,
+  };
+
+  console.log('포그라운드 알림 데이터 설정:', notificationData);
 
   // iOS와 Android의 로컬 푸시 알림 처리
   if (Platform.OS === 'ios') {
@@ -160,14 +209,20 @@ export const handleForegroundNotification = message => {
       id: message.messageId || String(Date.now()),
       title,
       body,
-      userInfo: message.data,
+      userInfo: notificationData, // 보강된 데이터 사용
     });
   } else {
     PushNotification.localNotification({
       channelId: 'default-channel',
       title,
       message: body,
-      data: message.data,
+      data: notificationData, // 보강된 데이터 사용
+      // 추가 Android 설정
+      ongoing: false,
+      autoCancel: true,
+      visibility: 'public',
+      importance: 'high',
+      priority: 'high',
     });
   }
 };
@@ -185,6 +240,9 @@ export const initializeNotifications = async () => {
     // 포그라운드 상태에서 메시지 수신 시 이벤트 리스너
     const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
       console.log('포그라운드 메시지 수신:', remoteMessage);
+
+      // 포그라운드에서 알림 처리 활성화 (로컬 알림 생성)
+      // 이렇게 하면 알림을 클릭했을 때 화면 이동이 처리됨
       handleForegroundNotification(remoteMessage);
     });
 
@@ -264,12 +322,14 @@ export const setupLocalNotifications = () => {
       // 데이터 추출
       const data = notification.data || {};
       const navigationInfo = {
-        notificationType: data.notificationType,
-        referenceEntityType: data.referenceEntityType,
-        referenceEntityId: data.referenceEntityId,
+        notificationType: data.notificationType || data.type,
+        referenceEntityType: data.referenceEntityType || data.type,
+        referenceEntityId: data.referenceEntityId || data.id || data.gifticonId || data.shareboxId,
         title: notification.title,
         body: notification.message,
       };
+
+      console.log('알림 클릭 처리 - 데이터:', navigationInfo);
 
       // 화면 이동 처리
       handleNotificationNavigation(navigationInfo);
@@ -284,6 +344,9 @@ export const setupLocalNotifications = () => {
     onRegistrationError: function (err) {
       console.error('알림 등록 오류:', err.message);
     },
+
+    // 앱이 포그라운드 상태일 때도 알림을 표시함 (true로 변경)
+    notificationForeground: true,
 
     // Android 설정
     largeIcon: 'ic_launcher',
