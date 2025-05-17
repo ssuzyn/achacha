@@ -2,6 +2,7 @@ package com.eurachacha.achacha.notification.service;
 
 import org.springframework.stereotype.Service;
 
+import com.eurachacha.achacha.notification.dto.NotificationEventDto;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -14,23 +15,42 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class FcmServiceImpl implements FcmService {
-	
+
 	private final FirebaseMessaging firebaseMessaging;
 
-	public void sendNotification(String fcmToken, String title, String body) {
+	@Override
+	public void sendNotification(NotificationEventDto eventDto) {
 		try {
-			Message message = Message.builder()
-				.setToken(fcmToken)
+			// 기본 알림 설정
+			Message.Builder messageBuilder = Message.builder()
+				.setToken(eventDto.getFcmToken())
 				.setNotification(Notification.builder()
-					.setTitle(title)
-					.setBody(body)
-					.build())
-				.build();
+					.setTitle(eventDto.getTitle())
+					.setBody(eventDto.getBody())
+					.build());
 
+			// 추가 데이터 필드 설정
+			if (eventDto.getNotificationTypeCode() != null) {
+				messageBuilder.putData("notificationTypeCode", eventDto.getNotificationTypeCode());
+			}
+
+			if (eventDto.getReferenceEntityType() != null) {
+				messageBuilder.putData("referenceEntityType", eventDto.getReferenceEntityType());
+			}
+
+			if (eventDto.getReferenceEntityId() != null) {
+				messageBuilder.putData("referenceEntityId", eventDto.getReferenceEntityId());
+			}
+
+			if (eventDto.getUserId() != null) {
+				messageBuilder.putData("userId", eventDto.getUserId().toString());
+			}
+
+			Message message = messageBuilder.build();
 			String messageId = firebaseMessaging.send(message);
-			log.info("Successfully sent FCM notification: {}", messageId);
+			log.info("Successfully sent FCM notification with additional data: {}", messageId);
 		} catch (FirebaseMessagingException e) {
-			log.error("Failed to send FCM notification: {}", e.getMessage());
+			log.error("Failed to send FCM notification with additional data: {}", e.getMessage());
 		}
 	}
 }

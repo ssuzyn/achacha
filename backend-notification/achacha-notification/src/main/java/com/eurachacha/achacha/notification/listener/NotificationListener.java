@@ -23,11 +23,8 @@ public class NotificationListener {
 		try {
 			// FCM 토큰, 제목, 내용이 모두 존재하는 경우에만 알림 전송
 			if (eventDto.getFcmToken() != null && eventDto.getTitle() != null && eventDto.getBody() != null) {
-				fcmService.sendNotification(
-					eventDto.getFcmToken(),
-					eventDto.getTitle(),
-					eventDto.getBody()
-				);
+				fcmService.sendNotification(eventDto);
+				
 				log.info("Notification processed for user: {}, type: {}",
 					eventDto.getUserId(), eventDto.getNotificationTypeCode());
 				return;
