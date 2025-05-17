@@ -233,9 +233,16 @@ class NearbyUsersService {
 
       if (tokenValue) {
         console.log('새 BLE 토큰 받음:', tokenValue);
-        // 새 토큰을 authStore에 저장
         await useAuthStore.getState().updateTokens(null, null, tokenValue);
         this.deviceId = tokenValue;
+
+        // !!! 중요: 새 토큰의 만료 시간 설정 !!!
+        const expiry = new Date();
+        // 서버에서 만료 시간을 준다면 해당 값을 사용, 아니라면 기본값 설정 (예: 7일)
+        // 예시: 서버가 expiresIn 필드를 초 단위로 준다면: expiry.setSeconds(expiry.getSeconds() + response.data.expiresIn);
+        expiry.setDate(expiry.getDate() + 7); // 지금은 임시로 7일 후 만료로 설정
+        this.tokenExpiry = expiry;
+        console.log('[generateBleToken] 새 토큰 만료 시간 설정됨:', this.tokenExpiry);
       } else {
         console.error('서버 응답에 토큰이 없습니다:', response.data);
       }
@@ -480,10 +487,7 @@ class NearbyUsersService {
       const shortUuidHex = uuidNoHyphens.substring(0, 4); // 앞 4자리(2바이트)만 사용
       const shortUUID = `0000${shortUuidHex}-0000-1000-8000-00805f9b34fb`;
 
-      console.log('Short UUID 변환 과정:');
-      console.log('1. UUID 하이픈 제거:', uuidNoHyphens);
-      console.log('2. 앞 4자리 추출:', shortUuidHex);
-      console.log('3. 최종 Short UUID:', shortUUID);
+      console.log('최종 Short UUID:', shortUUID);
 
       // Short UUID로 스캔
       console.log('Short UUID로 스캔 시작');
