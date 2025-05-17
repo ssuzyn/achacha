@@ -3,7 +3,7 @@ package com.eurachacha.achacha.infrastructure.adapter.input.scheduler;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.eurachacha.achacha.application.port.input.fcm.GifticonExpiryNotificationAppService;
+import com.eurachacha.achacha.application.port.input.notification.GifticonExpiryNotificationAppService;
 
 import lombok.RequiredArgsConstructor;
 

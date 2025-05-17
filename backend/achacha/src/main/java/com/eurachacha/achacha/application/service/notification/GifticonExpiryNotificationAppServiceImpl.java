@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.application.service.fcm;
+package com.eurachacha.achacha.application.service.notification;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -7,7 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.eurachacha.achacha.application.port.input.fcm.GifticonExpiryNotificationAppService;
+import com.eurachacha.achacha.application.port.input.notification.GifticonExpiryNotificationAppService;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;

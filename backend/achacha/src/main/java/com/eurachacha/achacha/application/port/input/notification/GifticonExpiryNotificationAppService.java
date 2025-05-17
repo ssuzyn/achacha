@@ -1,4 +1,4 @@
-package com.eurachacha.achacha.application.port.input.fcm;
+package com.eurachacha.achacha.application.port.input.notification;
 
 public interface GifticonExpiryNotificationAppService {
 
