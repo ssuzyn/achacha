@@ -1,7 +1,15 @@
 package com.koup28.achacha_app
 
+import android.Manifest
 import android.os.Build
 import android.os.Bundle
+import android.content.pm.PackageManager
+import android.util.Base64
+import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
@@ -10,13 +18,18 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
 
-import android.content.pm.PackageManager
-import android.util.Base64
-import android.util.Log
-import java.security.MessageDigest
-import java.security.NoSuchAlgorithmException
-
 class MainActivity : ReactActivity() {
+  // 알림 권한 요청을 위한 ActivityResultLauncher
+  private val requestPermissionLauncher = registerForActivityResult(
+    ActivityResultContracts.RequestPermission()
+  ) { isGranted: Boolean ->
+    if (isGranted) {
+      Log.d("Notifications", "알림 권한이 승인되었습니다.")
+    } else {
+      Log.d("Notifications", "알림 권한이 거부되었습니다.")
+    }
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     // Set the theme to AppTheme BEFORE onCreate to support
     // coloring the background, status bar, and navigation bar.
@@ -43,6 +56,31 @@ class MainActivity : ReactActivity() {
         Log.e("KeyHash_Native_Kotlin", "Unknown error getting key hash", e)
     }
     // --- 키 해시 로깅 코드 추가 끝 ---
+
+    // 앱 시작 시 알림 권한 요청
+    askNotificationPermission()
+  }
+
+  /**
+   * Android 13(TIRAMISU) 이상에서 알림 권한을 요청하는 함수
+   */
+  private fun askNotificationPermission() {
+    // API 레벨 33(TIRAMISU) 이상에서만 권한 요청
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == 
+          PackageManager.PERMISSION_GRANTED) {
+        // 이미 권한이 승인된 상태
+        Log.d("Notifications", "알림 권한이 이미 승인되어 있습니다.")
+      } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+        // 사용자에게 권한이 필요한 이유를 설명하는 로직 (선택적 구현)
+        Log.d("Notifications", "권한 요청 이유 표시 후 권한 요청이 필요합니다.")
+        // 권한이 필요한 이유를 설명하는 UI 표시 후 권한 요청
+        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+      } else {
+        // 직접 권한 요청
+        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+      }
+    }
   }
 
   /**

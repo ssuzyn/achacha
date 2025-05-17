@@ -631,7 +631,18 @@ const gifticonService = {
   async markProductGifticonAsUsed(gifticonId) {
     try {
       const url = API_CONFIG.ENDPOINTS.PRODUCT_GIFTICON_USE(gifticonId);
-      const response = await axios.post(`${API_BASE_URL}${url}`);
+      // accessToken 직접 읽기
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      console.log('[상품형 사용완료] accessToken:', accessToken);
+
+      // 헤더 직접 구성
+      const headers = {};
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+      console.log('[상품형 사용완료] Authorization 헤더:', headers.Authorization);
+
+      const response = await axios.post(`${API_BASE_URL}${url}`, null, { headers });
       return response.data;
     } catch (error) {
       console.error('[API] 상품형 기프티콘 사용완료 처리 실패:', error);

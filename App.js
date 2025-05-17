@@ -16,6 +16,14 @@ import AppQueryClientProvider from './src/context/QueryClientProvider';
 import useAuthStore from './src/store/authStore';
 import { Linking } from 'react-native';
 import NavigationService from './src/navigation/NavigationService';
+// FCM 알림 관련 서비스 import
+import {
+  requestUserPermission,
+  handleForegroundMessage,
+  setupBackgroundHandler,
+  handleNotificationOpen,
+  setupTokenRefresh,
+} from './src/services/NotificationService';
 
 // 특정 경고 무시 설정
 LogBox.ignoreLogs([
@@ -143,7 +151,7 @@ const linking = {
           TabSharebox: {
             path: 'sharebox',
             parse: {
-              code: (code) => code,
+              code: code => code,
             },
           },
           // ...다른 탭
@@ -158,17 +166,48 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   // Zustand 스토어의 토큰 복원 함수
   const restoreAuth = useAuthStore(state => state.restoreAuth);
+
+  // FCM 설정 초기화
+  useEffect(() => {
+    const initFCM = async () => {
+      // 푸시 알림 권한 요청
+      const permissionEnabled = await requestUserPermission();
+
+      if (permissionEnabled) {
+        // 포그라운드 메시지 처리 구독
+        const unsubscribeForeground = handleForegroundMessage();
+
+        // 백그라운드 메시지 핸들러 설정
+        setupBackgroundHandler();
+
+        // 알림 클릭 이벤트 처리
+        handleNotificationOpen(navigationRef.current);
+
+        // 토큰 갱신 리스너 설정
+        const unsubscribeTokenRefresh = setupTokenRefresh();
+
+        // 컴포넌트 언마운트 시 리소스 정리
+        return () => {
+          unsubscribeForeground();
+          unsubscribeTokenRefresh();
+        };
+      }
+    };
+
+    initFCM();
+  }, []);
+
   useEffect(() => {
     const init = async () => {
       await restoreAuth(); // Zustand의 토큰 복원(비동기)
       // 복원이 끝난 뒤에만 딥링크 처리
-      Linking.getInitialURL().then((url) => {
+      Linking.getInitialURL().then(url => {
         if (url) {
           NavigationService.handleDeepLink(url);
         }
       });
       // 실시간 딥링크(앱 실행 중)도 동일하게 처리
-      const subscription = Linking.addEventListener('url', (event) => {
+      const subscription = Linking.addEventListener('url', event => {
         NavigationService.handleDeepLink(event.url);
       });
       return () => subscription.remove();
