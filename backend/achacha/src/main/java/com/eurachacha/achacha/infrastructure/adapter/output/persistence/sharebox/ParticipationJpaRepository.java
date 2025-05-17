@@ -31,7 +31,8 @@ public interface ParticipationJpaRepository extends JpaRepository<Participation,
 		""")
 	void deleteByUserIdAndShareboxId(@Param("userId") Integer userId, @Param("shareBoxId") Integer shareBoxId);
 
-	@Modifying
+	// 영속성 컨텍스트 자동 초기화
+	@Modifying(clearAutomatically = true)
 	@Query("""
 		DELETE FROM Participation p
 		WHERE p.sharebox.id = :shareBoxId
