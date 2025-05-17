@@ -12,6 +12,24 @@ const SERVICE_UUID = '1bf0cbce-7af3-4b59-93f2-0c4c6d170164'; // 하이픈 포함
 const SERVICE_UUID_NO_HYPHENS = SERVICE_UUID.replace(/-/g, ''); // 하이픈 제거된 형식
 const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'; // 하이픈 포함된 형식
 
+// BLE 광고 권한 요청 함수 (Android 12+)
+async function requestBleAdvertisePermission() {
+  if (Platform.OS === 'android' && Platform.Version >= 31) {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+      {
+        title: 'BLE 광고 권한 요청',
+        message: '주변 기기와 통신하려면 BLE 광고 권한이 필요합니다.',
+        buttonNeutral: '나중에',
+        buttonNegative: '거부',
+        buttonPositive: '허용',
+      }
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  }
+  return true;
+}
+
 class NearbyUsersService {
   constructor() {
     this.deviceId = null; // 초기에는 null로 설정
@@ -322,14 +340,24 @@ class NearbyUsersService {
       return;
     }
 
+    // Android 12+ BLE 광고 권한 체크
+    if (Platform.OS === 'android' && Platform.Version >= 31) {
+      const hasAdvertisePermission = await requestBleAdvertisePermission();
+      if (!hasAdvertisePermission) {
+        console.error('BLE 광고 권한이 없습니다. 광고를 시작할 수 없습니다.');
+        return false;
+      }
+    }
+
     try {
       if (this.isAdvertising) {
         console.log('이미 광고 중입니다.');
         return;
       }
 
-      console.log('\n=== BLE 광고 시작 - 상세 디버그 ===');
-      console.log('1. 광고할 디바이스 ID:', this.deviceId);
+      // 광고 시작 전 서비스 UUID, 토큰 로그
+      console.log('[BLE 광고] 서비스 UUID:', this.serviceUUID);
+      console.log('[BLE 광고] 광고할 디바이스 ID(토큰):', this.deviceId);
 
       if (!this.deviceId) {
         console.error('BLE 토큰이 없습니다. 먼저 로그인이 필요합니다.');
@@ -347,21 +375,16 @@ class NearbyUsersService {
           uuidBytes[i] = parseInt(uuidNoHyphens.substr(i * 2, 2), 16);
         }
 
-        console.log('\n2. 바이트 크기 분석:');
-        console.log('- BLE 토큰 바이트 크기:', tokenBytes.length);
-        console.log('- 토큰 원본:', this.deviceId);
-
-        console.log('\n3. UUID 분석:');
-        console.log('- Service UUID:', this.serviceUUID);
-        console.log('- UUID 바이트 크기:', uuidBytes.length);
+        // 로그: 광고 데이터 바이트
+        console.log('[BLE 광고] UUID 바이트:', Array.from(uuidBytes));
+        console.log('[BLE 광고] 토큰 바이트:', Array.from(tokenBytes));
 
         // 최종 광고 데이터 생성 (UUID + Token 바이트 배열)
         const finalBytes = new Uint8Array(uuidBytes.length + tokenBytes.length);
         finalBytes.set(uuidBytes, 0); // UUID 바이트를 앞에 배치
         finalBytes.set(tokenBytes, uuidBytes.length); // 토큰 바이트를 뒤에 배치
 
-        console.log('\n4. 최종 광고 데이터:');
-        console.log('- 전체 바이트 크기:', finalBytes.length);
+        console.log('[BLE 광고] 최종 광고 데이터 바이트:', Array.from(finalBytes));
 
         if (tokenBytes.length > 13) {
           console.error('\n❌ BLE 토큰이 너무 큽니다:', tokenBytes.length, '바이트');
@@ -369,10 +392,6 @@ class NearbyUsersService {
         }
 
         try {
-          console.log('\n5. 네이티브 모듈로 전송되는 최종 데이터:');
-          console.log('- 바이트 배열:', Array.from(finalBytes));
-          console.log('- 최종 크기:', finalBytes.length, '바이트');
-
           // Base64로 인코딩하여 optimized 메서드로 전송
           const base64Data = btoa(String.fromCharCode.apply(null, finalBytes));
           await NativeModules.BleModule.startAdvertisingOptimized(base64Data);
@@ -472,41 +491,40 @@ class NearbyUsersService {
       this.isScanning = true;
 
       console.log('\n=== BLE 스캔 시작 ===');
-      console.log('현재 디바이스 ID:', this.deviceId);
-      console.log('스캔 시간:', this.SCAN_DURATION, '초');
+      console.log('[BLE 스캔] 현재 디바이스 ID:', this.deviceId);
+      console.log('[BLE 스캔] 서비스 UUID:', this.serviceUUID);
+      console.log('[BLE 스캔] 스캔 시간:', this.SCAN_DURATION, '초');
 
       // Full UUID와 Short UUID 모두 출력
-      console.log('원본 서비스 UUID:', this.serviceUUID);
-
-      // Short UUID 생성 (16비트 UUID 포맷)
       const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
       const shortUuidPrefix = uuidNoHyphens.substring(0, 4); // 앞 4자리(2바이트)만 사용
       const shortUUID = `0000${shortUuidPrefix}-0000-1000-8000-00805f9b34fb`;
-      console.log('변환된 Short UUID:', shortUUID);
-      console.log(
-        'Short UUID 형식 확인:',
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shortUUID)
-      );
+      console.log('[BLE 스캔] 원본 서비스 UUID:', this.serviceUUID);
+      console.log('[BLE 스캔] 변환된 Short UUID:', shortUUID);
 
       // Short UUID로 스캔 (16비트 UUID)
-      console.log('Short UUID로 스캔 시작');
+      console.log('[BLE 스캔] Short UUID로 스캔 시작');
       await BleManager.scan([shortUUID], this.SCAN_DURATION, true);
+
+      // 발견된 기기 MAC 주소 목록 저장
+      const discoveredMacs = [];
 
       // 디버깅을 위한 추가 로그
       this.scanListener = this.bleManagerEmitter.addListener(
         'BleManagerDiscoverPeripheral',
         peripheral => {
           console.log('\n=== 발견된 기기 상세 정보 ===');
-          console.log('기기 ID:', peripheral.id);
-          console.log('기기 이름:', peripheral.name || '이름 없음');
-          console.log('RSSI:', peripheral.rssi);
-          console.log('광고 데이터:', peripheral.advertising || '없음');
+          console.log('[BLE 스캔] 기기 ID(MAC):', peripheral.id);
+          discoveredMacs.push(peripheral.id);
+          console.log('[BLE 스캔] 기기 이름:', peripheral.name || '이름 없음');
+          console.log('[BLE 스캔] RSSI:', peripheral.rssi);
+          console.log('[BLE 스캔] 광고 데이터:', peripheral.advertising || '없음');
           if (peripheral.advertising) {
-            console.log('서비스 UUID들:', peripheral.advertising.serviceUUIDs || '없음');
-            console.log('서비스 데이터:', peripheral.advertising.serviceData || '없음');
-            console.log('제조사 데이터:', peripheral.advertising.manufacturerData || '없음');
+            console.log('[BLE 스캔] 서비스 UUID들:', peripheral.advertising.serviceUUIDs || '없음');
+            console.log('[BLE 스캔] 서비스 데이터:', peripheral.advertising.serviceData || '없음');
+            console.log('[BLE 스캔] 제조사 데이터:', peripheral.advertising.manufacturerData || '없음');
           }
-          console.log('전체 기기 정보:', JSON.stringify(peripheral, null, 2));
+          console.log('[BLE 스캔] 전체 기기 정보:', JSON.stringify(peripheral, null, 2));
           // 모든 기기 처리
           this.handleDiscoveredDevice(peripheral, onUserFound);
         }
@@ -515,8 +533,8 @@ class NearbyUsersService {
       // 스캔 완료 이벤트 처리
       this.stopScanListener = this.bleManagerEmitter.addListener('BleManagerStopScan', () => {
         console.log('\n=== 스캔 완료 ===');
-        console.log('총 발견된 기기 수:', this.nearbyUsers.length);
-
+        console.log('[BLE 스캔] 총 발견된 기기 수:', this.nearbyUsers.length);
+        console.log('[BLE 스캔] 발견된 MAC 주소 목록:', discoveredMacs);
         this.isScanning = false;
         if (this.scanListener) {
           this.scanListener.remove();
