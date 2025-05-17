@@ -263,18 +263,60 @@ const NotificationScreen = () => {
 
   // 알림 항목 선택 처리
   const handleNotificationPress = useCallback(
-    item => {
+    async item => {
       // 알림 타입 및 참조 엔티티에 따라 적절한 화면으로 이동
-      const { referenceEntityType, referenceEntityId } = item;
+      const { notificationType, referenceEntityType, referenceEntityId } = item;
 
-      if (referenceEntityType === REFERENCE_TYPES.GIFTICON && referenceEntityId) {
-        // 기프티콘 상세 화면으로 이동
-        navigation.navigate('GifticonDetail', { gifticonId: referenceEntityId });
-      } else if (referenceEntityType === REFERENCE_TYPES.SHAREBOX && referenceEntityId) {
-        // 쉐어박스 기프티콘 목록 화면으로 이동
-        navigation.navigate('ShareBoxGifticons', { shareBoxId: referenceEntityId });
+      if (!referenceEntityId) {
+        console.log('참조 ID가 없습니다:', item);
+        return;
       }
-      // 그 외 다른 타입의 알림은 필요에 따라 추가 처리
+
+      try {
+        // 기프티콘 관련 알림 처리
+        if (
+          ['EXPIRY_DATE', 'USAGE_COMPLETE', 'RECEIVE_GIFTICON', 'LOCATION_BASED'].includes(
+            notificationType
+          ) &&
+          referenceEntityType === REFERENCE_TYPES.GIFTICON
+        ) {
+          // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
+          const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
+
+          // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
+          if (gifticonDetail.gifticonType === 'AMOUNT') {
+            // 금액형 기프티콘
+            navigation.navigate('DetailAmount', {
+              gifticonId: referenceEntityId,
+              scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
+            });
+          } else {
+            // 상품형 기프티콘 (기본값)
+            navigation.navigate('DetailProduct', {
+              gifticonId: referenceEntityId,
+              scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
+            });
+          }
+        }
+        // 쉐어박스 관련 알림 처리
+        else if (
+          ['SHAREBOX_GIFTICON', 'SHAREBOX_USAGE_COMPLETE', 'SHAREBOX_MEMBER_JOIN'].includes(
+            notificationType
+          ) &&
+          referenceEntityType === REFERENCE_TYPES.SHAREBOX
+        ) {
+          // 쉐어박스 기프티콘 목록 화면으로 이동
+          navigation.navigate('BoxList', {
+            shareBoxId: referenceEntityId,
+            initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+          });
+        } else {
+          console.log('처리되지 않은 알림 타입:', notificationType);
+        }
+      } catch (error) {
+        console.error('알림 처리 중 오류 발생:', error);
+        Alert.alert('오류', '알림을 처리하는 중 문제가 발생했습니다.');
+      }
     },
     [navigation]
   );
@@ -385,13 +427,7 @@ const NotificationScreen = () => {
         <Text variant="h3" weight="bold" style={styles.headerTitle}>
           알림함
         </Text>
-        {unreadCount > 0 ? (
-          <TouchableOpacity onPress={markAllAsRead} style={styles.readAllButton}>
-            <Text style={styles.readAllText}>모두 읽음</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.rightPlaceholder} />
-        )}
+        <View style={styles.rightPlaceholder} />
       </View>
 
       {renderMessage()}
@@ -450,19 +486,6 @@ const styles = StyleSheet.create({
   rightPlaceholder: {
     width: 44,
     height: 44,
-  },
-  readAllButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    backgroundColor: '#F0F7FF',
-    width: 80,
-    alignItems: 'center',
-  },
-  readAllText: {
-    fontSize: 12,
-    color: '#4B9CFF',
-    fontWeight: '500',
   },
   listContainer: {
     flexGrow: 1,

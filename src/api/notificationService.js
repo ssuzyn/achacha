@@ -1,5 +1,6 @@
 import apiClient from './apiClient';
 import { API_CONFIG } from './config';
+import gifticonService from './gifticonService';
 
 /**
  * 알림 설정 관련 기능을 제공하는 서비스
@@ -181,59 +182,45 @@ const notificationService = {
   },
 
   /**
-   * 미확인 알림 개수 조회
-   * @returns {Promise<Object>} 미확인 알림 개수 정보 { count: number }
+   * 읽지 않은 알림 개수 조회
+   * @returns {Promise<Object>} - 읽지 않은 알림 개수
    */
   async getUnreadNotificationsCount() {
     try {
-      console.log('[API] 미확인 알림 개수 조회 요청');
-
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.NOTIFICATIONS_COUNT, {
-        params: { read: false },
-      });
-
-      console.log('[API] 미확인 알림 개수 조회 성공:', response.data);
+      const response = await apiClient.get(API_CONFIG.ENDPOINTS.NOTIFICATIONS_COUNT);
       return response.data;
     } catch (error) {
-      console.error('[API] 미확인 알림 개수 조회 실패:', error);
-
-      // 에러 상세 정보 로그
-      if (error.response) {
-        console.error('서버 응답 오류:', error.response.status, error.response.data);
-      } else if (error.request) {
-        console.error('서버 응답 없음:', error.request);
-      } else {
-        console.error('요청 설정 오류:', error.message);
-      }
-
+      console.error('[API] 읽지 않은 알림 개수 조회 실패:', error);
       throw error;
     }
   },
 
   /**
-   * 알림 읽음 일괄 처리
-   * @returns {Promise<Object>} 처리 결과
+   * 모든 알림 읽음 처리
+   * @returns {Promise<Object>} - 읽음 처리 결과
    */
   async markAllNotificationsAsRead() {
     try {
-      console.log('[API] 알림 읽음 일괄 처리 요청');
-
-      const response = await apiClient.patch(API_CONFIG.ENDPOINTS.NOTIFICATIONS_READ);
-
-      console.log('[API] 알림 읽음 일괄 처리 성공:', response.data);
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.NOTIFICATIONS_READ);
       return response.data;
     } catch (error) {
-      console.error('[API] 알림 읽음 일괄 처리 실패:', error);
+      console.error('[API] 모든 알림 읽음 처리 실패:', error);
+      throw error;
+    }
+  },
 
-      // 에러 상세 정보 로그
-      if (error.response) {
-        console.error('서버 응답 오류:', error.response.status, error.response.data);
-      } else if (error.request) {
-        console.error('서버 응답 없음:', error.request);
-      } else {
-        console.error('요청 설정 오류:', error.message);
-      }
-
+  /**
+   * 기프티콘 상세 정보 조회
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 기프티콘 상세 정보
+   */
+  async getGifticonDetail(gifticonId) {
+    try {
+      // gifticonService를 사용하여 기프티콘 상세 정보 조회
+      // 알림에서는 MY_BOX 기준으로 확인
+      return await gifticonService.getGifticonDetail(gifticonId, 'MY_BOX');
+    } catch (error) {
+      console.error('[NotificationService] 기프티콘 상세 정보 조회 실패:', error);
       throw error;
     }
   },
