@@ -465,22 +465,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
-		// 알림 타입 조회
-		NotificationType notificationType = notificationTypeRepository.findByCode(
-			NotificationTypeCode.USAGE_COMPLETE);
-
-		// 사용자 알림 설정 조회
-		NotificationSetting findSetting = notificationSettingRepository
-			.findByUserIdAndNotificationTypeId(findGifticon.getUser().getId(), notificationType.getId());
-
-		// 활성화 체크
-		if (findSetting.getIsEnabled()) {
-
-			// 바코드 조회 후 5분 뒤 알림 스케줄링
-			useCompleteGifticonNotificationSchedule(findGifticon, userId);
-
-		}
-
+		// 바코드 조회 후 5분 뒤 알림 스케줄링
+		useCompleteGifticonNotificationSchedule(findGifticon, userId);
+		
 		log.info("사용가능 기프티콘 바코드 조회 종료");
 
 		return GifticonBarcodeResponseDto.builder()
