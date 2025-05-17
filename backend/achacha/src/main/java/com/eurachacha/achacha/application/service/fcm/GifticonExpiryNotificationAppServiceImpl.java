@@ -115,7 +115,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 		// 알림 주기 확인: 만료일이 사용자의 알림 설정 주기보다 이른 경우에만 알림 발송
 		if (isExpiryMatch) {
 			String title = findCode.getCode().getDisplayName();
-			String content = getContent(findGifticon, day);
+			String content = getContent(findGifticon);
 
 			// 알림 저장
 			saveNotification(findGifticon, findCode, findSetting, title, content);
@@ -147,7 +147,9 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 				.isEqual(today.plusDays(day)));
 	}
 
-	private static String getContent(Gifticon findGifticon, int day) {
+	private static String getContent(Gifticon findGifticon) {
+		long calDays = findGifticon.getExpiryDate().toEpochDay() - LocalDate.now().toEpochDay();
+		int day = (int)calDays;
 		return findGifticon.getName() + "의 유효기간이 " + day + "일 남았습니다.";
 	}
 
