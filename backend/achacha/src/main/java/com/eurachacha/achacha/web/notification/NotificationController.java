@@ -1,51 +1,37 @@
 package com.eurachacha.achacha.web.notification;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.eurachacha.achacha.application.port.input.notification.NotificationSettingAppService;
-import com.eurachacha.achacha.application.port.input.notification.dto.request.ExpirationCycleUpdateRequestDto;
-import com.eurachacha.achacha.application.port.input.notification.dto.request.NotificationSettingUpdateRequestDto;
-import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationSettingDto;
-import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
+import com.eurachacha.achacha.application.port.input.notification.NotificationAppService;
+import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationCountResponseDto;
+import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationsResponseDto;
+import com.eurachacha.achacha.domain.model.notification.enums.NotificationSortType;
 
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
-@RequestMapping("/api/notification-settings")
+@RequestMapping("/api/notifications")
 @RestController
 @RequiredArgsConstructor
 public class NotificationController {
 
-	private final NotificationSettingAppService notificationSettingAppService;
+	private final NotificationAppService notificationAppService;
 
 	@GetMapping
-	public ResponseEntity<List<NotificationSettingDto>> getUserNotificationSettings() {
-		List<NotificationSettingDto> settings = notificationSettingAppService.getUserNotificationSettings();
-		return ResponseEntity.ok(settings);
+	public ResponseEntity<NotificationsResponseDto> getNotifications(
+		@RequestParam(required = false, defaultValue = "CREATED_DESC") NotificationSortType sort,
+		@RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
+		@RequestParam(required = false, defaultValue = "6") @Min(1) Integer size) {
+		return ResponseEntity.ok(notificationAppService.getNotifications(sort, page, size));
 	}
 
-	@PatchMapping("/types/{type}")
-	public ResponseEntity<?> updateNotificationSetting(
-		@PathVariable("type") NotificationTypeCode notificationTypeCode,
-		@RequestBody NotificationSettingUpdateRequestDto request) {
-
-		notificationSettingAppService.updateNotificationSetting(notificationTypeCode, request.getIsEnabled());
-
-		return ResponseEntity.ok("알림 허용 설정 변경 성공");
-	}
-
-	@PatchMapping("/expirationCycle")
-	public ResponseEntity<?> updateExpirationCycle(
-		@RequestBody ExpirationCycleUpdateRequestDto expirationCycleUpdateDto) {
-		notificationSettingAppService.updateExpirationCycle(expirationCycleUpdateDto.getExpirationCycle());
-
-		return ResponseEntity.ok("알림 주기 변경 성공");
+	@GetMapping("/count")
+	public ResponseEntity<NotificationCountResponseDto> getUnreadNotificationCount(
+		@RequestParam(required = false, defaultValue = "false") boolean read) {
+		return ResponseEntity.ok(notificationAppService.countUnreadNotifications(read));
 	}
 }
