@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb904452-4e09-4cd1-bcac-a9f38dbb20c3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/screens/HomeScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/HomeScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/apiClient.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/apiClient.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/api/notificationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/api/notificationService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

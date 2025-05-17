@@ -20,22 +20,9 @@ const notificationService = {
    */
   async getNotificationSettings() {
     try {
-      console.log('[API] 알림 설정 목록 조회 요청');
       const response = await apiClient.get(API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS);
-      console.log('[API] 알림 설정 목록 조회 성공:', response.data);
       return response.data;
     } catch (error) {
-      console.error('[API] 알림 설정 목록 조회 실패:', error);
-
-      // 에러 상세 정보 로그
-      if (error.response) {
-        console.error('서버 응답 오류:', error.response.status, error.response.data);
-      } else if (error.request) {
-        console.error('서버 응답 없음:', error.request);
-      } else {
-        console.error('요청 설정 오류:', error.message);
-      }
-
       throw error;
     }
   },
@@ -48,35 +35,15 @@ const notificationService = {
    */
   async updateNotificationTypeStatus(type, enabled) {
     try {
-      console.log(`[API] 알림 타입(${type}) 상태 업데이트 요청:`, enabled ? '활성화' : '비활성화');
-
       // API 엔드포인트 생성
       const endpoint = API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS_TYPE(type);
-      console.log('[API] 요청 URL:', endpoint);
 
       // API 요청 데이터
       const requestData = { isEnabled: enabled };
 
       const response = await apiClient.patch(endpoint, requestData);
-      console.log(`[API] 알림 타입(${type}) 상태 업데이트 성공:`, response.data);
-
       return response.data;
     } catch (error) {
-      console.error(`[API] 알림 타입(${type}) 상태 업데이트 실패:`, error);
-
-      // 에러 상세 정보 로그
-      if (error.response) {
-        const { status, data } = error.response;
-        console.error('서버 응답 오류:', status, data);
-
-        // 특정 에러 코드에 대한 처리
-        if (data.errorCode === 'NOTIFICATION_001') {
-          console.error('존재하지 않는 알림 타입입니다.');
-        } else if (data.errorCode === 'NOTIFICATION_002') {
-          console.error('알림 설정을 찾을 수 없습니다.');
-        }
-      }
-
       throw error;
     }
   },
@@ -88,8 +55,6 @@ const notificationService = {
    */
   async updateExpirationCycle(expirationCycle) {
     try {
-      console.log('[API] 알림 주기 설정 요청:', expirationCycle);
-
       // 유효한 알림 주기 값 검증
       const validCycles = [
         'ONE_DAY',
@@ -102,11 +67,8 @@ const notificationService = {
       ];
 
       if (!validCycles.includes(expirationCycle)) {
-        console.error('[API] 유효하지 않은 알림 주기 값:', expirationCycle);
         throw new Error('유효하지 않은 알림 주기 값입니다.');
       }
-
-      console.log('[API] 요청 URL:', API_CONFIG.ENDPOINTS.NOTIFICATION_SETTINGS_EXPIRATION_CYCLE);
 
       // API 요청 데이터
       const requestData = { expirationCycle };
@@ -116,24 +78,8 @@ const notificationService = {
         requestData
       );
 
-      console.log('[API] 알림 주기 설정 성공:', response.data);
       return response.data;
     } catch (error) {
-      console.error('[API] 알림 주기 설정 실패:', error);
-
-      // 에러 상세 정보 로그
-      if (error.response) {
-        const { status, data } = error.response;
-        console.error('서버 응답 오류:', status, data);
-
-        // 특정 에러 코드에 대한 처리
-        if (data.errorCode === 'NOTIFICATION_002') {
-          console.error('알림 설정을 찾을 수 없습니다.');
-        } else if (data.errorCode === 'NOTIFICATION_003') {
-          console.error('비활성화된 알림입니다. 먼저 알림을 활성화해주세요.');
-        }
-      }
-
       throw error;
     }
   },
@@ -148,8 +94,6 @@ const notificationService = {
    */
   async getNotifications(params = {}) {
     try {
-      console.log('[API] 알림 내역 목록 조회 요청', params);
-
       // 기본값 설정
       const defaultParams = {
         sort: 'CREATED_DESC',
@@ -163,20 +107,8 @@ const notificationService = {
         params: queryParams,
       });
 
-      console.log('[API] 알림 내역 목록 조회 성공:', response.data);
       return response.data;
     } catch (error) {
-      console.error('[API] 알림 내역 목록 조회 실패:', error);
-
-      // 에러 상세 정보 로그
-      if (error.response) {
-        console.error('서버 응답 오류:', error.response.status, error.response.data);
-      } else if (error.request) {
-        console.error('서버 응답 없음:', error.request);
-      } else {
-        console.error('요청 설정 오류:', error.message);
-      }
-
       throw error;
     }
   },
@@ -190,7 +122,6 @@ const notificationService = {
       const response = await apiClient.get(API_CONFIG.ENDPOINTS.NOTIFICATIONS_COUNT);
       return response.data;
     } catch (error) {
-      console.error('[API] 읽지 않은 알림 개수 조회 실패:', error);
       throw error;
     }
   },
@@ -204,7 +135,6 @@ const notificationService = {
       const response = await apiClient.patch(API_CONFIG.ENDPOINTS.NOTIFICATIONS_READ);
       return response.data;
     } catch (error) {
-      console.error('[API] 모든 알림 읽음 처리 실패:', error);
       throw error;
     }
   },
@@ -220,7 +150,6 @@ const notificationService = {
       // 알림에서는 MY_BOX 기준으로 확인
       return await gifticonService.getGifticonDetail(gifticonId, 'MY_BOX');
     } catch (error) {
-      console.error('[NotificationService] 기프티콘 상세 정보 조회 실패:', error);
       throw error;
     }
   },
@@ -235,7 +164,6 @@ const notificationService = {
       const response = await apiClient.post('/api/notifications/token', { token });
       return response.data;
     } catch (error) {
-      console.error('[API] FCM 토큰 업데이트 실패:', error);
       throw error;
     }
   },
