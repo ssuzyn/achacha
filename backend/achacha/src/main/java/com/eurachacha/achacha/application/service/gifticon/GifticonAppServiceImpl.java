@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
@@ -462,6 +465,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 사용 권한 검증
 		validateGifticonAccess(findGifticon, userId);
 
+		// 바코드 조회 후 5분 뒤 알림 스케줄링
+		useCompleteGifticonNotificationSchedule(findGifticon, userId);
+		
 		log.info("사용가능 기프티콘 바코드 조회 종료");
 
 		return GifticonBarcodeResponseDto.builder()
@@ -879,5 +885,48 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		}
 
 		log.debug("푸시 알림 전송 완료 - 사용자 ID: {}", userId);
+	}
+
+	// 5분 뒤 알림을 보내는 메서드
+	private void useCompleteGifticonNotificationSchedule(Gifticon gifticon, Integer userId) {
+		final Integer gifticonId = gifticon.getId();
+
+		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+
+		scheduler.schedule(() -> {
+			try {
+
+				// 사용여부 체크 후 저장, 전송
+				checkUsedAndSaveAndSendNotification(userId, gifticonId);
+
+			} catch (Exception e) {
+				log.error("기프티콘 바코드 조회 후 알림 전송 실패: {}", e.getMessage(), e);
+			} finally {
+				scheduler.shutdown();
+			}
+		}, 5, TimeUnit.MINUTES);
+
+		log.info("기프티콘 ID: {} 바코드 조회 후 5분 뒤 알림 예약됨", gifticonId);
+	}
+
+	@Transactional
+	public void checkUsedAndSaveAndSendNotification(Integer userId, Integer gifticonId) {
+		Gifticon findGifticon = gifticonRepository.findById(gifticonId);
+
+		boolean isUsed = gifticonDomainService.isUsed(findGifticon);
+
+		if (!isUsed) {
+
+			// 알림 타입 조회
+			NotificationType notificationType = notificationTypeRepository.findByCode(
+				NotificationTypeCode.USAGE_COMPLETE);
+			String title = notificationType.getCode().getDisplayName();
+
+			// 알림 내용 설정
+			String content = "방금 " + findGifticon.getName() + "을(를) 사용하셨나요? 완료 처리가 되지 않은 것 같아요. 확인해볼까요?";
+
+			sendNotificationToUser(userId, notificationType, title, content, "gifticon",
+				gifticonId);
+		}
 	}
 }
