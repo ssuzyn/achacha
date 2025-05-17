@@ -2,6 +2,7 @@ package com.eurachacha.achacha.web.notification;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,5 +34,11 @@ public class NotificationController {
 	public ResponseEntity<NotificationCountResponseDto> getUnreadNotificationCount(
 		@RequestParam(required = false, defaultValue = "false") boolean read) {
 		return ResponseEntity.ok(notificationAppService.countUnreadNotifications(read));
+	}
+
+	@PatchMapping("/read")
+	public ResponseEntity<String> markAllNotificationsAsRead() {
+		notificationAppService.markAllNotificationsAsRead();
+		return ResponseEntity.ok("모든 알림 읽음 처리 성공");
 	}
 }
