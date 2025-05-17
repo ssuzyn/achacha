@@ -180,7 +180,7 @@ const GiveAwayScreen = ({ onClose }) => {
         toValue: { x: 0, y: 0 },
         friction: 3,
         tension: 50,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
       Animated.spring(buttonScaleAnim, {
         toValue: 1,
@@ -206,7 +206,7 @@ const GiveAwayScreen = ({ onClose }) => {
           y: user.position.y - height / 2,
         },
         duration: 250,
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
       Animated.timing(buttonScaleAnim, {
         toValue: 0.5,
