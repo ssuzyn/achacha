@@ -24,4 +24,9 @@ public class NotificationPersistenceAdapter implements NotificationRepository {
 	public Slice<Notification> findNotifications(Integer userId, Pageable pageable) {
 		return notificationJpaRepository.findNotifications(userId, pageable);
 	}
+
+	@Override
+	public int countByUserIdAndRead(Integer userId, boolean read) {
+		return notificationJpaRepository.countByUserIdAndIsRead(userId, read);
+	}
 }
