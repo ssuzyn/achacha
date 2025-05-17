@@ -13,9 +13,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.eurachacha.achacha.infrastructure.adapter.output.auth.JwtTokenServiceAdapter;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,24 +29,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 		throws ServletException, IOException {
 
-		try {
-			String jwt = extractJwtFromRequest(request);
+		String jwt = extractJwtFromRequest(request);
 
-			if (StringUtils.hasText(jwt)) {
-				// 토큰에서 사용자 ID 추출
-				Integer userId = jwtTokenServiceAdapter.validateAccessTokenAndGetUserId(jwt);
+		if (StringUtils.hasText(jwt)) {
+			// 토큰에서 사용자 ID 추출
+			Integer userId = jwtTokenServiceAdapter.validateAccessTokenAndGetUserId(jwt);
 
-				// SecurityContext에 인증 정보 설정
-				UserDetails userDetails = createUserDetails(userId);
-				UsernamePasswordAuthenticationToken authentication =
-					new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			// SecurityContext에 인증 정보 설정
+			UserDetails userDetails = createUserDetails(userId);
+			UsernamePasswordAuthenticationToken authentication =
+				new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-				SecurityContextHolder.getContext().setAuthentication(authentication);
-			}
-		} catch (ExpiredJwtException | UnsupportedJwtException | MalformedJwtException | IllegalArgumentException e) {
-			// 토큰 검증 실패 로그 기록
-			logger.error("JWT token validation error", e);
+			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 
 		filterChain.doFilter(request, response);
