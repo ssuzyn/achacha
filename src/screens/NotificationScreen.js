@@ -363,7 +363,12 @@ const NotificationScreen = () => {
     );
   }, [isLoadingMore, theme.colors.primary]);
 
-  const keyExtractor = useCallback(item => item.notificationId.toString(), []);
+  // 고유한 키 값을 생성하는 함수
+  const keyExtractor = useCallback((item, index) => {
+    // notificationId와 함께 생성 시간과 인덱스를 조합하여 중복 방지
+    const uniqueId = `${item.notificationId}_${item.notificationCreatedAt}_${index}`;
+    return uniqueId;
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -374,21 +379,18 @@ const NotificationScreen = () => {
 
       {/* 커스텀 헤더 */}
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
-        <Button
-          variant="ghost"
-          onPress={handleGoBack}
-          style={styles.backButton}
-          leftIcon={
-            <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
-          }
-        />
-        <Text variant="h3" style={styles.headerTitle}>
+        <TouchableOpacity onPress={handleGoBack} style={styles.backButtonContainer}>
+          <Icon name="arrow-back-ios" type="material" size={22} color={theme.colors.black} />
+        </TouchableOpacity>
+        <Text variant="h3" weight="bold" style={styles.headerTitle}>
           알림함
         </Text>
-        {unreadCount > 0 && (
+        {unreadCount > 0 ? (
           <TouchableOpacity onPress={markAllAsRead} style={styles.readAllButton}>
             <Text style={styles.readAllText}>모두 읽음</Text>
           </TouchableOpacity>
+        ) : (
+          <View style={styles.rightPlaceholder} />
         )}
       </View>
 
@@ -435,23 +437,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
   },
-  backButton: {
-    padding: 0,
-    backgroundColor: 'transparent',
+  backButtonContainer: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    textAlign: 'center',
+    flex: 1,
   },
-  emptyRightSpace: {
-    width: 48,
-    height: 48,
+  rightPlaceholder: {
+    width: 44,
+    height: 44,
   },
   readAllButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 15,
     backgroundColor: '#F0F7FF',
+    width: 80,
+    alignItems: 'center',
   },
   readAllText: {
     fontSize: 12,
