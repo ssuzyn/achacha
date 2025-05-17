@@ -109,7 +109,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 		List<LocalDate> expiryDates = getExpiryDates(today);
 
 		boolean isExpiryMatch = expiryDates.stream()
-			.anyMatch(expiryDate -> isExpiryMath(findGifticon, today, expiryDate, day));
+			.anyMatch(expiryDate -> checkExpiryDate(findGifticon, today, expiryDate, day));
 
 		// 만료일 확인: 기프티콘의 만료일이 조회된 만료일 목록(1,2,3,7,30,60,90일 후)에 포함되고,
 		// 알림 주기 확인: 만료일이 사용자의 알림 설정 주기보다 이른 경우에만 알림 발송
@@ -141,7 +141,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 		}
 	}
 
-	private static boolean isExpiryMath(Gifticon findGifticon, LocalDate today, LocalDate expiryDate, int day) {
+	private static boolean checkExpiryDate(Gifticon findGifticon, LocalDate today, LocalDate expiryDate, int day) {
 		return findGifticon.getExpiryDate().equals(expiryDate) && (
 			findGifticon.getExpiryDate().isBefore(today.plusDays(day)) || findGifticon.getExpiryDate()
 				.isEqual(today.plusDays(day)));
