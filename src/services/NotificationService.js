@@ -2,6 +2,7 @@ import messaging from '@react-native-firebase/messaging';
 import { Alert } from 'react-native';
 import apiClient from '../api/apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_CONFIG } from '../api/config';
 
 // 알림 타입 상수
 export const NOTIFICATION_TYPES = {
@@ -33,15 +34,16 @@ const saveFcmTokenToServer = async token => {
     // 로그인 상태인지 확인
     const accessToken = await AsyncStorage.getItem('accessToken');
     if (accessToken) {
-      // 서버 API 엔드포인트에 토큰 전송
-      await apiClient.post('/api/users/fcm-token', { fcmToken: token });
-      console.log('알림 FCM 토큰이 서버에 저장되었습니다:', token);
+      // 참고: 로그인 시 FCM 토큰이 이미 전송되므로 '/api/users/fcm-token' 엔드포인트는 사용하지 않음
+      // 토큰 갱신 시에만 별도로 저장하도록 로그만 남깁니다
+      console.log('알림 FCM 토큰 준비 완료:', token);
+      // 토큰 갱신 시 처리 로직은 setupTokenRefresh에서 처리
     } else {
       console.log('로그인 상태가 아니므로 FCM 토큰 저장은 로그인 시 처리됩니다.');
     }
     return true;
   } catch (error) {
-    console.error('알림 FCM 토큰 서버 저장 실패:', error);
+    console.error('알림 FCM 토큰 처리 실패:', error);
     return false;
   }
 };
@@ -63,15 +65,11 @@ export const requestUserPermission = async () => {
   return false;
 };
 
-// 디바이스 토큰 얻기 및 서버에 저장
+// 디바이스 토큰 얻기
 export const getFcmToken = async () => {
   try {
     const token = await messaging().getToken();
     console.log('알림 FCM 토큰:', token);
-
-    // 토큰을 서버에 저장
-    await saveFcmTokenToServer(token);
-
     return token;
   } catch (error) {
     console.error('FCM 토큰 획득 실패:', error);
@@ -187,6 +185,18 @@ const handleNavigationByType = (navigation, remoteMessage) => {
 export const setupTokenRefresh = () => {
   return messaging().onTokenRefresh(async token => {
     console.log('FCM 토큰 갱신:', token);
-    await saveFcmTokenToServer(token);
+    try {
+      // 로그인 상태인지 확인
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      if (accessToken) {
+        // 토큰 갱신 시 서버에 전송
+        await apiClient.post(API_CONFIG.ENDPOINTS.FCM_TOKEN_UPDATE, { fcmToken: token });
+        console.log('갱신된 FCM 토큰이 서버에 저장되었습니다:', token);
+      } else {
+        console.log('로그인 상태가 아니므로 FCM 토큰 갱신은 저장되지 않습니다.');
+      }
+    } catch (error) {
+      console.error('FCM 토큰 갱신 서버 저장 실패:', error);
+    }
   });
 };

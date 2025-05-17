@@ -27,6 +27,7 @@ export const API_CONFIG = {
     REFRESH_TOKEN: '/api/auth/refresh', // 토큰 갱신
     USER_PROFILE: '/api/users/me', // 사용자 정보 조회
     USER_INFO: userId => `/api/users/${userId}`,
+    FCM_TOKEN_UPDATE: '/api/users/fcm-token', // FCM 토큰 갱신 API 추가
 
     // 쉐어박스 관련
     SHARE_BOXES: '/api/share-boxes', // 목록 조회(GET), 생성(POST) 모두 사용
