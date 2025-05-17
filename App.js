@@ -24,6 +24,7 @@ import {
   handleNotificationOpen,
   setupTokenRefresh,
 } from './src/services/NotificationService';
+import ShareMenu from 'react-native-share-menu';
 
 // 특정 경고 무시 설정
 LogBox.ignoreLogs([
@@ -214,6 +215,28 @@ export default function App() {
     };
     init();
   }, []);
+
+  // 공유 인텐트(이미지) 처리: react-native-share-menu 사용
+  useEffect(() => {
+    // 앱이 공유 인텐트로 처음 시작될 때
+    ShareMenu.getInitialShare(item => {
+      if (item && item.data && item.mimeType && item.mimeType.startsWith('image/')) {
+        navigationRef.current?.navigate('Register', { sharedImageUri: item.data });
+      }
+    });
+
+    // 앱 실행 중에 새로운 공유가 들어올 때
+    const listener = ShareMenu.addNewShareListener(item => {
+      if (item && item.data && item.mimeType && item.mimeType.startsWith('image/')) {
+        navigationRef.current?.navigate('Register', { sharedImageUri: item.data });
+      }
+    });
+
+    return () => {
+      listener.remove();
+    };
+  }, []);
+
   // 폰트 및 인증 상태 로딩 함수
   const loadResources = async () => {
     try {
