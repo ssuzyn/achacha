@@ -19,6 +19,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Carousel from 'react-native-reanimated-carousel';
 import Animated from 'react-native-reanimated';
 import gifticonService from '../api/gifticonService';
+import notificationService from '../api/notificationService';
 import { useNavigation } from '@react-navigation/native';
 
 // 캐러셀에 표시할 카드 데이터
@@ -60,6 +61,7 @@ const HomeScreen = () => {
   const [expiringGifticons, setExpiringGifticons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
 
   useEffect(() => {
     const printTokens = async () => {
@@ -126,7 +128,25 @@ const HomeScreen = () => {
       }
     };
 
+    const loadUnreadNotificationCount = async () => {
+      try {
+        console.log('[HomeScreen] 미확인 알림 개수 로드 요청');
+        const response = await notificationService.getUnreadNotificationsCount();
+        console.log('[HomeScreen] 미확인 알림 개수 응답:', response);
+
+        if (response && typeof response.count === 'number') {
+          setUnreadNotificationCount(response.count);
+        } else {
+          setUnreadNotificationCount(0);
+        }
+      } catch (err) {
+        console.error('[HomeScreen] 미확인 알림 개수 로드 실패:', err);
+        setUnreadNotificationCount(0);
+      }
+    };
+
     loadExpiringGifticons();
+    loadUnreadNotificationCount();
   }, []);
 
   const calculateDaysLeft = expiryDate => {
