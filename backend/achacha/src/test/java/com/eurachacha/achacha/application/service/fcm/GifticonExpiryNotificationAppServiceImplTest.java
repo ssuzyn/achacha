@@ -40,7 +40,7 @@ import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
 import com.eurachacha.achacha.domain.service.notification.NotificationSettingDomainService;
 
 @ExtendWith(MockitoExtension.class)
-class FcmAppServiceImplTest {
+class GifticonExpiryNotificationAppServiceImplTest {
 
 	@Mock
 	private GifticonRepository gifticonRepository;
@@ -70,7 +70,7 @@ class FcmAppServiceImplTest {
 	private NotificationSettingDomainService notificationSettingDomainService;
 
 	@InjectMocks
-	private FcmAppServiceImpl fcmAppService;
+	private GifticonExpiryNotificationAppServiceImpl fcmAppService;
 
 	@Test
 	@DisplayName("유효기간 만료 예정 알림 전송 - 본인이 소유한 기프티콘에 대한 알림은 성공적으로 전송되어야 한다.")

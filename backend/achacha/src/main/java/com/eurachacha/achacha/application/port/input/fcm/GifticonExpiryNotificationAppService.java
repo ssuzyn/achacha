@@ -1,6 +1,6 @@
 package com.eurachacha.achacha.application.port.input.fcm;
 
-public interface FcmAppService {
+public interface GifticonExpiryNotificationAppService {
 
 	void sendExpiryDateNotification();
 }
