@@ -16,22 +16,32 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.eurachacha.achacha.application.port.input.gifticon.dto.request.GifticonSaveRequestDto;
+import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonBarcodeResponseDto;
 import com.eurachacha.achacha.application.port.output.ai.OcrTrainingDataRepository;
 import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.brand.BrandRepository;
 import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
+import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.file.File;
+import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.domain.model.notification.Notification;
+import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
+import com.eurachacha.achacha.domain.model.notification.NotificationType;
+import com.eurachacha.achacha.domain.model.notification.enums.NotificationTypeCode;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.user.User;
 import com.eurachacha.achacha.domain.service.file.FileDomainService;
 import com.eurachacha.achacha.domain.service.gifticon.GifticonDomainService;
+import com.eurachacha.achacha.domain.service.notification.NotificationSettingDomainService;
 import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
@@ -67,6 +77,18 @@ class GifticonAppServiceImplTest {
 
 	@Mock
 	private SecurityServicePort securityServicePort;
+
+	@Mock
+	private NotificationTypeRepository notificationTypeRepository;
+
+	@Mock
+	private NotificationRepository notificationRepository;
+
+	@Mock
+	private NotificationSettingRepository notificationSettingRepository;
+
+	@Mock
+	private NotificationSettingDomainService notificationSettingDomainService;
 
 	@InjectMocks
 	private GifticonAppServiceImpl gifticonAppService;
@@ -257,5 +279,545 @@ class GifticonAppServiceImplTest {
 			1,                  // 공유박스 ID
 			"1"                 // OCR 학습 데이터 ID
 		);
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 바코드 조회 후 사용한 경우 알림이 발생하지 않아야 한다")
+	void getAvailableGifticonBarcode_WhenGifticonUsedAfterBarcodeFetch_ThenNoNotification() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(user)  // 테스트 사용자가 소유자
+			.build();
+
+		File barcodeFile = File.builder()
+			.id(1)
+			.path("path/to/barcode.jpg")
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.build();
+
+		NotificationType notificationType = NotificationType.builder()
+			.id(1)
+			.code(NotificationTypeCode.USAGE_COMPLETE)
+			.build();
+
+		// 알림 설정이 활성화된 상태
+		NotificationSetting notificationSetting = NotificationSetting.builder()
+			.id(1)
+			.user(user)
+			.notificationType(notificationType)
+			.isEnabled(true) // 활성화 상태
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+		given(gifticonDomainService.hasAccess(eq(userId), eq(userId))).willReturn(true);
+
+		given(fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(eq("gifticon"), eq(gifticonId),
+			eq(FileType.BARCODE)))
+			.willReturn(java.util.Optional.of(barcodeFile));
+		given(fileStoragePort.generateFileUrl(anyString(), eq(FileType.BARCODE))).willReturn(
+			"https://example.com/barcode.jpg");
+
+		// 알림 타입 및 설정 관련 모킹
+		given(notificationTypeRepository.findByCode(NotificationTypeCode.USAGE_COMPLETE)).willReturn(notificationType);
+		given(notificationSettingRepository.findByUserIdAndNotificationTypeId(userId, notificationType.getId()))
+			.willReturn(notificationSetting);
+
+		// 스케줄러 작업이 수행될 때는 기프티콘이 사용됨 상태로 변경
+		given(gifticonDomainService.isUsed(any(Gifticon.class))).willReturn(true);
+
+		// when
+		GifticonBarcodeResponseDto result = gifticonAppService.getAvailableGifticonBarcode(gifticonId);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getGifticonBarcodeNumber()).isEqualTo("1234567890");
+		assertThat(result.getBarcodePath()).isEqualTo("https://example.com/barcode.jpg");
+
+		// 5분 후 로직을 시뮬레이션하기 위해 직접 호출
+		// 이미 사용됨으로 알림이 발생하지 않아야 함
+		gifticonAppService.checkUsedAndSaveAndSendNotification(userId, gifticonId);
+		verify(notificationRepository, never()).save(any(Notification.class)); // 알림이 저장되지 않아야 함
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 바코드 조회 후 사용하지 않은 경우 성공적으로 알림이 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenGifticonNotUsedAfterBarcodeFetch_ThenNotificationSent() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(user)  // 테스트 사용자가 소유자
+			.build();
+
+		File barcodeFile = File.builder()
+			.id(1)
+			.path("path/to/barcode.jpg")
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.build();
+
+		NotificationType notificationType = NotificationType.builder()
+			.id(1)
+			.code(NotificationTypeCode.USAGE_COMPLETE)
+			.build();
+
+		// 알림 설정이 활성화된 상태
+		NotificationSetting notificationSetting = NotificationSetting.builder()
+			.id(1)
+			.user(user)
+			.notificationType(notificationType)
+			.isEnabled(true) // 활성화 상태
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+		given(gifticonDomainService.hasAccess(eq(userId), eq(userId))).willReturn(true);
+
+		given(fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(eq("gifticon"), eq(gifticonId),
+			eq(FileType.BARCODE)))
+			.willReturn(java.util.Optional.of(barcodeFile));
+		given(fileStoragePort.generateFileUrl(anyString(), eq(FileType.BARCODE))).willReturn(
+			"https://example.com/barcode.jpg");
+
+		// 알림 타입 및 설정 관련 모킹
+		given(notificationTypeRepository.findByCode(NotificationTypeCode.USAGE_COMPLETE)).willReturn(notificationType);
+
+		// 바코드 조회 시 알림 설정 조회 결과 (여기서는 활성화된 설정 반환)
+		given(notificationSettingRepository.findByUserIdAndNotificationTypeId(userId, notificationType.getId()))
+			.willReturn(notificationSetting);
+
+		// 스케줄러 작업이 수행될 때 기프티콘이 미사용 상태
+		given(gifticonDomainService.isUsed(any(Gifticon.class))).willReturn(false);
+
+		// when
+		GifticonBarcodeResponseDto result = gifticonAppService.getAvailableGifticonBarcode(gifticonId);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getGifticonBarcodeNumber()).isEqualTo("1234567890");
+
+		// 5분 후 로직 시뮬레이션 - 알림 발생 확인
+		// sendNotificationToUser 메서드에서 사용할 모킹 설정 (선택적)
+		// 이 부분은 checkUsedAndSaveAndSendNotification 내부에서 다른 동작을 원할 경우에만 필요
+		// 필요시 stubbing 추가
+
+		gifticonAppService.checkUsedAndSaveAndSendNotification(userId, gifticonId);
+		verify(notificationTypeRepository, atLeastOnce()).findByCode(NotificationTypeCode.USAGE_COMPLETE);
+		verify(notificationRepository).save(any(Notification.class));
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 사용된 기프티콘인 경우에는 예외가 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenGifticonAlreadyUsed_ThenThrowException() {
+		// given
+		Integer gifticonId = 1;
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(user)
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+
+		// validateGifticonIsAvailable에서 예외 발생하도록 설정
+		willThrow(new CustomException(ErrorCode.GIFTICON_ALREADY_USED))
+			.given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonAppService.getAvailableGifticonBarcode(gifticonId))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_ALREADY_USED);
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 삭제된 기프티콘인 경우에는 예외가 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenGifticonDeleted_ThenThrowException() {
+		// given
+		Integer gifticonId = 1;
+		User user = User.builder().id(1).name("테스트 사용자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(user)
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+
+		// validateGifticonIsAvailable에서 예외 발생하도록 설정
+		willThrow(new CustomException(ErrorCode.GIFTICON_DELETED))
+			.given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonAppService.getAvailableGifticonBarcode(gifticonId))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.GIFTICON_DELETED);
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 본인이 소유자인 경우 성공적으로 조회가 되어야 하고 알림이 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenUserIsOwner_ThenSuccessfullyFetchAndScheduleNotification() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(user)
+			.build();
+
+		File barcodeFile = File.builder()
+			.id(1)
+			.path("path/to/barcode.jpg")
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.build();
+
+		NotificationType notificationType = NotificationType.builder()
+			.id(1)
+			.code(NotificationTypeCode.USAGE_COMPLETE)
+			.build();
+
+		// 알림 설정이 활성화된 상태
+		NotificationSetting notificationSetting = NotificationSetting.builder()
+			.id(1)
+			.user(user)
+			.notificationType(notificationType)
+			.isEnabled(true) // 활성화 상태
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+		given(fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(eq("gifticon"), eq(gifticonId),
+			eq(FileType.BARCODE)))
+			.willReturn(java.util.Optional.of(barcodeFile));
+		given(fileStoragePort.generateFileUrl(anyString(), eq(FileType.BARCODE))).willReturn(
+			"https://example.com/barcode.jpg");
+
+		given(gifticonDomainService.hasAccess(userId, userId)).willReturn(true);
+		given(gifticonDomainService.isUsed(any(Gifticon.class))).willReturn(false);
+		given(notificationTypeRepository.findByCode(NotificationTypeCode.USAGE_COMPLETE)).willReturn(notificationType);
+
+		// 알림 설정 관련 모킹 추가
+		given(notificationSettingRepository.findByUserIdAndNotificationTypeId(userId, notificationType.getId()))
+			.willReturn(notificationSetting);
+
+		// when
+		GifticonBarcodeResponseDto result = gifticonAppService.getAvailableGifticonBarcode(gifticonId);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getGifticonBarcodeNumber()).isEqualTo("1234567890");
+
+		// 소유자 확인 및 알림 발생 확인 (직접 호출)
+		gifticonAppService.checkUsedAndSaveAndSendNotification(userId, gifticonId);
+		verify(notificationTypeRepository, times(2)).findByCode(
+			NotificationTypeCode.USAGE_COMPLETE); // 두 번 호출됨 (바코드 조회 시 + 알림 발생 시)
+		verify(notificationRepository).save(any(Notification.class));
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 본인이 참여한 쉐어박스의 기프티콘인 경우 성공적으로 조회가 되어야 하고 알림이 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenUserParticipatesInShareBox_ThenSuccessfullyFetchAndScheduleNotification() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		Integer ownerId = 2;
+		Integer shareBoxId = 1;
+
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User owner = User.builder().id(ownerId).name("소유자").build();
+		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 쉐어박스").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(owner)
+			.sharebox(shareBox)
+			.build();
+
+		File barcodeFile = File.builder()
+			.id(1)
+			.path("path/to/barcode.jpg")
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.build();
+
+		NotificationType notificationType = NotificationType.builder()
+			.id(1)
+			.code(NotificationTypeCode.USAGE_COMPLETE)
+			.build();
+
+		// 알림 설정이 활성화된 상태
+		NotificationSetting notificationSetting = NotificationSetting.builder()
+			.id(1)
+			.user(owner) // 소유자의 알림 설정
+			.notificationType(notificationType)
+			.isEnabled(true) // 활성화 상태
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+		given(fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(eq("gifticon"), eq(gifticonId),
+			eq(FileType.BARCODE)))
+			.willReturn(java.util.Optional.of(barcodeFile));
+		given(fileStoragePort.generateFileUrl(anyString(), eq(FileType.BARCODE))).willReturn(
+			"https://example.com/barcode.jpg");
+
+		// 쉐어박스 참여 확인
+		given(participationRepository.checkParticipation(userId, shareBoxId)).willReturn(true);
+		given(gifticonDomainService.isUsed(any(Gifticon.class))).willReturn(false);
+		given(notificationTypeRepository.findByCode(NotificationTypeCode.USAGE_COMPLETE)).willReturn(notificationType);
+
+		// 알림 설정 관련 모킹 추가 - 여기서는 기프티콘 소유자(owner)의 알림 설정을 가져옴
+		given(notificationSettingRepository.findByUserIdAndNotificationTypeId(ownerId, notificationType.getId()))
+			.willReturn(notificationSetting);
+
+		// when
+		GifticonBarcodeResponseDto result = gifticonAppService.getAvailableGifticonBarcode(gifticonId);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getGifticonBarcodeNumber()).isEqualTo("1234567890");
+
+		// 알림 발생 확인
+		gifticonAppService.checkUsedAndSaveAndSendNotification(userId, gifticonId);
+		verify(notificationTypeRepository, times(2)).findByCode(NotificationTypeCode.USAGE_COMPLETE); // 두 번 호출됨
+		verify(notificationRepository).save(any(Notification.class));
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 본인이 소유자가 아닌 기프티콘을 조회한 경우 예외가 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenUserIsNotOwner_ThenThrowException() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		Integer ownerId = 2;
+
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User owner = User.builder().id(ownerId).name("소유자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(owner)
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+
+		// 소유자 확인 실패
+		given(gifticonDomainService.hasAccess(userId, ownerId)).willReturn(false);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonAppService.getAvailableGifticonBarcode(gifticonId))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 본인이 참여하지 않은 쉐어박스의 기프티콘을 조회한 경우 예외가 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenUserDoesNotParticipateInShareBox_ThenThrowException() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		Integer ownerId = 2;
+		Integer shareBoxId = 1;
+
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+		User owner = User.builder().id(ownerId).name("소유자").build();
+		ShareBox shareBox = ShareBox.builder().id(shareBoxId).name("테스트 쉐어박스").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(owner)
+			.sharebox(shareBox)
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+
+		// 쉐어박스 참여 확인 실패
+		given(participationRepository.checkParticipation(userId, shareBoxId)).willReturn(false);
+
+		// when & then
+		assertThatThrownBy(() -> gifticonAppService.getAvailableGifticonBarcode(gifticonId))
+			.isInstanceOf(CustomException.class)
+			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 알림 설정이 활성화된 경우 알림이 발생해야 한다")
+	void getAvailableGifticonBarcode_WhenNotificationIsEnabled_ThenNotificationScheduled() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(user)
+			.build();
+
+		File barcodeFile = File.builder()
+			.id(1)
+			.path("path/to/barcode.jpg")
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.build();
+
+		NotificationType notificationType = NotificationType.builder()
+			.id(1)
+			.code(NotificationTypeCode.USAGE_COMPLETE)
+			.build();
+
+		// 알림 설정이 활성화된 상태
+		NotificationSetting notificationSetting = NotificationSetting.builder()
+			.id(1)
+			.user(user)
+			.notificationType(notificationType)
+			.isEnabled(true) // 활성화 상태
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+		given(gifticonDomainService.hasAccess(userId, userId)).willReturn(true);
+
+		given(fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(eq("gifticon"), eq(gifticonId),
+			eq(FileType.BARCODE)))
+			.willReturn(java.util.Optional.of(barcodeFile));
+		given(fileStoragePort.generateFileUrl(anyString(), eq(FileType.BARCODE))).willReturn(
+			"https://example.com/barcode.jpg");
+
+		// 알림 타입 및 설정 관련 모킹
+		given(notificationTypeRepository.findByCode(NotificationTypeCode.USAGE_COMPLETE)).willReturn(notificationType);
+		given(notificationSettingRepository.findByUserIdAndNotificationTypeId(userId, notificationType.getId()))
+			.willReturn(notificationSetting);
+
+		// when
+		GifticonBarcodeResponseDto result = gifticonAppService.getAvailableGifticonBarcode(gifticonId);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getGifticonBarcodeNumber()).isEqualTo("1234567890");
+		assertThat(result.getBarcodePath()).isEqualTo("https://example.com/barcode.jpg");
+
+		// 알림 스케줄링이 호출되었는지 확인
+		// 스케줄러 호출 확인을 위해 실제 로직 결과 확인
+		gifticonAppService.checkUsedAndSaveAndSendNotification(userId, gifticonId);
+		verify(notificationTypeRepository, times(2)).findByCode(NotificationTypeCode.USAGE_COMPLETE); // 실제 코드에서 2번 호출됨
+	}
+
+	@Test
+	@DisplayName("사용가능 바코드 조회 - 알림 설정이 비활성화된 경우 알림이 발생하지 않아야 한다")
+	void getAvailableGifticonBarcode_WhenNotificationIsDisabled_ThenNoNotificationScheduled() {
+		// given
+		Integer gifticonId = 1;
+		Integer userId = 1;
+		User user = User.builder().id(userId).name("테스트 사용자").build();
+
+		Gifticon gifticon = Gifticon.builder()
+			.id(gifticonId)
+			.name("테스트 기프티콘")
+			.barcode("1234567890")
+			.user(user)
+			.build();
+
+		File barcodeFile = File.builder()
+			.id(1)
+			.path("path/to/barcode.jpg")
+			.referenceEntityId(gifticonId)
+			.referenceEntityType("gifticon")
+			.build();
+
+		NotificationType notificationType = NotificationType.builder()
+			.id(1)
+			.code(NotificationTypeCode.USAGE_COMPLETE)
+			.build();
+
+		// 알림 설정이 비활성화된 상태
+		NotificationSetting notificationSetting = NotificationSetting.builder()
+			.id(1)
+			.user(user)
+			.notificationType(notificationType)
+			.isEnabled(false) // 비활성화 상태
+			.build();
+
+		// Mock 설정
+		given(securityServicePort.getLoggedInUser()).willReturn(user);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
+		willDoNothing().given(gifticonDomainService).validateGifticonIsAvailable(gifticon);
+		given(gifticonDomainService.hasAccess(userId, userId)).willReturn(true);
+
+		given(fileRepository.findByReferenceEntityTypeAndReferenceEntityIdAndType(eq("gifticon"), eq(gifticonId),
+			eq(FileType.BARCODE)))
+			.willReturn(java.util.Optional.of(barcodeFile));
+		given(fileStoragePort.generateFileUrl(anyString(), eq(FileType.BARCODE))).willReturn(
+			"https://example.com/barcode.jpg");
+
+		// 알림 타입 및 설정 관련 모킹
+		given(notificationTypeRepository.findByCode(NotificationTypeCode.USAGE_COMPLETE)).willReturn(notificationType);
+		given(notificationSettingRepository.findByUserIdAndNotificationTypeId(userId, notificationType.getId()))
+			.willReturn(notificationSetting);
+
+		// when
+		GifticonBarcodeResponseDto result = gifticonAppService.getAvailableGifticonBarcode(gifticonId);
+
+		// then
+		assertThat(result).isNotNull();
+		assertThat(result.getGifticonBarcodeNumber()).isEqualTo("1234567890");
+		assertThat(result.getBarcodePath()).isEqualTo("https://example.com/barcode.jpg");
+
+		// 알림 스케줄링이 호출되지 않았는지 확인
+		// 스케줄러가 실행되지 않으므로 checkUsedAndSaveAndSendNotification은 호출될 수 없음
+		// verify(실행이 안되므로 확인 불가)
+
+		// 대신 NotificationTypeRepository의 findByCode가 한 번만 호출되었는지 확인 (스케줄링에서는 호출 안됨)
+		verify(notificationTypeRepository, times(1)).findByCode(any());
 	}
 }
