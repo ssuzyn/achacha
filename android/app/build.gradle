@@ -166,7 +166,7 @@ dependencies {
 
     // BLE 관련 의존성 추가
     implementation 'com.polidea.rxandroidble2:rxandroidble:1.12.1'
-    implementation project(':react-native-ble-manager')  // 프로젝트 의존성으로 변경
+    // implementation project(':react-native-ble-manager')  // 프로젝트 의존성으로 변경
 
     def isGifEnabled = (findProperty('expo.gif.enabled') ?: "") == "true";
     def isWebpEnabled = (findProperty('expo.webp.enabled') ?: "") == "true";
