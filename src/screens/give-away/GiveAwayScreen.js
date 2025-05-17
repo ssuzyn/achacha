@@ -532,6 +532,7 @@ const GiveAwayScreen = ({ onClose }) => {
   // 선택 확인 모달에서 '취소' 버튼 핸들러
   const handleCancel = () => {
     setConfirmModalVisible(false);
+    setButtonVisible(true);
   };
 
   // 목록 외 영역 클릭 핸들러
