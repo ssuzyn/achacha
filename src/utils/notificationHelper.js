@@ -52,6 +52,13 @@ const NOTIFICATION_HANDLERS = {
     try {
       console.log('쉐어박스 처리 시작:', referenceEntityId, notificationType);
 
+      // 쉐어박스 삭제인 경우 앱 메인으로 이동
+      if (notificationType === 'SHAREBOX_DELETED') {
+        console.log('쉐어박스 삭제 알림: 메인 화면으로 이동');
+        NavigationService.navigate('Main');
+        return;
+      }
+
       // initialTab을 명시적으로 설정
       const initialTab = notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available';
       console.log('쉐어박스 화면으로 이동:', { shareBoxId: referenceEntityId, initialTab });
@@ -135,25 +142,33 @@ export const handleNotificationNavigation = async navigationInfo => {
 
     console.log('화면 이동 처리 - Type:', referenceEntityType, 'ID:', referenceEntityId);
 
-    // referenceEntityType이 직접 지정된 경우 우선적으로 처리
+    // 알림 타입에 따른 처리
     if (
-      referenceEntityType === REFERENCE_TYPES.GIFTICON ||
-      ['EXPIRY_DATE', 'USAGE_COMPLETE', 'RECEIVE_GIFTICON', 'LOCATION_BASED'].includes(
+      ['EXPIRY_DATE', 'LOCATION_BASED', 'USAGE_COMPLETE', 'RECEIVE_GIFTICON'].includes(
         notificationType
       )
     ) {
       // 기프티콘 관련 알림
-      console.log('기프티콘 타입으로 이동');
+      console.log('기프티콘 관련 알림 처리');
       await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
       return;
     } else if (
-      referenceEntityType === REFERENCE_TYPES.SHAREBOX ||
       ['SHAREBOX_GIFTICON', 'SHAREBOX_USAGE_COMPLETE', 'SHAREBOX_MEMBER_JOIN'].includes(
         notificationType
       )
     ) {
       // 쉐어박스 관련 알림
-      console.log('쉐어박스 타입으로 이동');
+      console.log('쉐어박스 관련 알림 처리');
+      await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
+      return;
+    } else if (referenceEntityType === REFERENCE_TYPES.GIFTICON) {
+      // referenceEntityType이 gifticon인 경우
+      console.log('참조 타입이 기프티콘인 경우 처리');
+      await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
+      return;
+    } else if (referenceEntityType === REFERENCE_TYPES.SHAREBOX) {
+      // referenceEntityType이 sharebox인 경우
+      console.log('참조 타입이 쉐어박스인 경우 처리');
       await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
       return;
     } else {
