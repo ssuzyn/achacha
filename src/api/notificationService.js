@@ -224,6 +224,21 @@ const notificationService = {
       throw error;
     }
   },
+
+  /**
+   * FCM 토큰 업데이트
+   * @param {string} token - FCM 토큰
+   * @returns {Promise<Object>} 업데이트 결과
+   */
+  async updateFcmToken(token) {
+    try {
+      const response = await apiClient.post('/api/notifications/token', { token });
+      return response.data;
+    } catch (error) {
+      console.error('[API] FCM 토큰 업데이트 실패:', error);
+      throw error;
+    }
+  },
 };
 
 export default notificationService;
