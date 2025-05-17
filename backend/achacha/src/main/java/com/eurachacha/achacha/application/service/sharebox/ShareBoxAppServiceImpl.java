@@ -200,7 +200,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		log.info("기프티콘 공유 완료 - 기프티콘 ID: {}, 쉐어박스 ID: {}", gifticonId, shareBoxId);
 
 		// 기프티콘 공유 알림 전송
-		sendGifticonSharedNotification(shareBox, loggedInUser, gifticon);
+		sendGifticonSharedNotification(shareBox, gifticon);
 	}
 
 	@Transactional
@@ -723,50 +723,10 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		}
 	}
 
-	@Transactional
-	@Override
-	public void shareGifticon(Integer shareBoxId, Integer gifticonId) {
-		log.info("기프티콘 공유 시작 - 쉐어박스 ID: {}, 기프티콘 ID: {}", shareBoxId, gifticonId);
-
-		// 로그인 된 유저
-		User loggedInUser = securityServicePort.getLoggedInUser();
-		Integer userId = loggedInUser.getId();
-
-		// 쉐어박스 조회
-		ShareBox shareBox = shareBoxRepository.findById(shareBoxId);
-
-		// 쉐어박스 참여 여부 검증
-		if (!participationRepository.checkParticipation(userId, shareBoxId)) {
-			throw new CustomException(ErrorCode.UNAUTHORIZED_SHAREBOX_ACCESS);
-		}
-
-		// 기프티콘 조회
-		Gifticon gifticon = gifticonRepository.findById(gifticonId);
-
-		// 기프티콘 소유권 검증
-		if (!gifticonDomainService.hasAccess(userId, gifticon.getUser().getId())) {
-			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-		}
-
-		// 기프티콘 공유 가능 여부 검증
-		gifticonDomainService.validateGifticonSharable(gifticon);
-
-		// 기프티콘의 쉐어박스 업데이트
-		gifticon.updateShareBox(shareBox);
-
-		// 변경사항 저장
-		gifticonRepository.save(gifticon);
-
-		log.info("기프티콘 공유 완료 - 기프티콘 ID: {}, 쉐어박스 ID: {}", gifticonId, shareBoxId);
-
-		// 기프티콘 공유 알림 전송
-		sendGifticonSharedNotification(shareBox, loggedInUser, gifticon);
-	}
-
 	/**
 	 * 기프티콘 쉐어박스 공유 알림을 전송합니다.
 	 */
-	private void sendGifticonSharedNotification(ShareBox shareBox, User sharedBy, Gifticon gifticon) {
+	private void sendGifticonSharedNotification(ShareBox shareBox, Gifticon gifticon) {
 		try {
 			log.info("기프티콘 쉐어박스 공유 알림 전송 시작 - 쉐어박스 ID: {}, 기프티콘 ID: {}",
 				shareBox.getId(), gifticon.getId());
@@ -777,7 +737,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 			String title = notificationType.getCode().getDisplayName();
 
 			// 알림 내용 설정
-			String content = String.format("%s 쉐어박스에 %s이(가) 등록되었어요.",
+			String content = String.format("[%s] 쉐어박스에 [%s]이(가) 등록되었어요.",
 				shareBox.getName(), gifticon.getName());
 
 			// 해당 쉐어박스의 모든 참여자 조회
