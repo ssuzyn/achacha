@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.notification.NotificationAppService;
+import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationCountResponseDto;
 import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationsResponseDto;
 import com.eurachacha.achacha.domain.model.notification.enums.NotificationSortType;
 
@@ -26,5 +27,11 @@ public class NotificationController {
 		@RequestParam(required = false, defaultValue = "0") @Min(0) Integer page,
 		@RequestParam(required = false, defaultValue = "6") @Min(1) Integer size) {
 		return ResponseEntity.ok(notificationAppService.getNotifications(sort, page, size));
+	}
+
+	@GetMapping("/count")
+	public ResponseEntity<NotificationCountResponseDto> getUnreadNotificationCount(
+		@RequestParam(required = false, defaultValue = "false") boolean read) {
+		return ResponseEntity.ok(notificationAppService.countUnreadNotifications(read));
 	}
 }
