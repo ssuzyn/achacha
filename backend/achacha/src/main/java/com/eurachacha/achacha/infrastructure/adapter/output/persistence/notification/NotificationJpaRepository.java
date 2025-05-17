@@ -7,4 +7,6 @@ import com.eurachacha.achacha.domain.model.notification.Notification;
 
 @Repository
 public interface NotificationJpaRepository extends JpaRepository<Notification, Integer>, NotificationRepositoryCustom {
+
+	int countByUserIdAndIsRead(Integer userId, boolean read);
 }
