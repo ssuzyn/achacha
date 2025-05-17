@@ -358,12 +358,16 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 		if (isOwner) {
 			log.info("방장의 쉐어박스 탈퇴로 인한 쉐어박스 삭제 - 쉐어박스 ID: {}", shareBoxId);
 
+			// 쉐어박스 삭제 알림을 전송하기 위해 참여자 목록 미리 조회
+			List<Participation> participations = participationRepository.findByShareBoxId(shareBoxId);
 			// 1. 모든 쉐어박스 연결 기프티콘 해제 (벌크 업데이트)
 			gifticonRepository.unshareAllGifticonsByShareBoxId(shareBoxId);
 			// 2. 모든 참여 정보 삭제
 			participationRepository.deleteAllByShareBoxId(shareBoxId);
 			// 3. 쉐어박스 삭제
 			shareBoxRepository.delete(shareBox);
+			// 쉐어박스 삭제 알림 전송
+			sendShareBoxDeletedNotification(shareBox, participations);
 
 			return;
 		}
@@ -682,6 +686,38 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 
 		// 신규 참여자에게 알림 전송
 		sendNotificationToUser(newMember.getId(), notificationType, title, content, "sharebox", shareBox.getId());
+	}
+
+	/**
+	 * 쉐어박스 삭제 알림을 전송합니다.
+	 */
+	private void sendShareBoxDeletedNotification(ShareBox shareBox, List<Participation> participations) {
+		try {
+			log.info("쉐어박스 삭제 알림 전송 시작 - 쉐어박스 ID: {}", shareBox.getId());
+
+			// 알림 타입 조회
+			NotificationType notificationType = notificationTypeRepository.findByCode(
+				NotificationTypeCode.SHAREBOX_DELETED);
+			String title = notificationType.getCode().getDisplayName();
+
+			// 알림 내용 설정
+			String content = String.format("%s 쉐어박스가 삭제되었어요.", shareBox.getName());
+
+			// 모든 참여자에게 알림 전송
+			for (Participation participation : participations) {
+				User participant = participation.getUser();
+				Integer participantId = participant.getId();
+
+				// 참여자에게 알림 전송
+				sendNotificationToUser(participantId, notificationType, title, content, "sharebox", shareBox.getId());
+			}
+
+			log.info("쉐어박스 삭제 알림 전송 완료 - 쉐어박스 ID: {}", shareBox.getId());
+		} catch (Exception e) {
+			// 알림 전송 실패시 로그만 남기고 계속 진행
+			log.error("쉐어박스 삭제 알림 전송 실패 - 쉐어박스 ID: {}, 오류: {}",
+				shareBox.getId(), e.getMessage(), e);
+		}
 	}
 
 	/**
