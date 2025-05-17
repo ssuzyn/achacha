@@ -74,10 +74,18 @@ class NearbyUsersService {
   // BLE 작업 재개 (포그라운드 복귀 시)
   async resumeBleOperations() {
     try {
-      // 토큰 유효성 검사 및 새 토큰 요청
-      await this.generateBleToken();
+      console.log('[AppState] resumeBleOperations 호출됨');
 
-      // 광고 시작
+      const now = new Date();
+      if (this.deviceId && this.tokenExpiry && this.tokenExpiry > now) {
+        console.log(
+          '[resumeBleOperations] 유효한 BLE 토큰이 이미 존재합니다. 토큰 재발급을 건너뜁니다.'
+        );
+      } else {
+        console.log('[resumeBleOperations] BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
+        await this.generateBleToken();
+      }
+
       await this.startAdvertising();
     } catch (error) {
       console.error('BLE 작업 재개 실패:', error);
@@ -262,61 +270,64 @@ class NearbyUsersService {
 
   // 블루투스 초기화 및 권한 설정
   async initialize() {
-    // 앱이 포그라운드인지 확인
+    console.log('NearbyUsersService: initialize 함수 시작');
+
+    // <<< 로그인 상태 확인 추가 >>>
+    const isLoggedIn = useAuthStore.getState().isLoggedIn; // 혹은 accessToken 유무로 판단
+    if (!isLoggedIn) {
+      console.log('[Initialize] 사용자가 로그인하지 않았습니다. BLE 초기화를 건너뜁니다.');
+      return false;
+    }
+    // <<< -- 로그인 상태 확인 끝 -- >>>
+
     if (AppState.currentState !== 'active') {
-      console.log('앱이 포그라운드 상태가 아닙니다. BLE 초기화를 건너뜁니다.');
+      console.log('[Initialize] 앱이 포그라운드 상태가 아닙니다. BLE 초기화를 건너뜁니다.');
       return false;
     }
 
     const hasPermissions = await this.requestBluetoothPermissions();
     if (!hasPermissions) {
-      console.log('블루투스 권한이 없습니다.');
+      console.log('[Initialize] 블루투스 권한이 없습니다.');
       return false;
     }
 
     const isBluetoothOn = await this.checkBluetoothState();
     if (!isBluetoothOn) {
-      console.log('블루투스가 꺼져 있습니다.');
+      console.log('[Initialize] 블루투스가 꺼져 있습니다.');
       return false;
     }
 
     try {
-      // 토큰 유효성 검사 및 필요 시 새 토큰 요청
       const now = new Date();
+      // <<< 토큰 만료 조건 디버깅 로그 추가 >>>
+      console.log('[Initialize] 토큰 유효성 검사 전:');
+      console.log('[Initialize]   - this.deviceId:', this.deviceId);
+      console.log('[Initialize]   - this.tokenExpiry:', this.tokenExpiry);
+      console.log('[Initialize]   - now:', now);
+      if (this.tokenExpiry) {
+        console.log('[Initialize]   - 만료됨? (this.tokenExpiry < now):', this.tokenExpiry < now);
+      }
+      // <<< -- 디버깅 로그 끝 -- >>>
+
       if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
-        console.log('BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
-        const bleTokenResponse = await this.generateBleToken();
-
-        const tokenValue = bleTokenResponse?.bleToken || bleTokenResponse?.bleTokenValue;
-
-        if (!tokenValue) {
-          console.error('BLE 토큰 응답이 올바르지 않습니다:', bleTokenResponse);
+        console.log('[Initialize] BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
+        const bleTokenResponse = await this.generateBleToken(); // generateBleToken 내부에서 this.deviceId와 this.tokenExpiry가 설정될 것임
+        // 추가적인 토큰 값 검증 로직이 필요하다면 여기에 추가
+        if (!this.deviceId) {
+          // generateBleToken 호출 후에도 deviceId가 없다면 문제
+          console.error(
+            '[Initialize] generateBleToken 호출 후에도 유효한 BLE 토큰을 얻지 못했습니다.'
+          );
           return false;
         }
       }
 
-      console.log('현재 BLE 토큰:', this.deviceId);
-
-      // 광고 시작 (자신의 UUID 알리기)
+      console.log('[Initialize] 현재 사용할 BLE 토큰:', this.deviceId);
       await this.startAdvertising();
-
-      // 앱 상태 변경 리스너 설정 (광고 상태 유지를 위해)
-      if (this.appStateListener) {
-        this.appStateListener.remove();
-      }
-      this.appStateListener = AppState.addEventListener('change', nextAppState => {
-        if (nextAppState === 'active') {
-          // 포그라운드로 돌아올 때 광고 재시작
-          this.startAdvertising();
-        } else if (nextAppState === 'background') {
-          // 백그라운드로 갈 때 광고 중지
-          this.stopAdvertising();
-        }
-      });
-
+      // ... (기존 appStateListener 관련 코드) ...
       return true;
     } catch (error) {
-      console.error('BLE 초기화 실패:', error);
+      console.error('[Initialize] BLE 초기화 실패:', error);
       return false;
     }
   }
