@@ -95,6 +95,11 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 
 		// 사용 기록 처리
 		usageHistoryRepository.saveUsageHistory(newUsageHistory);
+
+		// 완전히 사용되고, 쉐어박스에 있는 기프티콘인 경우 알림 전송
+		if (gifticonDomainService.isUsed(findGifticon) && findGifticon.getSharebox() != null) {
+			sendShareBoxGifticonUsedNotification(findGifticon.getSharebox(), loggedInUser, findGifticon);
+		}
 	}
 
 	@Override
@@ -161,6 +166,11 @@ public class GifticonUsageAppServiceImpl implements GifticonUsageAppService {
 		findGifticon.updateRemainingAmount(
 			gifticonUsageDomainService.calculateGifticonBalance(newAmount, findUsageHistory, findGifticon));
 		findUsageHistory.updateUsageAmount(newAmount);
+
+		// 완전히 사용되었고, 쉐어박스에 있는 기프티콘인 경우 알림 전송
+		if (gifticonDomainService.isUsed(findGifticon) && findGifticon.getSharebox() != null) {
+			sendShareBoxGifticonUsedNotification(findGifticon.getSharebox(), loggedInUser, findGifticon);
+		}
 	}
 
 	@Override
