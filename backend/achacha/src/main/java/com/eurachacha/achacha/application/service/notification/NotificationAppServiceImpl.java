@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.notification.NotificationAppService;
+import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationCountResponseDto;
 import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationResponseDto;
 import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationsResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
@@ -70,6 +71,15 @@ public class NotificationAppServiceImpl implements NotificationAppService {
 			.notifications(notificationResponseDtos)
 			.hasNextPage(notificationSlice.hasNext())
 			.nextPage(notificationSlice.hasNext() ? page + 1 : null)
+			.build();
+	}
+
+	@Override
+	public NotificationCountResponseDto countUnreadNotifications(boolean read) {
+		User user = securityServicePort.getLoggedInUser();
+		int count = notificationRepository.countByUserIdAndRead(user.getId(), read);
+		return NotificationCountResponseDto.builder()
+			.count(count)
 			.build();
 	}
 }
