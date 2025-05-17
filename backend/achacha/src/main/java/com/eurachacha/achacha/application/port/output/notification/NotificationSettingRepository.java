@@ -14,4 +14,6 @@ public interface NotificationSettingRepository {
 
 	List<NotificationSetting> saveAll(List<NotificationSetting> notificationSettings);
 
+	List<NotificationSetting> findByUserIdInAndNotificationTypeId(List<Integer> userIds, Integer notificationTypeId);
+
 }

@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.gifticon;
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -83,5 +84,10 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	@Override
 	public Slice<Gifticon> findUsedGifticonsByShareBoxId(Integer shareBoxId, GifticonType type, Pageable pageable) {
 		return gifticonJpaRepository.findUsedGifticonsByShareBoxId(shareBoxId, type, pageable);
+	}
+
+	@Override
+	public List<Gifticon> findGifticonsWithExpiryDates(List<LocalDate> expiryDates) {
+		return gifticonJpaRepository.findGifticonsWithExpiryDates(expiryDates);
 	}
 }

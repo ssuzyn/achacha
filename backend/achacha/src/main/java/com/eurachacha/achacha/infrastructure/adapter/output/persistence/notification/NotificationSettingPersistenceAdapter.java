@@ -37,4 +37,10 @@ public class NotificationSettingPersistenceAdapter implements NotificationSettin
 	public List<NotificationSetting> saveAll(List<NotificationSetting> notificationSettings) {
 		return notificationSettingJpaRepository.saveAll(notificationSettings);
 	}
+
+	@Override
+	public List<NotificationSetting> findByUserIdInAndNotificationTypeId(List<Integer> userIds,
+		Integer notificationTypeId) {
+		return notificationSettingJpaRepository.findAllUserIdInAndNotificationTypeId(userIds, notificationTypeId);
+	}
 }
