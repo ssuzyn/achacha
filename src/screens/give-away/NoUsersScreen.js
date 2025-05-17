@@ -14,7 +14,7 @@ const { width } = Dimensions.get('window');
 
 // 사용자가 없을 때 표시할 이미지
 const giveawayManagementImg = require('../../assets/images/giveaway_management.png');
-const giveawayShareboxImg = require('../../assets/images/giveaway_sharebox.png');
+const giveawayShareboxImg = require('../../assets/images/share_box.png');
 
 const NoUsersScreen = () => {
   const navigation = useNavigation();
