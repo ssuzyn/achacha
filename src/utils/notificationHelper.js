@@ -35,6 +35,8 @@ const NOTIFICATION_HANDLERS = {
       }
     } catch (error) {
       console.error('기프티콘 알림 처리 중 오류 발생:', error);
+      // 오류 발생 시 기본 화면으로 이동
+      NavigationService.navigate('Main', { screen: 'TabGifticonManage' });
     }
   },
 
@@ -48,6 +50,8 @@ const NOTIFICATION_HANDLERS = {
       });
     } catch (error) {
       console.error('쉐어박스 알림 처리 중 오류 발생:', error);
+      // 오류 발생 시 쉐어박스 탭으로 이동
+      NavigationService.navigate('Main', { screen: 'TabSharebox' });
     }
   },
 };
@@ -61,9 +65,23 @@ export const extractNavigationInfo = message => {
   const notification = message.notification || {};
 
   // FCM 페이로드에서 필요한 데이터 추출
-  const notificationType = data.notificationType;
-  const referenceEntityType = data.referenceEntityType;
-  const referenceEntityId = data.referenceEntityId;
+  const notificationType = data.notificationType || data.type;
+
+  // referenceEntityType과 referenceEntityId를 직접 FCM 데이터에서 추출
+  // 서로 다른 필드 이름으로 전송될 수 있는 경우를 모두 처리
+  const referenceEntityType = data.referenceEntityType || data.type;
+
+  // referenceEntityId, gifticonId, shareboxId 등 다양한 필드명 처리
+  // ID가 숫자 타입으로 온 경우 문자열로 변환
+  const entityId = data.referenceEntityId || data.id || data.gifticonId || data.shareboxId;
+  const referenceEntityId = entityId ? String(entityId) : null;
+
+  console.log('추출된 알림 데이터:', {
+    notificationType,
+    referenceEntityType,
+    referenceEntityId,
+    rawData: data,
+  });
 
   return {
     notificationType,
@@ -80,35 +98,52 @@ export const extractNavigationInfo = message => {
 export const handleNotificationNavigation = async navigationInfo => {
   const { notificationType, referenceEntityType, referenceEntityId } = navigationInfo;
 
+  console.log('화면 이동 처리 시작:', navigationInfo);
+
   if (!referenceEntityId) {
     console.log('참조 ID가 없습니다:', navigationInfo);
+    // 기본 화면으로 이동
+    NavigationService.navigate('Main');
     return;
   }
 
-  // 타입에 따라 분기 처리
+  // 쉐어박스 삭제 알림은 메인 화면으로 이동
+  if (notificationType === 'SHAREBOX_DELETED') {
+    console.log('쉐어박스 삭제 알림: 메인 화면으로 이동');
+    NavigationService.navigate('Main');
+    return;
+  }
+
+  // referenceEntityType이 직접 지정된 경우 우선적으로 처리
+  if (referenceEntityType === REFERENCE_TYPES.GIFTICON) {
+    console.log('기프티콘 타입으로 직접 이동');
+    await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
+    return;
+  } else if (referenceEntityType === REFERENCE_TYPES.SHAREBOX) {
+    console.log('쉐어박스 타입으로 직접 이동');
+    await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
+    return;
+  }
+
+  // 이전 방식: 알림 타입에 따른 분기 처리
   if (
     ['EXPIRY_DATE', 'USAGE_COMPLETE', 'RECEIVE_GIFTICON', 'LOCATION_BASED'].includes(
       notificationType
-    ) &&
-    referenceEntityType === REFERENCE_TYPES.GIFTICON
+    )
   ) {
     // 기프티콘 관련 알림
     await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
   } else if (
-    [
-      'SHAREBOX_GIFTICON',
-      'SHAREBOX_USAGE_COMPLETE',
-      'SHAREBOX_MEMBER_JOIN',
-      'SHAREBOX_DELETED',
-    ].includes(notificationType) &&
-    referenceEntityType === REFERENCE_TYPES.SHAREBOX
+    ['SHAREBOX_GIFTICON', 'SHAREBOX_USAGE_COMPLETE', 'SHAREBOX_MEMBER_JOIN'].includes(
+      notificationType
+    )
   ) {
     // 쉐어박스 관련 알림
     await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
   } else {
     console.log('처리되지 않은 알림 타입:', notificationType);
-    // 기본 동작: 알림함으로 이동
-    NavigationService.navigate('Notification');
+    // 기본 동작: 메인 화면으로 이동
+    NavigationService.navigate('Main');
   }
 };
 

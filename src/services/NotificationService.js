@@ -138,6 +138,66 @@ const handleNavigationByType = (navigation, remoteMessage) => {
   const { data } = remoteMessage;
   const notificationType = data?.type;
 
+  console.log('알림 데이터:', data);
+
+  // referenceEntityType과 referenceEntityId가 있는 경우 우선 처리
+  if (data?.referenceEntityType && data?.referenceEntityId) {
+    console.log(
+      'referenceEntityType:',
+      data.referenceEntityType,
+      'referenceEntityId:',
+      data.referenceEntityId
+    );
+
+    if (data.referenceEntityType === 'gifticon') {
+      // gifticon 타입일 경우 - 기프티콘 정보를 가져온 후 상품/금액형에 따라 상세 화면으로 이동
+      // 해당 ID로 상세 페이지로 이동 (기프티콘 타입은 API에서 확인 후 상품/금액형 화면으로 각각 이동)
+      try {
+        // 일단 기본 화면인 DetailProduct로 이동 (API 응답에서 타입에 따라 자동 처리됨)
+        navigation.navigate('DetailProduct', {
+          gifticonId: data.referenceEntityId,
+          scope: 'MY_BOX',
+        });
+      } catch (error) {
+        console.error('기프티콘 화면 이동 실패:', error);
+        // 기본 화면으로 이동
+        navigation.navigate('Main', { screen: 'TabGifticonManage' });
+      }
+      return;
+    } else if (data.referenceEntityType === 'sharebox') {
+      // sharebox 타입일 경우 쉐어박스 사용 가능한 기프티콘 목록 조회 페이지로 이동
+      try {
+        // BoxList 화면으로 이동
+        navigation.navigate('BoxList', {
+          shareBoxId: data.referenceEntityId,
+          initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+        });
+      } catch (error) {
+        console.error('쉐어박스 화면 이동 실패:', error);
+        // 기본 화면으로 이동
+        navigation.navigate('Main', { screen: 'TabSharebox' });
+      }
+      return;
+    }
+  }
+
+  // 기프티콘 ID나 쉐어박스 ID가 직접 있는 경우
+  if (data?.gifticonId) {
+    // 기프티콘 상세 페이지로 이동
+    navigation.navigate('DetailProduct', {
+      gifticonId: data.gifticonId,
+      scope: 'MY_BOX',
+    });
+    return;
+  } else if (data?.shareboxId) {
+    // 쉐어박스 상세 페이지로 이동
+    navigation.navigate('BoxList', {
+      shareBoxId: data.shareboxId,
+      initialTab: 'available',
+    });
+    return;
+  }
+
   // 특정 화면으로 이동이 필요한 경우
   if (data?.screen) {
     navigation.navigate(data.screen, data?.params);
@@ -151,33 +211,41 @@ const handleNavigationByType = (navigation, remoteMessage) => {
       navigation.navigate('Map');
       break;
     case NOTIFICATION_TYPES.EXPIRY_DATE:
-      // 유효기간 만료 알림 - 기프티콘 페이지로 이동
-      navigation.navigate('GifticonList');
-      break;
     case NOTIFICATION_TYPES.RECEIVE_GIFTICON:
-      // 기프티콘 뿌리기 알림 - 받은 기프티콘 페이지로 이동
-      navigation.navigate('GifticonList');
+      // 유효기간 만료 알림, 기프티콘 뿌리기 알림 - 기프티콘 페이지로 이동
+      navigation.navigate('Main', { screen: 'TabGifticonManage' });
       break;
     case NOTIFICATION_TYPES.USAGE_COMPLETE:
       // 사용완료 여부 알림 - 상세 페이지로 이동
       if (data?.gifticonId) {
-        navigation.navigate('GifticonDetail', { id: data.gifticonId });
+        navigation.navigate('DetailProduct', {
+          gifticonId: data.gifticonId,
+          scope: 'MY_BOX',
+        });
+      } else {
+        navigation.navigate('Main', { screen: 'TabGifticonManage' });
       }
       break;
     case NOTIFICATION_TYPES.SHAREBOX_GIFTICON:
     case NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE:
     case NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN:
-    case NOTIFICATION_TYPES.SHAREBOX_DELETED:
       // 쉐어박스 관련 알림 - 쉐어박스 페이지로 이동
       if (data?.shareboxId) {
-        navigation.navigate('ShareboxDetail', { id: data.shareboxId });
+        navigation.navigate('BoxList', {
+          shareBoxId: data.shareboxId,
+          initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+        });
       } else {
-        navigation.navigate('Sharebox');
+        navigation.navigate('Main', { screen: 'TabSharebox' });
       }
+      break;
+    case NOTIFICATION_TYPES.SHAREBOX_DELETED:
+      // 쉐어박스 삭제 알림 - 메인 화면으로 이동
+      navigation.navigate('Main');
       break;
     default:
       // 기본 페이지로 이동
-      navigation.navigate('Home');
+      navigation.navigate('Main');
   }
 };
 
