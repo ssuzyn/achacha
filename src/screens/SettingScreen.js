@@ -111,11 +111,13 @@ const SettingScreen = () => {
     [updateNotificationTypeStatus, error]
   );
 
-  // 알림 주기 변경 핸들러 - 최적화
+  // 알림 주기 변경 핸들러
   const handleExpirationCycleChange = useCallback(value => {
-    console.log('슬라이더 값 변경 트리거됨:', value);
-    // 슬라이더 값 즉시 업데이트
-    setTempExpiryInterval(value);
+    // 유효한 값인지 확인
+    if (typeof value === 'number' && markers.includes(value)) {
+      setTempExpiryInterval(value);
+      console.log('알림주기 변경:', value);
+    }
   }, []);
 
   // 수정/저장 버튼 클릭 핸들러
@@ -123,20 +125,28 @@ const SettingScreen = () => {
     if (editingInterval) {
       // 저장 모드 - API 호출하여 서버에 저장
       console.log('[알림설정] 알림 주기 변경 저장:', tempExpiryInterval);
-      const success = await updateExpirationCycle(tempExpiryInterval);
 
-      if (success) {
-        Alert.alert('설정 완료', '알림 주기 설정이 저장되었습니다.');
-      } else if (error) {
-        Alert.alert('알림 주기 설정 실패', error);
+      try {
+        const success = await updateExpirationCycle(tempExpiryInterval);
+
+        if (success) {
+          // 저장 성공 시 모드 전환 즉시 진행
+          setEditingInterval(false);
+          Alert.alert('설정 완료', '알림 주기가 설정되었습니다.');
+        } else if (error) {
+          Alert.alert('알림 주기 설정 실패', error);
+        }
+      } catch (err) {
+        console.error('[알림설정] 저장 중 오류:', err);
+        Alert.alert('오류', '알림 주기 설정 중 오류가 발생했습니다.');
       }
     } else {
       // 수정 모드로 전환 - 현재 서버에 저장된 값으로 슬라이더 초기화
       setTempExpiryInterval(expiryNotificationInterval);
       console.log('[알림설정] 수정 모드 전환, 현재 값:', expiryNotificationInterval);
+      // 모드 전환
+      setEditingInterval(true);
     }
-    // 모드 전환
-    setEditingInterval(prev => !prev);
   }, [
     editingInterval,
     tempExpiryInterval,
