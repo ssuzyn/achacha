@@ -482,18 +482,13 @@ class NearbyUsersService {
 
             // 서비스 UUID 확인
             if (device.serviceUUIDs) {
-              console.log('서비스 UUID들:', device.serviceUUIDs);
-
               // 우리 서비스 UUID가 있는지 확인
               const hasMatchingService = device.serviceUUIDs.some(
                 uuid => uuid.toLowerCase() === scanUUID.toLowerCase()
               );
 
               if (hasMatchingService) {
-                console.log('일치하는 서비스 UUID 발견!');
-
                 // 이 기기와 연결하여 서비스 데이터 읽기 시도
-                // (또는 더 자세한 정보 수집)
                 this.handleDiscoveredDevice(device, onUserFound);
               }
             } else {
