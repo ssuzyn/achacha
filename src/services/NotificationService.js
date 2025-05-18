@@ -1,5 +1,4 @@
 import messaging from '@react-native-firebase/messaging';
-import { Alert } from 'react-native';
 import apiClient from '../api/apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../api/config';
@@ -27,26 +26,6 @@ export const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE]: 'inventory-2', // 쉐어박스 기프티콘 사용
   [NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN]: 'inventory-2', // 쉐어박스 멤버 참여
   [NOTIFICATION_TYPES.SHAREBOX_DELETED]: 'inventory-2', // 쉐어박스 그룹 삭제
-};
-
-// FCM 토큰을 서버에 저장하는 함수
-const saveFcmTokenToServer = async token => {
-  try {
-    // 로그인 상태인지 확인
-    const accessToken = await AsyncStorage.getItem('accessToken');
-    if (accessToken) {
-      // 참고: 로그인 시 FCM 토큰이 이미 전송되므로 '/api/users/fcm-token' 엔드포인트는 사용하지 않음
-      // 토큰 갱신 시에만 별도로 저장하도록 로그만 남깁니다
-      console.log('알림 FCM 토큰 준비 완료:', token);
-      // 토큰 갱신 시 처리 로직은 setupTokenRefresh에서 처리
-    } else {
-      console.log('로그인 상태가 아니므로 FCM 토큰 저장은 로그인 시 처리됩니다.');
-    }
-    return true;
-  } catch (error) {
-    console.error('알림 FCM 토큰 처리 실패:', error);
-    return false;
-  }
 };
 
 // 알림 권한 요청
@@ -108,6 +87,13 @@ export const setupBackgroundHandler = () => {
 
 // 알림 클릭 시 처리
 export const handleNotificationOpen = navigation => {
+  if (!navigation) {
+    console.log(
+      '[NotificationService] navigation 객체가 초기화되지 않았습니다. 알림 핸들러를 설정할 수 없습니다.'
+    );
+    return;
+  }
+
   messaging().onNotificationOpenedApp(remoteMessage => {
     console.log('백그라운드 상태에서 알림 클릭:', remoteMessage);
 
@@ -130,9 +116,22 @@ export const handleNotificationOpen = navigation => {
 
 // 알림 타입에 따른 화면 이동 처리
 const handleNavigationByType = (navigation, remoteMessage) => {
-  if (!navigation || !remoteMessage) return;
+  if (!navigation) {
+    console.log('[NotificationService] navigation 객체가 없습니다. 화면 이동을 할 수 없습니다.');
+    return;
+  }
+
+  if (!remoteMessage) {
+    console.log('[NotificationService] 알림 데이터가 없습니다.');
+    return;
+  }
 
   const { data } = remoteMessage;
+  if (!data) {
+    console.log('[NotificationService] 알림에 데이터가 없습니다.');
+    return;
+  }
+
   const notificationType = data?.type || data?.notificationType;
 
   console.log('알림 데이터:', data);

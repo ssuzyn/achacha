@@ -30,12 +30,14 @@ function parseJwt(token) {
 export const loginWithKakao = async kakaoAccessToken => {
   // FCM 토큰 가져오기
   const fcmToken = await getFcmToken();
+  console.log('[KAKAO_LOGIN] FCM 토큰 로그인과 함께 서버로 전송:', fcmToken);
 
   // 1. 카카오 로그인 (FCM 토큰 포함)
   const response = await apiClient.post(API_CONFIG.ENDPOINTS.KAKAO_LOGIN, {
     kakaoAccessToken,
     fcmToken, // FCM 토큰 추가
   });
+  console.log('[KAKAO_LOGIN] 로그인 성공 (FCM 토큰 서버에 저장 완료)');
   const { user, accessToken, refreshToken } = response.data;
 
   // accessToken, refreshToken을 먼저 저장
