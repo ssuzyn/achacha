@@ -65,7 +65,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 			.orElseGet(() -> {
 				log.info("신규 카카오 사용자 생성: id={}", kakaoUserInfo.getId());
 				User newUser = createKakaoUser(kakaoUserInfo);
-				// 신규 사용자에 대한 알림 설정 초기화 호출
+				// 사용자에 대한 알림 설정 초기화 호출
 				initializeNotificationSettings(newUser);
 				return newUser;
 			});
@@ -177,7 +177,7 @@ public class AuthAppServiceImpl implements AuthAppService {
 			.map(notificationType -> NotificationSetting.builder()
 				.user(user)
 				.notificationType(notificationType)
-				.isEnabled(false)
+				.isEnabled(true)
 				.expirationCycle(determineExpirationCycle(notificationType))
 				.build())
 			.collect(Collectors.toList());
@@ -192,12 +192,4 @@ public class AuthAppServiceImpl implements AuthAppService {
 			? ExpirationCycle.ONE_WEEK
 			: null;
 	}
-
-	// @Override
-	// @Transactional
-	// public void logout(Integer userId, String refreshToken) {
-	// 	// 리프레시 + FCM 토큰 삭제 필요
-	// 	refreshTokenRepository.deleteByValue(refreshToken);
-	//
-	// }
 }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.eurachacha.achacha.application.port.input.auth.AuthAppService;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLoginRequestDto;
+import com.eurachacha.achacha.application.port.input.auth.dto.request.LogoutRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTokenRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 
@@ -29,6 +30,13 @@ public class AuthController {
 	public ResponseEntity<TokenResponseDto> refreshToken(@RequestBody RefreshTokenRequestDto requestDto) {
 		TokenResponseDto tokenResponseDto = authAppService.refreshToken(requestDto);
 		return ResponseEntity.ok(tokenResponseDto);
+	}
+
+	// Swagger-ui 문서용 메서드, 동작하지 않음
+	@PostMapping("/logout")
+	public ResponseEntity<String> logout(@RequestBody LogoutRequestDto logoutRequestDto) {
+
+		return ResponseEntity.ok("로그아웃 성공");
 	}
 
 }
