@@ -1,5 +1,16 @@
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { handleError, handleAuthError } from './utils/errorHandler';
+import { NavigationContainer } from '@react-navigation/native';
+import AppNavigator from './navigation/AppNavigator';
+import { navigationRef } from './navigation/NavigationService';
+import { useEffect } from 'react';
+import notificationHelper from './utils/notificationHelper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { TabBarProvider } from './context/TabBarContext';
+import { HeaderBarProvider } from './context/HeaderBarContext';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from './utils/toastService';
+import NotificationListener from './components/notification/NotificationListener';
 
 // React Query 클라이언트 생성 및 기본 옵션 설정
 const queryClient = new QueryClient({
@@ -23,5 +34,38 @@ const queryClient = new QueryClient({
 
 // 앱 컴포넌트
 export default function App() {
-  return <QueryClientProvider client={queryClient}>{/* 기존 앱 코드 */}</QueryClientProvider>;
+  // FCM 알림 초기화
+  useEffect(() => {
+    // FCM 및 로컬 푸시 알림 초기화
+    let unsubscribeForeground;
+    const setupNotifications = async () => {
+      // FCM 초기화 및 이벤트 리스너 설정 (원격 알림 처리)
+      unsubscribeForeground = await notificationHelper.initializeNotifications();
+    };
+
+    setupNotifications();
+
+    // 클린업 함수
+    return () => {
+      if (unsubscribeForeground) {
+        unsubscribeForeground();
+      }
+    };
+  }, []);
+
+  return (
+    <SafeAreaProvider>
+      <QueryClientProvider client={queryClient}>
+        <TabBarProvider>
+          <HeaderBarProvider>
+            <NavigationContainer ref={navigationRef}>
+              <AppNavigator />
+            </NavigationContainer>
+          </HeaderBarProvider>
+        </TabBarProvider>
+        <Toast config={toastConfig} />
+        <NotificationListener />
+      </QueryClientProvider>
+    </SafeAreaProvider>
+  );
 }

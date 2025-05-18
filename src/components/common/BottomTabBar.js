@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet, Platform, Dimensions, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTabBar } from '../../context/TabBarContext';
+import { useHeaderBar } from '../../context/HeaderBarContext';
 import HeaderBar from './HeaderBar';
 import { Icon, useTheme } from 'react-native-elements';
 import NavigationService from '../../navigation/NavigationService';
@@ -40,10 +41,11 @@ const HIDDEN_TAB_BAR_SCREENS = [
 // 헤더바가 포함된 스크린 컴포넌트
 const ScreenWithHeader = ({ children }) => {
   const { theme } = useTheme();
+  const { notificationCount } = useHeaderBar();
 
   return (
     <View style={[styles.headerContainer, { backgroundColor: theme.colors.background }]}>
-      <HeaderBar notificationCount={3} />
+      <HeaderBar notificationCount={notificationCount} />
       <View style={[styles.contentContainer, { backgroundColor: theme.colors.background }]}>
         {children}
       </View>

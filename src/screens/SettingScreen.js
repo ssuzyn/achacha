@@ -28,6 +28,26 @@ import { fetchUserById, logout as logoutApi } from '../api/userInfo';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
 import { getFcmToken } from '../services/NotificationService';
 import useAuthStore from '../store/authStore';
+import useNotificationStore from '../store/notificationStore';
+
+// 알림 타입 enum (API와 일치)
+const NOTIFICATION_TYPES = {
+  LOCATION_BASED: 'LOCATION_BASED', // 근접 매장 알림
+  EXPIRY_DATE: 'EXPIRY_DATE', // 유효기간 만료 알림
+  RECEIVE_GIFTICON: 'RECEIVE_GIFTICON', // 선물 뿌리기 알림
+  USAGE_COMPLETE: 'USAGE_COMPLETE', // 사용완료 여부 알림
+  SHAREBOX_GIFTICON: 'SHAREBOX_GIFTICON', // 쉐어박스 기프티콘 등록 알림
+  SHAREBOX_USAGE_COMPLETE: 'SHAREBOX_USAGE_COMPLETE', // 쉐어박스 기프티콘 사용 알림
+  SHAREBOX_MEMBER_JOIN: 'SHAREBOX_MEMBER_JOIN', // 쉐어박스 멤버 참여 알림
+  SHAREBOX_DELETED: 'SHAREBOX_DELETED', // 쉐어박스 그룹 삭제 알림
+};
+
+// 알림 주기 enum (API와 일치) - 현재 코드에서는 직접 사용하지 않음/* const EXPIRATION_CYCLES = {  ONE_DAY: 'ONE_DAY', // 1일  TWO_DAYS: 'TWO_DAYS', // 2일  THREE_DAYS: 'THREE_DAYS', // 3일  ONE_WEEK: 'ONE_WEEK', // 7일  ONE_MONTH: 'ONE_MONTH', // 30일  TWO_MONTHS: 'TWO_MONTHS', // 60일  THREE_MONTHS: 'THREE_MONTHS', // 90일};*/
+
+/* 현재 사용하지 않는 매핑// 마커 값에 따른 알림 주기 매핑const MARKER_TO_CYCLE = {  0: 'ONE_DAY', // 당일 또는 1일  1: 'ONE_DAY', // 1일  2: 'TWO_DAYS', // 2일  3: 'THREE_DAYS', // 3일  7: 'ONE_WEEK', // 7일  30: 'ONE_MONTH', // 30일  60: 'TWO_MONTHS', // 60일  90: 'THREE_MONTHS', // 90일};// 알림 주기에 따른 마커 값 매핑const CYCLE_TO_MARKER = {  'ONE_DAY': 1,  'TWO_DAYS': 2,  'THREE_DAYS': 3,  'ONE_WEEK': 7,  'ONE_MONTH': 30,  'TWO_MONTHS': 60,  'THREE_MONTHS': 90,};*/
+
+// 슬라이더 마커 값
+const markers = [0, 1, 2, 3, 7, 30, 60, 90];
 
 const SettingScreen = () => {
   const { theme } = useTheme();
@@ -40,31 +60,90 @@ const SettingScreen = () => {
   // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
   const keepTabBarVisible = route.params?.keepTabBarVisible || false;
 
-  // 상태 관리
-  const [expiryNotification, setExpiryNotification] = useState(true);
-  const [giftSharingNotification, setGiftSharingNotification] = useState(true);
-  const [nearbyStoreNotification, setNearbyStoreNotification] = useState(false);
-  const [expiryNotificationInterval, setExpiryNotificationInterval] = useState(1);
-  const [usageCompletionNotification, setUsageCompletionNotification] = useState(true);
-  const [shareboxGiftRegistration, setShareboxGiftRegistration] = useState(true);
-  const [shareboxGiftUsage, setShareboxGiftUsage] = useState(true);
-  const [shareboxMemberJoin, setShareboxMemberJoin] = useState(true);
-  const [shareboxGroupDelete, setShareboxGroupDelete] = useState(true);
-  const [watchModalVisible, setWatchModalVisible] = useState(false);
-  const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
+  // Zustand 스토어에서 알림 설정 상태 및 함수 가져오기
+  const {
+    expiryNotification,
+    giftSharingNotification,
+    nearbyStoreNotification,
+    expiryNotificationInterval,
+    usageCompletionNotification,
+    shareboxGiftRegistration,
+    shareboxGiftUsage,
+    shareboxMemberJoin,
+    shareboxGroupDelete,
+    isLoading,
+    error,
+    fetchNotificationSettings,
+    updateNotificationTypeStatus,
+    updateExpirationCycle,
+    loadLocalExpirationCycle,
+  } = useNotificationStore();
 
   // 로그인 타입 (추후 API 연동 시 실제 데이터로 대체)
   // eslint-disable-next-line no-unused-vars
   const [loginType, setLoginType] = useState('kakao'); // 'kakao' 또는 'google'
   const [nickname, setNickname] = useState('');
 
-  // 슬라이더 마커 값
-  const markers = [0, 1, 2, 3, 7, 30, 60, 90];
+  // 워치 모달 상태
+  const [watchModalVisible, setWatchModalVisible] = useState(false);
+  const [connectionStep, setConnectionStep] = useState(0); // 0: 초기, 1: 연결 중, 2: 연결 완료
+
+  // 편집 모드 상태 추가
+  const [editingInterval, setEditingInterval] = useState(false);
+  // 임시 값을 저장할 상태 추가
+  const [tempExpiryInterval, setTempExpiryInterval] = useState(7);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  // 알림 설정 토글 핸들러 함수
+  const handleNotificationToggle = useCallback(
+    async (type, enabled) => {
+      console.log(`[알림설정] ${type} 알림 상태 변경 요청:`, enabled);
+      const success = await updateNotificationTypeStatus(type, enabled);
+
+      if (!success && error) {
+        Alert.alert('알림 설정 실패', error);
+      }
+    },
+    [updateNotificationTypeStatus, error]
+  );
+
+  // 알림 주기 변경 핸들러 - 최적화
+  const handleExpirationCycleChange = useCallback(value => {
+    console.log('슬라이더 값 변경 트리거됨:', value);
+    // 슬라이더 값 즉시 업데이트
+    setTempExpiryInterval(value);
+  }, []);
+
+  // 수정/저장 버튼 클릭 핸들러
+  const handleEditSaveClick = useCallback(async () => {
+    if (editingInterval) {
+      // 저장 모드 - API 호출하여 서버에 저장
+      console.log('[알림설정] 알림 주기 변경 저장:', tempExpiryInterval);
+      const success = await updateExpirationCycle(tempExpiryInterval);
+
+      if (success) {
+        Alert.alert('설정 완료', '알림 주기 설정이 저장되었습니다.');
+      } else if (error) {
+        Alert.alert('알림 주기 설정 실패', error);
+      }
+    } else {
+      // 수정 모드로 전환 - 현재 서버에 저장된 값으로 슬라이더 초기화
+      setTempExpiryInterval(expiryNotificationInterval);
+      console.log('[알림설정] 수정 모드 전환, 현재 값:', expiryNotificationInterval);
+    }
+    // 모드 전환
+    setEditingInterval(prev => !prev);
+  }, [
+    editingInterval,
+    tempExpiryInterval,
+    expiryNotificationInterval,
+    updateExpirationCycle,
+    error,
+  ]);
 
   // Google 로고 SVG 컴포넌트
   // eslint-disable-next-line react/no-unstable-nested-components
@@ -286,6 +365,29 @@ const SettingScreen = () => {
     fetchUserName();
   }, []);
 
+  // 앱 시작 시 로컬 설정 및 서버 설정 로드
+  useEffect(() => {
+    const initSettings = async () => {
+      try {
+        // 로컬 저장소에서 알림 주기 값 로드
+        await loadLocalExpirationCycle();
+
+        // 서버에서 모든 알림 설정 로드
+        await fetchNotificationSettings();
+      } catch (e) {
+        console.error('[알림설정] 설정 초기화 실패:', e);
+      }
+    };
+
+    initSettings();
+  }, [loadLocalExpirationCycle, fetchNotificationSettings]);
+
+  // 앱 시작 시 tempExpiryInterval 초기화
+  useEffect(() => {
+    // 앱 시작 시 서버 값으로 tempExpiryInterval 초기화
+    setTempExpiryInterval(expiryNotificationInterval);
+  }, [expiryNotificationInterval]);
+
   // 탭바 처리 - 화면 진입 시 및 이탈 시
   useEffect(() => {
     // 애니메이션이 완료된 후에 탭바 숨기기
@@ -365,6 +467,13 @@ const SettingScreen = () => {
         <View style={styles.emptyRightSpace} />
       </View>
 
+      {/* 로딩 인디케이터 */}
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      )}
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -430,30 +539,58 @@ const SettingScreen = () => {
                 유효기간 임박 시 알림
               </Text>
             </View>
-            <Switch value={expiryNotification} onValueChange={setExpiryNotification} />
+            <Switch
+              value={expiryNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.EXPIRY_DATE, value)
+              }
+            />
           </View>
 
           {/* 유효기간 알림 주기 설정 - 만료 알림이 활성화된 경우에만 표시 */}
           {expiryNotification && (
             <View style={styles.sliderContainer}>
-              <View style={styles.notificationInfo}>
-                <Text variant="body1" style={styles.notificationLabel}>
-                  유효기간 알림 주기 설정
-                </Text>
-                <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-                  만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90일 단위
-                </Text>
+              <View style={styles.notificationTitleRow}>
+                <View style={styles.notificationInfo}>
+                  <Text variant="body1" style={styles.notificationLabel}>
+                    유효기간 알림 주기 설정
+                  </Text>
+                  <Text variant="caption" color="grey3" style={styles.notificationDescription}>
+                    만료 알림은 오전 9시 전송, 당일/1/2/3/7/30/60/90일 단위
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={[
+                    styles.editSaveButton,
+                    editingInterval ? styles.saveButton : styles.editButton,
+                  ]}
+                  onPress={handleEditSaveClick}
+                >
+                  {' '}
+                  <Text
+                    style={[
+                      styles.editSaveButtonText,
+                      editingInterval ? styles.saveButtonText : styles.editButtonText,
+                    ]}
+                  >
+                    {' '}
+                    {editingInterval ? '저장' : '수정'}{' '}
+                  </Text>{' '}
+                </TouchableOpacity>
               </View>
 
-              <View style={styles.customSliderContainer}>
+              <View
+                style={[styles.customSliderContainer, !editingInterval && styles.disabledSlider]}
+              >
                 <Slider
-                  value={expiryNotificationInterval}
+                  value={tempExpiryInterval}
                   values={markers}
-                  onValueChange={value => setExpiryNotificationInterval(value)}
+                  onValueChange={handleExpirationCycleChange}
                   minimumTrackTintColor={theme.colors.primary}
                   maximumTrackTintColor={theme.colors.grey2}
                   showValue={false}
                   containerStyle={styles.sliderStyle}
+                  disabled={!editingInterval}
                 />
               </View>
             </View>
@@ -469,7 +606,12 @@ const SettingScreen = () => {
                 각 매장 기준 50m 이내 접근 시 알림
               </Text>
             </View>
-            <Switch value={nearbyStoreNotification} onValueChange={setNearbyStoreNotification} />
+            <Switch
+              value={nearbyStoreNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.LOCATION_BASED, value)
+              }
+            />
           </View>
 
           {/* 사용 완료 여부 알림 */}
@@ -484,7 +626,9 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={usageCompletionNotification}
-              onValueChange={setUsageCompletionNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.USAGE_COMPLETE, value)
+              }
             />
           </View>
 
@@ -498,7 +642,12 @@ const SettingScreen = () => {
                 기프티콘 뿌리기 수신 알림
               </Text>
             </View>
-            <Switch value={giftSharingNotification} onValueChange={setGiftSharingNotification} />
+            <Switch
+              value={giftSharingNotification}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.RECEIVE_GIFTICON, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 기프티콘 등록 알림 */}
@@ -511,7 +660,12 @@ const SettingScreen = () => {
                 쉐어박스 신규 기프티콘 등록 시 알림
               </Text>
             </View>
-            <Switch value={shareboxGiftRegistration} onValueChange={setShareboxGiftRegistration} />
+            <Switch
+              value={shareboxGiftRegistration}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_GIFTICON, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 기프티콘 사용 알림 */}
@@ -524,7 +678,12 @@ const SettingScreen = () => {
                 쉐어박스 기프티콘 사용 완료 시 알림
               </Text>
             </View>
-            <Switch value={shareboxGiftUsage} onValueChange={setShareboxGiftUsage} />
+            <Switch
+              value={shareboxGiftUsage}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 멤버 참여 알림 */}
@@ -537,7 +696,12 @@ const SettingScreen = () => {
                 새 멤버 참여 시 알림
               </Text>
             </View>
-            <Switch value={shareboxMemberJoin} onValueChange={setShareboxMemberJoin} />
+            <Switch
+              value={shareboxMemberJoin}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN, value)
+              }
+            />
           </View>
 
           {/* 쉐어박스 그룹 삭제 알림 */}
@@ -550,7 +714,12 @@ const SettingScreen = () => {
                 그룹 삭제 시 알림
               </Text>
             </View>
-            <Switch value={shareboxGroupDelete} onValueChange={setShareboxGroupDelete} />
+            <Switch
+              value={shareboxGroupDelete}
+              onValueChange={value =>
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_DELETED, value)
+              }
+            />
           </View>
         </View>
 
@@ -569,27 +738,6 @@ const SettingScreen = () => {
               </Text>
               <Text variant="caption" color="grey3" style={styles.notificationDescription}>
                 스마트폰과 워치 연동 설정
-              </Text>
-            </View>
-            <View style={styles.arrowContainer}>
-              <Text style={styles.arrowText}>{'>'}</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-
-        {/* 개발자 옵션 섹션 */}
-        <Divider style={styles.sectionDivider} />
-        <View style={styles.section}>
-          <Text variant="h3" style={styles.sectionTitle}>
-            개발자 옵션
-          </Text>
-          <TouchableOpacity style={styles.watchItem} onPress={() => navigation.navigate('FCMTest')}>
-            <View style={styles.notificationInfo}>
-              <Text variant="body1" style={styles.notificationLabel}>
-                FCM 푸시 알림 테스트
-              </Text>
-              <Text variant="caption" color="grey3" style={styles.notificationDescription}>
-                FCM 알림 설정 및 테스트
               </Text>
             </View>
             <View style={styles.arrowContainer}>
@@ -866,6 +1014,58 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 8,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 999,
+  },
+  currentValueText: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    padding: 5,
+    color: '#333',
+  },
+  notificationTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  editSaveButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  editButton: {
+    backgroundColor: '#E6F7FF',
+    borderWidth: 1,
+    borderColor: '#A7DAF9',
+  },
+  saveButton: {
+    backgroundColor: '#56AEE9',
+  },
+  editSaveButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  editButtonText: {
+    color: '#278CCC',
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+  },
+  disabledSlider: {
+    opacity: 0.8,
+    pointerEvents: 'none',
   },
 });
 

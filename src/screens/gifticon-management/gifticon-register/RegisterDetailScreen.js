@@ -307,7 +307,6 @@ const RegisterDetailScreen = () => {
 
     // 컴포넌트 언마운트 시 메모리 정리
     return () => {
-      console.log('컴포넌트 언마운트: 이미지 상태 정리');
       // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
     };
   }, [route.params, gifticonType, barcode]);
@@ -1249,7 +1248,6 @@ const RegisterDetailScreen = () => {
       }
 
       // 이미지 캐시 정리 로직 (옵션)
-      console.log('컴포넌트 언마운트: 리소스 정리 완료');
     };
   }, []);
 

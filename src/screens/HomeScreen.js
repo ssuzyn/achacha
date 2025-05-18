@@ -19,6 +19,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Carousel from 'react-native-reanimated-carousel';
 import Animated from 'react-native-reanimated';
 import gifticonService from '../api/gifticonService';
+import notificationService from '../api/notificationService';
+import { useHeaderBar } from '../context/HeaderBarContext';
 import { useNavigation } from '@react-navigation/native';
 
 // 캐러셀에 표시할 카드 데이터
@@ -53,6 +55,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const HomeScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
+  const { updateNotificationCount } = useHeaderBar();
   const [nickname, setNickname] = useState('');
   const carouselRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -67,10 +70,6 @@ const HomeScreen = () => {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       const bleToken = await AsyncStorage.getItem('bleToken');
       const userId = await AsyncStorage.getItem('userId');
-      console.log('Access Token:', accessToken);
-      console.log('Refresh Token:', refreshToken);
-      console.log('BLE Token:', bleToken);
-      console.log('User ID:', userId);
     };
     printTokens();
 
@@ -79,11 +78,9 @@ const HomeScreen = () => {
         const storedNickname = await AsyncStorage.getItem('userNickname');
         if (storedNickname !== null) {
           setNickname(storedNickname);
-        } else {
-          console.log('[HomeScreen] AsyncStorage에서 닉네임을 찾을 수 없습니다.');
         }
       } catch (e) {
-        console.error('[HomeScreen] AsyncStorage에서 닉네임 로드 실패:', e);
+        // 닉네임 로드 실패
       }
     };
     loadNickname();
@@ -98,9 +95,7 @@ const HomeScreen = () => {
           sort: 'EXPIRY_ASC',
           scope: 'MY_BOX',
         };
-        console.log('[HomeScreen] 임박 기프티콘 로드 요청:', params);
         const response = await gifticonService.getAvailableGifticons(params);
-        console.log('[HomeScreen] API 응답:', response);
 
         if (response && response.gifticons) {
           const formattedGifticons = response.gifticons.map(item => ({
@@ -118,7 +113,6 @@ const HomeScreen = () => {
           setExpiringGifticons([]);
         }
       } catch (err) {
-        console.error('[HomeScreen] 임박 기프티콘 로드 실패:', err);
         setError(err.message || '기프티콘을 불러오는 데 실패했습니다.');
         setExpiringGifticons([]);
       } finally {
@@ -126,8 +120,34 @@ const HomeScreen = () => {
       }
     };
 
+    const loadNotificationCount = async () => {
+      try {
+        const response = await notificationService.getUnreadNotificationsCount();
+
+        if (response && response.count !== undefined) {
+          updateNotificationCount(response.count);
+        } else {
+          updateNotificationCount(0);
+        }
+      } catch (err) {
+        updateNotificationCount(0);
+      }
+    };
+
+    // 초기 데이터 로드
     loadExpiringGifticons();
-  }, []);
+    loadNotificationCount();
+
+    // 화면에 포커스될 때마다 알림 개수 갱신 - 구독 관리 추가
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      loadNotificationCount();
+    });
+
+    // 컴포넌트 언마운트 시 이벤트 리스너 정리
+    return () => {
+      unsubscribeFocus();
+    };
+  }, []); // 의존성 배열에서 navigation과 updateNotificationCount 제거
 
   const calculateDaysLeft = expiryDate => {
     const today = new Date();
@@ -458,7 +478,6 @@ const HomeScreen = () => {
 
   const handleGifticonPress = item => {
     if (!item || !item.id || !item.gifticonType) {
-      console.warn('[HomeScreen] 상세 페이지 이동 불가: 필수 정보 부족', item);
       return;
     }
 
@@ -470,8 +489,6 @@ const HomeScreen = () => {
       NavigationService.navigate('DetailProduct', params);
     } else if (item.gifticonType === 'AMOUNT') {
       NavigationService.navigate('DetailAmount', params);
-    } else {
-      console.warn('[HomeScreen] 알 수 없는 기프티콘 유형:', item.gifticonType);
     }
   };
 

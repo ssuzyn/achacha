@@ -1,5 +1,9 @@
 import messaging from '@react-native-firebase/messaging';
 import { Alert } from 'react-native';
+import apiClient from '../api/apiClient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_CONFIG } from '../api/config';
+import toastService from '../utils/toastService';
 
 // 알림 타입 상수
 export const NOTIFICATION_TYPES = {
@@ -25,15 +29,22 @@ export const NOTIFICATION_ICONS = {
   [NOTIFICATION_TYPES.SHAREBOX_DELETED]: 'inventory-2', // 쉐어박스 그룹 삭제
 };
 
-// FCM 토큰을 서버에 저장하는 함수 (실제 API 호출 필요)
+// FCM 토큰을 서버에 저장하는 함수
 const saveFcmTokenToServer = async token => {
   try {
-    // 서버 API 엔드포인트에 토큰 전송 구현
-    // 예: await api.post('/users/fcm-token', { token });
-    console.log('알림 FCM 토큰이 서버에 저장되었습니다:', token);
+    // 로그인 상태인지 확인
+    const accessToken = await AsyncStorage.getItem('accessToken');
+    if (accessToken) {
+      // 참고: 로그인 시 FCM 토큰이 이미 전송되므로 '/api/users/fcm-token' 엔드포인트는 사용하지 않음
+      // 토큰 갱신 시에만 별도로 저장하도록 로그만 남깁니다
+      console.log('알림 FCM 토큰 준비 완료:', token);
+      // 토큰 갱신 시 처리 로직은 setupTokenRefresh에서 처리
+    } else {
+      console.log('로그인 상태가 아니므로 FCM 토큰 저장은 로그인 시 처리됩니다.');
+    }
     return true;
   } catch (error) {
-    console.error('알림 FCM 토큰 서버 저장 실패:', error);
+    console.error('알림 FCM 토큰 처리 실패:', error);
     return false;
   }
 };
@@ -55,15 +66,11 @@ export const requestUserPermission = async () => {
   return false;
 };
 
-// 디바이스 토큰 얻기 및 서버에 저장
+// 디바이스 토큰 얻기
 export const getFcmToken = async () => {
   try {
     const token = await messaging().getToken();
     console.log('알림 FCM 토큰:', token);
-
-    // 토큰을 서버에 저장
-    await saveFcmTokenToServer(token);
-
     return token;
   } catch (error) {
     console.error('FCM 토큰 획득 실패:', error);
@@ -78,13 +85,9 @@ export const handleForegroundMessage = () => {
   const unsubscribe = messaging().onMessage(async remoteMessage => {
     console.log('포그라운드 메시지 수신:', remoteMessage);
 
-    // 알림 타입에 따른 특별 처리가 필요하면 여기서 구현
-    const notificationType = remoteMessage.data?.type;
-
-    Alert.alert(
-      remoteMessage.notification?.title || '알림',
-      remoteMessage.notification?.body || '새로운 알림이 도착했습니다'
-    );
+    // 토스트 메시지 표시
+    toastService.showNotificationToast(remoteMessage);
+    console.log('포그라운드 알림 토스트 메시지로 표시됨');
   });
 
   return unsubscribe;
@@ -130,7 +133,86 @@ const handleNavigationByType = (navigation, remoteMessage) => {
   if (!navigation || !remoteMessage) return;
 
   const { data } = remoteMessage;
-  const notificationType = data?.type;
+  const notificationType = data?.type || data?.notificationType;
+
+  console.log('알림 데이터:', data);
+
+  // 쉐어박스 삭제 알림은 메인 화면으로만 이동
+  if (notificationType === NOTIFICATION_TYPES.SHAREBOX_DELETED) {
+    console.log('쉐어박스 삭제 알림: 메인 화면으로 이동');
+    navigation.navigate('Main');
+    return;
+  }
+
+  // gifticon 타입 처리 - EXPIRY_DATE, LOCATION_BASED, USAGE_COMPLETE, RECEIVE_GIFTICON
+  if (
+    notificationType === NOTIFICATION_TYPES.EXPIRY_DATE ||
+    notificationType === NOTIFICATION_TYPES.LOCATION_BASED ||
+    notificationType === NOTIFICATION_TYPES.USAGE_COMPLETE ||
+    notificationType === NOTIFICATION_TYPES.RECEIVE_GIFTICON ||
+    data?.referenceEntityType === 'gifticon'
+  ) {
+    const gifticonId = data?.referenceEntityId || data?.gifticonId || data?.id;
+    if (gifticonId) {
+      try {
+        // API 호출로 기프티콘 타입 확인 후 분기 처리
+        apiClient
+          .get(`/api/gifticons/${gifticonId}/details`)
+          .then(response => {
+            // 타입에 따라 다른 화면으로 이동
+            if (response.data?.gifticonType === 'AMOUNT') {
+              navigation.navigate('DetailAmount', {
+                gifticonId: gifticonId,
+                scope: 'MY_BOX',
+              });
+            } else {
+              navigation.navigate('DetailProduct', {
+                gifticonId: gifticonId,
+                scope: 'MY_BOX',
+              });
+            }
+          })
+          .catch(error => {
+            console.error('기프티콘 정보 조회 실패:', error);
+            // 오류 시 기본 화면으로 이동
+            navigation.navigate('DetailProduct', {
+              gifticonId: gifticonId,
+              scope: 'MY_BOX',
+            });
+          });
+      } catch (error) {
+        console.error('기프티콘 화면 이동 실패:', error);
+        navigation.navigate('Main', { screen: 'TabGifticonManage' });
+      }
+      return;
+    }
+  }
+
+  // sharebox 타입 처리 - SHAREBOX_GIFTICON, SHAREBOX_USAGE_COMPLETE, SHAREBOX_MEMBER_JOIN
+  if (
+    notificationType === NOTIFICATION_TYPES.SHAREBOX_GIFTICON ||
+    notificationType === NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE ||
+    notificationType === NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN ||
+    data?.referenceEntityType === 'sharebox'
+  ) {
+    const shareBoxId = data?.referenceEntityId || data?.shareboxId || data?.id;
+    if (shareBoxId) {
+      console.log('쉐어박스 화면으로 이동:', shareBoxId);
+      // SHAREBOX_USAGE_COMPLETE일 경우 used 탭으로, 그 외에는 available 탭으로 이동
+      const initialTab =
+        notificationType === NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE ? 'used' : 'available';
+      try {
+        navigation.navigate('BoxList', {
+          shareBoxId: shareBoxId,
+          initialTab: initialTab,
+        });
+      } catch (error) {
+        console.error('쉐어박스 화면 이동 실패:', error);
+        navigation.navigate('Main', { screen: 'TabSharebox' });
+      }
+      return;
+    }
+  }
 
   // 특정 화면으로 이동이 필요한 경우
   if (data?.screen) {
@@ -138,40 +220,23 @@ const handleNavigationByType = (navigation, remoteMessage) => {
     return;
   }
 
-  // 알림 타입에 따른 기본 화면 이동
+  // 타입에 따른 기본 화면 이동 (ID가 없을 경우)
   switch (notificationType) {
     case NOTIFICATION_TYPES.LOCATION_BASED:
-      // 주변 매장 알림 - 위치 기반 페이지로 이동
       navigation.navigate('Map');
       break;
     case NOTIFICATION_TYPES.EXPIRY_DATE:
-      // 유효기간 만료 알림 - 기프티콘 페이지로 이동
-      navigation.navigate('GifticonList');
-      break;
     case NOTIFICATION_TYPES.RECEIVE_GIFTICON:
-      // 기프티콘 뿌리기 알림 - 받은 기프티콘 페이지로 이동
-      navigation.navigate('GifticonList');
-      break;
     case NOTIFICATION_TYPES.USAGE_COMPLETE:
-      // 사용완료 여부 알림 - 상세 페이지로 이동
-      if (data?.gifticonId) {
-        navigation.navigate('GifticonDetail', { id: data.gifticonId });
-      }
+      navigation.navigate('Main', { screen: 'TabGifticonManage' });
       break;
     case NOTIFICATION_TYPES.SHAREBOX_GIFTICON:
     case NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE:
     case NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN:
-    case NOTIFICATION_TYPES.SHAREBOX_DELETED:
-      // 쉐어박스 관련 알림 - 쉐어박스 페이지로 이동
-      if (data?.shareboxId) {
-        navigation.navigate('ShareboxDetail', { id: data.shareboxId });
-      } else {
-        navigation.navigate('Sharebox');
-      }
+      navigation.navigate('Main', { screen: 'TabSharebox' });
       break;
     default:
-      // 기본 페이지로 이동
-      navigation.navigate('Home');
+      navigation.navigate('Main');
   }
 };
 
@@ -179,6 +244,18 @@ const handleNavigationByType = (navigation, remoteMessage) => {
 export const setupTokenRefresh = () => {
   return messaging().onTokenRefresh(async token => {
     console.log('FCM 토큰 갱신:', token);
-    await saveFcmTokenToServer(token);
+    try {
+      // 로그인 상태인지 확인
+      const accessToken = await AsyncStorage.getItem('accessToken');
+      if (accessToken) {
+        // 토큰 갱신 시 서버에 전송
+        await apiClient.post(API_CONFIG.ENDPOINTS.FCM_TOKEN_UPDATE, { fcmToken: token });
+        console.log('갱신된 FCM 토큰이 서버에 저장되었습니다:', token);
+      } else {
+        console.log('로그인 상태가 아니므로 FCM 토큰 갱신은 저장되지 않습니다.');
+      }
+    } catch (error) {
+      console.error('FCM 토큰 갱신 서버 저장 실패:', error);
+    }
   });
 };
