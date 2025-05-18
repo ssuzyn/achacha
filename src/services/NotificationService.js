@@ -84,12 +84,23 @@ export const handleForegroundMessage = () => {
   const unsubscribe = messaging().onMessage(async remoteMessage => {
     console.log('포그라운드 메시지 수신:', remoteMessage);
 
-    // 알림 타입에 따른 특별 처리가 필요하면 여기서 구현
-    const notificationType = remoteMessage.data?.type;
+    // 토스트 메시지 서비스 동적 임포트
+    try {
+      // 런타임에 동적으로 임포트 - 순환 참조 방지를 위해
+      const toastService = require('../utils/toastService').default;
 
-    // Alert 팝업은 표시하지 않지만, 헤드업 알림이 클릭될 수 있도록 로컬 알림은 생성함
-    // 이는 notificationHelper.js의 handleForegroundNotification 함수에서 처리됨
-    // 알림 클릭 시 화면 이동은 setupLocalNotifications의 onNotification 콜백에서 처리됨
+      // 토스트 메시지로 알림 표시
+      toastService.showNotificationToast(remoteMessage);
+
+      console.log('포그라운드 알림 토스트 메시지로 표시됨');
+      return; // 시스템 알림 생성하지 않고 종료
+    } catch (err) {
+      console.error('토스트 메시지 표시 실패, 기본 알림으로 대체:', err);
+
+      // 오류 발생 시 기본 알림 처리 로직으로 폴백
+      const { handleForegroundNotification } = require('../utils/notificationHelper');
+      handleForegroundNotification(remoteMessage);
+    }
   });
 
   return unsubscribe;
