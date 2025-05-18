@@ -381,10 +381,9 @@ const gifticonService = {
    */
   async markGifticonAsUsed(gifticonId, usageType = 'SELF_USE') {
     try {
-      const response = await apiClient.post(
-        `/api/available-gifticons/${gifticonId}/use`,
-        { usageType }
-      );
+      const response = await apiClient.post(`/api/available-gifticons/${gifticonId}/use`, {
+        usageType,
+      });
       return response.data;
     } catch (error) {
       console.error('[API] 기프티콘 사용 완료 처리 실패:', error);
@@ -448,7 +447,6 @@ const gifticonService = {
   // 주어진 gifticonId에 대한 바코드 정보를 가져옵니다.
   async getGifticonBarcode(gifticonId, scope = '') {
     try {
-
       // 사용 완료 기프티콘인 경우 별도 함수 호출
       if (scope === 'USED') {
         return this.getUsedGifticonBarcode(gifticonId);
@@ -470,12 +468,24 @@ const gifticonService = {
    */
   async useAmountGifticon(gifticonId, usageAmount) {
     try {
-      const response = await apiClient.post(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/use`,
-        { usageAmount }
-      );
+      // 입력값 타입 검증
+      const gId = parseInt(gifticonId, 10);
+      const amount = parseInt(usageAmount, 10);
+
+      if (isNaN(gId) || isNaN(amount) || amount <= 0) {
+        throw new Error('유효한 ID와 금액이 필요합니다.');
+      }
+
+      // API 요청 - 요청 형식 맞추기
+      const url = `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gId}/use`;
+      const body = { usageAmount: amount };
+
+      console.log('[API] 금액형 기프티콘 사용 요청:', { url, body });
+
+      const response = await apiClient.post(url, body);
       return response.data;
     } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용 오류:', error);
       throw error;
     }
   },
@@ -540,7 +550,6 @@ const gifticonService = {
 
       return response.data;
     } catch (error) {
-
       // 에러 상세 정보 기록
       if (error.response) {
         const status = error.response.status;
@@ -576,19 +585,21 @@ const gifticonService = {
   // 상품형 기프티콘 사용완료 처리
   async markProductGifticonAsUsed(gifticonId) {
     try {
-      const url = API_CONFIG.ENDPOINTS.PRODUCT_GIFTICON_USE(gifticonId);
-      // accessToken 직접 읽기
-      const accessToken = await AsyncStorage.getItem('accessToken');
+      // 입력값 타입 검증
+      const gId = parseInt(gifticonId, 10);
 
-      // 헤더 직접 구성
-      const headers = {};
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
+      if (isNaN(gId)) {
+        throw new Error('유효한 기프티콘 ID가 필요합니다.');
       }
 
-      const response = await axios.post(`${API_BASE_URL}${url}`, null, { headers });
+      const url = API_CONFIG.ENDPOINTS.PRODUCT_GIFTICON_USE(gId);
+      console.log('[API] 상품형 기프티콘 사용완료 요청:', url);
+
+      // 요청 형식에 맞게 빈 바디 전송 (API 문서 요구사항)
+      const response = await apiClient.post(`${API_BASE_URL}${url}`);
       return response.data;
     } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용완료 처리 오류:', error);
       throw error;
     }
   },
