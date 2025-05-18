@@ -15,7 +15,7 @@ public interface FcmTokenJpaRepository extends JpaRepository<FcmToken, Integer> 
 
 	List<FcmToken> findAllByUser_Id(Integer userId);
 
-	@Modifying(clearAutomatically = true)
+	@Modifying
 	@Query("DELETE FROM FcmToken f WHERE f.user.id = :userId AND f.value = :value")
 	void deleteByUserIdAndValue(@Param("userId") Integer userId, @Param("value") String value);
 }
