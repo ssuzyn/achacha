@@ -77,14 +77,24 @@ const BoxMainScreen = () => {
 
   // 무한스크롤용 데이터 로딩
   const loadShareBoxes = async (nextPage = 0) => {
-    if (loading || (!hasNextPage && nextPage !== 0)) return;
+    if (loading || (!hasNextPage && nextPage !== 0)) {
+      console.log('[무한스크롤] 로딩 중이거나 더 이상 데이터가 없습니다:', { loading, hasNextPage, nextPage });
+      return;
+    }
     setLoading(true);
     try {
+      console.log('[무한스크롤] 데이터 로딩 시작:', { nextPage });
       const data = await fetchShareBoxes({ page: nextPage, size: 8 });
+      console.log('[무한스크롤] 받아온 데이터:', { 
+        shareBoxesCount: data.shareBoxes?.length,
+        hasNextPage: data.hasNextPage,
+        nextPage: data.nextPage
+      });
       setShareBoxes(prev => (nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]));
       setHasNextPage(data.hasNextPage);
       setPage(data.nextPage);
     } catch (e) {
+      console.error('[무한스크롤] 에러 발생:', e);
       if (nextPage === 0) setShareBoxes([]);
       Alert.alert('목록 불러오기 실패', '쉐어박스 목록을 불러오지 못했습니다.');
     } finally {
@@ -295,6 +305,12 @@ const BoxMainScreen = () => {
         contentContainerStyle={styles.scrollContent}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         onEndReached={() => {
+          console.log('[무한스크롤] 스크롤 끝 도달:', { 
+            currentPage: page,
+            loading,
+            hasNextPage,
+            shareBoxesCount: shareBoxes.length
+          });
           if (!loading && hasNextPage) loadShareBoxes(page);
         }}
         onEndReachedThreshold={0.7}

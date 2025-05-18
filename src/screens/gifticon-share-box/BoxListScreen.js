@@ -1010,25 +1010,41 @@ const BoxListScreen = () => {
   }, [selectedCategory, selectedFilter, sortBy.available, shareBoxId]);
 
   useEffect(() => {
-    console.log('[selectedCategory]', selectedCategory);
+    console.log('[사용완료 탭] API 호출 시작:', {
+      selectedCategory,
+      selectedFilter,
+      sortBy: sortBy.used,
+      shareBoxId
+    });
     if (selectedCategory !== 'used') return;
 
     const fetchData = async () => {
       setUsedLoading(true);
       try {
+        console.log('[사용완료 탭] API 요청 파라미터:', {
+          shareBoxId,
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+          sort: 'USED_DESC',
+          page: undefined,
+          size: 20
+        });
         const res = await fetchUsedGifticons({
           shareBoxId,
-          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(), // 'PRODUCT'/'AMOUNT'
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
           sort: 'USED_DESC',
-          page: undefined, // 첫 페이지
+          page: undefined,
           size: 20,
         });
-        console.log('[USED API 응답]', res);
+        console.log('[사용완료 탭] API 응답:', {
+          gifticonsCount: res.gifticons?.length,
+          hasNextPage: res.hasNextPage,
+          nextPage: res.nextPage
+        });
         setUsedGifticons(res.gifticons);
         setUsedHasNextPage(res.hasNextPage);
         setUsedNextPage(res.nextPage);
       } catch (e) {
-        console.log('[USED API 에러]', e);
+        console.error('[사용완료 탭] API 에러:', e);
       } finally {
         setUsedLoading(false);
       }
