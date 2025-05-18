@@ -1,19 +1,23 @@
 package com.eurachacha.achacha.application.service.auth;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.eurachacha.achacha.application.port.input.auth.AuthAppService;
+import com.eurachacha.achacha.application.port.input.auth.AuthenticationUseCase;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.KakaoLoginRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.request.RefreshTokenRequestDto;
 import com.eurachacha.achacha.application.port.input.auth.dto.response.TokenResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.AuthServicePort;
 import com.eurachacha.achacha.application.port.output.auth.TokenServicePort;
 import com.eurachacha.achacha.application.port.output.auth.dto.response.KakaoUserInfoDto;
+import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
@@ -36,10 +40,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class AuthAppServiceImpl implements AuthAppService {
+public class AuthAppServiceImpl implements AuthAppService, AuthenticationUseCase {
 	private final UserRepository userRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final FcmTokenRepository fcmTokenRepository;
+	private final BleTokenRepository bleTokenRepository;
 	private final NotificationTypeRepository notificationTypeRepository;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final AuthServicePort authServicePort;
@@ -191,5 +196,39 @@ public class AuthAppServiceImpl implements AuthAppService {
 		return notificationType.getCode() == NotificationTypeCode.EXPIRY_DATE
 			? ExpirationCycle.ONE_WEEK
 			: null;
+	}
+
+	@Override
+	public Integer validateAccessToken(String token) {
+		return tokenServicePort.validateAccessTokenAndGetUserId(token);
+	}
+
+	@Override
+	public UserDetails createUserDetails(Integer userId) {
+		// Spring Security의 UserDetails 객체 생성
+		return new org.springframework.security.core.userdetails.User(
+			userId.toString(), "", new ArrayList<>());
+	}
+
+	@Override
+	@Transactional
+	public void logout(Integer userId, String refreshToken, String fcmToken, String bleToken) {
+		log.info("사용자 로그아웃 처리 시작: userId={}", userId);
+		// refreshToken 처리
+		if (StringUtils.hasText(refreshToken) && userId != null) {
+			refreshTokenRepository.deleteByUserIdAndValue(userId, refreshToken);
+		}
+
+		// fcmToken 처리
+		if (StringUtils.hasText(fcmToken) && userId != null) {
+			fcmTokenRepository.deleteByUserIdAndValue(userId, fcmToken);
+		}
+
+		// bleToken 처리
+		if (StringUtils.hasText(bleToken) && userId != null) {
+			bleTokenRepository.deleteByUserIdAndValue(userId, bleToken);
+		}
+
+		log.info("사용자 로그아웃 처리 완료");
 	}
 }
