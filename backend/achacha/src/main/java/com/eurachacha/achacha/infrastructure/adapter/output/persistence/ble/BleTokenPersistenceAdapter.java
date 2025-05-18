@@ -3,6 +3,7 @@ package com.eurachacha.achacha.infrastructure.adapter.output.persistence.ble;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
 import com.eurachacha.achacha.domain.model.ble.BleToken;
@@ -15,6 +16,7 @@ public class BleTokenPersistenceAdapter implements BleTokenRepository {
 
 	private final BleTokenJpaRepository bleTokenJpaRepository;
 
+	@Transactional
 	@Override
 	public void deleteByUserIdAndValue(Integer userId, String value) {
 		bleTokenJpaRepository.deleteByUserIdAndValue(userId, value);
