@@ -52,13 +52,13 @@ const HeadupToast = props => {
 
         <View style={styles.textContainer}>
           {title ? (
-            <Text style={styles.title} numberOfLines={1}>
+            <Text style={[styles.title, { fontFamily: 'Pretendard-Bold' }]} numberOfLines={1}>
               {title}
             </Text>
           ) : null}
 
           {message ? (
-            <Text style={styles.message} numberOfLines={2}>
+            <Text style={[styles.message, { fontFamily: 'Pretendard-Regular' }]} numberOfLines={2}>
               {message}
             </Text>
           ) : null}
@@ -126,12 +126,12 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: '#737373',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginTop: 10,
+    marginTop: 50,
     borderWidth: 1,
     borderColor: '#EEEEEE',
   },
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 20,
   },
   textContainer: {
     flex: 1,
@@ -154,13 +154,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 15,
-    fontWeight: 'bold',
-    color: '#333333',
-    marginBottom: 2,
+    color: '#000',
+    marginBottom: 5,
   },
   message: {
     fontSize: 13,
-    color: '#666666',
+    lineHeight: 18,
+    color: '#737373',
   },
   closeButton: {
     width: 24,
