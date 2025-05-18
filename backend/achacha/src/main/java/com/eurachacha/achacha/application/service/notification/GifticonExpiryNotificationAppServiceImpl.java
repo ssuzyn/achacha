@@ -130,6 +130,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 						.fcmToken(fcmToken.getValue())
 						.title(title)
 						.body(content)
+						.userId(findSetting.getUser().getId())
 						.notificationTypeCode(findCode.getCode().name())
 						.referenceEntityId(findGifticon.getId())
 						.referenceEntityType("gifticon")
