@@ -23,7 +23,7 @@ import CategoryTabs from '../../components/common/CategoryTabs';
 import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
-import { Swipeable, RectButton } from 'react-native-gesture-handler';
+import { Swipeable } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import gifticonService from '../../api/gifticonService';
 import FastImage from 'react-native-fast-image';
@@ -490,9 +490,13 @@ const ManageListScreen = () => {
 
       // API 호출 파라미터 구성
       const params = {
-        page: reset ? 0 : nextPage,
         size: 10,
       };
+
+      // 첫 페이지 로드가 아니고, 다음 페이지 커서가 있는 경우에만 page 파라미터 추가
+      if (!reset && nextPage) {
+        params.page = nextPage;
+      }
 
       // 필터 적용
       if (selectedFilter !== 'all') {
@@ -1029,7 +1033,7 @@ const ManageListScreen = () => {
               }
             });
           }}
-          friction={1} // 마찰력 감소로 스와이프 감도 증가
+          friction={2} // 마찰력 감소로 스와이프 감도 증가
           overshootRight={false} // 오버슈트 비활성화로 동작 개선
           rightThreshold={40} // 임계값 감소로 스와이프 인식 개선
         >
@@ -1373,7 +1377,7 @@ const ManageListScreen = () => {
                 handleLoadMore();
               }
             }}
-            scrollEventThrottle={400}
+            scrollEventThrottle={100}
           >
             {renderContent()}
           </ScrollView>
