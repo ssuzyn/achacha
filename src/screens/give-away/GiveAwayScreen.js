@@ -136,6 +136,10 @@ const GiveAwayScreen = ({ onClose }) => {
     const startAngle = Math.random() * Math.PI * 2;
     const angleStep = (2 * Math.PI) / users.length;
 
+    const maxAllowedPhysicalRadius = radiusArray[2];
+    const emojiDisplayBaseSize = 80;
+    const screenEdgePadding = 15;
+
     for (let i = 0; i < users.length; i++) {
       const distanceIndex = Math.floor(Math.random() * 3);
 
@@ -150,13 +154,30 @@ const GiveAwayScreen = ({ onClose }) => {
         userRadius = (smallestRadius + circleSpacing * 2.2) * (1 + radiusVariation);
       }
 
+      userRadius = Math.min(userRadius, maxAllowedPhysicalRadius);
+
       const angleVariation = (Math.random() - 0.5) * (Math.PI / 12);
       const angle = startAngle + angleStep * i + angleVariation;
 
-      const x = centerX + userRadius * Math.cos(angle);
-      const y = centerY + userRadius * Math.sin(angle);
+      let x = centerX + userRadius * Math.cos(angle);
+      let y = centerY + userRadius * Math.sin(angle);
+
       const scale = 1 - distanceIndex * 0.15;
       const opacity = 1 - distanceIndex * 0.1;
+
+      const currentEmojiSize = emojiDisplayBaseSize * scale;
+
+      if (x - currentEmojiSize / 2 < screenEdgePadding) {
+        x = screenEdgePadding + currentEmojiSize / 2;
+      } else if (x + currentEmojiSize / 2 > width - screenEdgePadding) {
+        x = width - screenEdgePadding - currentEmojiSize / 2;
+      }
+
+      if (y - currentEmojiSize / 2 < screenEdgePadding) {
+        y = screenEdgePadding + currentEmojiSize / 2;
+      } else if (y + currentEmojiSize / 2 > height - screenEdgePadding) {
+        y = height - screenEdgePadding - currentEmojiSize / 2;
+      }
 
       positions.push({ x, y, scale, opacity, distanceIndex });
     }
