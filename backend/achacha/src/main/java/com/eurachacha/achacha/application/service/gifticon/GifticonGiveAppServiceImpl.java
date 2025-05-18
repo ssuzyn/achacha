@@ -27,6 +27,7 @@ import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.domain.model.ble.BleToken;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
+import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
 import com.eurachacha.achacha.domain.model.history.enums.TransferType;
 import com.eurachacha.achacha.domain.model.notification.Notification;
@@ -144,7 +145,11 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		}
 
 		// 기프티콘 사용 완료 처리
-		gifticon.use();
+		if (gifticon.getType() == GifticonType.AMOUNT) {
+			gifticon.updateRemainingAmount(gifticon.getOriginalAmount()); // 금액형
+		} else {
+			gifticon.use(); // 상품형
+		}
 
 		// 기프티콘 소유자 변경 내역 저장
 		GifticonOwnerHistory newGifticonOwnerHistory = GifticonOwnerHistory.builder()
