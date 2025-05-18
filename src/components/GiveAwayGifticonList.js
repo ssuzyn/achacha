@@ -64,6 +64,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(218, 240, 254, 0.8)',
     width: '90%',
     borderRadius: 10,
+    maxHeight: 260, 
   },
   flatListContent: {
     paddingTop: 8,
