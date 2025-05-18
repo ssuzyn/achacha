@@ -307,6 +307,7 @@ const SettingScreen = () => {
     try {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       let fcmToken = await AsyncStorage.getItem('fcmToken');
+      const bleToken = await AsyncStorage.getItem('bleToken');
       // fcmToken이 저장소에 없으면 서비스에서 직접 가져오기
       if (!fcmToken) {
         fcmToken = await getFcmToken();
@@ -315,7 +316,7 @@ const SettingScreen = () => {
         Alert.alert('오류', '로그아웃 정보가 올바르지 않습니다.');
         return;
       }
-      await logoutApi(refreshToken, fcmToken);
+      await logoutApi(refreshToken, fcmToken, bleToken);
       // 토큰 등 인증정보 삭제
       await AsyncStorage.removeItem('accessToken');
       await AsyncStorage.removeItem('refreshToken');

@@ -8,10 +8,11 @@ export const fetchUserById = async (userId) => {
 };
 
 // 로그아웃 API
-export const logout = async (refreshToken, fcmToken) => {
+export const logout = async (refreshToken, fcmToken, bleToken) => {
   const response = await apiClient.post(API_CONFIG.ENDPOINTS.LOGOUT, {
     refreshToken,
     fcmToken,
+    bleToken,
   });
   return response.data;
 }; 
