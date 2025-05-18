@@ -1,7 +1,6 @@
 package com.eurachacha.achacha.infrastructure.security;
 
 import java.io.IOException;
-import java.util.ArrayList;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.eurachacha.achacha.infrastructure.adapter.output.auth.JwtTokenServiceAdapter;
+import com.eurachacha.achacha.application.port.input.auth.AuthenticationUseCase;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -23,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-	private final JwtTokenServiceAdapter jwtTokenServiceAdapter;
+	private final AuthenticationUseCase authenticationUseCase;
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -33,10 +32,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		if (StringUtils.hasText(jwt)) {
 			// 토큰에서 사용자 ID 추출
-			Integer userId = jwtTokenServiceAdapter.validateAccessTokenAndGetUserId(jwt);
+			Integer userId = authenticationUseCase.validateAccessToken(jwt);
 
 			// SecurityContext에 인증 정보 설정
-			UserDetails userDetails = createUserDetails(userId);
+			UserDetails userDetails = authenticationUseCase.createUserDetails(userId);
 			UsernamePasswordAuthenticationToken authentication =
 				new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -53,11 +52,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return bearerToken.substring(7);
 		}
 		return null;
-	}
-
-	private UserDetails createUserDetails(Integer userId) {
-		// Spring Security의 UserDetails 객체 생성
-		return new org.springframework.security.core.userdetails.User(
-			userId.toString(), "", new ArrayList<>());
 	}
 }
