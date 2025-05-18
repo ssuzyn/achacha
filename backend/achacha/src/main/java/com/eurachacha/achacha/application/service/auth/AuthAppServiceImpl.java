@@ -96,7 +96,7 @@ public class AuthAppServiceImpl implements AuthAppService, AuthenticationUseCase
 		// 리프레시 토큰 저장
 		saveRefreshToken(user, refreshToken);
 
-		return new TokenResponseDto(accessToken, refreshToken, tokenServicePort.getAccessTokenExpirySeconds());
+		return new TokenResponseDto(accessToken, refreshToken);
 	}
 
 	@Override
@@ -113,8 +113,7 @@ public class AuthAppServiceImpl implements AuthAppService, AuthenticationUseCase
 
 		String newAccessToken = tokenServicePort.createAccessToken(userId);
 
-		return new TokenResponseDto(newAccessToken, refreshToken.getValue(),
-			tokenServicePort.getAccessTokenExpirySeconds());
+		return new TokenResponseDto(newAccessToken, refreshToken.getValue());
 	}
 
 	private User createKakaoUser(KakaoUserInfoDto kakaoUserInfo) {
