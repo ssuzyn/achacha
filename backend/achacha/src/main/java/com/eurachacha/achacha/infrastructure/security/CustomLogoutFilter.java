@@ -14,8 +14,6 @@ import com.eurachacha.achacha.infrastructure.adapter.output.auth.JwtTokenService
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.ble.BleTokenPersistenceAdapter;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.fcm.FcmTokenPersistenceAdapter;
 import com.eurachacha.achacha.infrastructure.adapter.output.persistence.user.RefreshTokenPersistenceAdapter;
-import com.eurachacha.achacha.web.common.exception.CustomException;
-import com.eurachacha.achacha.web.common.exception.ErrorCode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.FilterChain;
@@ -44,24 +42,18 @@ public class CustomLogoutFilter extends OncePerRequestFilter {
 			return;
 		}
 
-		try {
-			// 1. 사용자 ID 추출
-			Integer userId = extractUserIdFromToken(request);
+		// 1. 사용자 ID 추출
+		Integer userId = extractUserIdFromToken(request);
 
-			// 2. 토큰 정보 추출 및 처리
-			Map<String, String> tokenMap = objectMapper.readValue(request.getInputStream(), Map.class);
-			processTokens(userId, tokenMap);
+		// 2. 토큰 정보 추출 및 처리
+		Map<String, String> tokenMap = objectMapper.readValue(request.getInputStream(), Map.class);
+		processTokens(userId, tokenMap);
 
-			// 3. 성공 응답 반환
-			response.setStatus(HttpStatus.OK.value());
-			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-			response.setCharacterEncoding("UTF-8");
-			response.getWriter().write("\"로그아웃 성공\"");
-
-		} catch (Exception e) {
-			log.error("로그아웃 처리 중 오류 발생", e);
-			throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
-		}
+		// 3. 성공 응답 반환
+		response.setStatus(HttpStatus.OK.value());
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		response.setCharacterEncoding("UTF-8");
+		response.getWriter().write("\"로그아웃 성공\"");
 	}
 
 	private boolean isLogoutRequest(HttpServletRequest request) {
@@ -85,33 +77,33 @@ public class CustomLogoutFilter extends OncePerRequestFilter {
 		// RefreshToken 처리
 		String refreshToken = tokenMap.get("refreshToken");
 		if (StringUtils.hasText(refreshToken)) {
-			try {
-				// userId가 없는 경우 refreshToken에서 추출
-				if (userId == null) {
-					try {
-						userId = jwtTokenServiceAdapter.validateRefreshTokenAndGetUserId(refreshToken);
-					} catch (Exception e) {
-						log.warn("리프레시 토큰 검증 실패: {}", e.getMessage());
-					}
+			// userId가 없는 경우 refreshToken에서 추출
+			if (userId == null) {
+				try {
+					userId = jwtTokenServiceAdapter.validateRefreshTokenAndGetUserId(refreshToken);
+				} catch (Exception e) {
+					log.warn("리프레시 토큰 검증 실패: {}", e.getMessage());
 				}
+			}
 
-				if (userId != null && refreshTokenPersistenceAdapter.existsByUserId(userId)) {
+			if (userId != null && refreshTokenPersistenceAdapter.existsByUserId(userId)) {
+				try {
 					refreshTokenPersistenceAdapter.deleteByUserIdAndValue(userId, refreshToken);
 					log.info("사용자 ID {}의 리프레시 토큰 삭제됨", userId);
+				} catch (Exception e) {
+					log.warn("리프레시 토큰 삭제 실패: {}", e.getMessage());
 				}
-			} catch (Exception e) {
-				log.warn("리프레시 토큰 처리 실패: {}", e.getMessage());
 			}
 		}
 
-		// FcmToken 처리
+		// FcmToken 처리 (userId가 있는 경우에만)
 		String fcmToken = tokenMap.get("fcmToken");
 		if (StringUtils.hasText(fcmToken) && userId != null) {
 			try {
 				fcmTokenPersistenceAdapter.deleteByUserIdAndValue(userId, fcmToken);
 				log.info("사용자 ID {}의 FCM 토큰 삭제됨", userId);
 			} catch (Exception e) {
-				log.warn("FCM 토큰 처리 실패: {}", e.getMessage());
+				log.warn("FCM 토큰 삭제 실패: {}", e.getMessage());
 			}
 		}
 
@@ -125,7 +117,7 @@ public class CustomLogoutFilter extends OncePerRequestFilter {
 					log.info("사용자 ID {}의 BLE 토큰 삭제됨", token.getUser().getId());
 				}
 			} catch (Exception e) {
-				log.warn("BLE 토큰 처리 실패: {}", e.getMessage());
+				log.warn("BLE 토큰 삭제 실패: {}", e.getMessage());
 			}
 		}
 	}
