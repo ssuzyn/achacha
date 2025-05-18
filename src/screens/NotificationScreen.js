@@ -16,7 +16,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useHeaderBar } from '../context/HeaderBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, ListItem, Text } from '../components/ui';
+import { ListItem, Text } from '../components/ui';
 import notificationService from '../api/notificationService';
 
 // 알림 타입에 따른 아이콘 정의
@@ -163,35 +163,6 @@ const NotificationScreen = () => {
       console.error('미확인 알림 개수 조회 실패:', err);
     }
   }, [updateNotificationCount]);
-
-  // 알림 일괄 읽음 처리
-  const markAllAsRead = useCallback(async () => {
-    if (unreadCount === 0) {
-      // 읽지 않은 알림이 없으면 처리하지 않음
-      return;
-    }
-
-    try {
-      await notificationService.markAllNotificationsAsRead();
-
-      // 화면에 반영
-      setNotifications(prev =>
-        prev.map(notif => ({
-          ...notif,
-          notificationIsRead: true,
-        }))
-      );
-
-      // 읽지 않은 알림 개수 업데이트
-      setUnreadCount(0);
-      updateNotificationCount(0); // HeaderBar의 알림 카운트도 업데이트
-
-      Alert.alert('알림', '모든 알림을 읽음으로 처리했습니다.');
-    } catch (err) {
-      console.error('알림 읽음 처리 실패:', err);
-      Alert.alert('오류', '알림 읽음 처리에 실패했습니다.');
-    }
-  }, [unreadCount, updateNotificationCount]);
 
   // 사용자 새로고침 핸들러
   const handleRefresh = useCallback(() => {

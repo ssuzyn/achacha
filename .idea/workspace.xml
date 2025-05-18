@@ -5,17 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb904452-4e09-4cd1-bcac-a9f38dbb20c3" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/components/ui/ToastNotification.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/utils/toastService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/java/com/koup28/achacha_app/MainApplication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/java/com/koup28/achacha_app/MainApplication.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/android/app/src/main/java/com/koup28/achacha_app/MyFirebaseMessagingService.java" beforeDir="false" afterPath="$PROJECT_DIR$/android/app/src/main/java/com/koup28/achacha_app/MyFirebaseMessagingService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/services/NotificationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/NotificationService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/utils/notificationHelper.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/notificationHelper.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/notification/NotificationListener.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/notification/NotificationListener.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/toastService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/toastService.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
