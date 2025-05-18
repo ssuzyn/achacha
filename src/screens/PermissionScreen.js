@@ -1,55 +1,45 @@
 import React, { useEffect } from 'react';
-import {
-  NativeModules,
-  NativeEventEmitter,
-  Image,
-  StyleSheet,
-  View,
-  SafeAreaView,
-} from 'react-native';
+import { Image, StyleSheet, View, SafeAreaView, Platform } from 'react-native';
 import { Button, Text } from '../components/ui';
 // import * as Notifications from 'expo-notifications';
 // import * as Location from 'expo-location';
 // import * as ImagePicker from 'expo-image-picker';
-import BleManager from 'react-native-ble-manager';
+import { BleManager } from 'react-native-ble-plx';
 import { useNavigation } from '@react-navigation/native';
 import PermissionItem from '../components/PermissionItem';
 import { usePermissions } from '../hooks/usePermissions';
 import { useTheme } from 'react-native-elements';
-
-const BleManagerModule = NativeModules.BleManager;
-const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
 const PermissionScreen = () => {
   const navigation = useNavigation();
   const { permissionsStatus, requestAllPermissions } = usePermissions();
   const { theme } = useTheme();
 
-  // BleManager 초기화
+  // BLE-PLX 매니저 초기화
   useEffect(() => {
-    BleManager.start({ showAlert: false })
-      .then(() => {
-        // 콘솔 로그 제거
-      })
-      .catch(error => {
-        // 콘솔 에러 로그 제거
-      });
+    const manager = new BleManager();
 
-    // 이벤트 리스너 등록 (옵션)
-    const handlerDiscover = bleManagerEmitter.addListener(
-      'BleManagerDiscoverPeripheral',
-      peripheral => {
-        // 콘솔 로그 제거
-      }
-    );
-    const handlerStop = bleManagerEmitter.addListener('BleManagerStopScan', () => {
-      // 콘솔 로그 제거
-    });
+    // 이벤트 구독을 위한 변수
+    let stateSubscription = null;
 
-    // 컴포넌트 언마운트 시 리스너 제거
+    // 블루투스 상태 변경 감지
+    if (Platform.OS === 'ios') {
+      stateSubscription = manager.onStateChange(state => {
+        // state는 'Unknown', 'Resetting', 'Unsupported', 'Unauthorized', 'PoweredOff', 'PoweredOn' 중 하나
+        if (state === 'PoweredOn') {
+          // iOS에서 블루투스가 켜져 있을 때 수행할 작업
+        }
+      }, true); // true는 즉시 현재 상태를 체크하고 호출함을 의미
+    }
+
+    // 컴포넌트 언마운트 시 리소스 정리
     return () => {
-      handlerDiscover.remove();
-      handlerStop.remove();
+      if (stateSubscription) {
+        stateSubscription.remove();
+      }
+
+      // BLE-PLX 매니저 리소스 정리
+      manager.destroy();
     };
   }, []);
 
@@ -63,12 +53,10 @@ const PermissionScreen = () => {
   // permissionsStatus 상태 변경 감지하여 네비게이션 처리
   useEffect(() => {
     if (permissionsStatus === 'success') {
-      // 콘솔 로그 제거
       navigation.navigate('Login');
     } else if (permissionsStatus === 'fail') {
       // 심각한 오류 발생 시 (훅 내부 Alert 후 추가 동작 필요 시)
-      // 콘솔 에러 로그 제거
-      // Alert.alert(...) 제거 또는 다른 오류 처리 로직 추가
+      // 필요한 오류 처리 로직 추가
     }
     // 'checking' 이나 'idle' 상태에서는 아무것도 하지 않음
   }, [permissionsStatus, navigation]);

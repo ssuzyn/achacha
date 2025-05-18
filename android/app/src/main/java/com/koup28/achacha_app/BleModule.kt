@@ -174,8 +174,6 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
         // 디버그 로그
         Log.d(TAG, "\n=== BLE 광고 데이터 준비 ===")
         Log.d(TAG, "Service UUID: ${serviceUuid.uuid}")
-        Log.d(TAG, "Token size: ${tokenBytes.size} bytes")
-        Log.d(TAG, "Token bytes: ${tokenBytes.joinToString(",")}")
 
         try {
             // 원래 UUID에서 Short UUID 생성 (앞 2바이트만 사용)
@@ -191,13 +189,10 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
             
             // 로그 출력
             Log.d(TAG, "Short UUID Bytes: ${shortUuidBytes[0]}, ${shortUuidBytes[1]}")
-            
             // 16비트 UUID 생성
             val shortUuid16Bit = (shortUuidBytes[0].toInt() and 0xFF shl 8) or (shortUuidBytes[1].toInt() and 0xFF)
             val shortParcelUuid = ParcelUuid(UUID.fromString(String.format("0000%04x-0000-1000-8000-00805f9b34fb", shortUuid16Bit)))
             
-            Log.d(TAG, "16-bit UUID: 0x${String.format("%04x", shortUuid16Bit)}")
-            Log.d(TAG, "Short ParcelUuid: ${shortParcelUuid.uuid}")
 
             // 광고 데이터 구성 - Short UUID 사용
             val advertiseData = AdvertiseData.Builder()
@@ -205,10 +200,9 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
                 .addServiceUuid(shortParcelUuid) // 짧은 UUID 사용
                 .addServiceData(shortParcelUuid, tokenBytes) // 서비스 데이터는 그대로
                 .build()
-
+                
             // 광고 데이터 크기 추정 (Short UUID 사용)
             val advertisingDataSize = 2 + 2 + 2 + 2 + tokenBytes.size // 헤더 + UUID 헤더 + Short UUID + 서비스 데이터 헤더 + 토큰 크기
-            Log.d(TAG, "추정된 총 광고 데이터 크기: ${advertisingDataSize} 바이트 (최대 31바이트)")
 
             // 광고 설정
             val settings = AdvertiseSettings.Builder()
@@ -221,7 +215,6 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
             // 광고 콜백
             advertiseCallback = object : AdvertiseCallback() {
                 override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                    Log.d(TAG, "Advertisement started successfully with Short UUID")
                     promise.resolve(null)
                 }
 
@@ -234,18 +227,6 @@ class BleModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaMod
                         ADVERTISE_FAILED_INTERNAL_ERROR -> "Internal error"
                         ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> "Too many advertisers"
                         else -> "Unknown error: $errorCode"
-                    }
-                    
-                    // 추가 디버그 정보
-                    if (errorCode == ADVERTISE_FAILED_DATA_TOO_LARGE) {
-                        Log.e(TAG, "\n===== 광고 데이터 크기 초과 상세 분석 (Short UUID) =====")
-                        Log.e(TAG, "1. 서비스 UUID 크기: 2 바이트 + 헤더 2 바이트 = 4 바이트")
-                        Log.e(TAG, "2. 서비스 데이터: ${tokenBytes.size} 바이트 + 헤더 2 바이트 = ${tokenBytes.size + 2} 바이트")
-                        Log.e(TAG, "3. 기본 광고 헤더: 2 바이트")
-                        Log.e(TAG, "4. 총 광고 패킷 크기: ${2 + 4 + (tokenBytes.size + 2)} 바이트 (최대 31바이트)")
-                        Log.e(TAG, "5. 초과 크기: ${Math.max(0, 2 + 4 + (tokenBytes.size + 2) - 31)} 바이트")
-                        Log.e(TAG, "Short UUID: ${shortParcelUuid.uuid}")
-                        Log.e(TAG, "Token: ${String(tokenBytes, Charsets.UTF_8)}")
                     }
                     
                     Log.e(TAG, "Failed to start advertising with Short UUID: $errorMessage")

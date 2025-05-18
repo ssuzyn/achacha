@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: 60,
   },
   emptyText: {
     fontSize: 16,
