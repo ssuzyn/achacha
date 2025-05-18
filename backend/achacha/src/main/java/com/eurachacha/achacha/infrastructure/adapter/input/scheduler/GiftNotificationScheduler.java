@@ -13,7 +13,7 @@ public class GiftNotificationScheduler {
 
 	private final GifticonExpiryNotificationAppService gifticonExpiryNotificationAppService;
 
-	@Scheduled(cron = "0 0 9 * * *")
+	@Scheduled(cron = "0 40 15 * * *")
 	public void expirationScheduler() {
 		gifticonExpiryNotificationAppService.sendExpiryDateNotification();
 	}

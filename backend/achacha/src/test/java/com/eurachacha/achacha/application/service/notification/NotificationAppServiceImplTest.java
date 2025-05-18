@@ -78,7 +78,7 @@ public class NotificationAppServiceImplTest {
 		given(securityServicePort.getLoggedInUser()).willReturn(loggedInUser);
 
 		// 기프티콘을 찾을 수 없는 경우
-		given(gifticonRepository.findByIdAndUserId(gifticonId, loggedInUser.getId()))
+		given(gifticonRepository.findById(gifticonId))
 			.willThrow(new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
 
 		// when & then
@@ -124,7 +124,7 @@ public class NotificationAppServiceImplTest {
 
 		// Mock 설정
 		given(securityServicePort.getLoggedInUser()).willReturn(loggedInUser);
-		given(gifticonRepository.findByIdAndUserId(gifticonId, loggedInUser.getId())).willReturn(gifticon);
+		given(gifticonRepository.findById(gifticonId)).willReturn(gifticon);
 		given(notificationTypeRepository.findByCode(NotificationTypeCode.LOCATION_BASED)).willReturn(notificationType);
 
 		given(notificationSettingRepository.findByUserIdAndNotificationTypeId(

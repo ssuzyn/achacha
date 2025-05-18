@@ -90,10 +90,4 @@ public class GifticonPersistenceAdapter implements GifticonRepository {
 	public List<Gifticon> findGifticonsWithExpiryDates(List<LocalDate> expiryDates) {
 		return gifticonJpaRepository.findGifticonsWithExpiryDates(expiryDates);
 	}
-
-	@Override
-	public Gifticon findByIdAndUserId(Integer gifticonId, Integer userId) {
-		return gifticonJpaRepository.findByIdAndUserId(gifticonId, userId)
-			.orElseThrow(() -> new CustomException(ErrorCode.GIFTICON_NOT_FOUND));
-	}
 }

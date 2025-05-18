@@ -117,7 +117,7 @@ public class NotificationAppServiceImpl implements NotificationAppService {
 		User user = securityServicePort.getLoggedInUser();
 
 		// 요청 기프티콘 조회
-		Gifticon findGifticon = gifticonRepository.findByIdAndUserId(requestDto.getGifticonId(), user.getId());
+		Gifticon findGifticon = gifticonRepository.findById(requestDto.getGifticonId());
 
 		Brand findBrand = findGifticon.getBrand();
 
