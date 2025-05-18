@@ -566,16 +566,14 @@ const SettingScreen = () => {
                   ]}
                   onPress={handleEditSaveClick}
                 >
-                  {' '}
                   <Text
                     style={[
                       styles.editSaveButtonText,
                       editingInterval ? styles.saveButtonText : styles.editButtonText,
                     ]}
                   >
-                    {' '}
-                    {editingInterval ? '저장' : '수정'}{' '}
-                  </Text>{' '}
+                    {editingInterval ? '저장' : '수정'}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
