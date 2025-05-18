@@ -146,7 +146,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 
 		// 기프티콘 사용 완료 처리
 		if (gifticon.getType() == GifticonType.AMOUNT) {
-			gifticon.updateRemainingAmount(gifticon.getOriginalAmount()); // 금액형
+			gifticon.use(gifticon.getOriginalAmount()); // 금액형
 		} else {
 			gifticon.use(); // 상품형
 		}
