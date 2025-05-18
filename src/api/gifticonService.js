@@ -604,6 +604,33 @@ const gifticonService = {
     }
   },
 
+  /**
+   * 상품형 기프티콘 사용 API (사용자 요청에 맞게 구현)
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 응답 결과
+   */
+  async useProductGifticon(gifticonId) {
+    try {
+      // 입력값 타입 검증
+      const gId = parseInt(gifticonId, 10);
+
+      if (isNaN(gId)) {
+        throw new Error('유효한 기프티콘 ID가 필요합니다.');
+      }
+
+      // 사용자 요청에 맞게 URL 형식 설정
+      const url = `/api/product-gifticons/${gId}/use`;
+      console.log('[API] 상품형 기프티콘 사용 요청:', url);
+
+      // 요청 형식에 맞게 빈 바디 전송 (API 문서 요구사항)
+      const response = await apiClient.post(url);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용 처리 오류:', error);
+      throw error;
+    }
+  },
+
   // 사용완료 기프티콘 상세 조회
   async getUsedGifticonDetail(gifticonId) {
     try {

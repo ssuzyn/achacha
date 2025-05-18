@@ -110,27 +110,36 @@ const UseProductScreen = () => {
       await gifticonService.useProductGifticon(actualGifticonId);
       setIsLoading(false);
 
-      // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-      navigation.reset({
-        index: 0,
-        routes: [
-          {
-            name: 'Main',
-            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+      // 성공 메시지 표시
+      Alert.alert('성공', '기프티콘이 사용완료 처리되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+            // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'Main',
+                  params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                },
+              ],
+            });
           },
-        ],
-      });
+        },
+      ]);
     } catch (err) {
       setIsLoading(false);
       console.error('기프티콘 사용 완료 처리 오류:', err);
 
       // 에러 메시지 표시
-      Alert.alert(
-        '오류',
-        err.response?.data?.message || '기프티콘 사용 완료 처리 중 오류가 발생했습니다.',
-        [{ text: '확인' }]
-      );
+      let errorMessage = '기프티콘 사용완료 처리 중 오류가 발생했습니다.';
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+
+      Alert.alert('오류', errorMessage, [{ text: '확인' }]);
     }
   };
 

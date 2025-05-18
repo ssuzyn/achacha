@@ -170,8 +170,7 @@ const DetailProductScreen = () => {
               barcodePath: barcodeResponse.barcodePath,
             });
           }
-        } catch (barcodeError) {
-        }
+        } catch (barcodeError) {}
       }
 
       setIsLoading(false);
@@ -275,7 +274,6 @@ const DetailProductScreen = () => {
         });
       }
     } catch (error) {
-
       // 오류 메시지 처리
       let errorMessage = '바코드 정보를 불러오는데 실패했습니다.';
 
@@ -300,22 +298,37 @@ const DetailProductScreen = () => {
 
     if (isExpired || isUsing) {
       // 이미 사용 중인 경우 또는 만료된 경우 바로 사용 완료 처리
-      // console.log('기프티콘 사용 완료');
+      try {
+        // API 호출로 기프티콘 상태를 사용완료로 변경
+        await gifticonService.useProductGifticon(gifticonId);
 
-      // API 호출로 기프티콘 상태를 사용완료로 변경 (실제 구현 시 주석 해제)
-      // 예: await api.updateGifticonStatus(gifticonId, 'USED');
-
-      // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-      // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-      navigation.reset({
-        index: 0,
-        routes: [
+        // 성공 메시지 표시
+        Alert.alert('성공', '기프티콘이 사용완료 처리되었습니다.', [
           {
-            name: 'Main',
-            params: { screen: 'TabGifticonManage', initialTab: 'used' },
+            text: '확인',
+            onPress: () => {
+              // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+              // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'Main',
+                    params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                  },
+                ],
+              });
+            },
           },
-        ],
-      });
+        ]);
+      } catch (error) {
+        // 오류 처리
+        let errorMessage = '기프티콘 사용완료 처리 중 오류가 발생했습니다.';
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+        Alert.alert('오류', errorMessage);
+      }
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
       setIsUsing(true);
@@ -427,7 +440,6 @@ const DetailProductScreen = () => {
         ]);
       }
     } catch (error) {
-
       // 에러 메시지 처리
       let errorMessage = `기프티콘 ${alertType === 'delete' ? '삭제' : '공유 취소'} 중 오류가 발생했습니다.`;
 
