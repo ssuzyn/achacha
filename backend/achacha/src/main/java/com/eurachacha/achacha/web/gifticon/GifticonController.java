@@ -20,6 +20,8 @@ import com.eurachacha.achacha.application.port.input.gifticon.dto.request.Giftic
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonMetadataResponseDto;
 import com.eurachacha.achacha.application.port.input.gifticon.dto.response.GifticonPresentResponseDto;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
+import com.eurachacha.achacha.web.common.exception.CustomException;
+import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,9 +47,24 @@ public class GifticonController {
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<String> saveGifticon(
 		@Valid @RequestPart("gifticon") GifticonSaveRequestDto gifticonSaveRequestDto,
-		@RequestPart("originalImage") MultipartFile originalImage,
-		@RequestPart("thumbnailImage") MultipartFile thumbnailImage,
-		@RequestPart("barcodeImage") MultipartFile barcodeImage) {
+		@RequestPart(value = "originalImage", required = false) MultipartFile originalImage,
+		@RequestPart(value = "thumbnailImage", required = false) MultipartFile thumbnailImage,
+		@RequestPart(value = "barcodeImage", required = false) MultipartFile barcodeImage) {
+
+		// 원본 이미지 검증
+		if (originalImage == null || originalImage.isEmpty()) {
+			throw new CustomException(ErrorCode.ORIGINAL_IMAGE_REQUIRED);
+		}
+
+		// 썸네일 이미지 검증
+		if (thumbnailImage == null || thumbnailImage.isEmpty()) {
+			throw new CustomException(ErrorCode.THUMBNAIL_IMAGE_REQUIRED);
+		}
+
+		// 바코드 이미지 검증
+		if (barcodeImage == null || barcodeImage.isEmpty()) {
+			throw new CustomException(ErrorCode.BARCODE_IMAGE_REQUIRED);
+		}
 
 		gifticonAppService.saveGifticon(gifticonSaveRequestDto, originalImage, thumbnailImage, barcodeImage);
 		return ResponseEntity.ok("기프티콘이 성공적으로 등록되었습니다.");

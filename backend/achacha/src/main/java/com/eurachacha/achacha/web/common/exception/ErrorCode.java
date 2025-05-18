@@ -76,6 +76,9 @@ public enum ErrorCode {
 	FILE_INVALID_CONTENT(HttpStatus.BAD_REQUEST, "FILE_006", "파일 내용이 손상되었거나 유효하지 않습니다."),
 	FILE_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "FILE_007", "파일 처리 중 오류가 발생했습니다."),
 	FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "FILE_008", "파일을 찾을 수 없습니다."),
+	ORIGINAL_IMAGE_REQUIRED(HttpStatus.BAD_REQUEST, "FILE_009", "기프티콘 원본 이미지가 필요합니다."),
+	THUMBNAIL_IMAGE_REQUIRED(HttpStatus.BAD_REQUEST, "FILE_010", "기프티콘 썸네일 이미지가 필요합니다."),
+	BARCODE_IMAGE_REQUIRED(HttpStatus.BAD_REQUEST, "FILE_011", "기프티콘 바코드 이미지가 필요합니다."),
 
 	// CloudFront 관련 에러 코드
 	CLOUDFRONT_URL_GENERATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CF_001", "URL 생성 중 오류가 발생했습니다."),
