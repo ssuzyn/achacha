@@ -19,11 +19,11 @@ import Tooltip from '../../components/Tooltip';
 import NoUsersScreen from './NoUsersScreen';
 import LottieView from 'lottie-react-native';
 import nearbyUsersService from '../../services/NearbyUsersService';
+import { giveAwayService } from '../../services/giveAwayService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../hooks/useTheme';
 import { useNavigation } from '@react-navigation/native';
-import useAuthStore from '../../store/authStore';
 import { PermissionsAndroid } from 'react-native';
 import { mapGifticonService } from '../../services/mapGifticonService';
 
@@ -39,12 +39,14 @@ const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const [users, setUsers] = useState([]);
+  const [userPositions, setUserPositions] = useState([]);
+  const [userDataReady, setUserDataReady] = useState(false);
+  const userPositionsRef = useRef([]);
   const [listVisible, setListVisible] = useState(false);
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
   const [selectedGifticon, setSelectedGifticon] = useState(null);
   const [buttonVisible, setButtonVisible] = useState(false);
   const [centerButtonVisible, setCenterButtonVisible] = useState(false);
-  const userPositionsRef = useRef([]);
   const [loading, setLoading] = useState(true);
   const bleServiceRef = useRef(null);
   const navigation = useNavigation();
@@ -67,7 +69,8 @@ const GiveAwayScreen = ({ onClose }) => {
   const [isScanning, setIsScanning] = useState(false);
 
   // 애니메이션을 위한 값
-  const buttonPositionAnim = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  const buttonPositionX = useRef(new Animated.Value(0)).current;
+  const buttonPositionY = useRef(new Animated.Value(0)).current;
   const buttonScaleAnim = useRef(new Animated.Value(1)).current;
   const buttonOpacityAnim = useRef(new Animated.Value(1)).current;
 
@@ -131,43 +134,111 @@ const GiveAwayScreen = ({ onClose }) => {
     return positions;
   };
 
-  // PanResponder 설정 - 기프티콘 뿌리기 버튼을 드래그할 때 사용
+  // users 상태가 변경될 때마다 positions 재계산
+  // 이모지 변환은 onScanComplete 내에서 직접 처리하고, 여기서는 위치만 계산
+  useEffect(() => {
+    console.log('[상태 변경] users 업데이트됨, 길이:', users.length);
+
+    if (users.length > 0) {
+      // 위치 계산
+      const positions = calculateUserPositions(users);
+      userPositionsRef.current = positions;
+      setUserPositions(positions);
+
+      // 사용자 데이터 준비 완료 상태로 설정
+      setUserDataReady(true);
+
+      console.log('[상태 변경] positions 업데이트됨, 길이:', positions.length);
+    } else {
+      // 사용자가 없을 때 초기화
+      setUserPositions([]);
+      userPositionsRef.current = [];
+      setUserDataReady(false);
+      console.log('[상태 변경] 사용자 없음, positions 초기화');
+    }
+  }, [users]);
+
+  // PanResponder 수정
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (evt, gestureState) => {
-        // 더 낮은 임계값으로 더 빠르게 움직임 감지
         return Math.abs(gestureState.dx) > 2 || Math.abs(gestureState.dy) > 2;
       },
       onPanResponderGrant: () => {
-        // 드래그 시작시 크기 변경 효과 더 빠르게
+        console.log(
+          '드래그 시작, 사용자 수:',
+          users.length,
+          '위치 수:',
+          userPositions.length,
+          '데이터 준비됨:',
+          userDataReady
+        );
         Animated.spring(buttonScaleAnim, {
           toValue: 1.2,
-          friction: 2, // 마찰 더 감소
-          tension: 80, // 장력 증가
+          friction: 2,
+          tension: 80,
           useNativeDriver: true,
         }).start();
       },
       onPanResponderMove: (evt, gestureState) => {
-        // 드래그 움직임 증폭 (1.2배 더 민감하게)
-        buttonPositionAnim.setValue({
-          x: gestureState.dx * 1.2,
-          y: gestureState.dy * 1.2,
-        });
+        buttonPositionX.setValue(gestureState.dx * 1.2);
+        buttonPositionY.setValue(gestureState.dy * 1.2);
       },
       onPanResponderRelease: (e, gesture) => {
-        // 드래그가 끝나면 항상 버튼을 원래 위치로 되돌리기
-        resetButtonPosition();
+        console.log(
+          '드래그 종료, 사용자 수:',
+          users.length,
+          '위치 수:',
+          userPositions.length,
+          '데이터 준비됨:',
+          userDataReady
+        );
 
-        // 랜덤으로 주변 사용자 선택 (가까운 사용자 찾기 대신)
-        if (users.length > 0) {
+        const dragDistance = Math.sqrt(Math.pow(gesture.dx, 2) + Math.pow(gesture.dy, 2));
+
+        if (dragDistance < 50) {
+          console.log('드래그 거리가 너무 짧음, 리셋');
+          resetButtonPosition();
+          return;
+        }
+
+        if (users.length > 0 && userPositions.length === users.length && userDataReady) {
+          // 사용자와 위치 정보가 모두 있는 경우에만 진행
           const randomIndex = Math.floor(Math.random() * users.length);
-          const selectedUser = { ...users[randomIndex], position: userPositions[randomIndex] };
+          if (randomIndex >= 0 && randomIndex < userPositions.length) {
+            const selectedUser = {
+              ...users[randomIndex],
+              position: userPositions[randomIndex],
+            };
 
-          // 약간의 딜레이 후 전송 (버튼이 중앙으로 돌아간 후)
-          setTimeout(() => {
-            sendGifticonToUser(selectedUser);
-          }, 100);
+            console.log(
+              '선택된 사용자:',
+              selectedUser.name,
+              'uuid:',
+              selectedUser.uuid,
+              'position:',
+              selectedUser.position
+            );
+            setTimeout(() => {
+              sendGifticonToUser(selectedUser);
+            }, 100);
+          } else {
+            console.log('유효하지 않은 인덱스:', randomIndex, '유저 수:', users.length);
+            Alert.alert('알림', '사용자 선택 중 오류가 발생했습니다. 다시 시도해주세요.');
+            resetButtonPosition();
+          }
+        } else {
+          console.log('사용자 정보 문제:', {
+            usersLength: users.length,
+            positionsLength: userPositions.length,
+            dataReady: userDataReady,
+          });
+          Alert.alert(
+            '알림',
+            '주변에 선물을 받을 수 있는 사용자가 없거나 데이터가 준비되지 않았습니다.'
+          );
+          resetButtonPosition();
         }
       },
     })
@@ -176,8 +247,14 @@ const GiveAwayScreen = ({ onClose }) => {
   // 버튼 위치 초기화
   const resetButtonPosition = () => {
     Animated.parallel([
-      Animated.spring(buttonPositionAnim, {
-        toValue: { x: 0, y: 0 },
+      Animated.spring(buttonPositionX, {
+        toValue: 0,
+        friction: 3,
+        tension: 50,
+        useNativeDriver: true,
+      }),
+      Animated.spring(buttonPositionY, {
+        toValue: 0,
         friction: 3,
         tension: 50,
         useNativeDriver: true,
@@ -193,18 +270,37 @@ const GiveAwayScreen = ({ onClose }) => {
 
   // 사용자에게 기프티콘 전송
   const sendGifticonToUser = async user => {
-    if (!selectedGifticon || !user) return;
+    if (!selectedGifticon || !user || !user.position) {
+      console.error('전송 실패: 필요한 정보 누락', {
+        selectedGifticon: !!selectedGifticon,
+        user: !!user,
+        userPosition: user ? !!user.position : false,
+      });
+      Alert.alert('오류', '필요한 정보가 누락되었습니다. 다시 시도해주세요.');
+      resetButtonPosition();
+      return;
+    }
+
+    console.log('전송 시작 - 기본 정보:', {
+      gifticonName: selectedGifticon.gifticonName || '기프티콘',
+      gifticonId: selectedGifticon.gifticonId || selectedGifticon.id,
+      userName: user.name,
+      uuid: user.uuid,
+      bleToken: user.bleToken,
+    });
 
     setGiftSentUserId(user.uuid);
     setIsTransferring(true);
 
     // 버튼을 사용자 쪽으로 애니메이션
     Animated.parallel([
-      Animated.timing(buttonPositionAnim, {
-        toValue: {
-          x: user.position.x - width / 2,
-          y: user.position.y - height / 2,
-        },
+      Animated.timing(buttonPositionX, {
+        toValue: user.position.x - width / 2,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(buttonPositionY, {
+        toValue: user.position.y - height / 2,
         duration: 250,
         useNativeDriver: true,
       }),
@@ -224,28 +320,38 @@ const GiveAwayScreen = ({ onClose }) => {
         // 선물 효과 시작
         addReceivedAnimation(user.uuid);
 
-        // 더미 데이터로 전송 시뮬레이션
-        console.log(
-          `기프티콘 전송 시뮬레이션: 사용자 ${user.uuid}(${user.name})에게 ${selectedGifticon.gifticonName} 전송 중...`
-        );
+        // API 호출을 위한 파라미터 준비
+        const gifticonIdToUse = selectedGifticon.gifticonId || selectedGifticon.id;
+        if (!gifticonIdToUse) {
+          throw new Error('기프티콘 ID가 없습니다.');
+        }
 
-        // 전송 딜레이 시뮬레이션 (실제 네트워크 요청 대체)
-        await new Promise(resolve => setTimeout(resolve, 500));
+        if (!user.bleToken) {
+          throw new Error('사용자의 BLE 토큰이 없습니다.');
+        }
 
-        console.log(
-          `기프티콘 전송 애니메이션 완료: 사용자 ${user.name}에게 ${selectedGifticon.gifticonName}`
+        console.log('API 호출 직전:', {
+          gifticonId: gifticonIdToUse,
+          bleToken: user.bleToken,
+          apiPath: `/api/gifticons/${gifticonIdToUse}/give-away`,
+        });
+
+        // API 호출 (bleToken을 uuids 배열로 전달)
+        const response = await giveAwayService.giveAwayGifticon(
+          gifticonIdToUse,
+          [user.bleToken] // bleToken을 uuids 배열로 전달
         );
+        console.log('API 응답 성공:', response);
 
         // 짧은 딜레이 후 알림 표시
         setTimeout(() => {
           Alert.alert(
             '기프티콘 뿌리기 완료',
-            `${user.name}님에게 ${selectedGifticon.gifticonName}을(를) 뿌렸습니다!`,
+            `${user.name}님에게 ${selectedGifticon.gifticonName || '기프티콘'}을(를) 뿌렸습니다!`,
             [
               {
                 text: '확인',
                 onPress: () => {
-                  // 버튼 초기화 및 새로운 기프티콘 선택 가능하도록 설정
                   resetAfterSend();
                 },
               },
@@ -253,7 +359,14 @@ const GiveAwayScreen = ({ onClose }) => {
           );
         }, 800);
       } catch (error) {
-        console.error('기프티콘 전송 오류:', error);
+        console.error('기프티콘 전송 중 에러:', {
+          message: error.message,
+          stack: error.stack,
+          request: error.request,
+          response: error.response,
+          config: error.config,
+        });
+
         Alert.alert('전송 실패', '기프티콘 전송 중 오류가 발생했습니다. 다시 시도해주세요.');
         resetButtonPosition();
       } finally {
@@ -266,7 +379,8 @@ const GiveAwayScreen = ({ onClose }) => {
   // 전송 후 초기화 및 버튼 중앙으로 복귀
   const resetAfterSend = () => {
     // 버튼 위치 및 상태 초기화
-    buttonPositionAnim.setValue({ x: 0, y: 0 });
+    buttonPositionX.setValue(0);
+    buttonPositionY.setValue(0);
     buttonScaleAnim.setValue(1);
     buttonOpacityAnim.setValue(1);
 
@@ -317,13 +431,65 @@ const GiveAwayScreen = ({ onClose }) => {
     ]).start();
   };
 
-  // 스캔 시작 함수
+  // 이모지 숫자 인덱스를 이모지 객체로 변환하는 함수
+  const getEmojiFromIndex = index => {
+    const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
+    if (typeof index === 'number' && index >= 0) {
+      return emojiOptions[index % emojiOptions.length];
+    }
+    return emojiOptions[Math.floor(Math.random() * emojiOptions.length)];
+  };
+
+  // 스캔 완료 콜백
+  const onScanComplete = allUsers => {
+    console.log('[BLE 스캔] 스캔 완료, 발견된 사용자 수:', allUsers.length);
+
+    if (allUsers && allUsers.length > 0) {
+      const mappedUsers = allUsers
+        .map((user, index) => {
+          // 이모지를 숫자 인덱스로 받았다면, 여기서 바로 이모지 객체로 변환
+          let userEmoji;
+          if (typeof user.emoji === 'number') {
+            userEmoji = getEmojiFromIndex(user.emoji);
+          } else {
+            // 랜덤 이모지 할당
+            const randomEmojiIndex = Math.floor(Math.random() * 5);
+            userEmoji = getEmojiFromIndex(randomEmojiIndex);
+          }
+
+          return {
+            uuid: user.uuid || `user-${index}`,
+            name: user.name || `사용자 ${index + 1}`,
+            emoji: userEmoji, // 이미 객체로 변환된 이모지 사용
+            deviceId: user.deviceId || `device-${index}`,
+            bleToken: user.bleToken || `token-${index}`,
+          };
+        })
+        .slice(0, 5);
+
+      console.log('[BLE 스캔] 매핑된 사용자 목록 길이:', mappedUsers.length);
+
+      // 상태 업데이트 (이모지는 이미 객체로 변환됨)
+      setUsers(mappedUsers);
+      setButtonVisible(mappedUsers.length > 0);
+    } else {
+      console.log('[BLE 스캔] 사용자가 없거나 스캔 결과가 undefined');
+      setUsers([]);
+      setUserDataReady(false);
+      setButtonVisible(false);
+    }
+    setLoading(false);
+    setIsScanning(false);
+  };
+
+  // BLE 스캔 시작 함수
   const startScanning = async () => {
     if (!bleServiceRef.current || isScanning) {
       console.log(
         '[BLE 스캔] 스캔 시작 불가:',
         !bleServiceRef.current ? 'BLE 서비스가 초기화되지 않음' : '이미 스캔 중'
       );
+      setLoading(false);
       return;
     }
 
@@ -332,112 +498,56 @@ const GiveAwayScreen = ({ onClose }) => {
       setLoading(true);
       console.log('[BLE 스캔] 스캔 시작 시간:', new Date().toISOString());
 
-      // 발견된 사용자 정보 저장 (직접 배열에 추가)
+      // 발견된 사용자 정보 저장
       let discoveredUsers = [];
 
       // 사용자 발견 콜백
       const onUserFound = user => {
-        console.log('[BLE 스캔] 새 사용자 발견 콜백:', user);
-        // 중복 체크
-        if (!discoveredUsers.some(u => u.uuid === user.uuid)) {
+        if (user && user.uuid && !discoveredUsers.some(u => u.uuid === user.uuid)) {
           discoveredUsers.push(user);
+          console.log('[BLE 스캔] 새 사용자 발견, 현재 총:', discoveredUsers.length);
         }
       };
 
-      // 스캔 완료 콜백
-      const onScanComplete = allUsers => {
-        console.log('[BLE 스캔] 스캔 완료 콜백, 발견된 사용자 수:', allUsers.length);
-
-        // 스캔 결과 처리
-        if (allUsers.length > 0) {
-          const mappedUsers = allUsers
-            .map((user, index) => {
-              const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
-              // 랜덤 이모지 할당
-              const randomEmojiIndex = Math.floor(Math.random() * emojiOptions.length);
-              const emoji = emojiOptions[randomEmojiIndex];
-
-              // 사용자 이름을 간단히 "사용자 N" 형식으로 설정
-              const userName = `사용자 ${index + 1}`;
-
-              return {
-                uuid: user.uuid,
-                name: userName,
-                emoji: emoji,
-                deviceId: user.deviceId,
-              };
-            })
-            .slice(0, 5);
-
-          console.log('[BLE 스캔] 최종 표시될 사용자:', {
-            총_사용자_수: mappedUsers.length,
-            사용자_목록: mappedUsers,
-          });
-
-          // 사용자 목록이 변경되면 위치 캐시 초기화
-          if (users.length !== mappedUsers.length) {
-            userPositionsRef.current = []; // 캐시 초기화
-            console.log('[BLE 스캔] 사용자 수 변경, 위치 캐시 초기화됨');
-          } else {
-            // 사용자 수는 같지만 사용자가 바뀐 경우도 확인
-            const userIdsChanged = !users.every(
-              (user, idx) => idx < mappedUsers.length && user.uuid === mappedUsers[idx].uuid
-            );
-
-            if (userIdsChanged) {
-              userPositionsRef.current = []; // 캐시 초기화
-              console.log('[BLE 스캔] 사용자 ID 변경, 위치 캐시 초기화됨');
-            }
-          }
-
-          // 상태 업데이트
-          setUsers(mappedUsers);
-          setButtonVisible(mappedUsers.length > 0);
-          setLoading(false);
-        } else {
-          console.log('[BLE 스캔] 주변에 사용자가 없음');
-          setUsers([]);
-          setButtonVisible(false);
-          setLoading(false);
-
-          // 사용자가 없을 때도 캐시 초기화
-          if (userPositionsRef.current.length > 0) {
-            userPositionsRef.current = [];
-            console.log('[BLE 스캔] 사용자 없음, 위치 캐시 초기화됨');
-          }
-        }
-      };
-
-      // 스캔 시작
       await bleServiceRef.current.startScan(onUserFound, onScanComplete);
+
+      // 5초 후 자동으로 스캔 종료 (안전장치)
+      setTimeout(() => {
+        if (isScanning) {
+          console.log('[BLE 스캔] 5초 타임아웃, 스캔 종료');
+          stopScanning();
+          if (loading) setLoading(false);
+
+          // 결과가 없으면 빈 결과로 처리
+          if (users.length === 0) {
+            onScanComplete([]);
+          }
+        }
+      }, 5000);
     } catch (error) {
       console.error('[BLE 스캔] 스캔 중 오류 발생:', error);
       setUsers([]);
+      setUserPositions([]);
+      userPositionsRef.current = [];
       setButtonVisible(false);
       setLoading(false);
+      setIsScanning(false);
     }
   };
 
-  // 스캔 중지 함수도 로그 추가
+  // 스캔 중지 함수
   const stopScanning = async () => {
-    if (!bleServiceRef.current || !isScanning) {
-      console.log(
-        '[BLE 스캔] 스캔 중지 불가:',
-        !bleServiceRef.current ? 'BLE 서비스 없음' : '스캔 중이 아님'
-      );
+    if (!bleServiceRef.current) {
+      console.log('[BLE 스캔] BLE 서비스가 초기화되지 않아 스캔 중지 불가');
       return;
     }
 
     try {
-      console.log('[BLE 스캔] 스캔 중지 시작');
+      console.log('[BLE 스캔] 스캔 중지 시도');
       await bleServiceRef.current.stopScan();
       console.log('[BLE 스캔] 스캔 중지 완료');
     } catch (error) {
-      console.error('[BLE 스캔] 스캔 중지 중 오류 발생:', {
-        에러_메시지: error.message,
-        에러_스택: error.stack,
-        발생_시간: new Date().toISOString(),
-      });
+      console.error('[BLE 스캔] 스캔 중지 중 오류 발생:', error.message);
     } finally {
       setIsScanning(false);
     }
@@ -478,12 +588,16 @@ const GiveAwayScreen = ({ onClose }) => {
         } else {
           console.log('BLE 초기화 실패');
           setLoading(false);
+          Alert.alert('알림', '블루투스 초기화에 실패했습니다. 블루투스 설정을 확인해주세요.');
         }
       } catch (error) {
         console.error('초기화 중 오류 발생:', error);
         setUsers([]);
+        setUserPositions([]);
+        userPositionsRef.current = [];
         setButtonVisible(false);
         setLoading(false);
+        Alert.alert('오류', '초기화 중 문제가 발생했습니다: ' + error.message);
       }
     };
 
@@ -507,10 +621,17 @@ const GiveAwayScreen = ({ onClose }) => {
 
   // 새로고침 버튼 핸들러
   const handleRefresh = async () => {
+    if (isScanning || loading) {
+      console.log('이미 스캔 중이거나 로딩 중이라 새로고침 무시');
+      return;
+    }
+
     try {
       // 즉시 로딩 상태로 전환하고 현재 사용자 목록 초기화
       setLoading(true);
       setUsers([]);
+      setUserPositions([]);
+      setUserDataReady(false);
       userPositionsRef.current = [];
 
       // 이미 스캔 중이라면 먼저 중지
@@ -524,6 +645,7 @@ const GiveAwayScreen = ({ onClose }) => {
       console.error('[새로고침] 오류 발생:', error);
       setLoading(false);
       setIsScanning(false);
+      Alert.alert('새로고침 실패', '사용자 검색 중 오류가 발생했습니다.');
     }
   };
 
@@ -540,6 +662,7 @@ const GiveAwayScreen = ({ onClose }) => {
     } catch (error) {
       console.error('뿌리기용 기프티콘 목록 로드 실패:', error);
       setGiveAwayGifticons({ gifticons: [], hasNextPage: false, nextPage: null });
+      Alert.alert('오류', '기프티콘 목록을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setIsLoadingGifticons(false);
     }
@@ -552,6 +675,9 @@ const GiveAwayScreen = ({ onClose }) => {
       await loadGiveAwayGifticons(); // 기프티콘 목록 로드
       setListVisible(true);
       setButtonVisible(false);
+    } catch (error) {
+      console.error('기프티콘 목록 로드 중 오류:', error);
+      Alert.alert('오류', '기프티콘 목록을 불러오는 중 문제가 발생했습니다.');
     } finally {
       setIsLoadingGifticons(false);
     }
@@ -589,9 +715,6 @@ const GiveAwayScreen = ({ onClose }) => {
     }
   };
 
-  // 사용자 위치 계산
-  const userPositions = calculateUserPositions(users);
-
   // 뒤로가기 버튼 핸들러
   const handleGoBack = useCallback(() => {
     navigation.goBack();
@@ -620,8 +743,14 @@ const GiveAwayScreen = ({ onClose }) => {
         <TouchableOpacity
           onPress={handleRefresh}
           style={[styles.refreshButton, isScanning && styles.refreshButtonSpinning]}
+          disabled={isScanning || loading}
         >
-          <Icon name="refresh" type="material" size={24} color={theme.colors.black} />
+          <Icon
+            name="refresh"
+            type="material"
+            size={24}
+            color={isScanning || loading ? theme.colors.gray : theme.colors.black}
+          />
         </TouchableOpacity>
       </View>
 
@@ -644,6 +773,7 @@ const GiveAwayScreen = ({ onClose }) => {
               />
             ))}
           </Svg>
+
           {loading ? (
             // 로딩 중일 때 Lottie 애니메이션 표시
             <View style={styles.loadingOverlay}>
@@ -657,10 +787,12 @@ const GiveAwayScreen = ({ onClose }) => {
                 }}
               />
             </View>
-          ) : users.length > 0 ? (
-            // 사용자가 있을 때 UI
+          ) : userDataReady && users.length > 0 && userPositions.length === users.length ? (
+            // 사용자 데이터가 완전히 준비되었을 때만 표시
             users.map((user, index) => {
               const position = userPositions[index];
+              if (!position) return null;
+
               const baseSize = 80;
               const adjustedSize = baseSize * position.scale;
 
@@ -716,7 +848,7 @@ const GiveAwayScreen = ({ onClose }) => {
                     style={[styles.emojiContainer, { width: adjustedSize, height: adjustedSize }]}
                   >
                     <Image
-                      source={user.emoji || emoji1}
+                      source={user.emoji}
                       style={{
                         width: adjustedSize,
                         height: adjustedSize,
@@ -750,8 +882,8 @@ const GiveAwayScreen = ({ onClose }) => {
                 styles.centerButtonContainer,
                 {
                   transform: [
-                    { translateX: buttonPositionAnim.x },
-                    { translateY: buttonPositionAnim.y },
+                    { translateX: buttonPositionX },
+                    { translateY: buttonPositionY },
                     { scale: buttonScaleAnim },
                   ],
                   opacity: buttonOpacityAnim,
@@ -898,10 +1030,6 @@ const styles = StyleSheet.create({
   },
   centerButtonContainer: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 20,
