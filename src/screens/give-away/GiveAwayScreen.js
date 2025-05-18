@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     bottom: 40,
     left: 0,
     right: 0,
-    height: height * 0.4,
+    height: height * 0.35,
     zIndex: 10,
     borderRadius: 20,
     justifyContent: 'center',
