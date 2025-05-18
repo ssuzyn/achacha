@@ -507,13 +507,24 @@ const GiveAwayScreen = ({ onClose }) => {
 
   // 새로고침 버튼 핸들러
   const handleRefresh = async () => {
-    if (isScanning) {
-      return;
-    }
+    try {
+      // 즉시 로딩 상태로 전환하고 현재 사용자 목록 초기화
+      setLoading(true);
+      setUsers([]);
+      userPositionsRef.current = [];
 
-    // 새로고침 시 캐시 강제 초기화
-    userPositionsRef.current = [];
-    await startScanning();
+      // 이미 스캔 중이라면 먼저 중지
+      if (isScanning) {
+        await stopScanning();
+      }
+
+      // 스캔 시작
+      await startScanning();
+    } catch (error) {
+      console.error('[새로고침] 오류 발생:', error);
+      setLoading(false);
+      setIsScanning(false);
+    }
   };
 
   // 기프티콘 목록 로드 함수
@@ -608,15 +619,9 @@ const GiveAwayScreen = ({ onClose }) => {
         <Text style={[styles.headerTitle, { color: theme.colors.black }]}>기프티콘 뿌리기</Text>
         <TouchableOpacity
           onPress={handleRefresh}
-          disabled={isScanning}
-          style={styles.refreshButton}
+          style={[styles.refreshButton, isScanning && styles.refreshButtonSpinning]}
         >
-          <Icon
-            name="refresh"
-            type="material"
-            size={24}
-            color={isScanning ? theme.colors.gray : theme.colors.black}
-          />
+          <Icon name="refresh" type="material" size={24} color={theme.colors.black} />
         </TouchableOpacity>
       </View>
 
@@ -951,8 +956,13 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   refreshButton: {
-    padding: 0,
+    padding: 8,
     backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  refreshButtonSpinning: {
+    opacity: 0.5,
   },
 });
 
