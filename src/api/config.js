@@ -25,7 +25,6 @@ export const API_CONFIG = {
     KAKAO_LOGIN: '/api/auth/kakao', // 카카오 로그인
     LOGOUT: '/api/auth/logout', // 로그아웃
     REFRESH_TOKEN: '/api/auth/refresh', // 토큰 갱신
-    USER_PROFILE: '/api/users/me', // 사용자 정보 조회
     USER_INFO: userId => `/api/users/${userId}`,
     FCM_TOKEN_UPDATE: '/api/users/fcm-token', // FCM 토큰 갱신 API 추가
 

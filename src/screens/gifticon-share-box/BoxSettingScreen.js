@@ -25,6 +25,7 @@ import {
 } from '../../api/shareBoxService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Clipboard from '@react-native-clipboard/clipboard';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -149,7 +150,7 @@ const BoxSettingScreen = () => {
 
   // 초대 코드 복사 핸들러
   const copyInviteCode = () => {
-    // 클립보드에 코드 복사 로직 (실제 구현 필요)
+    Clipboard.setString(shareBoxCode);
     Alert.alert('알림', '초대 코드가 클립보드에 복사되었습니다.');
   };
 

@@ -169,15 +169,18 @@ export const useAuth = () => {
   // 로그인 에러 핸들러
   const handleLoginError = useCallback(() => {
     if (!kakaoLoginError) return;
-
-    // API 에러 처리
     let errorMessage = '로그인 중 알 수 없는 오류가 발생했습니다.';
+    let errorCode = '';
     if (kakaoLoginError.response?.data?.errorCode) {
-      const code = kakaoLoginError.response.data.errorCode;
-      errorMessage = ERROR_MESSAGES[code] || kakaoLoginError.response.data.message || errorMessage;
+      errorCode = kakaoLoginError.response.data.errorCode;
+      errorMessage = ERROR_MESSAGES[errorCode] || kakaoLoginError.response.data.message || errorMessage;
+    } else if (kakaoLoginError.response?.data?.message) {
+      errorMessage = kakaoLoginError.response.data.message;
     }
-
-    Alert.alert('로그인 실패', errorMessage);
+    Alert.alert(
+      '로그인 실패',
+      errorCode ? `[${errorCode}]\n${errorMessage}` : errorMessage
+    );
   }, [kakaoLoginError]);
 
   // 카카오 로그인 에러 발생 시 자동으로 에러 처리

@@ -10,6 +10,24 @@ import apiClient from '../api/apiClient';
 const SERVICE_UUID = '1bf0cbce-7af3-4b59-93f2-0c4c6d170164'; // 하이픈 포함된 형식
 const SERVICE_UUID_NO_HYPHENS = SERVICE_UUID.replace(/-/g, ''); // 하이픈 제거된 형식
 
+// BLE 광고 권한 요청 함수 (Android 12+)
+async function requestBleAdvertisePermission() {
+  if (Platform.OS === 'android' && Platform.Version >= 31) {
+    const granted = await PermissionsAndroid.request(
+      PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
+      {
+        title: 'BLE 광고 권한 요청',
+        message: '주변 기기와 통신하려면 BLE 광고 권한이 필요합니다.',
+        buttonNeutral: '나중에',
+        buttonNegative: '거부',
+        buttonPositive: '허용',
+      }
+    );
+    return granted === PermissionsAndroid.RESULTS.GRANTED;
+  }
+  return true;
+}
+
 class NearbyUsersService {
   constructor() {
     this.deviceId = null; // 초기에는 null로 설정
@@ -304,14 +322,24 @@ class NearbyUsersService {
       return false;
     }
 
+    // Android 12+ BLE 광고 권한 체크
+    if (Platform.OS === 'android' && Platform.Version >= 31) {
+      const hasAdvertisePermission = await requestBleAdvertisePermission();
+      if (!hasAdvertisePermission) {
+        console.error('BLE 광고 권한이 없습니다. 광고를 시작할 수 없습니다.');
+        return false;
+      }
+    }
+
     try {
       if (this.isAdvertising) {
         console.log('이미 광고 중입니다.');
         return true;
       }
 
-      console.log('\n=== BLE 광고 시작 - 상세 디버그 ===');
-      console.log('1. 광고할 디바이스 ID:', this.deviceId);
+      // 광고 시작 전 서비스 UUID, 토큰 로그
+      console.log('[BLE 광고] 서비스 UUID:', this.serviceUUID);
+      console.log('[BLE 광고] 광고할 디바이스 ID(토큰):', this.deviceId);
 
       if (!this.deviceId) {
         console.error('BLE 토큰이 없습니다. 먼저 로그인이 필요합니다.');

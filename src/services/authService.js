@@ -6,6 +6,7 @@ import { API_CONFIG } from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { decode as atob } from 'base-64'; // base-64 패키지 필요
 import { getFcmToken } from './NotificationService'; // FCM 토큰 가져오기 import 추가
+import { fetchUserById } from '../api/userInfo';
 
 function parseJwt(token) {
   if (!token) return null;
@@ -80,8 +81,9 @@ export const refreshTokens = async refreshToken => {
  * @returns {Promise} 사용자 정보
  */
 export const getUserProfile = async () => {
-  const response = await apiClient.get(API_CONFIG.ENDPOINTS.USER_PROFILE);
-  return response.data;
+  const userId = await AsyncStorage.getItem('userId');
+  if (!userId) throw new Error('userId가 없습니다.');
+  return await fetchUserById(userId);
 };
 
 /**

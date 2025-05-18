@@ -24,8 +24,10 @@ import { Divider, Text, Button } from '../components/ui';
 import Switch from '../components/ui/Switch';
 import { Svg, Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchUserById } from '../api/userInfo';
+import { fetchUserById, logout as logoutApi } from '../api/userInfo';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
+import { getFcmToken } from '../services/NotificationService';
+import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 
 // 알림 타입 enum (API와 일치)
@@ -402,6 +404,46 @@ const SettingScreen = () => {
     };
   }, [hideTabBar, showTabBar, keepTabBarVisible]);
 
+  // 로그아웃 핸들러
+  const handleLogout = async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+      let fcmToken = await AsyncStorage.getItem('fcmToken');
+      const bleToken = await AsyncStorage.getItem('bleToken');
+      // fcmToken이 저장소에 없으면 서비스에서 직접 가져오기
+      if (!fcmToken) {
+        fcmToken = await getFcmToken();
+      }
+      if (!refreshToken || !fcmToken) {
+        Alert.alert('오류', '로그아웃 정보가 올바르지 않습니다.');
+        return;
+      }
+      await logoutApi(refreshToken, fcmToken, bleToken);
+      // 토큰 등 인증정보 삭제
+      await AsyncStorage.removeItem('accessToken');
+      await AsyncStorage.removeItem('refreshToken');
+      await AsyncStorage.removeItem('bleToken');
+      await AsyncStorage.removeItem('userId');
+      await AsyncStorage.removeItem('fcmToken');
+
+      // zustand 상태도 초기화
+      await useAuthStore.getState().logout();
+
+      Alert.alert('알림', '로그아웃 되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 필요시 로그인 화면 등으로 이동
+            navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+          },
+        },
+      ]);
+    } catch (e) {
+      console.error('로그아웃 실패:', e);
+      Alert.alert('오류', '로그아웃에 실패했습니다.');
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -710,7 +752,7 @@ const SettingScreen = () => {
             <Text style={styles.withdrawText}>회원탈퇴</Text>
           </TouchableOpacity>
           <View style={styles.buttonSpacer} />
-          <TouchableOpacity style={styles.logoutTouchable}>
+          <TouchableOpacity style={styles.logoutTouchable} onPress={handleLogout}>
             <Text style={styles.logoutText}>로그아웃</Text>
           </TouchableOpacity>
         </View>

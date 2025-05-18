@@ -187,7 +187,7 @@ const PresentScreen = () => {
 
   // 갤러리에 저장 처리 함수
   const handleSaveToGallery = () => {
-    Alert.alert('갤러리 저장', '갤러리에 이미지가 저장되었습니다.');
+    // TODO: 실제 갤러리 저장 기능 구현 필요
   };
 
   // 선물하기 처리 함수
@@ -314,6 +314,10 @@ const PresentScreen = () => {
         {/* 템플릿 카드 영역 - 새로운 레이아웃 */}
         <View style={styles.templateCardSection}>
           <View style={styles.templateCard}>
+            {/* 미리보기 라벨 */}
+            <View style={styles.previewLabelContainer}>
+              <Text style={styles.previewLabelText}>미리보기</Text>
+            </View>
             {/* 템플릿 이미지 */}
             <Image
               source={getSelectedTemplateImage()}
@@ -436,6 +440,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'transparent',
     position: 'relative',
+  },
+  previewLabelContainer: {
+    position: 'absolute',
+    top: 28,
+    left: 10,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    zIndex: 10,
+  },
+  previewLabelText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    fontFamily: 'Pretendard-Bold',
   },
   templateImage: {
     width: '100%',
