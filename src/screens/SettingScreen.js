@@ -71,7 +71,6 @@ const SettingScreen = () => {
     shareboxGiftUsage,
     shareboxMemberJoin,
     shareboxGroupDelete,
-    isLoading,
     error,
     fetchNotificationSettings,
     updateNotificationTypeStatus,
@@ -102,13 +101,79 @@ const SettingScreen = () => {
   const handleNotificationToggle = useCallback(
     async (type, enabled) => {
       console.log(`[알림설정] ${type} 알림 상태 변경 요청:`, enabled);
-      const success = await updateNotificationTypeStatus(type, enabled);
 
-      if (!success && error) {
-        Alert.alert('알림 설정 실패', error);
-      }
+      // 낙관적 UI 업데이트 - 상태를 즉시 변경하여 깜빡임 방지
+      // 스토어에서 제공하는 함수를 직접 호출하지 않고, 내부 구현에서 처리
+      const updateOptimistically = async () => {
+        // 해당 타입의 상태값을 직접 가져와서 현재 어떤 상태인지 확인
+        let currentState = false;
+
+        switch (type) {
+          case NOTIFICATION_TYPES.EXPIRY_DATE:
+            currentState = expiryNotification;
+            break;
+          case NOTIFICATION_TYPES.LOCATION_BASED:
+            currentState = nearbyStoreNotification;
+            break;
+          case NOTIFICATION_TYPES.USAGE_COMPLETE:
+            currentState = usageCompletionNotification;
+            break;
+          case NOTIFICATION_TYPES.RECEIVE_GIFTICON:
+            currentState = giftSharingNotification;
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_GIFTICON:
+            currentState = shareboxGiftRegistration;
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE:
+            currentState = shareboxGiftUsage;
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_MEMBER_JOIN:
+            currentState = shareboxMemberJoin;
+            break;
+          case NOTIFICATION_TYPES.SHAREBOX_DELETED:
+            currentState = shareboxGroupDelete;
+            break;
+          default:
+            break;
+        }
+
+        // 이미 같은 상태면 아무것도 하지 않음 (중복 호출 방지)
+        if (currentState === enabled) {
+          return true;
+        }
+
+        try {
+          // API 호출하여 설정 업데이트
+          const success = await updateNotificationTypeStatus(type, enabled);
+
+          if (!success && error) {
+            // 실패 시 이전 상태로 되돌리기 위한 알림
+            Alert.alert('알림 설정 실패', error);
+            return false;
+          }
+
+          return success;
+        } catch (err) {
+          console.error('[알림설정] 토글 오류:', err);
+          Alert.alert('오류', '알림 설정 변경 중 문제가 발생했습니다.');
+          return false;
+        }
+      };
+
+      updateOptimistically();
     },
-    [updateNotificationTypeStatus, error]
+    [
+      expiryNotification,
+      nearbyStoreNotification,
+      usageCompletionNotification,
+      giftSharingNotification,
+      shareboxGiftRegistration,
+      shareboxGiftUsage,
+      shareboxMemberJoin,
+      shareboxGroupDelete,
+      updateNotificationTypeStatus,
+      error,
+    ]
   );
 
   // 알림 주기 변경 핸들러
@@ -477,13 +542,6 @@ const SettingScreen = () => {
         <View style={styles.emptyRightSpace} />
       </View>
 
-      {/* 로딩 인디케이터 */}
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      )}
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentContainer}
@@ -551,9 +609,14 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={expiryNotification}
-              onValueChange={value =>
-                handleNotificationToggle(NOTIFICATION_TYPES.EXPIRY_DATE, value)
-              }
+              onValueChange={value => {
+                // 낙관적 UI 업데이트를 위해 상태를 먼저 변경
+                useNotificationStore.setState(state => ({
+                  ...state,
+                  expiryNotification: value,
+                }));
+                handleNotificationToggle(NOTIFICATION_TYPES.EXPIRY_DATE, value);
+              }}
             />
           </View>
 
@@ -616,9 +679,14 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={nearbyStoreNotification}
-              onValueChange={value =>
-                handleNotificationToggle(NOTIFICATION_TYPES.LOCATION_BASED, value)
-              }
+              onValueChange={value => {
+                // 낙관적 UI 업데이트를 위해 상태를 먼저 변경
+                useNotificationStore.setState(state => ({
+                  ...state,
+                  nearbyStoreNotification: value,
+                }));
+                handleNotificationToggle(NOTIFICATION_TYPES.LOCATION_BASED, value);
+              }}
             />
           </View>
 
@@ -634,9 +702,14 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={usageCompletionNotification}
-              onValueChange={value =>
-                handleNotificationToggle(NOTIFICATION_TYPES.USAGE_COMPLETE, value)
-              }
+              onValueChange={value => {
+                // 낙관적 UI 업데이트를 위해 상태를 먼저 변경
+                useNotificationStore.setState(state => ({
+                  ...state,
+                  usageCompletionNotification: value,
+                }));
+                handleNotificationToggle(NOTIFICATION_TYPES.USAGE_COMPLETE, value);
+              }}
             />
           </View>
 
@@ -652,9 +725,14 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={giftSharingNotification}
-              onValueChange={value =>
-                handleNotificationToggle(NOTIFICATION_TYPES.RECEIVE_GIFTICON, value)
-              }
+              onValueChange={value => {
+                // 낙관적 UI 업데이트를 위해 상태를 먼저 변경
+                useNotificationStore.setState(state => ({
+                  ...state,
+                  giftSharingNotification: value,
+                }));
+                handleNotificationToggle(NOTIFICATION_TYPES.RECEIVE_GIFTICON, value);
+              }}
             />
           </View>
 
@@ -670,9 +748,14 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={shareboxGiftRegistration}
-              onValueChange={value =>
-                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_GIFTICON, value)
-              }
+              onValueChange={value => {
+                // 낙관적 UI 업데이트를 위해 상태를 먼저 변경
+                useNotificationStore.setState(state => ({
+                  ...state,
+                  shareboxGiftRegistration: value,
+                }));
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_GIFTICON, value);
+              }}
             />
           </View>
 
@@ -688,9 +771,14 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={shareboxGiftUsage}
-              onValueChange={value =>
-                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE, value)
-              }
+              onValueChange={value => {
+                // 낙관적 UI 업데이트를 위해 상태를 먼저 변경
+                useNotificationStore.setState(state => ({
+                  ...state,
+                  shareboxGiftUsage: value,
+                }));
+                handleNotificationToggle(NOTIFICATION_TYPES.SHAREBOX_USAGE_COMPLETE, value);
+              }}
             />
           </View>
 
