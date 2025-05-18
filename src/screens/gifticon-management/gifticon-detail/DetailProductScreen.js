@@ -25,6 +25,7 @@ import NavigationService from '../../../navigation/NavigationService';
 import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxService';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
+import useAuthStore from '../../../store/authStore';
 
 // 이미지 소스를 안전하게 가져오는 헬퍼 함수
 const getImageSource = path => {
@@ -54,6 +55,7 @@ const DetailProductScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { showTabBar } = useTabBar();
+  const myUserId = useAuthStore(state => state.userId);
 
   // scope 상태 관리
   const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX', 'SHARE_BOX' 또는 'USED'
@@ -426,7 +428,12 @@ const DetailProductScreen = () => {
         ]);
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
-        await gifticonService.cancelShareGifticon(gifticonId);
+        if (!gifticonData.shareBoxId) {
+          Alert.alert('오류', '쉐어박스 정보를 찾을 수 없습니다.');
+          return;
+        }
+
+        await gifticonService.cancelShareGifticon(gifticonData.shareBoxId, gifticonId);
 
         // 성공 메시지
         Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
@@ -448,10 +455,16 @@ const DetailProductScreen = () => {
 
         if (status === 400 && data.errorCode === 'SHAREBOX_010') {
           errorMessage = '이미 공유된 기프티콘은 삭제할 수 없습니다.';
+        } else if (status === 400 && data.errorCode === 'SHAREBOX_011') {
+          errorMessage = '이 쉐어박스에 공유되지 않은 기프티콘입니다.';
+        } else if (status === 403 && data.errorCode === 'SHAREBOX_008') {
+          errorMessage = '해당 쉐어박스에 접근 권한이 없습니다.';
         } else if (status === 403 && data.errorCode === 'GIFTICON_002') {
           errorMessage = '해당 기프티콘에 접근 권한이 없습니다.';
         } else if (status === 404) {
-          if (data.errorCode === 'GIFTICON_001') {
+          if (data.errorCode === 'SHAREBOX_001') {
+            errorMessage = '쉐어박스를 찾을 수 없습니다.';
+          } else if (data.errorCode === 'GIFTICON_001') {
             errorMessage = '기프티콘 정보를 찾을 수 없습니다.';
           } else if (data.errorCode === 'GIFTICON_005') {
             errorMessage = '이미 삭제된 기프티콘입니다.';
@@ -604,18 +617,17 @@ const DetailProductScreen = () => {
                       )}
 
                       {/* 쉐어박스이고 내가 공유한 경우에만 공유 취소 아이콘 표시 */}
-                      {scope === 'SHARE_BOX' && isSharer && (
-                        <TouchableOpacity
-                          style={styles.actionRemoveButton}
-                          onPress={handleCancelShare}
-                        >
-                          <Icon name="arrow-downward" type="material" size={20} color="#718096" />
-                          <Text style={styles.actionRemoveText}>내리기</Text>
-                        </TouchableOpacity>
-                      )}
+                      {scope === 'SHARE_BOX' &&
+                        (isSharer || gifticonData.userId === Number(myUserId)) && (
+                          <TouchableOpacity
+                            style={styles.actionIconButton}
+                            onPress={handleCancelShare}
+                          >
+                            <Icon name="person-remove" type="material" size={24} color="#718096" />
+                          </TouchableOpacity>
+                        )}
                     </View>
                   )}
-
                   {/* SELF_USE 유형의 사용완료 기프티콘인 경우 바코드 표시 */}
                   {isUsed && gifticonData.usageType === 'SELF_USE' && (
                     <View style={styles.usedBarcodeContainer}>
@@ -635,7 +647,6 @@ const DetailProductScreen = () => {
                       </Text>
                     </View>
                   )}
-
                   {isUsed && (
                     <View style={styles.usedOverlay}>
                       <Text weight="bold" style={styles.usedText}>
@@ -643,7 +654,6 @@ const DetailProductScreen = () => {
                       </Text>
                     </View>
                   )}
-
                   {!isUsed && (
                     <View
                       style={[
