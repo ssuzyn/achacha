@@ -3,7 +3,6 @@ import { Modal, View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } fr
 import { useTheme } from '../hooks/useTheme';
 
 const { width } = Dimensions.get('window');
-const StarbucksImg = require('../assets/images/starbucks.png');
 
 const GifticonConfirmModal = ({ visible, selectedGifticon, onCancel, onConfirm }) => {
   const { theme } = useTheme();
