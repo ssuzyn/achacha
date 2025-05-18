@@ -131,17 +131,34 @@ const HeadupToast = props => {
         ) &&
         referenceEntityType === REFERENCE_TYPES.SHAREBOX
       ) {
-        console.log('[HeadupToast] 쉐어박스 알림 처리:', {
-          shareBoxId: referenceEntityId,
+        // 로그 추가
+        console.log('[HeadupToast] 쉐어박스 알림 처리 시작 - 원본 데이터:', {
+          notificationType,
+          referenceEntityType,
+          referenceEntityId,
+          referenceEntityIdType: typeof referenceEntityId,
+        });
+
+        // 100% 숫자로 변환되도록 보장
+        let shareBoxId = referenceEntityId;
+        if (typeof shareBoxId === 'string') {
+          shareBoxId = parseInt(shareBoxId, 10);
+        }
+
+        console.log('[HeadupToast] 쉐어박스 알림 처리 - 변환된 shareBoxId:', {
+          shareBoxId,
+          shareBoxIdType: typeof shareBoxId,
           initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
         });
 
         try {
           // 쉐어박스 기프티콘 목록 화면으로 이동
+          // BoxList 스크린의 파라미터는 shareBoxId여야 함
           navigate('BoxList', {
-            shareBoxId: parseInt(referenceEntityId, 10),
+            shareBoxId: shareBoxId,
             initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
           });
+          console.log('[HeadupToast] BoxList 네비게이션 성공');
         } catch (navError) {
           console.error('[HeadupToast] 쉐어박스 네비게이션 오류:', navError);
         }

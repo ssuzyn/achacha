@@ -78,7 +78,7 @@ export const showNotificationToast = message => {
       parsedReferenceEntityId = parsed;
     }
   } catch (e) {
-    //
+    console.error('참조 ID 파싱 오류:', e);
   }
 
   // 최종 알림 데이터 구성
@@ -144,13 +144,32 @@ export const showNotificationToast = message => {
         ) &&
         referenceEntityType === REFERENCE_TYPES.SHAREBOX
       ) {
-        console.log('[토스트 서비스] 쉐어박스 알림 처리:', referenceEntityId);
+        console.log('[토스트 서비스] 쉐어박스 알림 처리 시작:', {
+          notificationType,
+          referenceEntityType,
+          referenceEntityId,
+          referenceEntityIdType: typeof referenceEntityId,
+        });
+
+        // 100% 숫자로 변환되도록 보장
+        let shareBoxId = referenceEntityId;
+        if (typeof shareBoxId === 'string') {
+          shareBoxId = parseInt(shareBoxId, 10);
+        }
+
+        console.log('[토스트 서비스] 쉐어박스 네비게이션 시도:', {
+          shareBoxId,
+          shareBoxIdType: typeof shareBoxId,
+          initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+        });
 
         // BoxList 화면으로 이동
         NavigationService.navigate('BoxList', {
-          shareBoxId: referenceEntityId,
+          shareBoxId: shareBoxId,
           initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
         });
+
+        console.log('[토스트 서비스] BoxList 네비게이션 성공');
       }
     } catch (error) {
       console.error('[토스트 서비스] 알림 처리 중 오류:', error);
