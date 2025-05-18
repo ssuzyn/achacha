@@ -610,46 +610,8 @@ const GiveAwayScreen = ({ onClose }) => {
     buttonOpacity.value = withTiming(1);
   };
 
-  const sendGifticonToUser = async user => {
-    console.log('[API] sendGifticonToUser 함수 시작. user:', user.name, 'bleToken:', user.bleToken);
-    const gifticonToSend = userDataRef.current.selectedGifticon;
-
-    if (!gifticonToSend || !user || !user.bleToken) {
-      console.error('[API] 전송 실패: 필요한 정보 누락.', { gifticonToSend, user });
-      Alert.alert('오류', 'API 호출에 필요한 정보가 부족합니다.');
-      runOnJS(setIsTransferring)(false);
-      runOnJS(resetButtonPositionReanimated)();
-      return;
-    }
-
-    setGiftSentUserId(user.uuid);
-
-    try {
-      addReceivedAnimationReanimated(user.uuid);
-      const gifticonIdToUse = gifticonToSend.gifticonId;
-      console.log('[API] 실제 API 호출 시작:', {
-        gifticonId: gifticonIdToUse,
-        bleTokens: [user.bleToken],
-      });
-      const response = await giveAwayService.giveAwayGifticon(gifticonIdToUse, [user.bleToken]);
-      console.log('[API] 호출 성공:', response);
-      setTimeout(() => {
-        Alert.alert('뿌리기 성공', '성공적으로 기프티콘을 뿌렸습니다!', [
-          { text: '확인', onPress: () => runOnJS(resetAfterSendReanimated)() },
-        ]);
-      }, 300);
-    } catch (apiError) {
-      console.error('[API] 호출 실패:', apiError);
-      Alert.alert('실패', apiError.message || '기프티콘 전송 중 오류 발생', [
-        { text: '확인', onPress: () => runOnJS(resetAfterSendReanimated)() },
-      ]);
-    } finally {
-      console.log('[API] sendGifticonToUser 함수 finally 블록.');
-    }
-  };
-
   const resetAfterSendReanimated = () => {
-    console.log('[Reanimated] resetAfterSendReanimated 호출됨');
+    // console.log('[Reanimated] resetButtonPositionReanimated 호출됨');
     buttonTranslateX.value = withSpring(0);
     buttonTranslateY.value = withSpring(0);
     buttonScale.value = withSpring(1);
@@ -665,11 +627,65 @@ const GiveAwayScreen = ({ onClose }) => {
     setSelectedGifticon(null);
     userDataRef.current.selectedGifticon = null;
     userDataRef.current.hasSelectedGifticon = false;
-    console.log('[Reanimated] resetAfterSendReanimated 완료. 버튼 및 상태 초기화.');
+  };
+
+  // API 성공 시 알림창 확인 버튼 핸들러
+  const handleApiSuccessAlertConfirm = () => {
+    resetAfterSendReanimated();
+    navigation.navigate('MapScreen');
+  };
+
+  // API 에러 시 알림창 확인 버튼 핸들러 (이전과 동일, 현재 화면 유지)
+  const handleApiErrorAlertConfirm = () => {
+    resetAfterSendReanimated();
+  };
+
+  const sendGifticonToUser = async user => {
+    const gifticonToSend = userDataRef.current.selectedGifticon;
+
+    if (!gifticonToSend || !user || !user.bleToken) {
+      console.error('[API] 전송 실패: 필요한 정보 누락.', { gifticonToSend, user });
+      Alert.alert('오류', 'API 호출에 필요한 정보가 부족합니다.');
+      runOnJS(setIsTransferring)(false);
+      runOnJS(resetButtonPositionReanimated)();
+      return;
+    }
+
+    setGiftSentUserId(user.uuid);
+
+    try {
+      addReceivedAnimationReanimated(user.uuid);
+      const gifticonIdToUse = gifticonToSend.gifticonId;
+      // console.log('[API] 실제 API 호출 시작:', {
+      //   gifticonId: gifticonIdToUse,
+      //   bleTokens: [user.bleToken],
+      // });
+      const response = await giveAwayService.giveAwayGifticon(gifticonIdToUse, [user.bleToken]);
+      // console.log('[API] 호출 성공:', response);
+
+      // 커스텀 모달 관련 호출 제거하고 Alert 사용
+      // runOnJS(setLastSentUserInfo)({
+      //   userName: user.name,
+      //   gifticonName: gifticonToSend.gifticonName || '기프티콘',
+      // });
+      // runOnJS(setIsSuccessModalVisible)(true); // 이 부분이 에러의 원인이었을 가능성이 높음
+
+      Alert.alert(
+        '성공',
+        `${user.name}님에게 ${gifticonToSend.gifticonName || '기프티콘'}을(를) 성공적으로 뿌렸습니다!`,
+        [{ text: '확인', onPress: () => runOnJS(handleApiSuccessAlertConfirm)() }]
+      );
+    } catch (apiError) {
+      console.error('[API] 호출 실패:', apiError);
+      Alert.alert('실패', apiError.message || '기프티콘 전송 중 오류 발생', [
+        { text: '확인', onPress: () => runOnJS(handleApiErrorAlertConfirm)() },
+      ]);
+    } finally {
+      // console.log('[API] sendGifticonToUser 함수 finally 블록.');
+    }
   };
 
   const addReceivedAnimationReanimated = userId => {
-    console.log('[Reanimated] addReceivedAnimationReanimated 호출됨, userId:', userId);
     receivedUserPulse.value = 1;
     receivedUserOpacity.value = 0;
 
@@ -684,12 +700,6 @@ const GiveAwayScreen = ({ onClose }) => {
       withTiming(0.8, { duration: 300 }),
       withTiming(0, { duration: 300, delay: 200 })
     );
-  };
-
-  const handleSuccessModalGoToMap = () => {
-    setIsSuccessModalVisible(false);
-    resetAfterSendReanimated();
-    handleGoBack();
   };
 
   return (
