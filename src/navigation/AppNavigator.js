@@ -17,7 +17,7 @@ import DetailAmountHistoryScreen from '../screens/gifticon-management/gifticon-d
 import UseProductScreen from '../screens/gifticon-management/gifticon-use/UseProductScreen';
 import UseAmountScreen from '../screens/gifticon-management/gifticon-use/UseAmountScreen';
 import PresentScreen from '../screens/gifticon-management/PresentScreen';
-import GiveAwayScreen from '../screens/GiveAwayScreen';
+import GiveAwayScreen from '../screens/give-away/GiveAwayScreen';
 import SettingScreen from '../screens/SettingScreen';
 import WatchGuideScreen from '../screens/WatchGuideScreen';
 // 쉐어박스 스크린 추가
