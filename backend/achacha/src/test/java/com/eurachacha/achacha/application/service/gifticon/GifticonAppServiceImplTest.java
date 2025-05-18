@@ -220,8 +220,11 @@ class GifticonAppServiceImplTest {
 		MultipartFile originalImage = mock(MultipartFile.class);
 		MultipartFile thumbnailImage = mock(MultipartFile.class);
 		MultipartFile barcodeImage = mock(MultipartFile.class);
+		User user = mock(User.class);
 
 		ShareBox shareBox = ShareBox.builder().id(1).name("테스트 공유박스").build();
+
+		when(securityServicePort.getLoggedInUser()).thenReturn(user);
 
 		// BDDMockito를 사용한 mock 설정
 		willDoNothing().given(fileDomainService).validateImageFile(any(MultipartFile.class));
