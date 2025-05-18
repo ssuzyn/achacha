@@ -5,6 +5,7 @@ import apiClient from '../api/apiClient';
 import { API_CONFIG } from '../api/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { decode as atob } from 'base-64'; // base-64 패키지 필요
+import { getFcmToken } from './NotificationService'; // FCM 토큰 가져오기 import 추가
 
 function parseJwt(token) {
   if (!token) return null;
@@ -26,9 +27,13 @@ function parseJwt(token) {
  * @returns {Promise} 서버 응답 데이터
  */
 export const loginWithKakao = async kakaoAccessToken => {
-  // 1. 카카오 로그인
+  // FCM 토큰 가져오기
+  const fcmToken = await getFcmToken();
+
+  // 1. 카카오 로그인 (FCM 토큰 포함)
   const response = await apiClient.post(API_CONFIG.ENDPOINTS.KAKAO_LOGIN, {
     kakaoAccessToken,
+    fcmToken, // FCM 토큰 추가
   });
   const { user, accessToken, refreshToken } = response.data;
 

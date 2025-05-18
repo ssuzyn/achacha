@@ -25,6 +25,11 @@ import {
   setupTokenRefresh,
 } from './src/services/NotificationService';
 import ShareMenu from 'react-native-share-menu';
+// Toast 메시지 추가
+import Toast from 'react-native-toast-message';
+import { toastConfig } from './src/utils/toastService';
+// 네이티브 알림 리스너 추가
+import NotificationListener from './src/components/notification/NotificationListener';
 
 // 특정 경고 무시 설정
 LogBox.ignoreLogs([
@@ -295,6 +300,8 @@ export default function App() {
                   <TabBarProvider>
                     <NavigationContainer ref={navigationRef} linking={linking}>
                       <AppNavigator />
+                      {/* 네이티브 알림 리스너 추가 */}
+                      <NotificationListener />
                       <StatusBar style="auto" />
                     </NavigationContainer>
                   </TabBarProvider>
@@ -303,6 +310,8 @@ export default function App() {
             </SafeAreaProvider>
           </ThemeProvider>
         </AppQueryClientProvider>
+        {/* Toast 메시지 컴포넌트 추가 */}
+        <Toast config={toastConfig} />
       </GestureHandlerRootView>
     </AppWrapper>
   );

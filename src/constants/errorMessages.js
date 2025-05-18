@@ -64,6 +64,12 @@ export const PRESENT_ERROR_MESSAGES = {
   PRESENT_001: '선물 카드 템플릿 디자인을 찾을 수 없습니다.',
 };
 
+// 알림 관련 에러 메시지
+export const NOTIFICATION_ERROR_MESSAGES = {
+  NOTIFICATION_001: '알림 타입을 찾을 수 없습니다.',
+  NOTIFICATION_002: '알림 설정을 찾을 수 없습니다.',
+  NOTIFICATION_003: '비활성화된 알림입니다.',
+};
 
 // 쉐어박스 관련 에러 메시지 (생성/참여 등)
 export const SHAREBOX_ERROR_MESSAGES = {
@@ -91,6 +97,7 @@ export const ERROR_MESSAGES = {
   ...SHAREBOX_ERROR_MESSAGES,
   ...SERVER_ERROR_MESSAGES,
   ...PRESENT_ERROR_MESSAGES,
+  ...NOTIFICATION_ERROR_MESSAGES,
 };
 
 // 기본 에러 메시지
