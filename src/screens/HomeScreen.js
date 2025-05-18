@@ -22,6 +22,7 @@ import gifticonService from '../api/gifticonService';
 import notificationService from '../api/notificationService';
 import { useHeaderBar } from '../context/HeaderBarContext';
 import { useNavigation } from '@react-navigation/native';
+import { fetchUserById } from '../api/userInfo';
 
 // 캐러셀에 표시할 카드 데이터
 const CAROUSEL_CARDS = [
@@ -70,20 +71,20 @@ const HomeScreen = () => {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       const bleToken = await AsyncStorage.getItem('bleToken');
       const userId = await AsyncStorage.getItem('userId');
-    };
-    printTokens();
-
-    const loadNickname = async () => {
-      try {
-        const storedNickname = await AsyncStorage.getItem('userNickname');
-        if (storedNickname !== null) {
-          setNickname(storedNickname);
+      
+      // userId로 사용자 정보 조회
+      if (userId) {
+        try {
+          const userInfo = await fetchUserById(userId);
+          if (userInfo && userInfo.userName) {
+            setNickname(userInfo.userName);
+          }
+        } catch (error) {
+          console.error('사용자 정보 조회 실패:', error);
         }
-      } catch (e) {
-        // 닉네임 로드 실패
       }
     };
-    loadNickname();
+    printTokens();
 
     const loadExpiringGifticons = async () => {
       setLoading(true);
