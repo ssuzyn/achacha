@@ -56,10 +56,15 @@ const MapGifticonItem = ({
       {/* 기프티콘 정보 */}
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>
-          <Text style={styles.brand}>{brandName}</Text>
+          <Text style={styles.brand}>
+            {brandName.length > 10 ? `${brandName.substring(0, 10)}...` : brandName}
+          </Text>
           <Text style={styles.dday}>{dday}</Text>
         </View>
-        <Text style={styles.menuName}>{gifticonName}</Text>
+
+        <Text style={styles.menuName}>
+          {gifticonName.length > 10 ? `${gifticonName.substring(0, 10)}...` : gifticonName}
+        </Text>
       </View>
 
       {/* 사용 버튼 */}
