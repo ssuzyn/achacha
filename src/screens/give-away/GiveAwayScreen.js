@@ -856,9 +856,6 @@ const GiveAwayScreen = ({ onClose }) => {
                       }}
                     />
                   </View>
-                  <Text style={[styles.userName, { fontSize: 18 * position.scale }]}>
-                    {user.name}
-                  </Text>
                 </Animated.View>
               );
             })
