@@ -1,5 +1,7 @@
 package com.eurachacha.achacha.domain.model.user;
 
+import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,7 +23,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class RefreshToken {
+public class RefreshToken extends TimeStampEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
