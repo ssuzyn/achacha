@@ -178,10 +178,9 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 	@Override
 	public void validateGifticonForPresent(Integer userId, Gifticon gifticon) {
-		// 본인 소유인지 확인
-		boolean isOwner = hasAccess(userId, gifticon.getUser().getId());
-		if (!isOwner) {
-			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		// 삭제 여부
+		if (isDeleted(gifticon)) {
+			throw new CustomException(ErrorCode.GIFTICON_DELETED);
 		}
 
 		// 사용 여부
@@ -191,6 +190,17 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 
 		// 유효기간
 		validateGifticonExpiryDate(gifticon.getExpiryDate(), LocalDate.now());
+
+		// 본인 소유인지 확인
+		boolean isOwner = hasAccess(userId, gifticon.getUser().getId());
+		if (!isOwner) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+
+		// 금액형 기프티콘의 경우, 일부 사용되었는지 검증
+		if (isAmountGifticonUsed(gifticon)) {
+			throw new CustomException(ErrorCode.CANNOT_SHARE_USED_AMOUNT_GIFTICON);
+		}
 
 		// 쉐어박스에 공유중인지 확인
 		boolean alreadyShared = isAlreadyShared(gifticon);
