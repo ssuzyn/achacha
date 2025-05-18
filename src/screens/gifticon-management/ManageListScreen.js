@@ -22,6 +22,7 @@ import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import gifticonService from '../../api/gifticonService';
 import FastImage from 'react-native-fast-image';
 
@@ -29,6 +30,23 @@ const ManageListScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
   const route = useRoute();
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // AsyncStorage에서 사용자 ID 가져오기
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (userId) {
+          setCurrentUserId(parseInt(userId));
+          console.log('저장소에서 가져온 사용자 ID:', userId);
+        }
+      } catch (error) {
+        console.error('사용자 ID 가져오기 실패:', error);
+      }
+    };
+    getUserId();
+  }, []);
 
   // route.params에서 initialTab을 가져와 초기 탭 설정
   const initialTab = route.params?.initialTab || 'mybas';
@@ -77,9 +95,6 @@ const ManageListScreen = () => {
 
   // 사용완료 탭 정렬 옵션
   const usedSortOptions = [{ id: 'recent', title: '사용순' }];
-
-  // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
-  const currentUserId = 1;
 
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({

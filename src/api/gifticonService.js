@@ -592,6 +592,16 @@ const gifticonService = {
       throw error;
     }
   },
+
+  // 사용완료 기프티콘 상세 조회
+  async getUsedGifticonDetail(gifticonId) {
+    try {
+      const response = await apiClient.get(`/api/used-gifticons/${gifticonId}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 };
 
 export default gifticonService;
