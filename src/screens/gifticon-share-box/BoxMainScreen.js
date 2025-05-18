@@ -153,6 +153,8 @@ const BoxMainScreen = () => {
       await joinShareBox(inviteCode.trim());
       alert('쉐어박스에 성공적으로 참여하였습니다!');
       handleCloseModal();
+      // 쉐어박스 목록 새로고침
+      await loadShareBoxes(0);
     } catch (error) {
       // 에러 상세 로그 추가
       console.log('[쉐어박스 참여 에러]', error);
