@@ -3,9 +3,21 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { calculateDday } from '../../utils/dateUtils';
 import { useNavigation } from '@react-navigation/native';
 
-const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
-  const { brandName, gifticonExpiryDate, gifticonName, thumbnailPath, gifticonId, brandId } =
-    gifticon;
+const MapGifticonItem = ({
+  gifticon,
+  onUse = () => {},
+  onSelectBrand = () => {},
+  isSelected = false,
+}) => {
+  const {
+    brandName,
+    gifticonExpiryDate,
+    gifticonName,
+    thumbnailPath,
+    gifticonId,
+    brandId,
+    gifticonType,
+  } = gifticon;
   const [imageError, setImageError] = useState(false);
   const navigation = useNavigation();
 
@@ -18,11 +30,20 @@ const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
 
   // 사용 버튼 클릭 핸들러
   const handleUsePress = e => {
-    e.stopPropagation(); // 부모 터치 이벤트 전파 중단
-    navigation.navigate('GifticonDetail', {
-      gifticonId: gifticonId,
-      scope: 'MY_BOX', // 사용 가능한 기프티콘이므로 MY_BOX로 설정
-    });
+    e.stopPropagation();
+
+    // 기프티콘 타입에 따라 다른 페이지로 이동
+    if (gifticonType === 'AMOUNT') {
+      navigation.navigate('DetailAmount', {
+        gifticonId: gifticonId,
+        scope: 'MY_BOX',
+      });
+    } else {
+      navigation.navigate('DetailProduct', {
+        gifticonId: gifticonId,
+        scope: 'MY_BOX',
+      });
+    }
   };
 
   return (
