@@ -42,9 +42,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // React Native 모듈로 알림 데이터 전달
         sendNotificationToReactNative(remoteMessage);
         
-        // 포그라운드에서는 시스템 알림을 표시하지 않고 종료
+        // 포그라운드에서는 시스템 알림을 표시하지 않고 종료 (React Native에서 처리)
         if (isAppInForeground()) {
-            Log.d(TAG, "App is in foreground. Notification will be handled by React Native Toast only.");
+            Log.d(TAG, "앱이 포그라운드 상태입니다. React Native Toast로 알림을 표시합니다.");
+            Log.d(TAG, "포그라운드 알림 타이틀: " + 
+                (remoteMessage.getNotification() != null ? remoteMessage.getNotification().getTitle() : "제목 없음"));
+            Log.d(TAG, "포그라운드 알림 내용: " + 
+                (remoteMessage.getNotification() != null ? remoteMessage.getNotification().getBody() : "내용 없음"));
             return;
         }
         
@@ -213,12 +217,22 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
      */
     private void sendNotificationToReactNative(RemoteMessage remoteMessage) {
         try {
-            // MyFirebaseMessagingServiceModule 클래스에서 정의한 static 메서드 호출
-            // 이 이벤트는 React Native 측에서 수신하여 처리함
+            // 로그 추가
+            Log.d(TAG, "React Native로 FCM 메시지 전달 시도 중...");
+            if (remoteMessage.getNotification() != null) {
+                Log.d(TAG, "알림 제목: " + remoteMessage.getNotification().getTitle());
+                Log.d(TAG, "알림 내용: " + remoteMessage.getNotification().getBody());
+            }
+            if (remoteMessage.getData().size() > 0) {
+                Log.d(TAG, "데이터 페이로드: " + remoteMessage.getData());
+            }
+            
+            // NotificationModule로 메시지 전달
             com.koup28.achacha_app.NotificationModule.emitMessageReceived(remoteMessage);
-            Log.d(TAG, "FCM 메시지가 React Native로 전달됨");
+            Log.d(TAG, "FCM 메시지가 React Native로 성공적으로 전달됨");
         } catch (Exception e) {
             Log.e(TAG, "React Native에 알림 데이터 전달 중 오류 발생", e);
+            e.printStackTrace();
         }
     }
 

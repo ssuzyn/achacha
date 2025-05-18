@@ -10,6 +10,7 @@ import { TabBarProvider } from './context/TabBarContext';
 import { HeaderBarProvider } from './context/HeaderBarContext';
 import Toast from 'react-native-toast-message';
 import { toastConfig } from './utils/toastService';
+import NotificationListener from './components/notification/NotificationListener';
 
 // React Query 클라이언트 생성 및 기본 옵션 설정
 const queryClient = new QueryClient({
@@ -63,6 +64,7 @@ export default function App() {
           </HeaderBarProvider>
         </TabBarProvider>
         <Toast config={toastConfig} />
+        <NotificationListener />
       </QueryClientProvider>
     </SafeAreaProvider>
   );

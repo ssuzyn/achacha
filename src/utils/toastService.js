@@ -90,7 +90,7 @@ export const toastConfig = {
  * 푸시 알림을 토스트 메시지로 표시
  * @param {Object} message - FCM 메시지 객체
  */
-export const showNotificationToast = (message) => {
+export const showNotificationToast = message => {
   const { title, body } = message.notification || {};
   const data = message.data || {};
 
@@ -100,6 +100,9 @@ export const showNotificationToast = (message) => {
     referenceEntityType: data.referenceEntityType || data.type,
     referenceEntityId: data.referenceEntityId || data.id || data.gifticonId || data.shareboxId,
   };
+
+  // 기존 알림이 있으면 모두 제거
+  Toast.hide();
 
   // 토스트 메시지 표시
   Toast.show({
@@ -112,13 +115,15 @@ export const showNotificationToast = (message) => {
       referenceEntityId: notificationData.referenceEntityId,
     },
     position: 'top',
-    visibilityTime: 4000,
+    visibilityTime: 7000,
     autoHide: true,
-    topOffset: 30,
+    topOffset: 40,
+    onShow: () => console.log('알림 토스트가 표시되었습니다.'),
+    onHide: () => console.log('알림 토스트가 숨겨졌습니다.'),
   });
 };
 
 export default {
   toastConfig,
   showNotificationToast,
-}; 
+};
