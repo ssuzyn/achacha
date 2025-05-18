@@ -181,20 +181,21 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// ShareBox 객체 조회, Participants 조회로 참여하고 있는 기프티콘 박스인지 체크해야 함.
 		ShareBox shareBox = null;
+
+		// 로그인 된 유저
+		User loggedInUser = securityServicePort.getLoggedInUser();
+
 		if (requestDto.getShareBoxId() != null) {
 			shareBox = shareBoxRepository.findById(requestDto.getShareBoxId());
 
 			// 현재 사용자가 해당 공유 박스에 참여 중인지 확인
-			Integer userId = 1; // 인증 구현 시 변경 필요
-			boolean hasParticipation = participationRepository.checkParticipation(userId, shareBox.getId());
+			boolean hasParticipation = participationRepository.checkParticipation(loggedInUser.getId(),
+				shareBox.getId());
 
 			if (!hasParticipation) {
 				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
 			}
 		}
-
-		// 로그인 된 유저
-		User loggedInUser = securityServicePort.getLoggedInUser();
 
 		// 도메인 객체 생성
 		Gifticon newGifticon = Gifticon.builder()
@@ -467,7 +468,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 
 		// 바코드 조회 후 5분 뒤 알림 스케줄링
 		useCompleteGifticonNotificationSchedule(findGifticon, userId);
-		
+
 		log.info("사용가능 기프티콘 바코드 조회 종료");
 
 		return GifticonBarcodeResponseDto.builder()
