@@ -638,6 +638,7 @@ const SettingScreen = () => {
                     editingInterval ? styles.saveButton : styles.editButton,
                   ]}
                   onPress={handleEditSaveClick}
+                  activeOpacity={0.7}
                 >
                   <Text
                     style={[
@@ -651,17 +652,28 @@ const SettingScreen = () => {
               </View>
 
               <View
-                style={[styles.customSliderContainer, !editingInterval && styles.disabledSlider]}
+                style={[
+                  styles.customSliderContainer,
+                  editingInterval ? styles.activeSlider : styles.disabledSlider,
+                ]}
               >
                 <Slider
                   value={tempExpiryInterval}
                   values={markers}
                   onValueChange={handleExpirationCycleChange}
-                  minimumTrackTintColor={theme.colors.primary}
-                  maximumTrackTintColor={theme.colors.grey2}
+                  minimumTrackTintColor={editingInterval ? theme.colors.primary : '#CCCCCC'}
+                  maximumTrackTintColor={editingInterval ? theme.colors.grey2 : '#EEEEEE'}
                   showValue={false}
                   containerStyle={styles.sliderStyle}
                   disabled={!editingInterval}
+                  thumbStyle={{
+                    backgroundColor: editingInterval ? '#56AEE9' : '#CCCCCC',
+                    transform: [{ scale: editingInterval ? 1 : 0.8 }],
+                  }}
+                  trackStyle={{ height: editingInterval ? 6 : 4 }}
+                  thumbTintColor={editingInterval ? '#56AEE9' : '#CCCCCC'}
+                  showThumbLabel={editingInterval}
+                  thumbLabelStyle={{ fontWeight: 'bold' }}
                 />
               </View>
             </View>
@@ -954,6 +966,9 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 8,
+    borderRadius: 10,
+    transition: 'all 0.3s',
   },
   footerButtonsWrapper: {
     marginVertical: 25,
@@ -1159,9 +1174,23 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#FFFFFF',
   },
+  customSliderContainer: {
+    marginTop: 20,
+    marginBottom: 2,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
+    borderRadius: 10,
+    transition: 'all 0.3s',
+  },
+  activeSlider: {
+    backgroundColor: 'rgba(86, 174, 233, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(86, 174, 233, 0.2)',
+  },
   disabledSlider: {
     opacity: 0.8,
-    pointerEvents: 'none',
   },
 });
 
