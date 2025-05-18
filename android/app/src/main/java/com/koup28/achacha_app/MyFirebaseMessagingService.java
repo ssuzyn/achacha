@@ -38,7 +38,17 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         
         // 포그라운드에서 메시지 처리 로직
         Log.d(TAG, "From: " + remoteMessage.getFrom());
-
+        
+        // React Native 모듈로 알림 데이터 전달
+        sendNotificationToReactNative(remoteMessage);
+        
+        // 포그라운드에서는 시스템 알림을 표시하지 않고 종료
+        if (isAppInForeground()) {
+            Log.d(TAG, "App is in foreground. Notification will be handled by React Native Toast only.");
+            return;
+        }
+        
+        // 백그라운드 상태일 때만 시스템 알림 표시
         // 데이터 페이로드가 있는 경우
         if (remoteMessage.getData().size() > 0) {
             Log.d(TAG, "Message data payload: " + remoteMessage.getData());
@@ -195,5 +205,54 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // 알림 표시
         int notificationId = (int) System.currentTimeMillis();
         notificationManager.notify(notificationId, notificationBuilder.build());
+    }
+
+    /**
+     * React Native 모듈로 알림 데이터 전달
+     * RN에서 토스트 메시지로 표시하도록 처리
+     */
+    private void sendNotificationToReactNative(RemoteMessage remoteMessage) {
+        try {
+            // MyFirebaseMessagingServiceModule 클래스에서 정의한 static 메서드 호출
+            // 이 이벤트는 React Native 측에서 수신하여 처리함
+            com.koup28.achacha_app.NotificationModule.emitMessageReceived(remoteMessage);
+            Log.d(TAG, "FCM 메시지가 React Native로 전달됨");
+        } catch (Exception e) {
+            Log.e(TAG, "React Native에 알림 데이터 전달 중 오류 발생", e);
+        }
+    }
+
+    /**
+     * 앱이 포그라운드 상태인지 확인
+     * @return 포그라운드 상태이면 true, 아니면 false
+     */
+    private boolean isAppInForeground() {
+        // ActivityManager를 통해 앱의 상태를 확인
+        android.app.ActivityManager activityManager = 
+            (android.app.ActivityManager) getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        
+        if (activityManager == null) {
+            return false;
+        }
+        
+        // 실행 중인 앱 목록 가져오기
+        java.util.List<android.app.ActivityManager.RunningAppProcessInfo> appProcesses = 
+            activityManager.getRunningAppProcesses();
+        
+        if (appProcesses == null) {
+            return false;
+        }
+        
+        final String packageName = getApplicationContext().getPackageName();
+        
+        for (android.app.ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+            if (appProcess.importance == 
+                    android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && 
+                    appProcess.processName.equals(packageName)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 } 

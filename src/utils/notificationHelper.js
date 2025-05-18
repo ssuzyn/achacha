@@ -1,9 +1,9 @@
 import messaging from '@react-native-firebase/messaging';
 import notificationService from '../api/notificationService';
 import NavigationService from '../navigation/NavigationService';
-import { Platform, AppState } from 'react-native';
-import PushNotification from 'react-native-push-notification';
-import PushNotificationIOS from '@react-native-community/push-notification-ios';
+import { Platform } from 'react-native';
+// Toast 메시지 서비스 추가
+import toastService from './toastService';
 
 // 참조 타입 상수
 const REFERENCE_TYPES = {
@@ -16,7 +16,6 @@ const NOTIFICATION_HANDLERS = {
   // 기프티콘 관련 알림 처리 함수
   handleGifticonNotification: async referenceEntityId => {
     try {
-
       // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
       const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
 
@@ -104,7 +103,6 @@ export const handleNotificationNavigation = async navigationInfo => {
   try {
     const { notificationType, referenceEntityType, referenceEntityId } = navigationInfo;
 
-
     // 강제 지연 추가 (네비게이션 안정화)
     await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -171,45 +169,10 @@ export const handleNotificationNavigation = async navigationInfo => {
  */
 export const handleForegroundNotification = message => {
   // 앱이 포그라운드 상태일 때 알림 처리
-  console.log('포그라운드 알림 수신 (로컬 알림 생성):', message.notification?.title);
+  console.log('포그라운드 알림 수신 (토스트 알림 생성):', message.notification?.title);
 
-  // 알림 데이터 추출
-  const { title, body } = extractNavigationInfo(message);
-  const data = message.data || {};
-
-  // 알림 데이터 보강 (필요한 모든 필드 포함)
-  const notificationData = {
-    ...data,
-    // 핵심 필드들이 없을 경우 백업 필드로 설정
-    notificationType: data.notificationType || data.type,
-    referenceEntityType: data.referenceEntityType || data.type,
-    referenceEntityId: data.referenceEntityId || data.id || data.gifticonId || data.shareboxId,
-  };
-
-  console.log('포그라운드 알림 데이터 설정:', notificationData);
-
-  // iOS와 Android의 로컬 푸시 알림 처리
-  if (Platform.OS === 'ios') {
-    PushNotificationIOS.addNotificationRequest({
-      id: message.messageId || String(Date.now()),
-      title,
-      body,
-      userInfo: notificationData, // 보강된 데이터 사용
-    });
-  } else {
-    PushNotification.localNotification({
-      channelId: 'default-channel',
-      title,
-      message: body,
-      data: notificationData, // 보강된 데이터 사용
-      // 추가 Android 설정
-      ongoing: false,
-      autoCancel: true,
-      visibility: 'public',
-      importance: 'high',
-      priority: 'high',
-    });
-  }
+  // 토스트 메시지로 알림 표시
+  toastService.showNotificationToast(message);
 };
 
 /**
@@ -226,8 +189,7 @@ export const initializeNotifications = async () => {
     const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
       console.log('포그라운드 메시지 수신:', remoteMessage);
 
-      // 포그라운드에서 알림 처리 활성화 (로컬 알림 생성)
-      // 이렇게 하면 알림을 클릭했을 때 화면 이동이 처리됨
+      // 토스트 메시지로 알림 표시
       handleForegroundNotification(remoteMessage);
     });
 
@@ -261,20 +223,6 @@ export const initializeNotifications = async () => {
     console.log('FCM 토큰:', token);
     updateFcmToken(token);
 
-    // Android용 채널 생성
-    if (Platform.OS === 'android') {
-      PushNotification.createChannel(
-        {
-          channelId: 'default-channel',
-          channelName: '기본 알림',
-          channelDescription: '앱의 기본 알림 채널',
-          importance: 4,
-          vibrate: true,
-        },
-        created => console.log(`알림 채널 생성 ${created ? '성공' : '실패'}`)
-      );
-    }
-
     return unsubscribeForeground;
   } catch (error) {
     console.error('FCM 초기화 실패:', error);
@@ -295,63 +243,8 @@ const updateFcmToken = async token => {
   }
 };
 
-/**
- * 로컬 푸시 알림 설정
- */
-export const setupLocalNotifications = () => {
-  PushNotification.configure({
-    // 알림 클릭 시 호출되는 함수
-    onNotification: function (notification) {
-      console.log('로컬 알림 클릭:', notification);
-
-      // 데이터 추출
-      const data = notification.data || {};
-      const navigationInfo = {
-        notificationType: data.notificationType || data.type,
-        referenceEntityType: data.referenceEntityType || data.type,
-        referenceEntityId: data.referenceEntityId || data.id || data.gifticonId || data.shareboxId,
-        title: notification.title,
-        body: notification.message,
-      };
-
-      console.log('알림 클릭 처리 - 데이터:', navigationInfo);
-
-      // 화면 이동 처리
-      handleNotificationNavigation(navigationInfo);
-
-      // iOS 필수: 완료 콜백
-      if (Platform.OS === 'ios') {
-        notification.finish(PushNotificationIOS.FetchResult.NoData);
-      }
-    },
-
-    // 사용자가 알림 권한을 거부한 경우
-    onRegistrationError: function (err) {
-      console.error('알림 등록 오류:', err.message);
-    },
-
-    // 앱이 포그라운드 상태일 때도 알림을 표시함 (true로 변경)
-    notificationForeground: true,
-
-    // Android 설정
-    largeIcon: 'ic_launcher',
-    smallIcon: 'ic_notification',
-
-    // iOS 설정
-    permissions: {
-      alert: true,
-      badge: true,
-      sound: true,
-    },
-
-    popInitialNotification: true,
-    requestPermissions: true,
-  });
-};
-
 export default {
   initializeNotifications,
-  setupLocalNotifications,
   handleNotificationNavigation,
   extractNavigationInfo,
 };

@@ -8,6 +8,8 @@ import notificationHelper from './utils/notificationHelper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBarProvider } from './context/TabBarContext';
 import { HeaderBarProvider } from './context/HeaderBarContext';
+import Toast from 'react-native-toast-message';
+import { toastConfig } from './utils/toastService';
 
 // React Query 클라이언트 생성 및 기본 옵션 설정
 const queryClient = new QueryClient({
@@ -36,9 +38,6 @@ export default function App() {
     // FCM 및 로컬 푸시 알림 초기화
     let unsubscribeForeground;
     const setupNotifications = async () => {
-      // 로컬 푸시 알림 설정 (로컬 알림 처리)
-      notificationHelper.setupLocalNotifications();
-
       // FCM 초기화 및 이벤트 리스너 설정 (원격 알림 처리)
       unsubscribeForeground = await notificationHelper.initializeNotifications();
     };
@@ -63,6 +62,7 @@ export default function App() {
             </NavigationContainer>
           </HeaderBarProvider>
         </TabBarProvider>
+        <Toast config={toastConfig} />
       </QueryClientProvider>
     </SafeAreaProvider>
   );
