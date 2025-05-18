@@ -1,18 +1,28 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { calculateDday } from '../../utils/dateUtils';
-const StarbucksImg = require('../../assets/images/starbucks.png');
+import { useNavigation } from '@react-navigation/native';
 
 const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
   const { brandName, gifticonExpiryDate, gifticonName, thumbnailPath, gifticonId, brandId } =
     gifticon;
   const [imageError, setImageError] = useState(false);
+  const navigation = useNavigation();
 
   const dday = calculateDday(gifticonExpiryDate);
 
   // 아이템 클릭 핸들러
   const handleItemPress = () => {
     onSelectBrand(brandId);
+  };
+
+  // 사용 버튼 클릭 핸들러
+  const handleUsePress = e => {
+    e.stopPropagation(); // 부모 터치 이벤트 전파 중단
+    navigation.navigate('GifticonDetail', {
+      gifticonId: gifticonId,
+      scope: 'MY_BOX', // 사용 가능한 기프티콘이므로 MY_BOX로 설정
+    });
   };
 
   return (
@@ -32,13 +42,7 @@ const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
       </View>
 
       {/* 사용 버튼 */}
-      <TouchableOpacity
-        style={styles.useButton}
-        onPress={e => {
-          e.stopPropagation(); // 부모 터치 이벤트 전파 중단
-          onUse(gifticonId);
-        }}
-      >
+      <TouchableOpacity style={styles.useButton} onPress={handleUsePress}>
         <Text style={styles.buttonText}>사용</Text>
       </TouchableOpacity>
     </TouchableOpacity>
