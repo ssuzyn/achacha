@@ -4,6 +4,8 @@ import NavigationService from '../navigation/NavigationService';
 import { Platform } from 'react-native';
 // Toast 메시지 서비스 추가
 import toastService from './toastService';
+// 새로 만든 NotificationHandler 임포트
+import { handleNotificationPress } from './NotificationHandler';
 
 // 참조 타입 상수
 const REFERENCE_TYPES = {
@@ -14,26 +16,16 @@ const REFERENCE_TYPES = {
 // 알림 타입에 따른 처리 방식 정의
 const NOTIFICATION_HANDLERS = {
   // 기프티콘 관련 알림 처리 함수
-  handleGifticonNotification: async referenceEntityId => {
+  handleGifticonNotification: async (referenceEntityId, notificationType) => {
     try {
-      // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
-      const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
-
-      // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
-      if (gifticonDetail && gifticonDetail.gifticonType === 'AMOUNT') {
-        // 금액형 기프티콘
-        NavigationService.navigate('DetailAmount', {
-          gifticonId: referenceEntityId,
-          scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
-        });
-      } else {
-        // 상품형 기프티콘 (기본값)
-        NavigationService.navigate('DetailProduct', {
-          gifticonId: referenceEntityId,
-          scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
-        });
-      }
+      // 새로 구현한 handleNotificationPress 함수 사용
+      await handleNotificationPress({
+        referenceEntityType: 'gifticon',
+        referenceEntityId,
+        notificationType,
+      });
     } catch (error) {
+      console.error('기프티콘 알림 처리 중 오류:', error);
       // 오류 발생 시 기본 화면으로 이동
       NavigationService.navigate('Main', { screen: 'TabGifticonManage' });
       throw error; // 상위 호출자에게 오류 전파
@@ -45,21 +37,20 @@ const NOTIFICATION_HANDLERS = {
     try {
       console.log('쉐어박스 처리 시작:', referenceEntityId, notificationType);
 
-      // 쉐어박스 삭제인 경우 앱 메인으로 이동
+      // 쉐어박스 삭제인 경우 앱 메인으로 이동 (처리 제외 요구사항)
       if (notificationType === 'SHAREBOX_DELETED') {
         NavigationService.navigate('Main');
         return;
       }
 
-      // initialTab을 명시적으로 설정
-      const initialTab = notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available';
-
-      // 쉐어박스 기프티콘 목록 화면으로 이동
-      NavigationService.navigate('BoxList', {
-        shareBoxId: referenceEntityId,
-        initialTab,
+      // 새로 구현한 handleNotificationPress 함수 사용
+      await handleNotificationPress({
+        referenceEntityType: 'sharebox',
+        referenceEntityId,
+        notificationType,
       });
     } catch (error) {
+      console.error('쉐어박스 알림 처리 중 오류:', error);
       // 오류 발생 시 쉐어박스 탭으로 이동
       NavigationService.navigate('Main', { screen: 'TabSharebox' });
       throw error; // 상위 호출자에게 오류 전파
@@ -125,7 +116,7 @@ export const handleNotificationNavigation = async navigationInfo => {
       )
     ) {
       // 기프티콘 관련 알림
-      await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
+      await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId, notificationType);
       return;
     } else if (
       ['SHAREBOX_GIFTICON', 'SHAREBOX_USAGE_COMPLETE', 'SHAREBOX_MEMBER_JOIN'].includes(
@@ -137,28 +128,22 @@ export const handleNotificationNavigation = async navigationInfo => {
       return;
     } else if (referenceEntityType === REFERENCE_TYPES.GIFTICON) {
       // referenceEntityType이 gifticon인 경우
-      await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
+      await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId, notificationType);
       return;
     } else if (referenceEntityType === REFERENCE_TYPES.SHAREBOX) {
       // referenceEntityType이 sharebox인 경우
       await NOTIFICATION_HANDLERS.handleShareboxNotification(referenceEntityId, notificationType);
       return;
     } else {
-      // 타입이 명확하지 않을 경우 기프티콘으로 시도
-      try {
-        await NOTIFICATION_HANDLERS.handleGifticonNotification(referenceEntityId);
-      } catch (err) {
-        try {
-          await NOTIFICATION_HANDLERS.handleShareboxNotification(
-            referenceEntityId,
-            notificationType
-          );
-        } catch (err2) {
-          NavigationService.navigate('Main');
-        }
-      }
+      // 타입이 명확하지 않을 경우 새로운 통합 처리 함수 사용
+      await handleNotificationPress({
+        referenceEntityType: 'gifticon', // 기본값으로 gifticon 설정
+        referenceEntityId,
+        notificationType,
+      });
     }
   } catch (error) {
+    console.error('알림 이동 처리 중 오류:', error);
     // 오류 발생 시 기본 화면으로 이동
     NavigationService.navigate('Main');
   }
