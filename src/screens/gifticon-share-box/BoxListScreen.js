@@ -23,18 +23,38 @@ import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
 import { Swipeable, RectButton } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   fetchAvailableGifticons,
   fetchUsedGifticons,
   fetchShareBoxSettings,
 } from '../../api/shareBoxService';
 import { API_BASE_URL } from '../../api/config';
+import { useAuth } from '../../hooks/useAuth';
 
 const BoxListScreen = () => {
   const { theme } = useTheme();
+  const { user } = useAuth();
   const navigation = useNavigation();
   const route = useRoute();
   const insets = useSafeAreaInsets();
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // AsyncStorage에서 사용자 ID 가져오기
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem('userId');
+        if (userId) {
+          setCurrentUserId(parseInt(userId));
+          console.log('저장소에서 가져온 사용자 ID:', userId);
+        }
+      } catch (error) {
+        console.error('사용자 ID 가져오기 실패:', error);
+      }
+    };
+    getUserId();
+  }, []);
 
   // 쉐어박스 ID와 이름 가져오기
   const shareBoxId = route.params?.shareBoxId || 0;
@@ -85,9 +105,6 @@ const BoxListScreen = () => {
 
   // 사용완료 탭 정렬 옵션
   const usedSortOptions = [{ id: 'recent', title: '사용순' }];
-
-  // 현재 로그인한 사용자의 ID (실제 구현에서는 context나 state에서 가져옴)
-  const currentUserId = 78;
 
   // 추가된 상태
   const [availableGifticons, setAvailableGifticons] = useState([]);
@@ -352,7 +369,7 @@ const BoxListScreen = () => {
     }
 
     // shareBoxId로 데이터 불러오기 (실제 구현 시)
-  }, [route.params?.initialTab, shareBoxId, currentUserId]);
+  }, [route.params?.initialTab, shareBoxId, user?.id]);
 
   // 카테고리 변경 시 정렬 옵션 초기화
   useEffect(() => {
@@ -548,9 +565,9 @@ const BoxListScreen = () => {
   // 기프티콘 아이템 렌더링
   const renderGifticonItem = item => {
     const daysLeft = item.scope === 'USED' ? null : calculateDaysLeft(item.gifticonExpiryDate);
-    const isUrgent = daysLeft !== null && typeof daysLeft === 'number' && daysLeft <= 7; // 7일 이하면 긴급(빨간색)
-    const isDDay = daysLeft !== null && daysLeft === 'D-day'; // D-day인 경우
-    const isExpired = daysLeft !== null && daysLeft === '만료됨'; // 만료된 경우
+    const isUrgent = daysLeft !== null && typeof daysLeft === 'number' && daysLeft <= 7;
+    const isDDay = daysLeft !== null && daysLeft === 'D-day';
+    const isExpired = daysLeft !== null && daysLeft === '만료됨';
     const isSharedByOther = item.scope === 'SHARE_BOX' && item.userId !== currentUserId;
 
     // 사용 완료된 기프티콘은 스와이프 불가능
@@ -576,8 +593,7 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-              <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
-
+                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -589,7 +605,7 @@ const BoxListScreen = () => {
                   {item.gifticonName}
                 </Text>
 
-                {/* 쉐어박스 정보 */}
+                {/* 쉐어박스 정보 - 다른 사람이 공유한 경우에만 표시 */}
                 {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
@@ -665,8 +681,7 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
-              <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
-
+                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -678,7 +693,7 @@ const BoxListScreen = () => {
                   {item.gifticonName}
                 </Text>
 
-                {/* 쉐어박스 정보 */}
+                {/* 쉐어박스 정보 - 다른 사람이 공유한 경우에만 표시 */}
                 {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
@@ -752,8 +767,7 @@ const BoxListScreen = () => {
               >
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
-
+                  <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
                 </View>
 
                 {/* 텍스트 정보 영역 */}
@@ -765,7 +779,7 @@ const BoxListScreen = () => {
                     {item.gifticonName}
                   </Text>
 
-                  {/* 쉐어박스 정보 */}
+                  {/* 쉐어박스 정보 - 다른 사람이 공유한 경우에만 표시 */}
                   {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
                     <View style={styles.shareBoxInfoContainer}>
                       <Icon
@@ -856,8 +870,7 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-              <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
-
+                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -869,7 +882,7 @@ const BoxListScreen = () => {
                   {item.gifticonName}
                 </Text>
 
-                {/* 쉐어박스 정보 */}
+                {/* 쉐어박스 정보 - 다른 사람이 공유한 경우에만 표시 */}
                 {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
                   <View style={styles.shareBoxInfoContainer}>
                     <Icon
@@ -980,6 +993,7 @@ const BoxListScreen = () => {
   useEffect(() => {
     if (selectedCategory !== 'available') return;
 
+    console.log('현재 로그인한 사용자 ID:', currentUserId);
     console.log('API 호출 - available', {
       shareBoxId,
       type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
@@ -996,6 +1010,12 @@ const BoxListScreen = () => {
           page: undefined,
           size: 20,
         });
+        console.log('기프티콘 목록 응답:', res.gifticons.map(item => ({
+          gifticonId: item.gifticonId,
+          gifticonName: item.gifticonName,
+          userId: item.userId,
+          userName: item.userName
+        })));
         setAvailableGifticons(res.gifticons);
         setHasNextPage(res.hasNextPage);
         setNextPage(res.nextPage);
@@ -1007,7 +1027,7 @@ const BoxListScreen = () => {
     };
 
     fetchData();
-  }, [selectedCategory, selectedFilter, sortBy.available, shareBoxId]);
+  }, [selectedCategory, selectedFilter, sortBy.available, shareBoxId, currentUserId]);
 
   useEffect(() => {
     console.log('[사용완료 탭] API 호출 시작:', {
