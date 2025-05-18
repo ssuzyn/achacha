@@ -47,6 +47,8 @@ export const API_CONFIG = {
     GET_GIFTICONS: '/api/available-gifticons', //사용 가능 기프티콘 목록 조회
     GET_USED_GIFTICONS: '/api/used-gifticons', // 사용 완료 기프티콘 목록 조회
     GET_GIFTICON_DETAIL: '/api/gifticons/', // 기프티콘 상세 조회 (뒤에 ID 붙여서 사용)
+
+    // 뿌리기 관련 엔드포인트
     GIVE_AWAY_GIFTICON: gifticonId => `/api/gifticons/${gifticonId}/give-away`, // 기프티콘 뿌리기
 
     // 금액형 기프티콘 관련 엔드포인트
@@ -74,6 +76,9 @@ export const API_CONFIG = {
     NOTIFICATIONS: '/api/notifications', // 알림 내역 목록 조회
     NOTIFICATIONS_COUNT: '/api/notifications/count', // 미확인 알림 개수 조회
     NOTIFICATIONS_READ: '/api/notifications/read', // 알림 읽음 일괄 처리
+
+    // 지오펜싱 인근 매장 알림 관련 엔드포인트
+    GEO_NOTIFICATIONS: '/api/notifications/request',
 
     // 기타 엔드포인트들을 여기에 추가합니다.
     // 예: GET_USERS: '/api/users',
