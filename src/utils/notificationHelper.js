@@ -1,11 +1,11 @@
 import messaging from '@react-native-firebase/messaging';
-import notificationService from '../api/notificationService';
 import NavigationService from '../navigation/NavigationService';
 import { Platform } from 'react-native';
 // Toast 메시지 서비스 추가
 import toastService from './toastService';
 // 새로 만든 NotificationHandler 임포트
 import { handleNotificationPress } from './NotificationHandler';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 참조 타입 상수
 const REFERENCE_TYPES = {
@@ -216,15 +216,21 @@ export const initializeNotifications = async () => {
 };
 
 /**
- * FCM 토큰을 서버에 업데이트
+ * FCM 토큰을 서버에 업데이트하는 함수
+ * 로그인 시에만 FCM 토큰이 서버로 전송됨
  */
 const updateFcmToken = async token => {
   try {
-    // API를 통해 서버에 토큰 업데이트 요청
-    await notificationService.updateFcmToken(token);
-    console.log('FCM 토큰 서버 업데이트 성공');
+    // 로그인 시에는 authService.js에서 FCM 토큰을 전송하므로
+    // 여기서는 로그만 남기고 별도 API 호출은 하지 않음
+    console.log('FCM 토큰 준비됨 (로그인 시 서버에 전송됨):', token);
+
+    // 토큰을 로컬에 저장 (필요시 사용)
+    if (AsyncStorage) {
+      await AsyncStorage.setItem('fcmToken', token);
+    }
   } catch (error) {
-    console.error('FCM 토큰 서버 업데이트 실패:', error);
+    console.error('FCM 토큰 처리 실패:', error);
   }
 };
 
