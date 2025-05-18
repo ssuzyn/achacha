@@ -9,4 +9,6 @@ public interface RefreshTokenRepository {
 	boolean existsByUserId(Integer userId);
 
 	RefreshToken save(RefreshToken refreshToken);
+
+	void deleteByUserIdAndValue(Integer userId, String value);
 }

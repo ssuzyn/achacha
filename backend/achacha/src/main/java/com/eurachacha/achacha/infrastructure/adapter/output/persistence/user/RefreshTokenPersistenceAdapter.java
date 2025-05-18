@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.infrastructure.adapter.output.persistence.user;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.output.user.RefreshTokenRepository;
 import com.eurachacha.achacha.domain.model.user.RefreshToken;
@@ -29,5 +30,11 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepository {
 	@Override
 	public RefreshToken save(RefreshToken refreshToken) {
 		return refreshTokenJpaRepository.save(refreshToken);
+	}
+
+	@Transactional
+	@Override
+	public void deleteByUserIdAndValue(Integer userId, String value) {
+		refreshTokenJpaRepository.deleteByUserIdAndValue(userId, value);
 	}
 }
