@@ -160,6 +160,10 @@ const RegisterMainScreen = () => {
         setIsOcrLoading(false);
         console.log('[공유 인텐트] 이미지 메타데이터 조회 결과:', imageMetadata);
         setImageOptionVisible(false);
+        
+        // 공유 인텐트 이미지 정보 초기화
+        navigation.setParams({ sharedImageUri: null });
+        
         navigation.navigate('RegisterDetail', {
           selectedImage: { uri: imageAsset.uri },
           originalImage: { uri: imageAsset.uri },
@@ -194,6 +198,9 @@ const RegisterMainScreen = () => {
           {
             text: '직접 입력하기',
             onPress: () => {
+              // 공유 인텐트 이미지 정보 초기화
+              navigation.setParams({ sharedImageUri: null });
+              
               setImageOptionVisible(false);
               navigation.navigate('RegisterDetail', {
                 selectedImage: { uri: imageAsset.uri },
