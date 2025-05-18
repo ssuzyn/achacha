@@ -429,11 +429,15 @@ const DetailProductScreen = () => {
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
         if (!gifticonData.shareBoxId) {
-          Alert.alert('오류', '쉐어박스 정보를 찾을 수 없습니다.');
+          Alert.alert(
+            '오류',
+            '쉐어박스 정보를 찾을 수 없습니다. 데이터 동기화 후 다시 시도해주세요.'
+          );
           return;
         }
 
-        await gifticonService.cancelShareGifticon(gifticonData.shareBoxId, gifticonId);
+        await gifticonService.cancelShareGifticonFromBox(gifticonData.shareBoxId, gifticonId);
+        console.log('[DetailProductScreen] 기프티콘 공유 취소 성공:', gifticonId);
 
         // 성공 메시지
         Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [

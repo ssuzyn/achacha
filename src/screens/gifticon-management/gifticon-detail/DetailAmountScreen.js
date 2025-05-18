@@ -104,32 +104,41 @@ const DetailAmountScreen = () => {
   // route.params에서 scope, gifticonId를 가져오는 부분
   useEffect(() => {
     if (route.params) {
-      if (route.params.scope) {
-        setScope(route.params.scope);
+      const {
+        scope: newScope,
+        gifticonId: newGifticonId,
+        isSharer: newIsSharer,
+        refresh,
+      } = route.params;
+      if (newScope) {
+        setScope(newScope);
       }
-      if (route.params.gifticonId) {
-        setGifticonId(route.params.gifticonId);
+      if (newGifticonId) {
+        setGifticonId(newGifticonId);
       }
-      // 공유박스에서 내가 공유한 것인지 확인
-      if (route.params.isSharer) {
-        setIsSharer(route.params.isSharer);
+      if (newIsSharer !== undefined) {
+        setIsSharer(newIsSharer);
       }
       // refresh 플래그가 true이면 데이터 다시 로드
-      if (route.params.refresh && gifticonId) {
-        console.log('[DetailAmountScreen] 데이터 새로고침 요청 - 기프티콘 ID:', gifticonId);
-        loadGifticonData(route.params.gifticonId || gifticonId);
+      if (refresh && (newGifticonId || gifticonId)) {
+        console.log(
+          '[DetailAmountScreen] 데이터 새로고침 요청 - 기프티콘 ID:',
+          newGifticonId || gifticonId
+        );
+        loadGifticonData(newGifticonId || gifticonId);
         // 사용하기 모드 종료
         setIsUsing(false);
       }
     }
-  }, [route.params]);
+  }, [route.params, gifticonId]);
 
-  // 기프티콘 ID가 있으면 데이터 로드
+  // 기프티콘 ID가 변경되거나, scope가 변경될 때 데이터 로드
+  // (refresh 파라미터 없이도 기본적인 데이터 로딩은 수행)
   useEffect(() => {
     if (gifticonId) {
       loadGifticonData(gifticonId);
     }
-  }, [gifticonId]);
+  }, [gifticonId, scope]); // scope 변경 시에도 데이터 리로드
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
@@ -587,11 +596,14 @@ const DetailAmountScreen = () => {
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
         if (!gifticonData.shareBoxId) {
-          Alert.alert('오류', '쉐어박스 정보를 찾을 수 없습니다.');
+          Alert.alert(
+            '오류',
+            '쉐어박스 정보를 찾을 수 없습니다. 데이터 동기화 후 다시 시도해주세요.'
+          );
           return;
         }
 
-        await gifticonService.cancelShareGifticon(gifticonData.shareBoxId, gifticonId);
+        await gifticonService.cancelShareGifticonFromBox(gifticonData.shareBoxId, gifticonId);
         console.log('[DetailAmountScreen] 기프티콘 공유 취소 성공:', gifticonId);
 
         // 성공 메시지
