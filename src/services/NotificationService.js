@@ -87,6 +87,13 @@ export const setupBackgroundHandler = () => {
 
 // 알림 클릭 시 처리
 export const handleNotificationOpen = navigation => {
+  if (!navigation) {
+    console.log(
+      '[NotificationService] navigation 객체가 초기화되지 않았습니다. 알림 핸들러를 설정할 수 없습니다.'
+    );
+    return;
+  }
+
   messaging().onNotificationOpenedApp(remoteMessage => {
     console.log('백그라운드 상태에서 알림 클릭:', remoteMessage);
 
@@ -109,9 +116,22 @@ export const handleNotificationOpen = navigation => {
 
 // 알림 타입에 따른 화면 이동 처리
 const handleNavigationByType = (navigation, remoteMessage) => {
-  if (!navigation || !remoteMessage) return;
+  if (!navigation) {
+    console.log('[NotificationService] navigation 객체가 없습니다. 화면 이동을 할 수 없습니다.');
+    return;
+  }
+
+  if (!remoteMessage) {
+    console.log('[NotificationService] 알림 데이터가 없습니다.');
+    return;
+  }
 
   const { data } = remoteMessage;
+  if (!data) {
+    console.log('[NotificationService] 알림에 데이터가 없습니다.');
+    return;
+  }
+
   const notificationType = data?.type || data?.notificationType;
 
   console.log('알림 데이터:', data);

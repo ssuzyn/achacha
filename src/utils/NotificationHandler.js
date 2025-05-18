@@ -18,6 +18,16 @@ export const handleNotificationPress = async notification => {
   try {
     const { referenceEntityType, referenceEntityId, notificationType } = notification;
 
+    // navigation이 초기화됐는지 확인
+    if (!NavigationService.navigationRef.current) {
+      console.log(
+        '[NotificationHandler] Navigation이 초기화되지 않았습니다. 잠시 후 재시도합니다.'
+      );
+      // 0.5초 후에 재시도
+      setTimeout(() => handleNotificationPress(notification), 500);
+      return;
+    }
+
     // 기프티콘 관련 알림인 경우
     if (referenceEntityType.toLowerCase() === 'gifticon') {
       const gifticonId = referenceEntityId;
