@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-elements';
+import notificationService from '../../api/notificationService';
 
 // NotificationScreen.js에서 사용하는 것과 동일한 아이콘 매핑
 const NOTIFICATION_ICONS = {
@@ -16,6 +17,12 @@ const NOTIFICATION_ICONS = {
   SUCCESS: 'check-circle',
   ERROR: 'error',
   INFO: 'info',
+};
+
+// 참조 타입 상수
+const REFERENCE_TYPES = {
+  GIFTICON: 'gifticon',
+  SHAREBOX: 'sharebox',
 };
 
 /**
@@ -34,18 +41,93 @@ const HeadupToast = props => {
   const title = customProps.title || text1 || '';
   const message = customProps.message || text2 || '';
 
-  // 클릭 이벤트 핸들러
-  const handlePress = () => {
+  // 알림 객체 데이터 추출 (NotificationScreen과 동일한 형식)
+  const notificationData = customProps.notificationData || null;
+
+  // 네비게이션 설정
+  const navigationConfig = customProps.navigationConfig || null;
+
+  // 알림 클릭 처리 함수
+  const handleNotificationPress = async () => {
+    // 먼저 customProps에 onPress가 있으면 실행
     if (customProps.onPress) {
       customProps.onPress();
-    } else if (onPress) {
+      return;
+    }
+
+    // 기존 onPress가 있으면 실행
+    if (onPress) {
       onPress();
+      return;
+    }
+
+    // notificationData가 없거나 네비게이션 설정이 없으면 처리 불가
+    if (!notificationData || !navigationConfig || !navigationConfig.navigate) {
+      console.log('알림 데이터 또는 네비게이션 설정이 없습니다');
+      return;
+    }
+
+    const { notificationType, referenceEntityType, referenceEntityId } = notificationData;
+    const { navigate } = navigationConfig;
+
+    if (!referenceEntityId) {
+      console.log('참조 ID가 없습니다:', notificationData);
+      return;
+    }
+
+    try {
+      // 기프티콘 관련 알림 처리
+      if (
+        ['EXPIRY_DATE', 'USAGE_COMPLETE', 'RECEIVE_GIFTICON', 'LOCATION_BASED'].includes(
+          notificationType
+        ) &&
+        referenceEntityType === REFERENCE_TYPES.GIFTICON
+      ) {
+        // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
+        const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
+
+        // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
+        if (gifticonDetail.gifticonType === 'AMOUNT') {
+          // 금액형 기프티콘
+          navigate('DetailAmount', {
+            gifticonId: referenceEntityId,
+            scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
+          });
+        } else {
+          // 상품형 기프티콘 (기본값)
+          navigate('DetailProduct', {
+            gifticonId: referenceEntityId,
+            scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
+          });
+        }
+      }
+      // 쉐어박스 관련 알림 처리
+      else if (
+        ['SHAREBOX_GIFTICON', 'SHAREBOX_USAGE_COMPLETE', 'SHAREBOX_MEMBER_JOIN'].includes(
+          notificationType
+        ) &&
+        referenceEntityType === REFERENCE_TYPES.SHAREBOX
+      ) {
+        // 쉐어박스 기프티콘 목록 화면으로 이동
+        navigate('BoxList', {
+          shareBoxId: referenceEntityId,
+          initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+        });
+      } else {
+        console.log('처리되지 않은 알림 타입:', notificationType);
+      }
+    } catch (error) {
+      console.error('알림 처리 중 오류 발생:', error);
     }
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.content} activeOpacity={0.9} onPress={handlePress}>
+      <TouchableOpacity
+        style={styles.content}
+        activeOpacity={0.9}
+        onPress={handleNotificationPress}
+      >
         <View style={[styles.iconContainer, { backgroundColor: iconColor + '20' }]}>
           <Icon name={iconName} type="material" size={22} color={iconColor} />
         </View>
