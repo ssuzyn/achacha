@@ -25,4 +25,9 @@ public class FcmTokenPersistenceAdapter implements FcmTokenRepository {
 	public FcmToken save(FcmToken fcmToken) {
 		return fcmTokenJpaRepository.save(fcmToken);
 	}
+
+	@Override
+	public void deleteByUserIdAndValue(Integer userId, String value) {
+		fcmTokenJpaRepository.deleteByUserIdAndValue(userId, value);
+	}
 }

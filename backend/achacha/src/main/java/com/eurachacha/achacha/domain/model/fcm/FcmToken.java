@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.domain.model.fcm;
 
+import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 import com.eurachacha.achacha.domain.model.user.User;
 
 import jakarta.persistence.Column;
@@ -23,7 +24,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class FcmToken {
+public class FcmToken extends TimeStampEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

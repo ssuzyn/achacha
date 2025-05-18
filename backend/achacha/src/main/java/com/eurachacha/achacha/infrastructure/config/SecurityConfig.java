@@ -10,6 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 
+import com.eurachacha.achacha.infrastructure.security.CustomLogoutFilter;
 import com.eurachacha.achacha.infrastructure.security.JwtAuthenticationFilter;
 import com.eurachacha.achacha.web.common.exception.FilterExceptionHandler;
 
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+	private final CustomLogoutFilter customLogoutFilter;
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -34,6 +36,8 @@ public class SecurityConfig {
 			)
 			// 필터 예외 처리기 등록 (인증 필터보다 먼저 등록해야 함)
 			.addFilterBefore(new FilterExceptionHandler(), LogoutFilter.class)
+			// 로그아웃 필터 등록
+			.addFilterAfter(customLogoutFilter, LogoutFilter.class)
 			// JWT 인증 필터 등록
 			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

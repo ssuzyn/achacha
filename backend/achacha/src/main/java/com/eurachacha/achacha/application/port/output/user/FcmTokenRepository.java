@@ -9,4 +9,6 @@ public interface FcmTokenRepository {
 	List<FcmToken> findAllByUserId(Integer userId);
 
 	FcmToken save(FcmToken fcmToken);
+
+	void deleteByUserIdAndValue(Integer userId, String value);
 }

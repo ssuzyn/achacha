@@ -30,4 +30,9 @@ public class RefreshTokenPersistenceAdapter implements RefreshTokenRepository {
 	public RefreshToken save(RefreshToken refreshToken) {
 		return refreshTokenJpaRepository.save(refreshToken);
 	}
+
+	@Override
+	public void deleteByUserIdAndValue(Integer userId, String value) {
+		refreshTokenJpaRepository.deleteByUserIdAndValue(userId, value);
+	}
 }
