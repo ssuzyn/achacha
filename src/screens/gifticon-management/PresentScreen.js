@@ -18,7 +18,7 @@ import {
   Linking,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
@@ -72,6 +72,9 @@ const PresentScreen = () => {
 
   // 사용자 메시지
   const [message, setMessage] = useState('');
+
+  // 공유 완료 상태 추적
+  const [isShared, setIsShared] = useState(false);
 
   // 탭바 숨기기
   useEffect(() => {
@@ -166,6 +169,35 @@ const PresentScreen = () => {
     fetchTemplateDetail();
   }, [selectedTemplateId]);
 
+  // 카카오톡에서 돌아올 때 체크
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('[PresentScreen] 화면 포커스됨 - 카카오톡에서 돌아옴');
+      
+      if (isShared) {
+        console.log('[PresentScreen] 공유 완료 후 돌아옴');
+        // 공유 완료 후 돌아왔을 때의 처리
+        Alert.alert('선물하기 완료', '기프티콘이 성공적으로 선물되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 이전 화면으로 이동
+              navigation.pop(2);
+            },
+          },
+        ]);
+      } else {
+        console.log('[PresentScreen] 뒤로가기로 돌아옴');
+        // 뒤로가기로 돌아왔을 때의 처리
+      }
+      
+      return () => {
+        console.log('[PresentScreen] 화면 포커스 해제');
+        setIsShared(false); // 상태 초기화
+      };
+    }, [isShared])
+  );
+
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
     NavigationService.goBack();
@@ -257,8 +289,8 @@ const PresentScreen = () => {
           { key: 'brand_name', value: brandName },
         ],
       });
-      // 카카오톡 공유 후 앱으로 돌아오면 이전 화면으로 2단계 pop
-      navigation.pop(2);
+      // 공유 완료 상태 설정
+      setIsShared(true);
     } catch (err) {
       console.log('카카오톡 공유 실패:', err);
       Alert.alert('에러', '카카오톡 공유에 실패했습니다.');
