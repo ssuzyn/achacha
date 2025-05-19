@@ -815,8 +815,9 @@ class MainActivity : ComponentActivity() {
             try {
                 val response = apiService.getAvailableGifticons(
                     authorization = authorizationHeader,
+                    sort = "EXPIRY_ASC",
                     page = page
-                    // 필요시 scope, type, sort, size 등 파라미터 추가 전달
+                    // 필요시 scope, type, size 등 파라미터 추가 전달
                 )
 
                 if (response.isSuccessful) {

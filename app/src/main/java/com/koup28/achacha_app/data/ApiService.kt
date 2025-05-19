@@ -21,6 +21,7 @@ data class GifticonListApiResponse(
 // BarcodeInfo는 BarcodeInfo.kt 파일에 정의되어 있다고 가정
 // data class BarcodeInfo(...)
 
+@Serializable
 data class GiveAwayRequest(val uuids: List<String>)
 
 @Serializable
@@ -87,9 +88,10 @@ interface ApiService {
 
     @POST("/api/gifticons/{gifticonId}/give-away")
     suspend fun giveAwayGifticon(
+        @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int,
         @Body request: GiveAwayRequest
-    ): retrofit2.Response<Unit>
+    ): retrofit2.Response<String>
 
     @GET("api/notifications")
     suspend fun getNotifications(

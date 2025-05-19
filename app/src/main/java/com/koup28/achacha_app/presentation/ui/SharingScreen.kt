@@ -25,6 +25,10 @@ import java.util.UUID
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.clickable
+import android.util.Base64
+import com.koup28.achacha_app.data.UserDataStore
+import kotlinx.coroutines.flow.firstOrNull
+import org.json.JSONObject
 
 @Composable
 fun SharingScreen(
@@ -36,18 +40,18 @@ fun SharingScreen(
 ) {
     Log.d("NavigationCheck", "SharingScreen (Nearby Search UI) Composable called with gifticonId: $gifticonId")
 
-    val SERVICE_UUID = UUID.fromString("1bf0cbce-7af3-4b59-93f2-0c4c6d170164")
+    val SERVICE_UUID = UUID.fromString("00001bf0-0000-1000-8000-00805f9b34fb")
     var isScanning by remember { mutableStateOf(true) }
     var resultText by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     var scanJob by remember { mutableStateOf<Job?>(null) }
     var scannerRef by remember { mutableStateOf<BluetoothLeScanner?>(null) }
     var scanCallbackRef by remember { mutableStateOf<ScanCallback?>(null) }
-    val foundUserIds = remember { mutableSetOf<String>() }
 
     // BLE 스캔 및 API 호출 로직
     LaunchedEffect(gifticonId) {
         if (gifticonId == null) return@LaunchedEffect
+        val foundUserIds = mutableSetOf<String>()
         val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val bluetoothAdapter = bluetoothManager.adapter
         val scanner = bluetoothAdapter.bluetoothLeScanner
@@ -55,15 +59,19 @@ fun SharingScreen(
 
         val scanCallback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult) {
-                Log.d("BLE_SCAN", "모든 BLE 기기 광고를 수신 중. 서비스 UUID 매칭 여부 확인 중")
                 val scanRecord = result.scanRecord
                 val bleTokenBytes = scanRecord?.getServiceData(ParcelUuid(SERVICE_UUID))
+                Log.d("BLE_SCAN", "raw bytes: ${bleTokenBytes?.contentToString()}")
                 val bleToken = bleTokenBytes?.toString(Charsets.UTF_8)
                 Log.d("BLE_SCAN", "스캔 결과: $bleToken (raw: $bleTokenBytes)")
-                // 서비스 UUID와 상관없이 모든 기기 정보를 foundUserIds에 추가
-                val deviceInfo = bleToken ?: (result.device?.address ?: "알 수 없음")
-                foundUserIds.add(deviceInfo)
-                Log.d("BLE_SCAN", "기기 추가: $deviceInfo")
+                val hasOurUuid = scanRecord?.serviceUuids?.contains(ParcelUuid(SERVICE_UUID)) == true
+                if (hasOurUuid) {
+                    Log.d("BLE_SCAN", "우리 서비스 UUID가 포함된 기기 발견: ${result.device?.address}")
+                }
+                if (!bleToken.isNullOrEmpty()) {
+                    foundUserIds.add(bleToken)
+                    Log.d("BLE_SCAN", "사용자 발견: $bleToken")
+                }
             }
             override fun onBatchScanResults(results: List<ScanResult>) {
                 Log.d("BLE_SCAN", "배치 스캔 결과: ${results.size}개")
@@ -75,7 +83,7 @@ fun SharingScreen(
         }
         scanCallbackRef = scanCallback
 
-        Log.d("BLE_SCAN", "BLE 스캔 시작 (ScanFilter 없이 모든 BLE 기기 광고를 수신 중, 서비스 UUID는 소프트웨어적으로만 필터링)")
+        Log.d("BLE_SCAN", "BLE 스캔 시작")
         scanner.startScan(null, ScanSettings.Builder().build(), scanCallback)
         scanJob = coroutineScope.launch {
             delay(5000)
@@ -88,9 +96,29 @@ fun SharingScreen(
                 if (foundUserIds.isNotEmpty()) {
                     try {
                         Log.d("BLE_SCAN", "나눔 API 호출 시작")
-                        val response = apiService.giveAwayGifticon(gifticonId, GiveAwayRequest(foundUserIds.toList()))
+                        val userDataStore = UserDataStore(context)
+                        val token = userDataStore.accessTokenFlow.firstOrNull()
+                        if (token.isNullOrEmpty()) {
+                            Log.e("BLE_SCAN", "토큰이 없습니다. 인증 필요.")
+                            resultText = "인증 토큰이 없습니다."
+                            return@launch
+                        }
+                        val authorizationHeader = "Bearer $token"
+                        Log.d("BLE_SCAN", "API에 전달할 uuids: ${foundUserIds.toList()}")
+                        val response = apiService.giveAwayGifticon(
+                            authorizationHeader,
+                            gifticonId,
+                            GiveAwayRequest(foundUserIds.toList())
+                        )
                         Log.d("BLE_SCAN", "나눔 API 응답: ${response.code()} / 성공여부: ${response.isSuccessful}")
-                        resultText = if (response.isSuccessful) "나눔 성공!" else "나눔 실패: ${response.code()}"
+                        if (response.isSuccessful) {
+                            resultText = "나눔 성공!"
+                        } else {
+                            val errorBody = response.errorBody()?.string()
+                            val errorMsg = parseGiveAwayError(errorBody)
+                            resultText = "나눔 실패: $errorMsg"
+                            Log.e("BLE_SCAN", "나눔 API 에러 바디: $errorBody")
+                        }
                     } catch (e: Exception) {
                         Log.e("BLE_SCAN", "나눔 API 호출 실패: ${e.localizedMessage}")
                         resultText = "나눔 실패: ${e.localizedMessage}"
@@ -123,54 +151,48 @@ fun SharingScreen(
         // Vignette는 레이더 애니메이션과 함께 사용할 경우 화면 가장자리가 어두워져 방해가 될 수 있으므로 일단 제거 고려
         // vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 8.dp), // 패딩 조절
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween // 요소들을 위, 중간, 아래로 분산
-        ) {
-            Text(
-                if (isScanning) "주변 탐색 중..." else "탐색 완료",
-                style = MaterialTheme.typography.title3,
-                modifier = Modifier.padding(top = 20.dp) // 상단 여백 추가
-            )
-
-            RadarAnimation(modifier = Modifier.weight(1f).aspectRatio(1f).padding(8.dp)) // 레이더 애니메이션 영역
-
-            // 스캔된 모든 기기 리스트 표시
-            if (foundUserIds.isNotEmpty()) {
-                Column(modifier = Modifier.padding(8.dp)) {
-                    Text("스캔된 기기:", style = MaterialTheme.typography.body2)
-                    foundUserIds.forEach { deviceInfo ->
-                        Text(deviceInfo, style = MaterialTheme.typography.body2)
-                    }
-                }
-            }
-
-            if (resultText.isNotEmpty()) {
-                Text(resultText, color = Color.Black, modifier = Modifier.padding(8.dp))
-            }
-
-            Chip(
-                onClick = {
-                    if (isScanning) stopScanEarly() else onBackClick()
-                }, // 탐색 중지 시 BLE 스캔 중단, 완료 후엔 뒤로가기
-                label = {
-                    Text(
-                        text = if (isScanning) "탐색 중지" else "뒤로",
-                        textAlign = TextAlign.Center, // 텍스트 중앙 정렬 추가
-                        modifier = Modifier.fillMaxWidth() // 라벨 영역 너비 채우기
-                    )
-                },
-                colors = ChipDefaults.chipColors(
-                    backgroundColor = Color(0xFFAECBFA), // 다른 버튼과 유사한 색상
-                    contentColor = Color.Black
-                ),
+        if (resultText == "나눔 성공!") {
+            GiveAwaySuccessScreen(onBackClick = onBackClick)
+        } else {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth(0.5f) // 좌우 폭 더 줄임 (50%)
-                    .padding(bottom = 8.dp)
-            )
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 8.dp), // 패딩 조절
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween // 요소들을 위, 중간, 아래로 분산
+            ) {
+                Text(
+                    if (isScanning) "주변 탐색 중..." else "",
+                    style = MaterialTheme.typography.title3,
+                    modifier = Modifier.padding(top = 20.dp) // 상단 여백 추가
+                )
+
+                RadarAnimation(modifier = Modifier.weight(1f).aspectRatio(1f).padding(8.dp)) // 레이더 애니메이션 영역
+
+                if (resultText.isNotEmpty()) {
+                    Text(resultText, color = Color.Black, modifier = Modifier.padding(8.dp))
+                }
+
+                Chip(
+                    onClick = {
+                        if (isScanning) stopScanEarly() else onBackClick()
+                    }, // 탐색 중지 시 BLE 스캔 중단, 완료 후엔 뒤로가기
+                    label = {
+                        Text(
+                            text = if (isScanning) "탐색 중지" else "뒤로",
+                            textAlign = TextAlign.Center, // 텍스트 중앙 정렬 추가
+                            modifier = Modifier.fillMaxWidth() // 라벨 영역 너비 채우기
+                        )
+                    },
+                    colors = ChipDefaults.chipColors(
+                        backgroundColor = Color(0xFFAECBFA), // 다른 버튼과 유사한 색상
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth(0.5f) // 좌우 폭 더 줄임 (50%)
+                        .padding(bottom = 8.dp)
+                )
+            }
         }
     }
 }
@@ -259,6 +281,36 @@ fun BleScanFailScreen(onBackClick: () -> Unit) {
     }
 }
 
+// 뿌리기 완료 전용 스크린 추가
+@Composable
+fun GiveAwaySuccessScreen(onBackClick: () -> Unit) {
+    Scaffold(
+        timeText = { TimeText(modifier = Modifier.padding(top = 4.dp)) },
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clickable { onBackClick() }, // 전체 화면 터치 시 뒤로
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "뿌리기 완료!",
+                    style = MaterialTheme.typography.title2,
+                    color = MaterialTheme.colors.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Text(
+                    text = "기프티콘을 성공적으로 뿌렸습니다.",
+                    style = MaterialTheme.typography.body1,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    }
+}
+
 // Preview는 필요시 유지하거나 수정
 // @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
 // @Composable
@@ -266,4 +318,22 @@ fun BleScanFailScreen(onBackClick: () -> Unit) {
 //     Achacha_wearOSTheme {
 //         SharingScreen(gifticonId = 123, navController = rememberSwipeDismissableNavController())
 //     }
-// } 
+// }
+
+fun parseGiveAwayError(errorBody: String?): String {
+    if (errorBody.isNullOrBlank()) return "알 수 없는 오류가 발생했습니다."
+    return try {
+        val json = JSONObject(errorBody)
+        when (json.optString("errorCode")) {
+            "GIFTICON_010" -> "기프티콘 잔액이 부족합니다."
+            "GIFTICON_011" -> "기프티콘 타입이 올바르지 않습니다."
+            "GIFTICON_013" -> "유효기간이 지난 기프티콘입니다."
+            "GIFTICON_002" -> "해당 기프티콘에 접근 권한이 없습니다."
+            "GIFTICON_004" -> "이미 사용된 기프티콘입니다."
+            "GIFTICON_005" -> "삭제된 기프티콘입니다."
+            else -> json.optString("message", "알 수 없는 오류가 발생했습니다.")
+        }
+    } catch (e: Exception) {
+        errorBody // 파싱 실패 시 원본 메시지 반환
+    }
+} 
