@@ -170,6 +170,8 @@ const linking = {
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
+  const [navigationReady, setNavigationReady] = useState(false);
+  const [pendingShareItem, setPendingShareItem] = useState(null);
   // Zustand 스토어의 토큰 복원 함수
   const restoreAuth = useAuthStore(state => state.restoreAuth);
 
@@ -237,16 +239,19 @@ export default function App() {
     init();
   }, []);
 
-  // 공유 인텐트(이미지) 처리: react-native-share-menu 사용
+  // 공유 인텐트(이미지) 처리
   useEffect(() => {
-    // 앱이 공유 인텐트로 처음 시작될 때
     ShareMenu.getInitialShare(item => {
       if (item && item.data && item.mimeType && item.mimeType.startsWith('image/')) {
-        navigationRef.current?.navigate('Register', { sharedImageUri: item.data });
+        // navigationReady가 false면 일단 보류
+        if (!navigationReady) {
+          setPendingShareItem(item);
+        } else {
+          navigationRef.current?.navigate('Register', { sharedImageUri: item.data });
+        }
       }
     });
 
-    // 앱 실행 중에 새로운 공유가 들어올 때
     const listener = ShareMenu.addNewShareListener(item => {
       if (item && item.data && item.mimeType && item.mimeType.startsWith('image/')) {
         navigationRef.current?.navigate('Register', { sharedImageUri: item.data });
@@ -256,7 +261,15 @@ export default function App() {
     return () => {
       listener.remove();
     };
-  }, []);
+  }, [navigationReady]);
+
+  // navigationReady가 true가 되면 보류된 공유 인텐트 처리
+  useEffect(() => {
+    if (navigationReady && pendingShareItem) {
+      navigationRef.current?.navigate('Register', { sharedImageUri: pendingShareItem.data });
+      setPendingShareItem(null);
+    }
+  }, [navigationReady, pendingShareItem]);
 
   // 폰트 및 인증 상태 로딩 함수
   const loadResources = async () => {
@@ -314,7 +327,11 @@ export default function App() {
               <View style={styles.container} onLayout={onLayoutRootView}>
                 <HeaderBarProvider>
                   <TabBarProvider>
-                    <NavigationContainer ref={navigationRef} linking={linking}>
+                    <NavigationContainer
+                      ref={navigationRef}
+                      linking={linking}
+                      onReady={() => setNavigationReady(true)}
+                    >
                       <AppNavigator />
                       {/* 네이티브 알림 리스너 추가 */}
                       <NotificationListener />
