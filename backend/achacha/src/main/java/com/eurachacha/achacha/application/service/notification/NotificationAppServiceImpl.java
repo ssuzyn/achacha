@@ -113,6 +113,7 @@ public class NotificationAppServiceImpl implements NotificationAppService {
 	}
 
 	@Override
+	@Transactional
 	public void requestNotification(LocationBasedNotificationRequestDto requestDto) {
 		User user = securityServicePort.getLoggedInUser();
 
