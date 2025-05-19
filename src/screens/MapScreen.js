@@ -6,36 +6,138 @@ import {
   TouchableOpacity,
   AppState,
   StatusBar,
+  Alert,
 } from 'react-native';
 import KakaoMapWebView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import geofencingService from '../services/GeofencingService';
+import GeofencingService from '../services/GeofencingService';
 import { useNavigation } from '@react-navigation/native';
 import { mapGifticonService } from '../services/mapGifticonService';
+import { geoNotificationService } from '../services/geoNotificationService';
 
 const MapScreen = () => {
   const navigation = useNavigation();
   const [selectedBrand, setSelectedBrand] = useState(null);
   const mapRef = useRef(null);
-  const geofencingServiceRef = useRef();
+  const geofencingServiceRef = useRef(null);
   const appState = useRef(AppState.currentState);
   const [gifticons, setGifticons] = useState([]);
 
   // 기프티콘 데이터 로드
   const loadGifticons = async () => {
     try {
+      console.log('[MapScreen] 기프티콘 목록 로드 시작');
       const response = await mapGifticonService.getMapGifticons();
-      setGifticons(response.gifticons || []);
+
+      // API 응답 구조 확인
+      console.log(
+        '[MapScreen] API 응답 구조:',
+        Object.keys(response),
+        'gifticons 배열:',
+        Array.isArray(response.gifticons),
+        '개수:',
+        response.gifticons?.length || 0
+      );
+
+      // UI에 표시할 기프티콘 설정
+      const gifticonsArray = response.gifticons || [];
+      setGifticons(gifticonsArray);
+
+      // GeofencingService에 기프티콘 목록 전달
+      if (geofencingServiceRef.current) {
+        console.log('[MapScreen] 지오펜싱 서비스에 기프티콘 목록 업데이트:', gifticonsArray.length);
+        geofencingServiceRef.current.updateUserGifticons(response);
+
+        // 전달 후 서비스 내 기프티콘 상태 확인
+        setTimeout(() => {
+          const serviceGifticons = geofencingServiceRef.current.userGifticons || [];
+          console.log('[MapScreen] 업데이트 후 서비스 내 기프티콘 수:', serviceGifticons.length);
+        }, 100);
+      }
+
+      return response;
     } catch (error) {
-      console.error('기프티콘 목록 로드 실패:', error);
+      console.error('[MapScreen] 기프티콘 목록 로드 실패:', error);
       setGifticons([]);
+      return null;
     }
   };
 
-  // 컴포넌트 마운트 시 데이터 로드
+  // 컴포넌트 마운트 시 초기화
   useEffect(() => {
-    loadGifticons();
+    console.log('[MapScreen] 컴포넌트 마운트');
+
+    // GeofencingService 인스턴스 생성 (싱글톤)
+    if (!geofencingServiceRef.current) {
+      console.log('[MapScreen] GeofencingService 인스턴스 생성');
+      geofencingServiceRef.current = new GeofencingService();
+    }
+
+    const initialize = async () => {
+      // 1. 기프티콘 목록 로드
+      console.log('[MapScreen] 초기화 - 기프티콘 목록 로드 시작');
+      await loadGifticons();
+
+      // 2. 지오펜싱 초기화
+      if (geofencingServiceRef.current && !geofencingServiceRef.current.initialized) {
+        try {
+          console.log('[MapScreen] 초기화 - 지오펜싱 초기화 시작');
+          await geofencingServiceRef.current.initGeofencing();
+          console.log('[MapScreen] 초기화 - 지오펜싱 초기화 성공');
+        } catch (error) {
+          console.error('[MapScreen] 초기화 - 지오펜싱 초기화 중 오류:', error);
+        }
+      }
+    };
+
+    initialize();
+
+    // 30분마다 기프티콘 목록 새로고침
+    const refreshInterval = setInterval(
+      () => {
+        loadGifticons();
+      },
+      30 * 60 * 1000
+    ); // 15분
+
+    // AppState 이벤트 핸들러
+    const handleAppStateChange = async nextAppState => {
+      console.log(`[MapScreen] 앱 상태 변경: ${appState.current} -> ${nextAppState}`);
+
+      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+        console.log('[MapScreen] 앱이 포그라운드로 돌아옴 - 재초기화 시작');
+
+        if (geofencingServiceRef.current) {
+          // 지오펜싱 서비스 초기화 상태 리셋
+          geofencingServiceRef.current.resetInitialized();
+
+          // 지오펜싱 다시 초기화 및 기프티콘 목록 갱신
+          console.log('[MapScreen] 앱 포그라운드 전환 - 지오펜싱 재초기화 시작');
+          await geofencingServiceRef.current.initGeofencing();
+
+          console.log('[MapScreen] 앱 포그라운드 전환 - 기프티콘 목록 갱신');
+          await loadGifticons();
+        }
+      }
+
+      appState.current = nextAppState;
+    };
+
+    // 이벤트 리스너 설정
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+    // 컴포넌트 언마운트 시 정리
+    return () => {
+      console.log('[MapScreen] 컴포넌트 언마운트 - 정리 작업');
+      clearInterval(refreshInterval);
+      subscription.remove();
+
+      if (geofencingServiceRef.current) {
+        console.log('[MapScreen] 컴포넌트 언마운트 - 지오펜싱 서비스 정리');
+        geofencingServiceRef.current.cleanup();
+      }
+    };
   }, []);
 
   // 기프티콘 목록에서 브랜드 정보 추출(중복 없이)
@@ -55,63 +157,6 @@ const MapScreen = () => {
 
   const uniqueBrands = getUniqueBrands();
 
-  // 첫 렌더링 시 지오펜싱 초기화
-  useEffect(() => {
-    // 최초 렌더링 시 인스턴스 생성
-    if (!geofencingServiceRef.current) {
-      console.log('GeofencingService 인스턴스 생성');
-      geofencingServiceRef.current = new geofencingService(uniqueBrands);
-    }
-
-    console.log('MapScreen 마운트 - 지오펜싱 초기화 시작');
-
-    const initGeofencing = async () => {
-      if (geofencingServiceRef.current && !geofencingServiceRef.current.initialized) {
-        console.log('initGeofencing 함수 호출됨');
-        try {
-          await geofencingServiceRef.current.initGeofencing();
-          console.log('지오펜싱 초기화 성공');
-        } catch (error) {
-          console.error('지오펜싱 초기화 중 오류:', error);
-        }
-      } else {
-        console.log('지오펜싱이 이미 초기화되었습니다.');
-      }
-    };
-
-    initGeofencing();
-
-    // AppState 이벤트 핸들러
-    const handleAppStateChange = async nextAppState => {
-      console.log(`앱 상태 변경: ${appState.current} -> ${nextAppState}`);
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextAppState === 'active' &&
-        geofencingServiceRef.current &&
-        !geofencingServiceRef.current.initializing // 초기화 중이 아닐 때만
-      ) {
-        console.log('앱이 포그라운드로 돌아왔습니다 - 지오펜싱 재초기화');
-        geofencingServiceRef.current.resetInitialized();
-        await geofencingServiceRef.current.initGeofencing();
-      }
-      appState.current = nextAppState;
-    };
-
-    // 이벤트 리스너 설정
-    console.log('앱 상태 변경 리스너 설정');
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-
-    // 컴포넌트 언마운트 시 정리
-    return () => {
-      console.log('MapScreen 언마운트 - 정리 작업 시작');
-      subscription.remove();
-      if (geofencingServiceRef.current) {
-        geofencingServiceRef.current.cleanup();
-      }
-      console.log('MapScreen 정리 작업 완료');
-    };
-  }, []);
-
   // uniqueBrands 변경 시 서비스에 전달
   useEffect(() => {
     if (geofencingServiceRef.current) {
@@ -125,16 +170,44 @@ const MapScreen = () => {
     : gifticons;
 
   // 매장 검색 결과 처리 콜백
-  const handleStoresFound = storeResults => {
-    console.log('매장 검색 결과 수신:', storeResults.length);
-    if (geofencingServiceRef.current) {
-      geofencingServiceRef.current.setupGeofences(storeResults, selectedBrand);
+  const handleStoresFound = async storeResults => {
+    console.log('[MapScreen] 매장 검색 결과 수신:', storeResults.length);
+
+    if (!geofencingServiceRef.current) {
+      console.error('[MapScreen] 지오펜싱 서비스 참조가 없음');
+      return;
     }
+
+    // 기프티콘이 없는 경우 먼저 로드
+    if (
+      !geofencingServiceRef.current.userGifticons ||
+      geofencingServiceRef.current.userGifticons.length === 0
+    ) {
+      console.log('[MapScreen] 기프티콘 목록이 비어있음, 로드 시도');
+      await loadGifticons();
+
+      // 로드 후에도 여전히 비어있는지 확인
+      if (
+        !geofencingServiceRef.current.userGifticons ||
+        geofencingServiceRef.current.userGifticons.length === 0
+      ) {
+        console.warn('[MapScreen] 기프티콘 로드 후에도 목록이 비어있음');
+      } else {
+        console.log(
+          '[MapScreen] 기프티콘 로드 성공:',
+          geofencingServiceRef.current.userGifticons.length
+        );
+      }
+    }
+
+    // 지오펜스 설정 진행
+    console.log('[MapScreen] 지오펜스 설정 시작, 서비스 참조:', geofencingServiceRef.current);
+    await geofencingServiceRef.current.setupGeofences(storeResults, selectedBrand);
   };
 
   // 기프티콘 사용 처리 함수
   const handleUseGifticon = id => {
-    console.log(`기프티콘 ${id} 사용됨`);
+    console.log(`[MapScreen] 기프티콘 ${id} 사용됨`);
   };
 
   // 브랜드 선택 처리 함수
@@ -143,10 +216,14 @@ const MapScreen = () => {
     const currentBrandId = selectedBrand !== null ? Number(selectedBrand) : null;
     const newBrandId = brandId !== null ? Number(brandId) : null;
 
+    console.log(`[MapScreen] 브랜드 선택 변경 - 현재: ${currentBrandId}, 새로운: ${newBrandId}`);
+
     // 같은 브랜드를 다시 선택하면 선택 해제
     if (currentBrandId === newBrandId) {
+      console.log('[MapScreen] 같은 브랜드 다시 선택 - 선택 해제');
       setSelectedBrand(null);
     } else {
+      console.log(`[MapScreen] 새 브랜드 선택: ${newBrandId}`);
       setSelectedBrand(newBrandId);
     }
   };
@@ -154,18 +231,71 @@ const MapScreen = () => {
   // 현재 위치로 이동하는 함수
   const moveToCurrentLocation = () => {
     if (mapRef.current && mapRef.current.moveToCurrentLocation) {
+      console.log('[MapScreen] 현재 위치로 이동');
       mapRef.current.moveToCurrentLocation();
+    }
+  };
+
+  // 테스트용 - 지오펜스 진입 이벤트 시뮬레이션 함수
+  const testGeofenceTrigger = () => {
+    if (!geofencingServiceRef.current) {
+      Alert.alert('오류', '지오펜싱 서비스가 초기화되지 않았습니다.');
+      return;
+    }
+
+    // 기프티콘 목록 확인
+    const userGifticons = geofencingServiceRef.current.userGifticons || [];
+
+    if (userGifticons.length === 0) {
+      Alert.alert('알림', '기프티콘 목록이 비어 있습니다.');
+      return;
+    }
+
+    // 테스트할 브랜드 ID (예: CU)
+    const testBrandId = 6;
+
+    // 해당 브랜드의 기프티콘 찾기
+    const relevantGifticon = userGifticons.find(g => g.brandId === testBrandId);
+
+    if (relevantGifticon) {
+      Alert.alert(
+        '테스트 정보',
+        `브랜드 ID ${testBrandId}의 기프티콘을 찾았습니다:\n` +
+          `- 이름: ${relevantGifticon.gifticonName}\n` +
+          `- ID: ${relevantGifticon.gifticonId}\n` +
+          `- 만료일: ${relevantGifticon.gifticonExpiryDate}\n\n` +
+          '실제 지오펜스 진입 이벤트가 발생하면 이 기프티콘에 대한 알림이 자동으로 전송됩니다.',
+        [
+          { text: '확인' },
+          {
+            text: 'API 테스트',
+            onPress: async () => {
+              try {
+                console.log(
+                  `[MapScreen] API 테스트: gifticonId=${relevantGifticon.gifticonId} 전송`
+                );
+                const result = await geoNotificationService.requestGeoNotification(
+                  relevantGifticon.gifticonId
+                );
+                console.log('[MapScreen] API 테스트 성공:', result);
+                Alert.alert('성공', 'API 호출이 성공적으로 완료되었습니다!');
+              } catch (error) {
+                console.error('[MapScreen] API 테스트 실패:', error);
+                Alert.alert('오류', `API 호출 실패: ${error.message}`);
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert('알림', `브랜드 ID ${testBrandId}에 해당하는 기프티콘이 없습니다.`);
     }
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
-      {/* <View style={styles.header}>
-        <Text variant="h2" weight="bold" style={styles.headerTitle}>
-          기프티콘 MAP
-        </Text>
-      </View> */}
+
       <View style={styles.mapContainer}>
         <KakaoMapWebView
           ref={mapRef}
@@ -175,15 +305,26 @@ const MapScreen = () => {
           onStoresFound={handleStoresFound}
         />
       </View>
+
+      {/* 현재 위치 버튼 */}
       <TouchableOpacity style={styles.locationButton} onPress={moveToCurrentLocation}>
         <Icon name="my-location" size={24} color="#278CCC" />
       </TouchableOpacity>
+
+      {/* 기프티콘 뿌리기 화면 이동 버튼 */}
       <TouchableOpacity
         style={styles.giftButton}
         onPress={() => navigation.navigate('GiveAwayScreen')}
       >
         <Icon name="card-giftcard" size={24} color="#278CCC" />
       </TouchableOpacity>
+
+      {/* 테스트 버튼 (개발 중에만 사용) */}
+      <TouchableOpacity style={[styles.giftButton, { top: 175 }]} onPress={testGeofenceTrigger}>
+        <Icon name="location-on" size={24} color="red" />
+      </TouchableOpacity>
+
+      {/* 기프티콘 목록 하단 시트 */}
       <GifticonBottomSheet
         gifticons={filteredGifticons}
         onUseGifticon={handleUseGifticon}
@@ -194,6 +335,7 @@ const MapScreen = () => {
   );
 };
 
+// 스타일
 const styles = StyleSheet.create({
   container: {
     flex: 1,
