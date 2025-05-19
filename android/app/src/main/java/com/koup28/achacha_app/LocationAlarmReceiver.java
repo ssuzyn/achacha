@@ -22,7 +22,6 @@ public class LocationAlarmReceiver extends BroadcastReceiver {
     
     // 다음 알람을 예약하지 않음 (매장 진입 시만 알림을 위해)
   }
-}
   
   private void scheduleNextAlarm(Context context) {
     AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
