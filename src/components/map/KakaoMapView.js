@@ -83,15 +83,11 @@ const KakaoMapView = forwardRef(
             if (location) {
               moveToCurrentLocation();
             }
-            // 초기 로드 시에도 매장 검색 (사용자 현재 위치 기반)
-            // uniqueBrands가 로드된 이후에 호출되어야 하므로, uniqueBrands의 상태에 따라 호출 위치 조정 필요할 수 있음
-            if (location && uniqueBrands && uniqueBrands.length > 0) {
-              debouncedSearchNearbyStores({
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              });
-            }
-          }, 1000);
+            // 초기 로드 시 중복될 수 있는 직접적인 매장 검색 호출 제거
+            // if (location && uniqueBrands && uniqueBrands.length > 0) {
+            //     debouncedSearchNearbyStores({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+            // }
+          }, 1000); // 약간의 지연을 두어 map 객체가 완전히 준비되도록 함
         }
 
         // 마커 클릭 이벤트 처리
