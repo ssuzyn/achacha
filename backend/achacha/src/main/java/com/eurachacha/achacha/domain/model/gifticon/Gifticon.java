@@ -90,6 +90,11 @@ public class Gifticon extends TimeStampEntity {
 		}
 	}
 
+	// 사용 취소 메서드
+	public void cancelUse() {
+		this.isUsed = false;
+	}
+
 	public void updateRemainingAmount(Integer amount) {
 		this.remainingAmount = amount;
 
