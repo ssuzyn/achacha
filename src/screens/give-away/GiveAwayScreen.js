@@ -43,6 +43,20 @@ const emoji3 = require('../../assets/images/emoji3.png');
 const emoji4 = require('../../assets/images/emoji4.png');
 const emoji5 = require('../../assets/images/emoji5.png');
 
+// 사용 가능한 이미지 (5개)
+const availableImages = [emoji1, emoji2, emoji3, emoji4, emoji5];
+
+// 사용 가능한 설명 (7개)
+const availableDescriptions = [
+  '익명의 도넛',
+  '익명의 개구리',
+  '익명의 그림자',
+  '익명의 거북이',
+  '익명의 만두',
+  '익명의 펭귄',
+  '익명의 유령',
+];
+
 const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -137,7 +151,7 @@ const GiveAwayScreen = ({ onClose }) => {
     const angleStep = (2 * Math.PI) / users.length;
 
     const maxAllowedPhysicalRadius = radiusArray[2];
-    const emojiDisplayBaseSize = 80;
+    const emojiDisplayBaseSize = 90;
     const screenEdgePadding = 15;
 
     for (let i = 0; i < users.length; i++) {
@@ -219,18 +233,14 @@ const GiveAwayScreen = ({ onClose }) => {
     if (allUsers && allUsers.length > 0) {
       const mappedUsers = allUsers
         .map((user, index) => {
-          let userEmoji;
-          if (typeof user.emoji === 'number') {
-            userEmoji = getEmojiFromIndex(user.emoji);
-          } else {
-            const randomEmojiIndex = Math.floor(Math.random() * 5);
-            userEmoji = getEmojiFromIndex(randomEmojiIndex);
-          }
+          const randomImageIndex = Math.floor(Math.random() * availableImages.length);
+          const randomDescriptionIndex = Math.floor(Math.random() * availableDescriptions.length);
 
           return {
             uuid: user.uuid || `user-${index}`,
             name: user.name || `사용자 ${index + 1}`,
-            emoji: userEmoji,
+            displayImageIndex: randomImageIndex,
+            displayDescriptionIndex: randomDescriptionIndex,
             deviceId: user.deviceId || `device-${index}`,
             bleToken: user.bleToken || `token-${index}`,
           };
@@ -549,14 +559,6 @@ const GiveAwayScreen = ({ onClose }) => {
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
   ];
 
-  const getEmojiFromIndex = index => {
-    const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
-    if (typeof index === 'number' && index >= 0) {
-      return emojiOptions[index % emojiOptions.length];
-    }
-    return emojiOptions[Math.floor(Math.random() * emojiOptions.length)];
-  };
-
   const triggerSendGifticonAPI = userWithPosition => {
     console.log('[runOnJS] triggerSendGifticonAPI 호출됨, user:', userWithPosition.name);
     setIsTransferring(true);
@@ -809,7 +811,7 @@ const GiveAwayScreen = ({ onClose }) => {
                     style={[styles.emojiContainer, { width: adjustedSize, height: adjustedSize }]}
                   >
                     <Image
-                      source={user.emoji}
+                      source={availableImages[user.displayImageIndex]}
                       style={{
                         width: adjustedSize,
                         height: adjustedSize,
@@ -817,6 +819,9 @@ const GiveAwayScreen = ({ onClose }) => {
                       }}
                     />
                   </View>
+                  <Text style={[styles.userName, { color: theme.colors.text }]}>
+                    {availableDescriptions[user.displayDescriptionIndex]}
+                  </Text>
                 </Animated.View>
               );
             })
