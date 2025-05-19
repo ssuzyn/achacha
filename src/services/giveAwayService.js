@@ -13,12 +13,6 @@ export const giveAwayService = {
     }
 
     try {
-      console.log('[API] 기프티콘 뿌리기 요청:', {
-        gifticonId,
-        uuids,
-        endpoint: API_CONFIG.ENDPOINTS.GIVE_AWAY_GIFTICON(gifticonId),
-      });
-
       const response = await apiClient.post(API_CONFIG.ENDPOINTS.GIVE_AWAY_GIFTICON(gifticonId), {
         uuids,
       });
@@ -27,21 +21,8 @@ export const giveAwayService = {
         throw new Error('API 응답이 올바르지 않습니다.');
       }
 
-      console.log('[API] 기프티콘 뿌리기 응답:', {
-        status: response.status,
-        data: response.data,
-        headers: response.headers,
-      });
-
       return response.data;
     } catch (error) {
-      console.error('[API] 기프티콘 뿌리기 실패:', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        config: error.config,
-        endpoint: error.config?.url,
-      });
       throw error;
     }
   },
