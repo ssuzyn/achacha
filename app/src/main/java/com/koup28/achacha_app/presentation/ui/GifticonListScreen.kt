@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -71,9 +72,25 @@ fun GifticonListScreen(
     isLoading: Boolean,
     error: String?,
     onGifticonClick: (gifticonId: Int) -> Unit,
-    onBackPress: () -> Unit
+    onBackPress: () -> Unit,
+    hasNextPage: Boolean,
+    nextPage: Int?,
+    isLoadingMore: Boolean,
+    onLoadMore: (page: Int) -> Unit
 ) {
     val listState = rememberScalingLazyListState()
+
+    // 무한 스크롤: 마지막 아이템에 도달하면 onLoadMore 호출
+    LaunchedEffect(listState.centerItemIndex, gifticons.size, hasNextPage, isLoadingMore) {
+        if (
+            hasNextPage &&
+            !isLoadingMore &&
+            listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == gifticons.lastIndex &&
+            nextPage != null
+        ) {
+            onLoadMore(nextPage)
+        }
+    }
 
     // 시스템 뒤로가기 버튼 처리
     BackHandler(enabled = true) {
@@ -184,6 +201,17 @@ fun GifticonListScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                             )
+                        }
+                        // 로딩 인디케이터 (추가 로딩 중일 때)
+                        if (isLoadingMore) {
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                }
+                            }
                         }
                     }
                     item { Spacer(modifier = Modifier.height(24.dp)) }

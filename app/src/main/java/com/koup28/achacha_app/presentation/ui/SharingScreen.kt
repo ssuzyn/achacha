@@ -173,25 +173,29 @@ fun SharingScreen(
                     Text(resultText, color = Color.Black, modifier = Modifier.padding(8.dp))
                 }
 
-                Chip(
-                    onClick = {
-                        if (isScanning) stopScanEarly() else onBackClick()
-                    }, // 탐색 중지 시 BLE 스캔 중단, 완료 후엔 뒤로가기
-                    label = {
-                        Text(
-                            text = if (isScanning) "탐색 중지" else "뒤로",
-                            textAlign = TextAlign.Center, // 텍스트 중앙 정렬 추가
-                            modifier = Modifier.fillMaxWidth() // 라벨 영역 너비 채우기
-                        )
-                    },
-                    colors = ChipDefaults.chipColors(
-                        backgroundColor = Color(0xFFAECBFA), // 다른 버튼과 유사한 색상
-                        contentColor = Color.Black
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth(0.5f) // 좌우 폭 더 줄임 (50%)
-                        .padding(bottom = 8.dp)
-                )
+                // 탐색 중일 때만 버튼 노출, 탐색이 끝나면 버튼 없음
+                if (isScanning) {
+                    Chip(
+                        onClick = {
+                            stopScanEarly()
+                            onBackClick()
+                        },
+                        label = {
+                            Text(
+                                text = "탐색 중지",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        },
+                        colors = ChipDefaults.chipColors(
+                            backgroundColor = Color(0xFFAECBFA),
+                            contentColor = Color.Black
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .padding(bottom = 8.dp)
+                    )
+                }
             }
         }
     }

@@ -70,6 +70,7 @@ fun NotificationBoxScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var nextPage by remember { mutableStateOf<Int?>(null) }
     var hasNextPage by remember { mutableStateOf(false) }
+    var isLoadingMore by remember { mutableStateOf(false) }
 
     // 시스템 뒤로가기 버튼 처리
     BackHandler(enabled = true) {
@@ -96,11 +97,8 @@ fun NotificationBoxScreen(
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
-                    // 제외할 타입들
-                    val excludeTypes = setOf(
-                        "SHAREBOX_GIFTICON", "SHAREBOX_USAGE_COMPLETE", "SHAREBOX_MEMBER_JOIN", "SHAREBOX_DELETED"
-                    )
-                    notifications = body.notifications.filter { it.notificationType !in excludeTypes }
+                    // 모든 알림을 필터링 없이 그대로 보여줌
+                    notifications = body.notifications
                     hasNextPage = body.hasNextPage
                     nextPage = body.nextPage
                 } else {
@@ -118,6 +116,43 @@ fun NotificationBoxScreen(
             error = "알림 불러오기 오류: ${e.localizedMessage}"
         } finally {
             isLoading = false
+        }
+    }
+
+    // 다음 페이지 호출 함수
+    suspend fun loadNextPage() {
+        if (!hasNextPage || isLoadingMore) return
+        isLoadingMore = true
+        try {
+            val token = userDataStore.accessTokenFlow.firstOrNull()
+            if (token.isNullOrEmpty()) return
+            val response = apiService.getNotifications(
+                authorization = "Bearer $token",
+                type = null,
+                page = nextPage?.toString(),
+                size = 6
+            )
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    notifications = notifications + body.notifications // append
+                    hasNextPage = body.hasNextPage
+                    nextPage = body.nextPage
+                }
+            }
+        } finally {
+            isLoadingMore = false
+        }
+    }
+
+    // 스크롤 하단 감지하여 다음 페이지 자동 호출
+    LaunchedEffect(listState.centerItemIndex, notifications.size) {
+        if (
+            hasNextPage &&
+            !isLoadingMore &&
+            listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index == notifications.lastIndex
+        ) {
+            loadNextPage()
         }
     }
 

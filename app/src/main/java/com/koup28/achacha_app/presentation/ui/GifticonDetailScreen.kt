@@ -170,8 +170,8 @@ fun GifticonDetailScreen(
                     modifier = Modifier.fillMaxWidth(0.8f),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // 금액형이 아닐 때만 나눔(뿌리기) 버튼 노출
-                    if (currentGifticon.gifticonType != "AMOUNT") {
+                    // 금액형이 아니고 shareBoxName이 null일 때만 나눔(뿌리기) 버튼 노출
+                    if (currentGifticon.gifticonType != "AMOUNT" && currentGifticon.shareBoxName == null) {
                         Chip(
                             onClick = { onShareClick(currentGifticon.gifticonId) },
                             modifier = Modifier.weight(1f),

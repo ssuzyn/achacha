@@ -374,6 +374,14 @@ class MainActivity : ComponentActivity() {
 
     private val _gifticonListError = mutableStateOf<String?>(null) // 목록 로딩 오류 상태
     val gifticonListError: State<String?> = _gifticonListError
+
+    // --- 무한 스크롤 페이징 상태 추가 ---
+    private val _gifticonHasNextPage = mutableStateOf(false)
+    val gifticonHasNextPage: State<Boolean> = _gifticonHasNextPage
+    private val _gifticonNextPage = mutableStateOf<Int?>(null)
+    val gifticonNextPage: State<Int?> = _gifticonNextPage
+    private val _isGifticonListLoadingMore = mutableStateOf(false)
+    val isGifticonListLoadingMore: State<Boolean> = _isGifticonListLoadingMore
     // --------------------------------------
 
     // --- 기프티콘 상세 정보 관련 상태 변수 추가 ---
@@ -457,32 +465,34 @@ class MainActivity : ComponentActivity() {
                     }
                     ScreenState.GIFTICON_LIST -> {
                         // 화면 진입 시 기프티콘 목록 로드
-                        LaunchedEffect(Unit) { // Unit 키: 화면에 처음 진입할 때만 실행
+                        LaunchedEffect(Unit) {
                             fetchGifticons() // 첫 페이지 로드
                         }
                         GifticonListScreen(
-                            gifticons = gifticonList, // 실제 데이터 전달
-                            isLoading = isGifticonListLoading.value, // 로딩 상태 전달
-                            error = gifticonListError.value, // 오류 상태 전달
+                            gifticons = gifticonList,
+                            isLoading = isGifticonListLoading.value,
+                            error = gifticonListError.value,
                             onGifticonClick = { gifticonId ->
                                 addLog("GifticonList: Clicked on gifticon ID: $gifticonId for detail view.")
-                                // 인덱스/ID 상태 먼저 세팅
                                 val index = gifticonList.indexOfFirst { it.gifticonId == gifticonId }
                                 if (index != -1) {
                                     _currentGifticonIndex.value = index
                                     _selectedGifticonId.value = gifticonId
-                                    _currentScreen.value = ScreenState.GIFTICON_DETAIL // 바로 화면 이동
-                                    fetchGifticonDetail(gifticonId) // 상세 정보는 비동기로 갱신
+                                    _currentScreen.value = ScreenState.GIFTICON_DETAIL
+                                    fetchGifticonDetail(gifticonId)
                                 } else {
                                     addLog("[Error] Clicked gifticon not found in list: $gifticonId")
                                 }
                             },
-                            onBackPress = { 
-                                _gifticonList.clear() // 목록 화면 벗어날 때 리스트 초기화 (선택적)
-                                _gifticonListError.value = null // 오류 상태 초기화
-                                _currentScreen.value = ScreenState.MAIN_MENU 
-                            }
-                            // onLoadMore = { /* 페이지네이션 구현 시 */ }
+                            onBackPress = {
+                                _gifticonList.clear()
+                                _gifticonListError.value = null
+                                _currentScreen.value = ScreenState.MAIN_MENU
+                            },
+                            hasNextPage = gifticonHasNextPage.value,
+                            nextPage = gifticonNextPage.value,
+                            isLoadingMore = isGifticonListLoadingMore.value,
+                            onLoadMore = { page -> fetchGifticons(page) }
                         )
                     }
                     ScreenState.GIFTICON_DETAIL -> {
@@ -562,7 +572,10 @@ class MainActivity : ComponentActivity() {
                                         addLog("[Error] Clicked gifticon for use not found: $gifticonId")
                                     }
                                 },
-                                onBackPress = { _currentScreen.value = ScreenState.GIFTICON_LIST }
+                                onBackPress = {
+                                    _gifticonList.clear() // 목록 데이터 초기화(새로고침 유도)
+                                    _currentScreen.value = ScreenState.GIFTICON_LIST
+                                }
                             )
                         } else {
                             // Handle invalid index state (e.g., navigate back or show error)
@@ -789,14 +802,13 @@ class MainActivity : ComponentActivity() {
 
     // --- 기프티콘 목록 API 호출 함수 추가 ---
     private fun fetchGifticons(page: Int = 0) {
-        if (_isGifticonListLoading.value && page == 0) return // 이미 로딩 중이면 중복 호출 방지 (첫 페이지 로드 시)
-        // TODO: 페이지네이션 시에는 로딩 중이어도 다음 페이지 호출은 허용할 수 있음
-
-        addLog("[API] Fetching gifticon list (page: $page)...")
-        _isGifticonListLoading.value = true
-        _gifticonListError.value = null
+        if ((page == 0 && _isGifticonListLoading.value) || (page > 0 && _isGifticonListLoadingMore.value)) return
         if (page == 0) {
+            _isGifticonListLoading.value = true
+            _gifticonListError.value = null
             _gifticonList.clear() // 첫 페이지 로드 시 기존 목록 초기화
+        } else {
+            _isGifticonListLoadingMore.value = true
         }
 
         lifecycleScope.launch {
@@ -804,8 +816,8 @@ class MainActivity : ComponentActivity() {
             if (token.isNullOrEmpty()) {
                 _gifticonListError.value = "인증 토큰이 없습니다."
                 _isGifticonListLoading.value = false
+                _isGifticonListLoadingMore.value = false
                 addLog("[API] Error: Access Token is missing.")
-                // TODO: 에러 상태를 좀 더 명확히 전달하거나, 연결 화면으로 유도?
                 _currentScreen.value = ScreenState.CONNECTING // 예: 토큰 없으면 연결 화면으로
                 return@launch
             }
@@ -817,14 +829,14 @@ class MainActivity : ComponentActivity() {
                     authorization = authorizationHeader,
                     sort = "EXPIRY_ASC",
                     page = page
-                    // 필요시 scope, type, size 등 파라미터 추가 전달
                 )
 
                 if (response.isSuccessful) {
                     val apiResponse = response.body()
                     if (apiResponse != null) {
                         _gifticonList.addAll(apiResponse.gifticons) // 받아온 목록 추가
-                        // 페이지네이션 상태 업데이트 로직 추가 가능
+                        _gifticonHasNextPage.value = apiResponse.hasNextPage
+                        _gifticonNextPage.value = apiResponse.nextPage
                         addLog("[API] Gifticon list fetched successfully. Count: ${apiResponse.gifticons.size}, HasNext: ${apiResponse.hasNextPage}")
                     } else {
                         _gifticonListError.value = "데이터 수신 실패 (null response)"
@@ -834,19 +846,19 @@ class MainActivity : ComponentActivity() {
                     val errorBody = response.errorBody()?.string() ?: "Unknown error"
                     _gifticonListError.value = "목록 로딩 실패 (${response.code()})"
                     addLog("[API] Error fetching gifticon list: ${response.code()} - $errorBody")
-                     if (response.code() == 401) { // 예: 인증 오류 시
-                         // 토큰 만료 또는 무효 처리 -> 연결 화면으로 이동 등
-                         addLog("[API] Unauthorized. Token might be invalid. Clearing token and navigating to connect.")
-                         userDataStore.clearAccessToken()
-                         _receivedToken.value = null
-                         _currentScreen.value = ScreenState.CONNECTING
-                     }
+                    if (response.code() == 401) {
+                        addLog("[API] Unauthorized. Token might be invalid. Clearing token and navigating to connect.")
+                        userDataStore.clearAccessToken()
+                        _receivedToken.value = null
+                        _currentScreen.value = ScreenState.CONNECTING
+                    }
                 }
             } catch (e: Exception) {
                 _gifticonListError.value = "네트워크 오류: ${e.localizedMessage}"
                 addLog("[API] Exception fetching gifticon list: ${e.message}")
             } finally {
                 _isGifticonListLoading.value = false
+                _isGifticonListLoadingMore.value = false
             }
         }
     }
