@@ -9,6 +9,7 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  Image,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -27,6 +28,7 @@ import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import Switch from '../../components/ui/Switch';
+import KakaoShareLink from 'react-native-kakao-share-link';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -221,6 +223,21 @@ const BoxSettingScreen = () => {
     }
   };
 
+  // 카카오톡 공유 함수
+  const handleKakaoShare = async () => {
+    try {
+      await KakaoShareLink.sendCustom({
+        templateId: 120597, // 실제 사용하는 템플릿 ID로 교체
+        templateArgs: [
+          { key: 'invite_code', value: shareBoxCode },
+        ],
+      });
+    } catch (e) {
+      console.error(e);
+      Alert.alert('에러', '카카오톡 공유에 실패했습니다.');
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -313,11 +330,23 @@ const BoxSettingScreen = () => {
               <Text variant="h3" weight="bold" style={styles.codeText}>
                 {shareBoxCode}
               </Text>
-              <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
-                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
-                  복사
-                </Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity
+                  style={[styles.confirmButton, { padding: 4, backgroundColor: 'transparent', marginRight: 2 }]}
+                  onPress={handleKakaoShare}
+                >
+                  <Image
+                    source={require('../../assets/images/login_kakaotalk.png')}
+                    style={{ width: 24, height: 24 }}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
+                  <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
+                    복사
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
