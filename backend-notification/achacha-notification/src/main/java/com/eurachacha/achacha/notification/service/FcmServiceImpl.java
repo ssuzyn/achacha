@@ -1,5 +1,6 @@
 package com.eurachacha.achacha.notification.service;
 
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.eurachacha.achacha.notification.dto.NotificationEventDto;
@@ -18,6 +19,7 @@ public class FcmServiceImpl implements FcmService {
 
 	private final FirebaseMessaging firebaseMessaging;
 
+	@Async("fcmTaskExecutor")
 	@Override
 	public void sendNotification(NotificationEventDto eventDto) {
 		try {
