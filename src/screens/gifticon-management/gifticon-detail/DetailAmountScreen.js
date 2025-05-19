@@ -156,7 +156,7 @@ const DetailAmountScreen = () => {
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
-    NavigationService.goBack();
+    navigation.goBack();
   };
 
   // 기프티콘 데이터 로드 함수
@@ -207,7 +207,7 @@ const DetailAmountScreen = () => {
         }
 
         // 오류 발생 시 이전 화면으로 돌아가기
-        NavigationService.goBack();
+        navigation.goBack();
       }
     }
   };

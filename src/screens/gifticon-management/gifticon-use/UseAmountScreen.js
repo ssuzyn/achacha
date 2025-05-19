@@ -40,8 +40,7 @@ const UseAmountScreen = () => {
   const productInfo = {
     name: brandName && gifticonName ? `${brandName} | ${gifticonName}` : '상품권',
     barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
-    originalAmount: 30000,
-    remainingAmount: remainingAmount || 8000,
+    remainingAmount: remainingAmount || 0,
   };
 
   // 화면 로드 시 가로 모드로 설정
@@ -80,6 +79,10 @@ const UseAmountScreen = () => {
         }
 
         setBarcodeData(response);
+
+        // remainingAmount 업데이트
+        productInfo.remainingAmount = response?.gifticonRemainingAmount || remainingAmount || 0;
+
         setIsLoading(false);
       } catch (err) {
         console.error('바코드 로드 에러:', err);
@@ -108,7 +111,7 @@ const UseAmountScreen = () => {
     };
 
     loadBarcodeData();
-  }, [actualGifticonId, navigation, route.params]);
+  }, [actualGifticonId, navigation, route.params, remainingAmount]);
 
   // 뒤로가기
   const handleGoBack = () => {
@@ -181,12 +184,15 @@ const UseAmountScreen = () => {
 
       setIsLoading(false);
 
+      // 화면 방향을 세로로 변경
+      Orientation.lockToPortrait();
+
       // 성공 메시지 표시
       Alert.alert('성공', '기프티콘이 성공적으로 사용되었습니다.', [
         {
           text: '확인',
           onPress: () => {
-            // 사용내역 화면으로 이동 (이전 화면으로 돌아가지 않도록 reset 사용)
+            // 사용내역 화면으로 이동
             navigation.navigate('DetailAmountHistoryScreen', {
               gifticonId: actualGifticonId,
               brandName: brandName,
@@ -198,6 +204,9 @@ const UseAmountScreen = () => {
         },
       ]);
     } catch (err) {
+      // 에러 발생 시 화면 방향을 세로로 변경
+      Orientation.lockToPortrait();
+
       setIsLoading(false);
       console.error('기프티콘 사용 오류:', err);
 
@@ -235,6 +244,8 @@ const UseAmountScreen = () => {
 
   // 취소 처리
   const handleCancel = () => {
+    // 화면 방향을 세로로 변경 후 이전 화면으로
+    Orientation.lockToPortrait();
     navigation.goBack();
   };
 
@@ -369,7 +380,8 @@ const UseAmountScreen = () => {
             </View>
 
             <Text style={styles.remainingAmountText}>
-              잔액: {formatAmount(productInfo.remainingAmount)}
+              잔액:{' '}
+              {formatAmount(barcodeData?.gifticonRemainingAmount || productInfo.remainingAmount)}
             </Text>
 
             <View style={styles.modalButtonContainer}>
