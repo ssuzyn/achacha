@@ -192,14 +192,19 @@ const UseAmountScreen = () => {
         {
           text: '확인',
           onPress: () => {
-            // 사용내역 화면으로 이동
-            navigation.navigate('DetailAmountHistoryScreen', {
-              gifticonId: actualGifticonId,
-              brandName: brandName,
-              gifticonName: gifticonName,
-              scope: parsedAmount >= remainingAmt ? 'USED' : 'MY_BOX',
-              usageType: 'SELF_USE',
-            });
+            // 먼저 DetailAmountScreen으로 돌아가기
+            navigation.goBack();
+
+            // 그 후 사용내역 화면으로 이동
+            setTimeout(() => {
+              navigation.navigate('DetailAmountHistoryScreen', {
+                gifticonId: actualGifticonId,
+                brandName: brandName,
+                gifticonName: gifticonName,
+                scope: parsedAmount >= remainingAmt ? 'USED' : 'MY_BOX',
+                usageType: 'SELF_USE',
+              });
+            }, 100); // 약간의 시간을 두어 네비게이션이 올바르게 처리되게 함
           },
         },
       ]);
