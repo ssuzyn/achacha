@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
+import com.eurachacha.achacha.domain.model.history.enums.TransferType;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,7 +34,7 @@ public class GifticonOwnerHistoryPersistenceAdapter implements GifticonOwnerHist
 	}
 
 	@Override
-	public void deleteByGifticonId(Integer gifticonId) {
-		gifticonOwnerHistoryJpaRepository.deleteByGifticonId(gifticonId);
+	public void deleteByGifticonIdAndTransferType(Integer gifticonId, TransferType transferType) {
+		gifticonOwnerHistoryJpaRepository.deleteByGifticonIdAndTransferType(gifticonId, transferType);
 	}
 }

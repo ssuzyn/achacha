@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.eurachacha.achacha.domain.model.history.GifticonOwnerHistory;
+import com.eurachacha.achacha.domain.model.history.enums.TransferType;
 
 @Repository
 public interface GifticonOwnerHistoryJpaRepository extends JpaRepository<GifticonOwnerHistory, Integer> {
@@ -37,5 +38,5 @@ public interface GifticonOwnerHistoryJpaRepository extends JpaRepository<Giftico
 		@Param("ids") List<Integer> ids,
 		@Param("userId") Integer userId);
 
-	void deleteByGifticonId(Integer gifticonId);
+	void deleteByGifticonIdAndTransferType(Integer gifticonId, TransferType transferType);
 }
