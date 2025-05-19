@@ -9,9 +9,6 @@ export const geoNotificationService = {
       throw new Error('gifticonId가 필요합니다.');
     }
     try {
-      console.log(
-        `[geoNotificationService] requestGeoNotification 호출됨. gifticonId: ${gifticonId}`
-      );
       const response = await apiClient.post(API_CONFIG.ENDPOINTS.GEO_NOTIFICATIONS, { gifticonId });
       return response.data;
     } catch (error) {
