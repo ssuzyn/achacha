@@ -35,7 +35,6 @@ const MapScreen = () => {
 
       // 기프티콘 AsyncStorage에 저장 (백그라운드 처리용)
       await AsyncStorage.setItem('USER_GIFTICONS', JSON.stringify(gifticonsArray));
-      console.log('[MapScreen] 기프티콘 AsyncStorage에 저장됨:', gifticonsArray.length);
 
       // GeofencingService에 기프티콘 목록 전달 (싱글톤 인스턴스 가져오기)
       if (!geofencingServiceRef.current) {
@@ -139,7 +138,6 @@ const MapScreen = () => {
     }
 
     // 지오펜스 설정 진행
-    console.log('[MapScreen] 지오펜스 설정 시작, 서비스 참조:', geofencingServiceRef.current);
     try {
       // storeResults 데이터 구조 확인
       console.log(
@@ -162,7 +160,6 @@ const MapScreen = () => {
 
       // 지오펜스 정보를 저장소에 저장 (백그라운드에서 활용하기 위함)
       await AsyncStorage.setItem('GEOFENCE_STORE_DATA', JSON.stringify(storeResults));
-      console.log('[MapScreen] 매장 데이터 AsyncStorage에 저장 완료');
 
       return setupResult;
     } catch (error) {
@@ -171,9 +168,7 @@ const MapScreen = () => {
   };
 
   // 기프티콘 사용 처리 함수
-  const handleUseGifticon = id => {
-    console.log(`[MapScreen] 기프티콘 ${id} 사용됨`);
-  };
+  const handleUseGifticon = id => {};
 
   // 브랜드 선택 처리 함수
   const handleSelectBrand = brandId => {
@@ -181,14 +176,10 @@ const MapScreen = () => {
     const currentBrandId = selectedBrand !== null ? Number(selectedBrand) : null;
     const newBrandId = brandId !== null ? Number(brandId) : null;
 
-    console.log(`[MapScreen] 브랜드 선택 변경 - 현재: ${currentBrandId}, 새로운: ${newBrandId}`);
-
     // 같은 브랜드를 다시 선택하면 선택 해제
     if (currentBrandId === newBrandId) {
-      console.log('[MapScreen] 같은 브랜드 다시 선택 - 선택 해제');
       setSelectedBrand(null);
     } else {
-      console.log(`[MapScreen] 새 브랜드 선택: ${newBrandId}`);
       setSelectedBrand(newBrandId);
     }
   };
@@ -196,7 +187,6 @@ const MapScreen = () => {
   // 현재 위치로 이동하는 함수
   const moveToCurrentLocation = useCallback(() => {
     if (mapRef.current && mapRef.current.moveToCurrentLocation) {
-      console.log('[MapScreen] 현재 위치로 이동 요청 (moveToCurrentLocation)');
       mapRef.current.moveToCurrentLocation();
     }
   }, []);
@@ -204,7 +194,6 @@ const MapScreen = () => {
   // 화면 포커스 시 현재 위치로 이동
   useFocusEffect(
     useCallback(() => {
-      console.log('[MapScreen] 화면 포커스됨, 현재 위치로 이동 시도');
       moveToCurrentLocation();
       return () => {
         // 화면을 벗어날 때 정리할 작업이 있다면 여기에 추가
