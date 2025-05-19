@@ -292,8 +292,11 @@ const NotificationScreen = () => {
     isMounted.current = true;
     loadingMoreRef.current = false;
 
-    // 데이터 로딩
-    loadNotifications();
+    // 화면 진입 시 자동으로 데이터 로딩
+    const loadInitialData = async () => {
+      await loadNotifications(true); // true를 전달하여 새로고침 모드로 실행
+    };
+    loadInitialData();
 
     // 화면 진입 시 모든 알림 읽음 처리
     const markAllAsReadOnMount = async () => {
@@ -360,6 +363,13 @@ const NotificationScreen = () => {
       // 알림 타입 및 참조 엔티티에 따라 적절한 화면으로 이동
       const { notificationType, referenceEntityType, referenceEntityId } = item;
 
+      console.log('[디버그] 알림 클릭:', {
+        notificationType,
+        referenceEntityType,
+        referenceEntityId,
+        item: JSON.stringify(item),
+      });
+
       if (!referenceEntityId) {
         console.log('참조 ID가 없습니다:', item);
         return;
@@ -373,18 +383,22 @@ const NotificationScreen = () => {
           ) &&
           referenceEntityType === REFERENCE_TYPES.GIFTICON
         ) {
+          console.log('[디버그] 기프티콘 알림 처리 시작');
           // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
           const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
+          console.log('[디버그] 기프티콘 상세 조회 결과:', JSON.stringify(gifticonDetail));
 
           // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
           if (gifticonDetail.gifticonType === 'AMOUNT') {
             // 금액형 기프티콘
+            console.log('[디버그] 금액형 기프티콘으로 이동:', referenceEntityId);
             navigation.navigate('DetailAmount', {
               gifticonId: referenceEntityId,
               scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
             });
           } else {
             // 상품형 기프티콘 (기본값)
+            console.log('[디버그] 상품형 기프티콘으로 이동:', referenceEntityId);
             navigation.navigate('DetailProduct', {
               gifticonId: referenceEntityId,
               scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
@@ -398,16 +412,28 @@ const NotificationScreen = () => {
           ) &&
           referenceEntityType === REFERENCE_TYPES.SHAREBOX
         ) {
-          // 쉐어박스 기프티콘 목록 화면으로 이동
-          navigation.navigate('BoxList', {
+          console.log('[디버그] 쉐어박스 알림 처리:', {
             shareBoxId: referenceEntityId,
             initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
           });
+
+          try {
+            // 문자열이 아닌 숫자로 변환하여 전달
+            const shareBoxId = parseInt(referenceEntityId, 10);
+
+            // 쉐어박스 기프티콘 목록 화면으로 이동
+            navigation.navigate('BoxList', {
+              shareBoxId: shareBoxId,
+              initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+            });
+          } catch (navError) {
+            console.error('[디버그] 쉐어박스 네비게이션 오류:', navError);
+          }
         } else {
           console.log('처리되지 않은 알림 타입:', notificationType);
         }
       } catch (error) {
-        console.error('알림 처리 중 오류 발생:', error);
+        console.error('[디버그] 알림 처리 중 오류 발생:', error);
         Alert.alert('오류', '알림을 처리하는 중 문제가 발생했습니다.');
       }
     },

@@ -25,6 +25,7 @@ import AlertDialog from '../../../components/ui/AlertDialog';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
 import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxService';
+import useAuthStore from '../../../store/authStore';
 
 // 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
 const getImageSource = path => {
@@ -54,6 +55,7 @@ const DetailAmountScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { showTabBar } = useTabBar();
+  const myUserId = useAuthStore(state => state.userId);
 
   // scope 상태 관리
   const [scope, setScope] = useState('MY_BOX'); // 'MY_BOX', 'SHARE_BOX' 또는 'USED'
@@ -91,47 +93,70 @@ const DetailAmountScreen = () => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       showTabBar();
+
+      // 화면에 포커스가 있을 때마다 데이터 새로고침
+      if (gifticonId) {
+        console.log('[DetailAmountScreen] 화면 포커스 - 데이터 새로고침:', gifticonId);
+        loadGifticonData(gifticonId);
+        // 사용하기 모드 종료
+        setIsUsing(false);
+      }
     });
 
     // 초기 로드 시에도 바텀탭 표시
     showTabBar();
 
     return unsubscribe;
-  }, [navigation, showTabBar]);
+  }, [navigation, showTabBar, gifticonId]);
 
   // route.params에서 scope, gifticonId를 가져오는 부분
   useEffect(() => {
     if (route.params) {
-      if (route.params.scope) {
-        setScope(route.params.scope);
+      const {
+        scope: newScope,
+        gifticonId: newGifticonId,
+        isSharer: newIsSharer,
+        refresh,
+      } = route.params;
+
+      console.log('[DetailAmountScreen] 라우트 파라미터 변경:', route.params);
+
+      if (newScope) {
+        setScope(newScope);
       }
-      if (route.params.gifticonId) {
-        setGifticonId(route.params.gifticonId);
+      if (newGifticonId) {
+        setGifticonId(newGifticonId);
       }
-      // 공유박스에서 내가 공유한 것인지 확인
-      if (route.params.isSharer) {
-        setIsSharer(route.params.isSharer);
+      if (newIsSharer !== undefined) {
+        setIsSharer(newIsSharer);
       }
-      // refresh 플래그가 true이면 데이터 다시 로드
-      if (route.params.refresh && gifticonId) {
-        console.log('[DetailAmountScreen] 데이터 새로고침 요청 - 기프티콘 ID:', gifticonId);
-        loadGifticonData(route.params.gifticonId || gifticonId);
+
+      // refresh 플래그가 true이거나 새 gifticonId가 있을 경우 데이터 다시 로드
+      if ((refresh || newGifticonId !== gifticonId) && (newGifticonId || gifticonId)) {
+        console.log(
+          '[DetailAmountScreen] 데이터 새로고침 요청 - 기프티콘 ID:',
+          newGifticonId || gifticonId,
+          '리프레시:',
+          refresh
+        );
+        loadGifticonData(newGifticonId || gifticonId);
         // 사용하기 모드 종료
         setIsUsing(false);
       }
     }
-  }, [route.params]);
+  }, [route.params, gifticonId]);
 
-  // 기프티콘 ID가 있으면 데이터 로드
+  // 기프티콘 ID가 변경되거나, scope가 변경될 때 데이터 로드
+  // (refresh 파라미터 없이도 기본적인 데이터 로딩은 수행)
   useEffect(() => {
     if (gifticonId) {
       loadGifticonData(gifticonId);
     }
-  }, [gifticonId]);
+  }, [gifticonId, scope]); // scope 변경 시에도 데이터 리로드
 
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
-    NavigationService.goBack();
+    navigation.goBack();
   };
 
   // 기프티콘 데이터 로드 함수
@@ -182,7 +207,7 @@ const DetailAmountScreen = () => {
         }
 
         // 오류 발생 시 이전 화면으로 돌아가기
-        NavigationService.goBack();
+        navigation.goBack();
       }
     }
   };
@@ -279,6 +304,19 @@ const DetailAmountScreen = () => {
   // 숫자에 천단위 콤마 추가
   const formatNumber = number => {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  // 입력된 텍스트에서 콤마를 제거하고 숫자만 추출하는 함수
+  const extractNumber = text => {
+    return text.replace(/,/g, '');
+  };
+
+  // 입력된 금액을 포맷팅하는 함수 (천 단위 콤마 추가)
+  const formatInputAmount = text => {
+    if (!text) return '';
+    const onlyNums = text.replace(/[^0-9]/g, '');
+    if (onlyNums === '') return '';
+    return parseInt(onlyNums, 10).toLocaleString();
   };
 
   // 쉐어박스 목록 불러오기
@@ -381,19 +419,23 @@ const DetailAmountScreen = () => {
       gifticonId: gifticonData.gifticonId,
       brandName: gifticonData.brandName,
       gifticonName: gifticonData.gifticonName,
+      scope: scope,
     });
   };
 
   // 금액 입력 완료 처리
   const handleConfirmAmount = async () => {
+    // 콤마 제거 후 숫자로 변환
+    const numericAmount = amount ? parseInt(extractNumber(amount), 10) : 0;
+
     // 금액 입력 값 검증
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+    if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       Alert.alert('알림', '유효한 금액을 입력해주세요.');
       return;
     }
 
-    // 입력한 금액이 잔액보다 크면 오류
-    if (Number(amount) > gifticonData.gifticonRemainingAmount) {
+    // 입력한 금액이 잔액보다 크면 오류 (이미 입력 시 제한되지만 추가 검증)
+    if (numericAmount > gifticonData.gifticonRemainingAmount) {
       Alert.alert('알림', '잔액보다 큰 금액을 사용할 수 없습니다.');
       return;
     }
@@ -405,7 +447,7 @@ const DetailAmountScreen = () => {
       setIsLoading(true);
 
       // API 호출로 기프티콘 사용 처리
-      const response = await gifticonService.useAmountGifticon(gifticonId, Number(amount));
+      const response = await gifticonService.useAmountGifticon(gifticonId, numericAmount);
 
       // 사용 모드 종료
       setIsUsing(false);
@@ -447,6 +489,7 @@ const DetailAmountScreen = () => {
           usedAmount: amount,
           brandName: gifticonData.brandName,
           gifticonName: gifticonData.gifticonName,
+          scope: scope,
         });
       }
     } catch (error) {
@@ -476,18 +519,18 @@ const DetailAmountScreen = () => {
   // 금액 칩 선택 처리
   const handleChipSelect = value => {
     if (value === 'all') {
-      // '전액' 선택 시 남은 잔액 전체 설정
-      setAmount(gifticonData.gifticonRemainingAmount.toString());
+      // '전액' 선택 시 남은 잔액 전체 설정 (콤마 포함)
+      setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
     } else {
-      // 기존 금액에 선택한 금액 추가
-      const currentAmount = Number(amount) || 0;
+      // 기존 금액에 선택한 금액 추가 (콤마 제거 후 계산)
+      const currentAmount = amount ? parseInt(extractNumber(amount), 10) : 0;
       const newAmount = currentAmount + value;
 
       // 잔액보다 크면 잔액으로 제한
       if (newAmount > gifticonData.gifticonRemainingAmount) {
-        setAmount(gifticonData.gifticonRemainingAmount.toString());
+        setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
       } else {
-        setAmount(newAmount.toString());
+        setAmount(newAmount.toLocaleString());
       }
     }
   };
@@ -584,7 +627,15 @@ const DetailAmountScreen = () => {
         ]);
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
-        await gifticonService.cancelShareGifticon(gifticonId);
+        if (!gifticonData.shareBoxId) {
+          Alert.alert(
+            '오류',
+            '쉐어박스 정보를 찾을 수 없습니다. 데이터 동기화 후 다시 시도해주세요.'
+          );
+          return;
+        }
+
+        await gifticonService.cancelShareGifticonFromBox(gifticonData.shareBoxId, gifticonId);
         console.log('[DetailAmountScreen] 기프티콘 공유 취소 성공:', gifticonId);
 
         // 성공 메시지
@@ -612,10 +663,16 @@ const DetailAmountScreen = () => {
 
         if (status === 400 && data.errorCode === 'SHAREBOX_010') {
           errorMessage = '이미 공유된 기프티콘은 삭제할 수 없습니다.';
+        } else if (status === 400 && data.errorCode === 'SHAREBOX_011') {
+          errorMessage = '이 쉐어박스에 공유되지 않은 기프티콘입니다.';
+        } else if (status === 403 && data.errorCode === 'SHAREBOX_008') {
+          errorMessage = '해당 쉐어박스에 접근 권한이 없습니다.';
         } else if (status === 403 && data.errorCode === 'GIFTICON_002') {
           errorMessage = '해당 기프티콘에 접근 권한이 없습니다.';
         } else if (status === 404) {
-          if (data.errorCode === 'GIFTICON_001') {
+          if (data.errorCode === 'SHAREBOX_001') {
+            errorMessage = '쉐어박스를 찾을 수 없습니다.';
+          } else if (data.errorCode === 'GIFTICON_001') {
             errorMessage = '기프티콘 정보를 찾을 수 없습니다.';
           } else if (data.errorCode === 'GIFTICON_005') {
             errorMessage = '이미 삭제된 기프티콘입니다.';
@@ -767,15 +824,15 @@ const DetailAmountScreen = () => {
                       )}
 
                       {/* 쉐어박스이고 내가 공유한 경우에만 공유 취소 아이콘 표시 */}
-                      {scope === 'SHARE_BOX' && isSharer && (
-                        <TouchableOpacity
-                          style={styles.actionRemoveButton}
-                          onPress={handleCancelShare}
-                        >
-                          <Icon name="arrow-downward" type="material" size={20} color="#718096" />
-                          <Text style={styles.actionRemoveText}>내리기</Text>
-                        </TouchableOpacity>
-                      )}
+                      {scope === 'SHARE_BOX' &&
+                        (isSharer || gifticonData.userId === Number(myUserId)) && (
+                          <TouchableOpacity
+                            style={styles.actionIconButton}
+                            onPress={handleCancelShare}
+                          >
+                            <Icon name="person-remove" type="material" size={24} color="#718096" />
+                          </TouchableOpacity>
+                        )}
                     </View>
                   )}
 
@@ -1227,8 +1284,24 @@ const DetailAmountScreen = () => {
                 placeholder="0"
                 keyboardType="number-pad"
                 value={amount}
-                onChangeText={setAmount}
-                maxLength={10}
+                onChangeText={text => {
+                  // 콤마가 포함된 형식으로 표시하되, 입력값이 잔액을 초과하지 않도록 체크
+                  const numericValue = text.replace(/[^0-9]/g, '');
+                  if (numericValue === '') {
+                    setAmount('');
+                    return;
+                  }
+
+                  const numValue = parseInt(numericValue, 10);
+                  // 잔액 초과 검사
+                  if (numValue > gifticonData.gifticonRemainingAmount) {
+                    // 잔액으로 제한
+                    setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
+                  } else {
+                    setAmount(numValue.toLocaleString());
+                  }
+                }}
+                maxLength={15}
               />
               <Text style={styles.wonText}>원</Text>
             </View>
@@ -1855,21 +1928,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
-  },
-  actionRemoveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F9F9F9',
-    marginLeft: 8,
-  },
-  actionRemoveText: {
-    fontSize: 14,
-    color: '#718096',
-    marginLeft: 4,
-    fontWeight: '500',
   },
   // 공유 모달 관련 스타일
   shareModalOverlay: {

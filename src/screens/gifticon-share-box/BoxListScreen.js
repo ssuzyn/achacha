@@ -562,6 +562,70 @@ const BoxListScreen = () => {
     }
   };
 
+  // 좌측 액션 (사용 완료) 렌더링
+  const renderLeftActions = (progress, dragX, item) => {
+    const scale = dragX.interpolate({
+      inputRange: [0, 100],
+      outputRange: [0, 1],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = dragX.interpolate({
+      inputRange: [0, 50, 100],
+      outputRange: [0, 0.5, 1],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View style={[styles.leftAction, { opacity }]}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => showUseCompleteDialog(item)}
+          activeOpacity={0.7}
+        >
+          <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
+            <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
+            <Text style={styles.actionText} weight="semiBold">
+              사용 완료
+            </Text>
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
+  // 우측 액션 (바코드 조회) 렌더링
+  const renderRightActions = (progress, dragX, item) => {
+    const scale = dragX.interpolate({
+      inputRange: [-100, 0],
+      outputRange: [1, 0],
+      extrapolate: 'clamp',
+    });
+
+    const opacity = dragX.interpolate({
+      inputRange: [-100, -50, 0],
+      outputRange: [1, 0.5, 0],
+      extrapolate: 'clamp',
+    });
+
+    return (
+      <Animated.View style={[styles.rightAction, { opacity }]}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleBarcodeView(item)}
+          activeOpacity={0.7}
+        >
+          <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
+            <Icon name="qr-code-scanner" type="material" color="#FFFFFF" size={24} />
+            <Text style={styles.actionText} weight="semiBold">
+              바코드 조회
+            </Text>
+          </Animated.View>
+        </TouchableOpacity>
+      </Animated.View>
+    );
+  };
+
   // 기프티콘 아이템 렌더링
   const renderGifticonItem = item => {
     const daysLeft = item.scope === 'USED' ? null : calculateDaysLeft(item.gifticonExpiryDate);
@@ -593,7 +657,10 @@ const BoxListScreen = () => {
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+                <Image
+                  source={{ uri: getImageUrl(item.thumbnailPath) }}
+                  style={styles.gifticonImage}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -604,22 +671,6 @@ const BoxListScreen = () => {
                 <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
                   {item.gifticonName}
                 </Text>
-
-                {/* 쉐어박스 정보 - 다른 사람이 공유한 경우에만 표시 */}
-                {item.scope === 'SHARE_BOX' && item.userName && item.userId !== currentUserId && (
-                  <View style={styles.shareBoxInfoContainer}>
-                    <Icon
-                      name="person"
-                      type="material"
-                      size={12}
-                      color="#278CCC"
-                      containerStyle={styles.shareBoxIcon}
-                    />
-                    <Text style={styles.sharedByText} weight="bold">
-                      {item.userName}님 공유
-                    </Text>
-                  </View>
-                )}
 
                 {/* 사용완료 기프티콘에 사용자 정보 표시 */}
                 {item.scope === 'USED' && item.usedBy && (
@@ -675,13 +726,16 @@ const BoxListScreen = () => {
             <View
               style={[
                 styles.gifticonContent,
-                isExpired && { opacity: 0.7 },
+                { opacity: 0.7 },
                 isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
               ]}
             >
               {/* 이미지 영역 - 만료된 경우 흐리게 표시 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+                <Image
+                  source={{ uri: getImageUrl(item.thumbnailPath) }}
+                  style={styles.gifticonImage}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -738,9 +792,9 @@ const BoxListScreen = () => {
               }
             });
           }}
-          friction={2}
-          rightThreshold={60}
-          overshootRight={false}
+          friction={2} // 마찰력 감소로 스와이프 감도 증가
+          overshootRight={false} // 오버슈트 비활성화로 동작 개선
+          rightThreshold={40} // 임계값 감소로 스와이프 인식 개선
         >
           <TouchableOpacity
             style={styles.gifticonItem}
@@ -751,6 +805,7 @@ const BoxListScreen = () => {
               }
               handleGifticonPress(item);
             }}
+            activeOpacity={0.7} // 터치 피드백 개선
           >
             <Shadow
               distance={12}
@@ -761,13 +816,15 @@ const BoxListScreen = () => {
               <View
                 style={[
                   styles.gifticonContent,
-                  isExpired && { opacity: 0.7 },
                   isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
                 ]}
               >
                 {/* 이미지 영역 */}
                 <View style={styles.imageContainer}>
-                  <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+                  <Image
+                    source={{ uri: getImageUrl(item.thumbnailPath) }}
+                    style={styles.gifticonImage}
+                  />
                 </View>
 
                 {/* 텍스트 정보 영역 */}
@@ -794,21 +851,39 @@ const BoxListScreen = () => {
                       </Text>
                     </View>
                   )}
+
+                  {/* 금액형 기프티콘의 경우 잔액 정보 표시 */}
+                  {item.gifticonType === 'AMOUNT' && item.gifticonRemainingAmount && (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: '#278CCC',
+                        fontWeight: 'bold',
+                        marginTop: 3,
+                      }}
+                    >
+                      잔액: {item.gifticonRemainingAmount.toLocaleString()}원
+                    </Text>
+                  )}
                 </View>
 
                 {/* D-day 태그 */}
                 <View
                   style={[
                     styles.dDayContainer,
-                    isDDay ? styles.urgentDDay : isUrgent ? styles.urgentDDay : styles.normalDDay,
+                    isExpired
+                      ? styles.expiredDDay
+                      : isUrgent || isDDay
+                        ? styles.urgentDDay
+                        : styles.normalDDay,
                   ]}
                 >
                   <Text
                     style={[
                       styles.dDayText,
-                      isDDay
-                        ? styles.urgentDDayText
-                        : isUrgent
+                      isExpired
+                        ? styles.expiredDDayText
+                        : isUrgent || isDDay
                           ? styles.urgentDDayText
                           : styles.normalDDayText,
                     ]}
@@ -824,7 +899,7 @@ const BoxListScreen = () => {
       );
     }
 
-    // 상품형 기프티콘은 양쪽 스와이프 모두 가능 (기존과 동일)
+    // 상품형 기프티콘은 양쪽 스와이프 모두 가능
     return (
       <Swipeable
         key={item.gifticonId}
@@ -839,11 +914,11 @@ const BoxListScreen = () => {
             }
           });
         }}
-        friction={2}
-        leftThreshold={60}
-        rightThreshold={60}
-        overshootLeft={false}
-        overshootRight={false}
+        friction={1} // 마찰력 감소로 스와이프 감도 증가
+        leftThreshold={40} // 임계값 감소로 스와이프 인식 개선
+        rightThreshold={40} // 임계값 감소로 스와이프 인식 개선
+        overshootLeft={false} // 오버슈트 비활성화로 동작 개선
+        overshootRight={false} // 오버슈트 비활성화로 동작 개선
       >
         <TouchableOpacity
           style={styles.gifticonItem}
@@ -854,6 +929,7 @@ const BoxListScreen = () => {
             }
             handleGifticonPress(item);
           }}
+          activeOpacity={0.7} // 터치 피드백 개선
         >
           <Shadow
             distance={12}
@@ -864,13 +940,15 @@ const BoxListScreen = () => {
             <View
               style={[
                 styles.gifticonContent,
-                isExpired && { opacity: 0.7 },
                 isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
               ]}
             >
               {/* 이미지 영역 */}
               <View style={styles.imageContainer}>
-                <Image source={{ uri: getImageUrl(item.thumbnailPath) }} style={styles.gifticonImage} />
+                <Image
+                  source={{ uri: getImageUrl(item.thumbnailPath) }}
+                  style={styles.gifticonImage}
+                />
               </View>
 
               {/* 텍스트 정보 영역 */}
@@ -903,15 +981,19 @@ const BoxListScreen = () => {
               <View
                 style={[
                   styles.dDayContainer,
-                  isDDay ? styles.urgentDDay : isUrgent ? styles.urgentDDay : styles.normalDDay,
+                  isExpired
+                    ? styles.expiredDDay
+                    : isUrgent || isDDay
+                      ? styles.urgentDDay
+                      : styles.normalDDay,
                 ]}
               >
                 <Text
                   style={[
                     styles.dDayText,
-                    isDDay
-                      ? styles.urgentDDayText
-                      : isUrgent
+                    isExpired
+                      ? styles.expiredDDayText
+                      : isUrgent || isDDay
                         ? styles.urgentDDayText
                         : styles.normalDDayText,
                   ]}
@@ -924,61 +1006,6 @@ const BoxListScreen = () => {
           </Shadow>
         </TouchableOpacity>
       </Swipeable>
-    );
-  };
-
-  // 좌측 액션 (상세보기) 렌더링
-  const renderLeftActions = (progress, dragX, item) => {
-    const scale = dragX.interpolate({
-      inputRange: [0, 60],
-      outputRange: [0, 1],
-      extrapolate: 'clamp',
-    });
-
-    const opacity = dragX.interpolate({
-      inputRange: [0, 40, 60],
-      outputRange: [0, 0.8, 1],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <Animated.View style={[styles.leftAction, { opacity }]}>
-        <RectButton style={styles.actionButton} onPress={() => showUseCompleteDialog(item)}>
-          <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
-            <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
-            <Text style={styles.actionText} weight="semiBold">
-              사용 완료
-            </Text>
-          </Animated.View>
-        </RectButton>
-      </Animated.View>
-    );
-  };
-
-  // 우측 액션 (바코드 조회) 렌더링
-  const renderRightActions = (progress, dragX, item) => {
-    const scale = dragX.interpolate({
-      inputRange: [-60, 0],
-      outputRange: [1, 0],
-      extrapolate: 'clamp',
-    });
-
-    const opacity = dragX.interpolate({
-      inputRange: [-60, -40, 0],
-      outputRange: [1, 0.8, 0],
-      extrapolate: 'clamp',
-    });
-    return (
-      <Animated.View style={[styles.rightAction, { opacity }]}>
-        <RectButton style={styles.actionButton} onPress={() => handleBarcodeView(item)}>
-          <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
-            <Icon name="qr-code-scanner" type="material" color="#FFFFFF" size={24} />
-            <Text style={styles.actionText} weight="semiBold">
-              바코드 조회
-            </Text>
-          </Animated.View>
-        </RectButton>
-      </Animated.View>
     );
   };
 
@@ -1010,12 +1037,15 @@ const BoxListScreen = () => {
           page: undefined,
           size: 20,
         });
-        console.log('기프티콘 목록 응답:', res.gifticons.map(item => ({
-          gifticonId: item.gifticonId,
-          gifticonName: item.gifticonName,
-          userId: item.userId,
-          userName: item.userName
-        })));
+        console.log(
+          '기프티콘 목록 응답:',
+          res.gifticons.map(item => ({
+            gifticonId: item.gifticonId,
+            gifticonName: item.gifticonName,
+            userId: item.userId,
+            userName: item.userName,
+          }))
+        );
         setAvailableGifticons(res.gifticons);
         setHasNextPage(res.hasNextPage);
         setNextPage(res.nextPage);
@@ -1034,7 +1064,7 @@ const BoxListScreen = () => {
       selectedCategory,
       selectedFilter,
       sortBy: sortBy.used,
-      shareBoxId
+      shareBoxId,
     });
     if (selectedCategory !== 'used') return;
 
@@ -1046,7 +1076,7 @@ const BoxListScreen = () => {
           type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
           sort: 'USED_DESC',
           page: undefined,
-          size: 20
+          size: 20,
         });
         const res = await fetchUsedGifticons({
           shareBoxId,
@@ -1058,7 +1088,7 @@ const BoxListScreen = () => {
         console.log('[사용완료 탭] API 응답:', {
           gifticonsCount: res.gifticons?.length,
           hasNextPage: res.hasNextPage,
-          nextPage: res.nextPage
+          nextPage: res.nextPage,
         });
         setUsedGifticons(res.gifticons);
         setUsedHasNextPage(res.hasNextPage);
@@ -1131,7 +1161,7 @@ const BoxListScreen = () => {
     }, [shareBoxId, selectedCategory, selectedFilter, sortBy])
   );
 
-  const getImageUrl = (thumbnailPath) => {
+  const getImageUrl = thumbnailPath => {
     if (!thumbnailPath) return null;
     // 이미 http(s)로 시작하면 그대로 사용
     if (thumbnailPath.startsWith('http://') || thumbnailPath.startsWith('https://')) {
@@ -1143,8 +1173,10 @@ const BoxListScreen = () => {
 
   // FlatList 데이터 준비
   const getGifticonData = () => {
-    if (selectedCategory === 'available') return availableGifticons.map(item => ({ ...item, scope: 'SHARE_BOX' }));
-    if (selectedCategory === 'used') return usedGifticons.map(item => ({ ...item, scope: 'USED', usedBy: item.userName }));
+    if (selectedCategory === 'available')
+      return availableGifticons.map(item => ({ ...item, scope: 'SHARE_BOX' }));
+    if (selectedCategory === 'used')
+      return usedGifticons.map(item => ({ ...item, scope: 'USED', usedBy: item.userName }));
     return [];
   };
   const isListLoading = selectedCategory === 'available' ? loading : usedLoading;
@@ -1274,11 +1306,17 @@ const BoxListScreen = () => {
           onRefresh={handleLoadMore}
           onEndReached={handleLoadMore}
           onEndReachedThreshold={0.7}
-          ListFooterComponent={isListLoading ? <Text style={{ textAlign: 'center', margin: 16 }}>로딩 중...</Text> : null}
+          ListFooterComponent={
+            isListLoading ? (
+              <Text style={{ textAlign: 'center', margin: 16 }}>로딩 중...</Text>
+            ) : null
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                {selectedCategory === 'available' ? '사용가능한 기프티콘이 없습니다' : '사용완료한 기프티콘이 없습니다'}
+                {selectedCategory === 'available'
+                  ? '사용가능한 기프티콘이 없습니다'
+                  : '사용완료한 기프티콘이 없습니다'}
               </Text>
             </View>
           }

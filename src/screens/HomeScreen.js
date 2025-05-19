@@ -1,5 +1,5 @@
 /* eslint-disable react-native/no-inline-styles */
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -10,6 +10,7 @@ import {
   Dimensions,
   ImageBackground,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useTheme } from '../hooks/useTheme';
 import { Text } from '../components/ui';
@@ -64,6 +65,7 @@ const HomeScreen = () => {
   const [expiringGifticons, setExpiringGifticons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const printTokens = async () => {
@@ -71,7 +73,7 @@ const HomeScreen = () => {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       const bleToken = await AsyncStorage.getItem('bleToken');
       const userId = await AsyncStorage.getItem('userId');
-      
+
       // userId로 사용자 정보 조회
       if (userId) {
         try {
@@ -139,16 +141,20 @@ const HomeScreen = () => {
     loadExpiringGifticons();
     loadNotificationCount();
 
-    // 화면에 포커스될 때마다 알림 개수 갱신 - 구독 관리 추가
+    // 화면에 포커스될 때마다 알림 개수 및 기프티콘 목록 모두 새로고침
     const unsubscribeFocus = navigation.addListener('focus', () => {
+      // 알림 개수 갱신
       loadNotificationCount();
+
+      // 만료 임박 기프티콘 목록 새로고침
+      loadExpiringGifticons();
     });
 
     // 컴포넌트 언마운트 시 이벤트 리스너 정리
     return () => {
       unsubscribeFocus();
     };
-  }, []); // 의존성 배열에서 navigation과 updateNotificationCount 제거
+  }, []);
 
   const calculateDaysLeft = expiryDate => {
     const today = new Date();
@@ -159,6 +165,59 @@ const HomeScreen = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
+
+  // 새로고침 처리 함수
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // 만료 임박 기프티콘 새로고침
+      const params = {
+        page: 0,
+        size: 5,
+        sort: 'EXPIRY_ASC',
+        scope: 'MY_BOX',
+      };
+      const response = await gifticonService.getAvailableGifticons(params);
+
+      if (response && response.gifticons) {
+        const formattedGifticons = response.gifticons.map(item => ({
+          id: item.gifticonId,
+          brand: item.brandName,
+          name: item.gifticonName,
+          image: item.thumbnailPath
+            ? { uri: item.thumbnailPath }
+            : require('../assets/images/adaptive_icon.png'),
+          expiryDate: new Date(item.gifticonExpiryDate),
+          gifticonType: item.gifticonType,
+        }));
+        setExpiringGifticons(formattedGifticons);
+      } else {
+        setExpiringGifticons([]);
+      }
+
+      // 알림 개수 새로고침
+      const notificationResponse = await notificationService.getUnreadNotificationsCount();
+      if (notificationResponse && notificationResponse.count !== undefined) {
+        updateNotificationCount(notificationResponse.count);
+      } else {
+        updateNotificationCount(0);
+      }
+
+      // 사용자 정보도 갱신
+      const userId = await AsyncStorage.getItem('userId');
+      if (userId) {
+        const userInfo = await fetchUserById(userId);
+        if (userInfo && userInfo.userName) {
+          setNickname(userInfo.userName);
+        }
+      }
+    } catch (err) {
+      console.error('새로고침 중 오류 발생:', err);
+      setError(err.message || '데이터를 새로고침하는 데 실패했습니다.');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [updateNotificationCount]);
 
   // 스타일 정의를 컴포넌트 내부로 이동하여 theme에 접근 가능하도록 합니다.
   const styles = StyleSheet.create({
@@ -670,6 +729,14 @@ const HomeScreen = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
       >
         <View style={styles.welcomeSection}>
           <Text variant="h3" weight="bold" style={styles.welcomeText}>

@@ -49,29 +49,48 @@ const HeadupToast = props => {
 
   // 알림 클릭 처리 함수
   const handleNotificationPress = async () => {
+    console.log('[HeadupToast] 알림 클릭 이벤트 발생');
+
+    // 알림 표시 닫기
+    if (onClose) {
+      onClose();
+    }
+
     // 먼저 customProps에 onPress가 있으면 실행
     if (customProps.onPress) {
+      console.log('[HeadupToast] customProps.onPress 실행');
       customProps.onPress();
       return;
     }
 
     // 기존 onPress가 있으면 실행
     if (onPress) {
+      console.log('[HeadupToast] 기본 onPress 실행');
       onPress();
       return;
     }
 
+    // 이하 코드는 onPress 또는 customProps.onPress가 지정되어 있지 않을 때만 실행됨
     // notificationData가 없거나 네비게이션 설정이 없으면 처리 불가
     if (!notificationData || !navigationConfig || !navigationConfig.navigate) {
-      console.log('알림 데이터 또는 네비게이션 설정이 없습니다');
+      console.log('[HeadupToast] 알림 데이터 또는 네비게이션 설정이 없습니다', {
+        hasNotificationData: !!notificationData,
+        hasNavigationConfig: !!navigationConfig,
+        hasNavigate: !!(navigationConfig && navigationConfig.navigate),
+      });
       return;
     }
+
+    console.log('[HeadupToast] 알림 데이터:', {
+      notificationData: JSON.stringify(notificationData),
+      navigationConfig: navigationConfig ? 'exists' : 'null',
+    });
 
     const { notificationType, referenceEntityType, referenceEntityId } = notificationData;
     const { navigate } = navigationConfig;
 
     if (!referenceEntityId) {
-      console.log('참조 ID가 없습니다:', notificationData);
+      console.log('[HeadupToast] 참조 ID가 없습니다:', notificationData);
       return;
     }
 
@@ -83,18 +102,22 @@ const HeadupToast = props => {
         ) &&
         referenceEntityType === REFERENCE_TYPES.GIFTICON
       ) {
+        console.log('[HeadupToast] 기프티콘 알림 처리 시작');
         // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
         const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
+        console.log('[HeadupToast] 기프티콘 상세 조회 결과:', JSON.stringify(gifticonDetail));
 
         // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
         if (gifticonDetail.gifticonType === 'AMOUNT') {
           // 금액형 기프티콘
+          console.log('[HeadupToast] 금액형 기프티콘으로 이동:', referenceEntityId);
           navigate('DetailAmount', {
             gifticonId: referenceEntityId,
             scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
           });
         } else {
           // 상품형 기프티콘 (기본값)
+          console.log('[HeadupToast] 상품형 기프티콘으로 이동:', referenceEntityId);
           navigate('DetailProduct', {
             gifticonId: referenceEntityId,
             scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
@@ -108,16 +131,42 @@ const HeadupToast = props => {
         ) &&
         referenceEntityType === REFERENCE_TYPES.SHAREBOX
       ) {
-        // 쉐어박스 기프티콘 목록 화면으로 이동
-        navigate('BoxList', {
-          shareBoxId: referenceEntityId,
+        // 로그 추가
+        console.log('[HeadupToast] 쉐어박스 알림 처리 시작 - 원본 데이터:', {
+          notificationType,
+          referenceEntityType,
+          referenceEntityId,
+          referenceEntityIdType: typeof referenceEntityId,
+        });
+
+        // 100% 숫자로 변환되도록 보장
+        let shareBoxId = referenceEntityId;
+        if (typeof shareBoxId === 'string') {
+          shareBoxId = parseInt(shareBoxId, 10);
+        }
+
+        console.log('[HeadupToast] 쉐어박스 알림 처리 - 변환된 shareBoxId:', {
+          shareBoxId,
+          shareBoxIdType: typeof shareBoxId,
           initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
         });
+
+        try {
+          // 쉐어박스 기프티콘 목록 화면으로 이동
+          // BoxList 스크린의 파라미터는 shareBoxId여야 함
+          navigate('BoxList', {
+            shareBoxId: shareBoxId,
+            initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
+          });
+          console.log('[HeadupToast] BoxList 네비게이션 성공');
+        } catch (navError) {
+          console.error('[HeadupToast] 쉐어박스 네비게이션 오류:', navError);
+        }
       } else {
-        console.log('처리되지 않은 알림 타입:', notificationType);
+        console.log('[HeadupToast] 처리되지 않은 알림 타입:', notificationType);
       }
     } catch (error) {
-      console.error('알림 처리 중 오류 발생:', error);
+      console.error('[HeadupToast] 알림 처리 중 오류 발생:', error);
     }
   };
 
@@ -146,7 +195,14 @@ const HeadupToast = props => {
           ) : null}
         </View>
 
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={e => {
+            // 이벤트 버블링 방지
+            e.stopPropagation();
+            if (onClose) onClose();
+          }}
+        >
           <Icon name="close" type="material" size={18} color="#888" />
         </TouchableOpacity>
       </TouchableOpacity>

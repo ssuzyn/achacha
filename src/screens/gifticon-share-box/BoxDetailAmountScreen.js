@@ -127,7 +127,8 @@ const BoxDetailAmountScreen = () => {
     if (id) {
       const requestId = ++latestRequestId.current;
       setIsLoading(true);
-      gifticonService.getGifticonDetail(id, scopeParam)
+      gifticonService
+        .getGifticonDetail(id, scopeParam)
         .then(data => {
           if (requestId === latestRequestId.current) {
             setGifticonData(data);
@@ -277,27 +278,70 @@ const BoxDetailAmountScreen = () => {
     }
 
     try {
-      setIsLoading(true);
-      await gifticonService.useAmountGifticon(gifticonData.gifticonId, Number(amount));
-      // 1. 모달/상태 먼저 닫기
+      // 모달 닫기
       setModalVisible(false);
-      setAmount('');
+      // 로딩 표시
+      setIsLoading(true);
+
+      // API 호출로 기프티콘 사용 처리
+      const response = await gifticonService.useAmountGifticon(
+        gifticonData.gifticonId,
+        Number(amount)
+      );
+
+      // 사용 모드 종료
       setIsUsing(false);
-      // 2. Alert 띄우기
-      Alert.alert('성공', '금액이 사용되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            // 상세정보 API 재호출
-            loadGifticonData(gifticonData.gifticonId);
-          },
-        },
-      ]);
-    } catch (e) {
-      const errorMessage = e?.response?.data?.message || '기프티콘 사용 처리에 실패했습니다.';
-      Alert.alert('오류', errorMessage);
-    } finally {
       setIsLoading(false);
+      setAmount('');
+
+      // API 응답에서 남은 잔액 확인
+      const remainingAmount =
+        response.gifticonRemainingAmount !== undefined
+          ? response.gifticonRemainingAmount
+          : gifticonData.gifticonRemainingAmount - Number(amount);
+
+      // 잔액이 0원이면 사용완료 처리
+      if (remainingAmount === 0) {
+        // 사용 완료 모달 표시
+        Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // BoxListScreen으로 이동하면서 사용완료 탭으로 설정
+              navigation.navigate('BoxList', {
+                shareBoxId: gifticonData.shareBoxId,
+                shareBoxName: gifticonData.shareBoxName,
+                initialTab: 'used', // 사용완료 탭으로 이동
+                refresh: true,
+              });
+            },
+          },
+        ]);
+      } else {
+        // 일반 사용인 경우 - 사용내역 화면으로 이동
+        navigation.navigate('BoxDetailAmountHistoryScreen', {
+          id: gifticonData.gifticonId,
+          scope: scope,
+          usedAmount: amount,
+          brandName: gifticonData.brandName,
+          gifticonName: gifticonData.gifticonName,
+        });
+      }
+    } catch (error) {
+      setIsLoading(false);
+      setAmount('');
+      setModalVisible(false);
+
+      console.error('기프티콘 사용 오류:', error);
+
+      // 에러 메시지 처리
+      if (error.response) {
+        const errorMessage =
+          error.response.data?.message || '기프티콘 사용 중 오류가 발생했습니다.';
+        Alert.alert('오류', errorMessage);
+      } else {
+        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+      }
     }
   };
 
@@ -342,11 +386,14 @@ const BoxDetailAmountScreen = () => {
   // 사용내역 기능
   const handleHistory = () => {
     // 사용내역 조회 로직
-    // console.log('사용내역 조회');
-    const brandName = route.params?.brandName || gifticonData.brandName || gifticonData.brand || '-';
-    const gifticonName = route.params?.gifticonName || gifticonData.gifticonName || gifticonData.name || '-';
+    const brandName =
+      route.params?.brandName || gifticonData.brandName || gifticonData.brand || '-';
+    const gifticonName =
+      route.params?.gifticonName || gifticonData.gifticonName || gifticonData.name || '-';
+
     navigation.navigate('BoxDetailAmountHistoryScreen', {
       id: gifticonData.gifticonId,
+      gifticonId: gifticonData.gifticonId,
       scope: scope,
       brandName: brandName,
       gifticonName: gifticonName,
@@ -427,7 +474,7 @@ const BoxDetailAmountScreen = () => {
     // console.log('기프티콘 선물하기');
   };
 
-  const getImageUrl = (thumbnailPath) => {
+  const getImageUrl = thumbnailPath => {
     if (!thumbnailPath) return null;
     if (typeof thumbnailPath === 'string') {
       if (thumbnailPath.startsWith('http://') || thumbnailPath.startsWith('https://')) {
@@ -486,7 +533,8 @@ const BoxDetailAmountScreen = () => {
   const dDay = calculateDaysLeft(gifticonData.gifticonExpiryDate);
 
   const brandName = route.params?.brandName || gifticonData.brandName || gifticonData.brand || '-';
-  const gifticonName = route.params?.gifticonName || gifticonData.gifticonName || gifticonData.name || '-';
+  const gifticonName =
+    route.params?.gifticonName || gifticonData.gifticonName || gifticonData.name || '-';
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -540,7 +588,7 @@ const BoxDetailAmountScreen = () => {
                       scope === 'USED' && styles.grayScaleImage,
                       scope === 'USED' && usageType === 'SELF_USE' && styles.smallerGifticonImage,
                     ]}
-                    resizeMode="contain"
+                    resizeMode="cover"
                   />
 
                   {/* 상단 액션 아이콘 */}
@@ -562,7 +610,12 @@ const BoxDetailAmountScreen = () => {
                   {scope === 'USED' && usageType === 'SELF_USE' && (
                     <View style={styles.usedBarcodeContainer}>
                       <Image
-                        source={{ uri: getImageUrl(gifticonData.barcodeImageUrl || require('../../assets/images/barcode.png')) }}
+                        source={{
+                          uri: getImageUrl(
+                            gifticonData.barcodeImageUrl ||
+                              require('../../assets/images/barcode.png')
+                          ),
+                        }}
                         style={styles.usedBarcodeImage}
                         resizeMode="contain"
                       />
@@ -614,10 +667,10 @@ const BoxDetailAmountScreen = () => {
               )}
 
               <View style={styles.infoContainer}>
-                <Text weight="bold" style={styles.brandText}>
-                  {brandName}
+                <Text style={styles.brandText}>{brandName}</Text>
+                <Text weight="bold" style={styles.nameText}>
+                  {gifticonName}
                 </Text>
-                <Text style={styles.nameText}>{gifticonName}</Text>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>유효기간</Text>
@@ -652,9 +705,7 @@ const BoxDetailAmountScreen = () => {
                 {scope === 'USED' && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>사용일시</Text>
-                    <Text style={styles.infoValue}>
-                      {formatDateTime(gifticonData.usedAt)}
-                    </Text>
+                    <Text style={styles.infoValue}>{formatDateTime(gifticonData.usedAt)}</Text>
                   </View>
                 )}
 
@@ -699,50 +750,11 @@ const BoxDetailAmountScreen = () => {
               {isUsing ? (
                 // 사용 모드일 때 - 금액입력/취소 버튼을 두 줄로 표시
                 <>
-                  <TouchableOpacity
-                    onPress={handleAmountInput}
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#56AEE9',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                      marginBottom: 10,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#FFFFFF',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
-                      }}
-                    >
-                      금액입력
-                    </Text>
+                  <TouchableOpacity onPress={handleAmountInput} style={styles.useButton}>
+                    <Text style={styles.useButtonText}>금액입력</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleCancel}
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#E5F4FE',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#278CCC',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
-                      }}
-                    >
-                      취소
-                    </Text>
+                  <TouchableOpacity onPress={handleCancel} style={styles.historyButton}>
+                    <Text style={styles.historyButtonText}>취소</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -751,18 +763,7 @@ const BoxDetailAmountScreen = () => {
                   <View style={styles.buttonRow}>
                     {isExpired ? (
                       // 만료된 기프티콘은 사용완료 버튼만 표시
-                      <TouchableOpacity
-                        onPress={handleUse}
-                        style={{
-                          width: '100%',
-                          borderRadius: 8,
-                          height: 56,
-                          backgroundColor: '#56AEE9',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          flexDirection: 'row',
-                        }}
-                      >
+                      <TouchableOpacity onPress={handleUse} style={styles.useButton}>
                         <Text style={styles.useButtonText}>사용완료</Text>
                       </TouchableOpacity>
                     ) : (
@@ -787,29 +788,11 @@ const BoxDetailAmountScreen = () => {
                     <View style={styles.buttonRow}>
                       <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
                         <Icon name="inventory-2" type="material" size={22} color="#000000" />
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            color: '#000000',
-                            fontSize: 16,
-                            fontWeight: 'semibold',
-                          }}
-                        >
-                          공유하기
-                        </Text>
+                        <Text style={styles.shareButtonText}>공유하기</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={handleGift} style={styles.giftButton}>
                         <Icon name="card-giftcard" type="material" size={22} color="#000000" />
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            color: '#000000',
-                            fontSize: 16,
-                            fontWeight: 'semibold',
-                          }}
-                        >
-                          선물하기
-                        </Text>
+                        <Text style={styles.giftButtonText}>선물하기</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -875,8 +858,23 @@ const BoxDetailAmountScreen = () => {
                 placeholder="0"
                 keyboardType="number-pad"
                 value={amount}
-                onChangeText={setAmount}
-                maxLength={10}
+                onChangeText={text => {
+                  const numericValue = text.replace(/[^0-9]/g, '');
+                  if (numericValue === '') {
+                    setAmount('');
+                    return;
+                  }
+
+                  const numValue = parseInt(numericValue, 10);
+                  // 잔액 초과 검사
+                  if (numValue > gifticonData.gifticonRemainingAmount) {
+                    // 잔액으로 제한
+                    setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
+                  } else {
+                    setAmount(numValue.toLocaleString());
+                  }
+                }}
+                maxLength={15}
               />
               <Text style={styles.wonText}>원</Text>
             </View>
@@ -993,7 +991,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     padding: 16,
     paddingTop: 0,
     borderBottomWidth: 1,
@@ -1004,17 +1002,21 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   gifticonImage: {
-    width: '60%',
-    height: '90%',
+    width: 200,
+    height: 200,
     borderRadius: 8,
+    resizeMode: 'cover',
+    marginBottom: 20,
   },
   grayScaleImage: {
     opacity: 0.7,
   },
   smallerGifticonImage: {
-    height: '50%',
+    width: 160,
+    height: 160,
     marginBottom: 5,
     marginTop: 20,
+    resizeMode: 'cover',
   },
   actionIconsContainer: {
     position: 'absolute',
@@ -1033,7 +1035,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   infoContainer: {
-    marginTop: 16,
     padding: 16,
   },
   brandText: {
@@ -1058,7 +1059,6 @@ const styles = StyleSheet.create({
     width: 80,
     fontSize: 16,
     color: '#737373',
-    fontWeight: '500',
     marginRight: 8,
   },
   infoValue: {
@@ -1082,7 +1082,6 @@ const styles = StyleSheet.create({
     width: 80,
     fontSize: 16,
     color: '#737373',
-    fontWeight: '500',
     marginRight: 8,
   },
   amountValueContainer: {
@@ -1134,6 +1133,38 @@ const styles = StyleSheet.create({
   },
   historyButtonText: {
     color: '#278CCC',
+    fontSize: 16,
+    fontWeight: 'semibold',
+  },
+  shareButton: {
+    flex: 1,
+    marginRight: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#EEEEEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  giftButton: {
+    flex: 1,
+    marginLeft: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#EEEEEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  shareButtonText: {
+    marginLeft: 8,
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: 'semibold',
+  },
+  giftButtonText: {
+    marginLeft: 8,
+    color: '#000000',
     fontSize: 16,
     fontWeight: 'semibold',
   },
@@ -1369,6 +1400,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     fontWeight: '500',
+    marginRight: 2,
   },
   magnifyButton: {
     marginLeft: 12,
@@ -1390,20 +1422,6 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
     marginTop: 5,
-  },
-  shareButton: {
-    flex: 1,
-    marginRight: 4,
-    borderRadius: 8,
-    height: 56,
-    backgroundColor: '#EEEEEE',
-  },
-  giftButton: {
-    flex: 1,
-    marginLeft: 4,
-    borderRadius: 8,
-    height: 56,
-    backgroundColor: '#EEEEEE',
   },
 });
 

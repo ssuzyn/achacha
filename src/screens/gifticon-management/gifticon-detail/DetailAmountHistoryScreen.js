@@ -17,7 +17,7 @@ import { Text, Divider } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
 import NavigationService from '../../../navigation/NavigationService';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import gifticonService from '../../../api/gifticonService';
 
 const DetailAmountHistoryScreen = () => {
@@ -25,6 +25,7 @@ const DetailAmountHistoryScreen = () => {
   const { theme } = useTheme();
   const { showTabBar } = useTabBar();
   const route = useRoute();
+  const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
@@ -168,7 +169,7 @@ const DetailAmountHistoryScreen = () => {
 
   // 뒤로가기 함수
   const handleGoBack = () => {
-    NavigationService.goBack();
+    navigation.goBack();
   };
 
   // 수정하기 함수
@@ -244,8 +245,8 @@ const DetailAmountHistoryScreen = () => {
         {
           text: '확인',
           onPress: () => {
-            // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
-            NavigationService.goBack({ refresh: true });
+            // 이전 화면으로 돌아가기
+            navigation.goBack();
           },
         },
       ]);
@@ -325,8 +326,8 @@ const DetailAmountHistoryScreen = () => {
               {
                 text: '확인',
                 onPress: () => {
-                  // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
-                  NavigationService.goBack({ refresh: true });
+                  // 이전 화면으로 돌아가기
+                  navigation.goBack();
                 },
               },
             ]);

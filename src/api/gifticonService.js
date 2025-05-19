@@ -240,12 +240,8 @@ const gifticonService = {
    * @returns {Promise<Object>} - 기프티콘 목록 조회 결과
    */
   async getAvailableGifticons(params = {}) {
-    try {
-      const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_GIFTICONS, { params });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.get(API_CONFIG.ENDPOINTS.GET_GIFTICONS, { params });
+    return response.data;
   },
 
   /**
@@ -381,10 +377,9 @@ const gifticonService = {
    */
   async markGifticonAsUsed(gifticonId, usageType = 'SELF_USE') {
     try {
-      const response = await apiClient.post(
-        `/api/available-gifticons/${gifticonId}/use`,
-        { usageType }
-      );
+      const response = await apiClient.post(`/api/available-gifticons/${gifticonId}/use`, {
+        usageType,
+      });
       return response.data;
     } catch (error) {
       console.error('[API] 기프티콘 사용 완료 처리 실패:', error);
@@ -398,14 +393,10 @@ const gifticonService = {
    * @returns {Promise<Object>} - 삭제 결과
    */
   async deleteGifticon(gifticonId) {
-    try {
-      const response = await apiClient.delete(
-        `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}`
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.delete(
+      `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}`
+    );
+    return response.data;
   },
 
   /**
@@ -415,17 +406,13 @@ const gifticonService = {
    * @returns {Promise<Object>} - 공유 결과
    */
   async shareGifticon(gifticonId, shareBoxId) {
-    try {
-      const response = await apiClient.post(
-        `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}/share`,
-        {
-          shareBoxId,
-        }
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.post(
+      `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}/share`,
+      {
+        shareBoxId,
+      }
+    );
+    return response.data;
   },
 
   /**
@@ -434,21 +421,16 @@ const gifticonService = {
    * @returns {Promise<Object>} - 공유 취소 결과
    */
   async cancelShareGifticon(gifticonId) {
-    try {
-      const response = await apiClient.delete(
-        `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}/share`
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.delete(
+      `${API_CONFIG.ENDPOINTS.REGISTER_GIFTICON}/${gifticonId}/share`
+    );
+    return response.data;
   },
 
   // 기프티콘 바코드 조회 API 함수 추가
   // 주어진 gifticonId에 대한 바코드 정보를 가져옵니다.
   async getGifticonBarcode(gifticonId, scope = '') {
     try {
-
       // 사용 완료 기프티콘인 경우 별도 함수 호출
       if (scope === 'USED') {
         return this.getUsedGifticonBarcode(gifticonId);
@@ -470,12 +452,24 @@ const gifticonService = {
    */
   async useAmountGifticon(gifticonId, usageAmount) {
     try {
-      const response = await apiClient.post(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/use`,
-        { usageAmount }
-      );
+      // 입력값 타입 검증
+      const gId = parseInt(gifticonId, 10);
+      const amount = parseInt(usageAmount, 10);
+
+      if (isNaN(gId) || isNaN(amount) || amount <= 0) {
+        throw new Error('유효한 ID와 금액이 필요합니다.');
+      }
+
+      // API 요청 - 요청 형식 맞추기
+      const url = `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gId}/use`;
+      const body = { usageAmount: amount };
+
+      console.log('[API] 금액형 기프티콘 사용 요청:', { url, body });
+
+      const response = await apiClient.post(url, body);
       return response.data;
     } catch (error) {
+      console.error('[API] 금액형 기프티콘 사용 오류:', error);
       throw error;
     }
   },
@@ -486,14 +480,10 @@ const gifticonService = {
    * @returns {Promise<Object>} - 사용내역 정보
    */
   async getAmountGifticonUsageHistory(gifticonId) {
-    try {
-      const response = await apiClient.get(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history`
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.get(
+      `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history`
+    );
+    return response.data;
   },
 
   /**
@@ -540,16 +530,17 @@ const gifticonService = {
 
       return response.data;
     } catch (error) {
-
       // 에러 상세 정보 기록
       if (error.response) {
         const status = error.response.status;
-
         // 서버 오류 메시지 확인
         if (status === 500) {
+          console.error('서버 내부 오류 발생:', error.response.data);
         }
       } else if (error.request) {
+        console.error('응답을 받지 못했습니다:', error.request);
       } else {
+        console.error('요청 설정 중 오류 발생:', error.message);
       }
 
       throw error;
@@ -563,44 +554,73 @@ const gifticonService = {
    * @returns {Promise<string>} - 응답 메시지
    */
   async deleteAmountGifticonUsageHistory(gifticonId, usageHistoryId) {
-    try {
-      const response = await apiClient.delete(
-        `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history/${usageHistoryId}`
-      );
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.delete(
+      `${API_CONFIG.ENDPOINTS.AMOUNT_GIFTICONS}/${gifticonId}/usage-history/${usageHistoryId}`
+    );
+    return response.data;
   },
 
   // 상품형 기프티콘 사용완료 처리
   async markProductGifticonAsUsed(gifticonId) {
     try {
-      const url = API_CONFIG.ENDPOINTS.PRODUCT_GIFTICON_USE(gifticonId);
-      // accessToken 직접 읽기
-      const accessToken = await AsyncStorage.getItem('accessToken');
+      // 입력값 타입 검증
+      const gId = parseInt(gifticonId, 10);
 
-      // 헤더 직접 구성
-      const headers = {};
-      if (accessToken) {
-        headers.Authorization = `Bearer ${accessToken}`;
+      if (isNaN(gId)) {
+        throw new Error('유효한 기프티콘 ID가 필요합니다.');
       }
 
-      const response = await axios.post(`${API_BASE_URL}${url}`, null, { headers });
+      const url = API_CONFIG.ENDPOINTS.PRODUCT_GIFTICON_USE(gId);
+      console.log('[API] 상품형 기프티콘 사용완료 요청:', url);
+
+      // 요청 형식에 맞게 빈 바디 전송 (API 문서 요구사항)
+      const response = await apiClient.post(`${API_BASE_URL}${url}`);
       return response.data;
     } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용완료 처리 오류:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 상품형 기프티콘 사용 API (사용자 요청에 맞게 구현)
+   * @param {number} gifticonId - 기프티콘 ID
+   * @returns {Promise<Object>} - 응답 결과
+   */
+  async useProductGifticon(gifticonId) {
+    try {
+      // 입력값 타입 검증
+      const gId = parseInt(gifticonId, 10);
+
+      if (isNaN(gId)) {
+        throw new Error('유효한 기프티콘 ID가 필요합니다.');
+      }
+
+      // 사용자 요청에 맞게 URL 형식 설정
+      const url = `/api/product-gifticons/${gId}/use`;
+      console.log('[API] 상품형 기프티콘 사용 요청:', url);
+
+      // 요청 형식에 맞게 빈 바디 전송 (API 문서 요구사항)
+      const response = await apiClient.post(url);
+      return response.data;
+    } catch (error) {
+      console.error('[API] 상품형 기프티콘 사용 처리 오류:', error);
       throw error;
     }
   },
 
   // 사용완료 기프티콘 상세 조회
   async getUsedGifticonDetail(gifticonId) {
-    try {
-      const response = await apiClient.get(`/api/used-gifticons/${gifticonId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.get(`/api/used-gifticons/${gifticonId}`);
+    return response.data;
+  },
+
+  // 공유 취소 기능 (shareBoxId 파라미터를 사용하는 새로운 버전)
+  async cancelShareGifticonFromBox(shareBoxId, gifticonId) {
+    const response = await apiClient.delete(
+      `/api/share-boxes/${shareBoxId}/gifticons/${gifticonId}`
+    );
+    return response.data;
   },
 };
 

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Slider as RNESlider } from 'react-native-elements';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { useTheme } from 'react-native-elements';
 import { Text } from './index';
 
@@ -77,50 +77,105 @@ const Slider = ({
   // 값 배열(values)이 제공된 경우 이를 처리하는 로직
   const useValueArray = values && values.length > 0;
 
-  // 값 배열(values)이 제공된 경우, 해당 배열의 인덱스로 변환
-  const [localIndex, setLocalIndex] = useState(() => {
-    if (useValueArray) {
-      const index = values.indexOf(value);
-      return index !== -1 ? index : 0;
-    }
-    return 0;
-  });
+  // 현재 값에 해당하는 배열 인덱스 찾기
+  const findClosestIndex = val => {
+    if (!useValueArray || !values.length) return 0;
 
-  // 초기 로컬 값 설정
-  const [localValue, setLocalValue] = useState(useValueArray ? values[localIndex] : value);
+    // 정확히 일치하는 값이 있으면 해당 인덱스 반환
+    const exactIndex = values.indexOf(val);
+    if (exactIndex !== -1) return exactIndex;
+
+    // 가장 가까운 값의 인덱스 찾기
+    let closestIndex = 0;
+    let minDiff = Math.abs(values[0] - val);
+
+    for (let i = 1; i < values.length; i++) {
+      const diff = Math.abs(values[i] - val);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closestIndex = i;
+      }
+    }
+
+    return closestIndex;
+  };
+
+  // 초기 인덱스 계산
+  const initialIndex = findClosestIndex(value);
+
+  // 로컬 상태 설정
+  const [localIndex, setLocalIndex] = useState(initialIndex);
+  const [localValue, setLocalValue] = useState(useValueArray ? values[initialIndex] : value);
+
+  // 외부 값이 변경되면 로컬 상태 업데이트
+  useEffect(() => {
+    if (useValueArray) {
+      const newIndex = findClosestIndex(value);
+      setLocalIndex(newIndex);
+      setLocalValue(values[newIndex]);
+    } else {
+      setLocalValue(value);
+    }
+  }, [value, useValueArray, values]);
 
   const { theme } = useTheme();
 
   // 로컬 값 변경 핸들러
   const handleValueChange = newValue => {
     if (useValueArray) {
-      // values 배열을 사용하는 경우, 정확한 인덱스로 변환
-      // 반올림하여 가장 가까운 스텝으로 이동
       const index = Math.round(newValue);
-      const valueFromArray = values[index];
+      if (index >= 0 && index < values.length) {
+        const valueFromArray = values[index];
+        setLocalIndex(index);
+        setLocalValue(valueFromArray);
 
-      setLocalIndex(index);
-      setLocalValue(valueFromArray);
-      onValueChange && onValueChange(valueFromArray);
+        if (onValueChange) {
+          onValueChange(valueFromArray);
+        }
+      }
     } else {
-      // 일반 슬라이더로 사용하는 경우
       setLocalValue(newValue);
-      onValueChange && onValueChange(newValue);
+
+      if (onValueChange) {
+        onValueChange(newValue);
+      }
     }
   };
 
   // 슬라이딩 완료 핸들러
   const handleSlidingComplete = newValue => {
     if (useValueArray) {
-      // 정확한 인덱스로 이동
       const index = Math.round(newValue);
-      const valueFromArray = values[index];
+      if (index >= 0 && index < values.length) {
+        const valueFromArray = values[index];
+        setLocalIndex(index);
+        setLocalValue(valueFromArray);
 
+        if (onSlidingComplete) {
+          onSlidingComplete(valueFromArray);
+        }
+      }
+    } else if (onSlidingComplete) {
+      onSlidingComplete(newValue);
+    }
+  };
+
+  // 마커 위치 클릭 핸들러
+  const handleMarkerPress = index => {
+    if (disabled) return;
+
+    if (useValueArray && index >= 0 && index < values.length) {
       setLocalIndex(index);
-      setLocalValue(valueFromArray);
-      onSlidingComplete && onSlidingComplete(valueFromArray);
-    } else {
-      onSlidingComplete && onSlidingComplete(newValue);
+      const newValue = values[index];
+      setLocalValue(newValue);
+
+      if (onValueChange) {
+        onValueChange(newValue);
+      }
+
+      if (onSlidingComplete) {
+        onSlidingComplete(newValue);
+      }
     }
   };
 
@@ -160,6 +215,37 @@ const Slider = ({
         </Text>
       </View>
 
+      {/* 마커 표시 */}
+      {useValueArray && (
+        <View style={styles.markersContainer}>
+          {values.map((val, idx) => (
+            <TouchableWithoutFeedback
+              key={idx}
+              onPress={() => handleMarkerPress(idx)}
+              disabled={disabled}
+            >
+              <View
+                style={[
+                  styles.marker,
+                  localIndex === idx && styles.activeMarker,
+                  disabled && styles.disabledMarker,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.markerText,
+                    localIndex === idx && styles.activeMarkerText,
+                    disabled && styles.disabledMarkerText,
+                  ]}
+                >
+                  {val}
+                </Text>
+              </View>
+            </TouchableWithoutFeedback>
+          ))}
+        </View>
+      )}
+
       <View style={styles.sliderArea}>
         <SliderWrapper
           value={useValueArray ? localIndex : localValue}
@@ -169,7 +255,7 @@ const Slider = ({
           onValueChange={handleValueChange}
           onSlidingComplete={handleSlidingComplete}
           disabled={disabled}
-          trackStyle={[styles.track, trackStyle]}
+          trackStyle={[styles.track, trackStyle, disabled && styles.disabledTrack]}
           thumbStyle={[
             styles.thumb,
             { backgroundColor: thumbTintColor || '#A7DAF9' },
@@ -179,6 +265,7 @@ const Slider = ({
           minimumTrackTintColor={minimumTrackTintColor || activeColor || primaryColor}
           maximumTrackTintColor={maximumTrackTintColor || inactiveColor || theme.colors.grey2}
           thumbTintColor={thumbTintColor || backgroundColor}
+          allowTouchTrack={true} // 트랙 터치 활성화, 슬라이더를 터치하면 해당 위치로 이동
           thumbProps={{
             children: showThumbLabel ? (
               <View style={styles.thumbLabelContainer}>
@@ -192,6 +279,7 @@ const Slider = ({
                 </Text>
               </View>
             ) : null,
+            hitSlop: { top: 15, right: 15, bottom: 15, left: 15 }, // 터치 영역 확장
           }}
           {...props}
         />
@@ -223,12 +311,12 @@ const styles = StyleSheet.create({
   },
   sliderArea: {
     position: 'relative',
-    paddingVertical: 2,
+    paddingVertical: 8,
     marginHorizontal: 10, // 슬라이더 양쪽 여백
   },
   adjustmentTextContainer: {
     alignItems: 'center',
-    marginBottom: 2,
+    marginBottom: 6,
   },
   adjustmentText: {
     fontSize: 16,
@@ -236,42 +324,81 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   track: {
-    height: 4,
-    borderRadius: 2,
+    height: 6,
+    borderRadius: 3,
+  },
+  disabledTrack: {
+    opacity: 0.5,
   },
   thumb: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    elevation: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
-    shadowRadius: 1,
+    shadowRadius: 2,
+    zIndex: 10,
   },
   disabledThumb: {
-    opacity: 0.7,
+    opacity: 0.5,
+    backgroundColor: '#CCCCCC',
   },
   thumbLabelContainer: {
-    width: '100%',
-    height: '100%',
+    position: 'absolute',
+    top: -24,
+    left: -10,
+    width: 48,
+    height: 24,
+    backgroundColor: '#56AEE9',
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   thumbLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textAlign: 'center',
+    fontSize: 12,
+    color: 'white',
   },
   minMaxContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: 10,
     marginTop: 4,
-    paddingHorizontal: 20, // 최소/최대값 컨테이너 여백
   },
   minMaxText: {
     fontSize: 12,
+  },
+  markersContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 14,
+    paddingTop: 4,
+    paddingBottom: 2,
+  },
+  marker: {
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+  },
+  activeMarker: {
+    backgroundColor: 'rgba(86, 174, 233, 0.1)',
+  },
+  disabledMarker: {
+    opacity: 0.5,
+  },
+  markerText: {
+    fontSize: 10,
+    color: '#666',
+  },
+  activeMarkerText: {
+    color: '#56AEE9',
+    fontWeight: 'bold',
+  },
+  disabledMarkerText: {
+    color: '#999',
   },
 });
 

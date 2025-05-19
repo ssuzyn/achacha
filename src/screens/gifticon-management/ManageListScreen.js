@@ -12,6 +12,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  TextInput,
+  Modal,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
@@ -21,7 +23,7 @@ import CategoryTabs from '../../components/common/CategoryTabs';
 import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
-import { Swipeable, RectButton } from 'react-native-gesture-handler';
+import { Swipeable } from 'react-native-gesture-handler';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import gifticonService from '../../api/gifticonService';
 import FastImage from 'react-native-fast-image';
@@ -357,6 +359,89 @@ const ManageListScreen = () => {
       fontSize: 14,
       fontFamily: theme.fonts.fontWeight.medium,
     },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      width: '85%',
+      backgroundColor: 'white',
+      borderRadius: 16,
+      padding: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    modalTitle: {
+      fontSize: 20,
+      color: '#333',
+      fontWeight: 'bold',
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    amountInfoContainer: {
+      marginBottom: 16,
+      backgroundColor: '#F5F8FC',
+      padding: 16,
+      borderRadius: 8,
+    },
+    amountInfoLabel: {
+      fontSize: 14,
+      color: '#666',
+      marginBottom: 4,
+    },
+    amountInfoValue: {
+      fontSize: 16,
+      color: '#333',
+      fontWeight: 'bold',
+      marginBottom: 12,
+    },
+    inputLabel: {
+      fontSize: 16,
+      color: '#333',
+      marginBottom: 8,
+    },
+    amountInput: {
+      borderWidth: 1,
+      borderColor: '#DDD',
+      borderRadius: 8,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      marginBottom: 24,
+    },
+    modalButtons: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: 12,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: 6,
+    },
+    cancelButton: {
+      backgroundColor: '#F1F1F1',
+    },
+    confirmButton: {
+      backgroundColor: '#278CCC',
+    },
+    cancelButtonText: {
+      color: '#666',
+      fontSize: 16,
+      fontWeight: '500',
+    },
+    confirmButtonText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: '500',
+    },
   });
 
   // 파라미터에서 initialTab이 변경되면 selectedCategory 업데이트
@@ -405,9 +490,13 @@ const ManageListScreen = () => {
 
       // API 호출 파라미터 구성
       const params = {
-        page: reset ? 0 : nextPage,
         size: 10,
       };
+
+      // 첫 페이지 로드가 아니고, 다음 페이지 커서가 있는 경우에만 page 파라미터 추가
+      if (!reset && nextPage) {
+        params.page = nextPage;
+      }
 
       // 필터 적용
       if (selectedFilter !== 'all') {
@@ -463,7 +552,6 @@ const ManageListScreen = () => {
       setHasNextPage(response.hasNextPage || false);
       setNextPage(response.nextPage || null);
     } catch (err) {
-
       // 네트워크 오류 세부 정보 로깅
       if (err.response) {
         // 서버 응답이 있는 경우 (4xx, 5xx 에러)
@@ -569,6 +657,11 @@ const ManageListScreen = () => {
   const [dialogVisible, setDialogVisible] = useState(false);
   const [selectedGifticon, setSelectedGifticon] = useState(null);
 
+  // 금액형 기프티콘 사용 관련 상태
+  const [amountDialogVisible, setAmountDialogVisible] = useState(false);
+  const [amountToUse, setAmountToUse] = useState('');
+  const [selectedAmountGifticon, setSelectedAmountGifticon] = useState(null);
+
   // 바코드 조회 처리
   const handleBarcodeView = item => {
     if (item.gifticonType === 'PRODUCT') {
@@ -590,20 +683,117 @@ const ManageListScreen = () => {
 
   // 사용 완료 다이얼로그 표시
   const showUseCompleteDialog = item => {
-    setSelectedGifticon(item);
-    setDialogVisible(true);
+    // 금액형인 경우 금액 입력 다이얼로그 표시
+    if (item.gifticonType === 'AMOUNT') {
+      setSelectedAmountGifticon(item);
+      setAmountToUse(''); // 금액 초기화
+      setAmountDialogVisible(true);
+    } else {
+      // 상품형인 경우 기존 확인 다이얼로그 표시
+      setSelectedGifticon(item);
+      setDialogVisible(true);
+    }
   };
 
-  // 사용 완료 처리
+  // 금액형 기프티콘 사용 처리
+  const handleUseAmountGifticon = async () => {
+    if (!selectedAmountGifticon) return;
+
+    // 금액 입력값 검증
+    if (!amountToUse || isNaN(parseInt(amountToUse, 10)) || parseInt(amountToUse, 10) <= 0) {
+      Alert.alert('입력 오류', '사용할 금액을 올바르게 입력해주세요.');
+      return;
+    }
+
+    const usageAmount = parseInt(amountToUse, 10);
+    const remainingAmount = selectedAmountGifticon.gifticonRemainingAmount || 0;
+
+    // 잔액 초과 검증
+    if (usageAmount > remainingAmount) {
+      Alert.alert('금액 초과', `사용 가능한 금액은 ${remainingAmount.toLocaleString()}원입니다.`);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setAmountDialogVisible(false);
+
+      // 금액형 기프티콘 사용 API 호출
+      await gifticonService.useAmountGifticon(selectedAmountGifticon.gifticonId, usageAmount);
+
+      // 성공 시 기프티콘 목록에서 해당 항목 갱신
+      // 전체 금액을 사용한 경우에만 목록에서 제거
+      if (usageAmount >= remainingAmount) {
+        const updatedGifticons = filteredGifticons.filter(
+          gifticon => gifticon.gifticonId !== selectedAmountGifticon.gifticonId
+        );
+        setFilteredGifticons(updatedGifticons);
+      } else {
+        // 일부 금액만 사용한 경우 잔액 갱신
+        const updatedGifticons = filteredGifticons.map(gifticon => {
+          if (gifticon.gifticonId === selectedAmountGifticon.gifticonId) {
+            return {
+              ...gifticon,
+              gifticonRemainingAmount: remainingAmount - usageAmount,
+            };
+          }
+          return gifticon;
+        });
+        setFilteredGifticons(updatedGifticons);
+      }
+
+      // 성공 메시지 표시
+      Alert.alert('사용 완료', '기프티콘이 사용처리되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 사용내역 화면으로 이동
+            navigation.navigate('DetailAmountHistoryScreen', {
+              gifticonId: selectedAmountGifticon.gifticonId,
+              brandName: selectedAmountGifticon.brandName,
+              gifticonName: selectedAmountGifticon.gifticonName,
+              scope: usageAmount >= remainingAmount ? 'USED' : 'MY_BOX',
+              usageType: 'SELF_USE',
+            });
+          },
+        },
+      ]);
+    } catch (error) {
+      // 에러 메시지 처리
+      let errorMessage = '기프티콘 사용 중 오류가 발생했습니다.';
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 400) {
+          errorMessage = '잘못된 요청입니다. 금액을 확인해주세요.';
+        } else if (status === 403) {
+          errorMessage = '이 기프티콘에 대한 권한이 없습니다.';
+        } else if (status === 404) {
+          errorMessage = '존재하지 않는 기프티콘입니다.';
+        }
+
+        // 서버에서 전달한 메시지가 있으면 우선 표시
+        errorMessage = error.response.data?.message || errorMessage;
+      } else if (error.request) {
+        errorMessage = '서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.';
+      }
+
+      console.error('금액형 기프티콘 사용 오류:', error);
+      Alert.alert('오류', errorMessage);
+    } finally {
+      setLoading(false);
+      setSelectedAmountGifticon(null);
+    }
+  };
+
+  // 상품형 기프티콘 사용 완료 처리
   const handleMarkAsUsed = async () => {
     if (!selectedGifticon) return;
 
     try {
       setLoading(true);
 
-      // API 호출로 기프티콘을 사용완료 상태로 변경
-      await gifticonService.markGifticonAsUsed(selectedGifticon.gifticonId, 'SELF_USE');
-
+      // 상품형 기프티콘 사용 완료 처리
+      await gifticonService.markProductGifticonAsUsed(selectedGifticon.gifticonId);
 
       // 상태 업데이트 및 화면 갱신
       const updatedGifticons = filteredGifticons.filter(
@@ -614,13 +804,27 @@ const ManageListScreen = () => {
       // 성공 메시지 표시
       Alert.alert('사용 완료', '기프티콘이 사용완료 처리되었습니다.', [{ text: '확인' }]);
     } catch (error) {
-
       // 에러 메시지 처리
       let errorMessage = '기프티콘 사용완료 처리 중 오류가 발생했습니다.';
       if (error.response) {
+        const status = error.response.status;
+        if (status === 400) {
+          errorMessage = '잘못된 요청입니다.';
+        } else if (status === 403) {
+          errorMessage = '이 기프티콘에 대한 권한이 없습니다.';
+        } else if (status === 404) {
+          errorMessage = '존재하지 않는 기프티콘입니다.';
+        } else if (status === 409) {
+          errorMessage = '이미 사용된 기프티콘입니다.';
+        }
+
+        // 서버에서 전달한 메시지가 있으면 우선 표시
         errorMessage = error.response.data?.message || errorMessage;
+      } else if (error.request) {
+        errorMessage = '서버에 연결할 수 없습니다. 네트워크 상태를 확인해주세요.';
       }
 
+      console.error('상품형 기프티콘 사용완료 처리 오류:', error);
       Alert.alert('오류', errorMessage);
     } finally {
       setLoading(false);
@@ -630,28 +834,32 @@ const ManageListScreen = () => {
     }
   };
 
-  // 좌측 액션 (바코드 조회) 렌더링
+  // 좌측 액션 (사용 완료) 렌더링
   const renderLeftActions = (progress, dragX, item) => {
     const scale = dragX.interpolate({
-      inputRange: [0, 60],
+      inputRange: [0, 100],
       outputRange: [0, 1],
       extrapolate: 'clamp',
     });
 
     const opacity = dragX.interpolate({
-      inputRange: [0, 40, 60],
-      outputRange: [0, 0.8, 1],
+      inputRange: [0, 50, 100],
+      outputRange: [0, 0.5, 1],
       extrapolate: 'clamp',
     });
 
     return (
       <Animated.View style={[styles.leftAction, { opacity }]}>
-        <RectButton style={styles.actionButton} onPress={() => showUseCompleteDialog(item)}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => showUseCompleteDialog(item)}
+          activeOpacity={0.7}
+        >
           <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
             <Icon name="check-circle" type="material" color="#FFFFFF" size={24} />
             <Text style={styles.actionText}>사용 완료</Text>
           </Animated.View>
-        </RectButton>
+        </TouchableOpacity>
       </Animated.View>
     );
   };
@@ -659,24 +867,29 @@ const ManageListScreen = () => {
   // 우측 액션 (바코드 조회) 렌더링
   const renderRightActions = (progress, dragX, item) => {
     const scale = dragX.interpolate({
-      inputRange: [-60, 0],
+      inputRange: [-100, 0],
       outputRange: [1, 0],
       extrapolate: 'clamp',
     });
 
     const opacity = dragX.interpolate({
-      inputRange: [-60, -40, 0],
-      outputRange: [1, 0.8, 0],
+      inputRange: [-100, -50, 0],
+      outputRange: [1, 0.5, 0],
       extrapolate: 'clamp',
     });
+
     return (
       <Animated.View style={[styles.rightAction, { opacity }]}>
-        <RectButton style={styles.actionButton} onPress={() => handleBarcodeView(item)}>
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => handleBarcodeView(item)}
+          activeOpacity={0.7}
+        >
           <Animated.View style={[styles.actionIconContainer, { transform: [{ scale }] }]}>
             <Icon name="qr-code-scanner" type="material" color="#FFFFFF" size={24} />
             <Text style={styles.actionText}>바코드 조회</Text>
           </Animated.View>
-        </RectButton>
+        </TouchableOpacity>
       </Animated.View>
     );
   };
@@ -820,9 +1033,9 @@ const ManageListScreen = () => {
               }
             });
           }}
-          friction={2}
-          rightThreshold={60}
-          overshootRight={false}
+          friction={2} // 마찰력 감소로 스와이프 감도 증가
+          overshootRight={false} // 오버슈트 비활성화로 동작 개선
+          rightThreshold={40} // 임계값 감소로 스와이프 인식 개선
         >
           <TouchableOpacity
             style={styles.gifticonItem}
@@ -833,6 +1046,7 @@ const ManageListScreen = () => {
               }
               handleGifticonPress(item);
             }}
+            activeOpacity={0.7} // 터치 피드백 개선
           >
             <Shadow
               distance={12}
@@ -873,6 +1087,20 @@ const ManageListScreen = () => {
                       )}
                     </View>
                   )}
+
+                  {/* 금액형 기프티콘의 경우 잔액 정보 표시 */}
+                  {item.gifticonType === 'AMOUNT' && item.gifticonRemainingAmount && (
+                    <Text
+                      style={{
+                        fontSize: 12,
+                        color: '#278CCC',
+                        fontFamily: theme.fonts.fontWeight.bold,
+                        marginTop: 3,
+                      }}
+                    >
+                      잔액: {item.gifticonRemainingAmount.toLocaleString()}원
+                    </Text>
+                  )}
                 </View>
 
                 {/* D-day 태그 */}
@@ -910,7 +1138,7 @@ const ManageListScreen = () => {
       );
     }
 
-    // 상품형 기프티콘은 양쪽 스와이프 모두 가능 (기존과 동일)
+    // 상품형 기프티콘은 양쪽 스와이프 모두 가능
     return (
       <Swipeable
         key={item.gifticonId}
@@ -925,11 +1153,11 @@ const ManageListScreen = () => {
             }
           });
         }}
-        friction={2}
-        leftThreshold={60}
-        rightThreshold={60}
-        overshootLeft={false}
-        overshootRight={false}
+        friction={1} // 마찰력 감소로 스와이프 감도 증가
+        leftThreshold={40} // 임계값 감소로 스와이프 인식 개선
+        rightThreshold={40} // 임계값 감소로 스와이프 인식 개선
+        overshootLeft={false} // 오버슈트 비활성화로 동작 개선
+        overshootRight={false} // 오버슈트 비활성화로 동작 개선
       >
         <TouchableOpacity
           style={styles.gifticonItem}
@@ -940,6 +1168,7 @@ const ManageListScreen = () => {
             }
             handleGifticonPress(item);
           }}
+          activeOpacity={0.7} // 터치 피드백 개선
         >
           <Shadow
             distance={12}
@@ -1148,7 +1377,7 @@ const ManageListScreen = () => {
                 handleLoadMore();
               }
             }}
-            scrollEventThrottle={400}
+            scrollEventThrottle={100}
           >
             {renderContent()}
           </ScrollView>
@@ -1174,6 +1403,64 @@ const ManageListScreen = () => {
           type="info"
         />
       )}
+
+      {/* 금액형 기프티콘 사용 다이얼로그 */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={amountDialogVisible}
+        onRequestClose={() => setAmountDialogVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setAmountDialogVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>금액 사용</Text>
+
+                {selectedAmountGifticon && (
+                  <View style={styles.amountInfoContainer}>
+                    <Text style={styles.amountInfoLabel}>기프티콘명</Text>
+                    <Text style={styles.amountInfoValue}>
+                      {selectedAmountGifticon.brandName} - {selectedAmountGifticon.gifticonName}
+                    </Text>
+
+                    <Text style={styles.amountInfoLabel}>잔액</Text>
+                    <Text style={styles.amountInfoValue}>
+                      {selectedAmountGifticon.gifticonRemainingAmount?.toLocaleString() || 0}원
+                    </Text>
+                  </View>
+                )}
+
+                <Text style={styles.inputLabel}>사용할 금액</Text>
+                <TextInput
+                  style={styles.amountInput}
+                  value={amountToUse}
+                  onChangeText={text => setAmountToUse(text.replace(/[^0-9]/g, ''))}
+                  placeholder="금액을 입력하세요"
+                  keyboardType="numeric"
+                  autoFocus={true}
+                />
+
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.cancelButton]}
+                    onPress={() => setAmountDialogVisible(false)}
+                  >
+                    <Text style={styles.cancelButtonText}>취소</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.modalButton, styles.confirmButton]}
+                    onPress={handleUseAmountGifticon}
+                  >
+                    <Text style={styles.confirmButtonText}>사용하기</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };

@@ -40,8 +40,7 @@ const UseAmountScreen = () => {
   const productInfo = {
     name: brandName && gifticonName ? `${brandName} | ${gifticonName}` : '상품권',
     barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
-    originalAmount: 30000,
-    remainingAmount: remainingAmount || 8000,
+    remainingAmount: remainingAmount || 0,
   };
 
   // 화면 로드 시 가로 모드로 설정
@@ -80,6 +79,10 @@ const UseAmountScreen = () => {
         }
 
         setBarcodeData(response);
+
+        // remainingAmount 업데이트
+        productInfo.remainingAmount = response?.gifticonRemainingAmount || remainingAmount || 0;
+
         setIsLoading(false);
       } catch (err) {
         console.error('바코드 로드 에러:', err);
@@ -108,7 +111,7 @@ const UseAmountScreen = () => {
     };
 
     loadBarcodeData();
-  }, [actualGifticonId, navigation, route.params]);
+  }, [actualGifticonId, navigation, route.params, remainingAmount]);
 
   // 뒤로가기
   const handleGoBack = () => {
@@ -128,19 +131,21 @@ const UseAmountScreen = () => {
 
   // 금액 칩 선택 처리
   const handleChipSelect = value => {
+    const remainingAmt = barcodeData?.gifticonRemainingAmount || productInfo.remainingAmount || 0;
+
     if (value === 'all') {
-      // '전액' 선택 시 남은 잔액 전체 설정
-      setAmount(productInfo.remainingAmount.toString());
+      // '전액' 선택 시 남은 잔액 전체 설정 (콤마 포함)
+      setAmount(remainingAmt.toLocaleString());
     } else {
-      // 기존 금액에 선택한 금액 추가
-      const currentAmount = Number(amount) || 0;
+      // 기존 금액에 선택한 금액 추가 (콤마 제거 후 계산)
+      const currentAmount = amount ? parseInt(extractNumber(amount), 10) : 0;
       const newAmount = currentAmount + value;
 
       // 잔액보다 크면 잔액으로 제한
-      if (newAmount > productInfo.remainingAmount) {
-        setAmount(productInfo.remainingAmount.toString());
+      if (newAmount > remainingAmt) {
+        setAmount(remainingAmt.toLocaleString());
       } else {
-        setAmount(newAmount.toString());
+        setAmount(newAmount.toLocaleString());
       }
     }
   };
@@ -150,10 +155,34 @@ const UseAmountScreen = () => {
     return amount.toLocaleString() + '원';
   };
 
+  // 입력된 텍스트에서 콤마를 제거하고 숫자만 추출하는 함수
+  const extractNumber = text => {
+    return text.replace(/,/g, '');
+  };
+
+  // 사용하지 않는 함수 제거
+
   // 금액 입력 완료 및 사용완료 처리
   const handleUseComplete = async () => {
-    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-      Alert.alert('알림', '유효한 금액을 입력해주세요.');
+    // 콤마 제거 후 숫자로 변환
+    const numericAmount = amount ? parseInt(extractNumber(amount), 10) : 0;
+
+    // 입력 검증
+    if (!amount || amount.trim() === '') {
+      Alert.alert('알림', '금액을 입력해주세요.');
+      return;
+    }
+
+    // 숫자 검증
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      Alert.alert('알림', '유효한 금액을 입력해주세요. (0보다 큰 숫자)');
+      return;
+    }
+
+    // 잔액 초과 검증 (이미 입력 시 제한되지만 추가 검증)
+    const remainingAmt = barcodeData?.gifticonRemainingAmount || productInfo.remainingAmount || 0;
+    if (numericAmount > remainingAmt) {
+      Alert.alert('알림', `사용 가능한 금액(${remainingAmt.toLocaleString()}원)을 초과하였습니다.`);
       return;
     }
 
@@ -162,52 +191,77 @@ const UseAmountScreen = () => {
       setModalVisible(false);
 
       // 금액형 기프티콘 사용 API 호출
-      await gifticonService.useAmountGifticon(actualGifticonId, Number(amount));
+      await gifticonService.useAmountGifticon(actualGifticonId, numericAmount);
 
       setIsLoading(false);
+
+      // 화면 방향을 세로로 변경
+      Orientation.lockToPortrait();
 
       // 성공 메시지 표시
       Alert.alert('성공', '기프티콘이 성공적으로 사용되었습니다.', [
         {
           text: '확인',
           onPress: () => {
-            // 사용 기록 화면 또는 목록 화면으로 이동
-            navigation.reset({
-              index: 0,
-              routes: [
-                {
-                  name: 'Main',
-                  params: {
-                    screen: 'TabGifticonManage',
-                    params: {
-                      screen: 'GifticonManage',
-                      params: {
-                        refresh: true,
-                        initialTab: 'myBox',
-                      },
-                    },
-                  },
-                },
-              ],
-            });
+            // 먼저 DetailAmountScreen으로 돌아가기
+            navigation.goBack();
+
+            // 그 후 사용내역 화면으로 이동
+            setTimeout(() => {
+              navigation.navigate('DetailAmountHistoryScreen', {
+                gifticonId: actualGifticonId,
+                brandName: brandName,
+                gifticonName: gifticonName,
+                scope: numericAmount >= remainingAmt ? 'USED' : 'MY_BOX',
+                usageType: 'SELF_USE',
+              });
+            }, 100); // 약간의 시간을 두어 네비게이션이 올바르게 처리되게 함
           },
         },
       ]);
     } catch (err) {
+      // 에러 발생 시 화면 방향을 세로로 변경
+      Orientation.lockToPortrait();
+
       setIsLoading(false);
       console.error('기프티콘 사용 오류:', err);
 
-      // 에러 메시지 표시
-      Alert.alert(
-        '오류',
-        err.response?.data?.message || '기프티콘 사용 처리 중 오류가 발생했습니다.',
-        [{ text: '확인' }]
-      );
+      // 에러 메시지 처리
+      let errorMessage = '기프티콘 사용 처리 중 오류가 발생했습니다.';
+
+      if (err.response) {
+        const status = err.response.status;
+
+        // 서버 응답 상태코드별 메시지 처리
+        if (status === 400) {
+          errorMessage = '잘못된 요청입니다. 금액을 확인해주세요.';
+        } else if (status === 401) {
+          errorMessage = '인증이 필요합니다. 다시 로그인해주세요.';
+        } else if (status === 403) {
+          errorMessage = '이 기프티콘에 대한 권한이 없습니다.';
+        } else if (status === 404) {
+          errorMessage = '기프티콘을 찾을 수 없습니다.';
+        } else if (status === 409) {
+          errorMessage = '이미 사용된 기프티콘이거나 처리 중 충돌이 발생했습니다.';
+        }
+
+        // 서버에서 전달한 메시지가 있으면 이를 사용
+        if (err.response.data?.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err.request) {
+        // 요청은 전송되었으나 응답을 받지 못한 경우
+        errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
+      }
+
+      Alert.alert('오류', errorMessage, [{ text: '확인' }]);
     }
   };
 
   // 취소 처리
   const handleCancel = () => {
+    // 화면 방향을 세로로 변경 후 이전 화면으로
+    Orientation.lockToPortrait();
     navigation.goBack();
   };
 
@@ -317,8 +371,27 @@ const UseAmountScreen = () => {
                 placeholder="0"
                 keyboardType="number-pad"
                 value={amount}
-                onChangeText={setAmount}
-                maxLength={10}
+                onChangeText={text => {
+                  // 콤마가 포함된 형식으로 표시하되, 입력값이 잔액을 초과하지 않도록 체크
+                  const numericValue = text.replace(/[^0-9]/g, '');
+                  if (numericValue === '') {
+                    setAmount('');
+                    return;
+                  }
+
+                  const numValue = parseInt(numericValue, 10);
+                  const remainingAmt =
+                    barcodeData?.gifticonRemainingAmount || productInfo.remainingAmount || 0;
+
+                  // 잔액 초과 검사
+                  if (numValue > remainingAmt) {
+                    // 잔액으로 제한
+                    setAmount(remainingAmt.toLocaleString());
+                  } else {
+                    setAmount(numValue.toLocaleString());
+                  }
+                }}
+                maxLength={15}
               />
               <Text style={styles.wonText}>원</Text>
             </View>
@@ -342,7 +415,8 @@ const UseAmountScreen = () => {
             </View>
 
             <Text style={styles.remainingAmountText}>
-              잔액: {formatAmount(productInfo.remainingAmount)}
+              잔액:{' '}
+              {formatAmount(barcodeData?.gifticonRemainingAmount || productInfo.remainingAmount)}
             </Text>
 
             <View style={styles.modalButtonContainer}>
