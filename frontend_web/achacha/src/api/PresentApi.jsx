@@ -4,9 +4,21 @@ const API_URL = '/api/presents/cards'; // API 기본 URL, 필요에 따라 수�
 
 export const getPresentCardByCode = async (presentCardCode) => {
   try {
+    console.log(`API 호출 시작: ${API_URL}/${presentCardCode}`);
     const response = await axios.get(`${API_URL}/${presentCardCode}`);
     // API 응답을 그대로 반환 (어떤 변환도 수행하지 않음)
-    console.log('API로부터 받은 원본 데이터:', response.data);
+    console.log('API 호출 성공! 받은 원본 데이터:', response.data);
+    
+    // 응답 데이터의 구조 검증
+    if (response.data) {
+      const requiredFields = ['presentCardCode', 'presentCardMessage', 'gifticonOriginalPath', 'templateCardPath'];
+      const missingFields = requiredFields.filter(field => !response.data[field]);
+      
+      if (missingFields.length > 0) {
+        console.warn('API 응답에 필요한 필드가 없습니다:', missingFields);
+      }
+    }
+    
     return response.data;
   } catch (error) {
     if (error.response) {

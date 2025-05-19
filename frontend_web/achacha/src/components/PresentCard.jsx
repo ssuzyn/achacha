@@ -2,11 +2,22 @@ import React from 'react';
 
 function PresentCard({ presentCard }) {
   if (!presentCard) {
+    console.error('PresentCard: 전달받은 데이터가 없습니다.');
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>선물 정보를 불러오지 못했습니다.</p></div>;
   }
 
   // 디버깅용 콘솔 출력 (개발 확인용)
-  console.log('PresentCard에 전달된 데이터:', presentCard);
+  console.log('PresentCard: 전달받은 데이터 (타입):', typeof presentCard, presentCard);
+  
+  // 데이터 유효성 검사
+  const isValidData = 
+    presentCard.presentCardMessage && 
+    presentCard.gifticonOriginalPath &&
+    presentCard.templateCardPath;
+    
+  if (!isValidData) {
+    console.error('PresentCard: 필수 데이터가 누락되었습니다. 받은 데이터:', presentCard);
+  }
 
   const {
     presentCardCode,
@@ -18,13 +29,13 @@ function PresentCard({ presentCard }) {
   } = presentCard;
 
   // 디버깅용 콘솔 출력 (개발 확인용)
-  console.log('구조분해할당 후 데이터:', {
-    presentCardCode,
-    presentCardMessage,
-    gifticonOriginalPath,
-    gifticonThumbnailPath,
-    templateCardPath,
-    expiryDateTime
+  console.log('PresentCard: 구조분해할당 완료된 데이터:', {
+    presentCardCode: presentCardCode || '(없음)',
+    presentCardMessage: presentCardMessage || '(없음)',
+    gifticonOriginalPath: gifticonOriginalPath || '(없음)',
+    gifticonThumbnailPath: gifticonThumbnailPath || '(없음)', 
+    templateCardPath: templateCardPath || '(없음)',
+    expiryDateTime: expiryDateTime || '(없음)'
   });
 
   // 브라우저에서 이미지 저장 기능
@@ -60,6 +71,11 @@ function PresentCard({ presentCard }) {
                 src={gifticonOriginalPath}
                 alt="기프티콘" 
                 className="max-w-full max-h-full object-contain"
+                onError={(e) => {
+                  console.error('기프티콘 이미지 로드 실패:', e);
+                  e.target.src = "/fallback-image.png"; // 기본 이미지로 대체
+                  e.target.onerror = null; // 추가 에러 방지
+                }}
               />
             </div>
           </div>
