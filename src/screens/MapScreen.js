@@ -27,33 +27,13 @@ const MapScreen = () => {
   // 기프티콘 데이터 로드
   const loadGifticons = async () => {
     try {
-      console.log('[MapScreen] 기프티콘 목록 로드 시작');
       const response = await mapGifticonService.getMapGifticons();
-
-      // API 응답 구조 확인
-      console.log(
-        '[MapScreen] API 응답 구조:',
-        Object.keys(response),
-        'gifticons 배열:',
-        Array.isArray(response.gifticons),
-        '개수:',
-        response.gifticons?.length || 0
-      );
-
-      // UI에 표시할 기프티콘 설정
       const gifticonsArray = response.gifticons || [];
       setGifticons(gifticonsArray);
 
       // GeofencingService에 기프티콘 목록 전달
       if (geofencingServiceRef.current) {
-        console.log('[MapScreen] 지오펜싱 서비스에 기프티콘 목록 업데이트:', gifticonsArray.length);
         geofencingServiceRef.current.updateUserGifticons(response);
-
-        // 전달 후 서비스 내 기프티콘 상태 확인
-        setTimeout(() => {
-          const serviceGifticons = geofencingServiceRef.current.userGifticons || [];
-          console.log('[MapScreen] 업데이트 후 서비스 내 기프티콘 수:', serviceGifticons.length);
-        }, 100);
       }
 
       return response;
@@ -66,27 +46,21 @@ const MapScreen = () => {
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
-    console.log('[MapScreen] 컴포넌트 마운트');
-
     // GeofencingService 인스턴스 생성 (싱글톤)
     if (!geofencingServiceRef.current) {
-      console.log('[MapScreen] GeofencingService 인스턴스 생성');
       geofencingServiceRef.current = new GeofencingService();
     }
 
     const initialize = async () => {
       // 1. 기프티콘 목록 로드
-      console.log('[MapScreen] 초기화 - 기프티콘 목록 로드 시작');
       await loadGifticons();
 
       // 2. 지오펜싱 초기화
       if (geofencingServiceRef.current && !geofencingServiceRef.current.initialized) {
         try {
-          console.log('[MapScreen] 초기화 - 지오펜싱 초기화 시작');
           await geofencingServiceRef.current.initGeofencing();
-          console.log('[MapScreen] 초기화 - 지오펜싱 초기화 성공');
         } catch (error) {
-          console.error('[MapScreen] 초기화 - 지오펜싱 초기화 중 오류:', error);
+          console.error('[MapScreen] 지오펜싱 초기화 중 오류:', error);
         }
       }
     };
@@ -99,24 +73,17 @@ const MapScreen = () => {
         loadGifticons();
       },
       30 * 60 * 1000
-    ); // 15분
+    );
 
     // AppState 이벤트 핸들러
     const handleAppStateChange = async nextAppState => {
-      console.log(`[MapScreen] 앱 상태 변경: ${appState.current} -> ${nextAppState}`);
-
       if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('[MapScreen] 앱이 포그라운드로 돌아옴 - 재초기화 시작');
-
         if (geofencingServiceRef.current) {
           // 지오펜싱 서비스 초기화 상태 리셋
           geofencingServiceRef.current.resetInitialized();
 
           // 지오펜싱 다시 초기화 및 기프티콘 목록 갱신
-          console.log('[MapScreen] 앱 포그라운드 전환 - 지오펜싱 재초기화 시작');
           await geofencingServiceRef.current.initGeofencing();
-
-          console.log('[MapScreen] 앱 포그라운드 전환 - 기프티콘 목록 갱신');
           await loadGifticons();
         }
       }
@@ -129,12 +96,10 @@ const MapScreen = () => {
 
     // 컴포넌트 언마운트 시 정리
     return () => {
-      console.log('[MapScreen] 컴포넌트 언마운트 - 정리 작업');
       clearInterval(refreshInterval);
       subscription.remove();
 
       if (geofencingServiceRef.current) {
-        console.log('[MapScreen] 컴포넌트 언마운트 - 지오펜싱 서비스 정리');
         geofencingServiceRef.current.cleanup();
       }
     };
