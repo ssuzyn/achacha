@@ -691,11 +691,9 @@ const GiveAwayScreen = ({ onClose }) => {
       // });
       // runOnJS(setIsSuccessModalVisible)(true); // 이 부분이 에러의 원인이었을 가능성이 높음
 
-      Alert.alert(
-        '성공',
-        `${user.name}님에게 ${gifticonToSend.gifticonName || '기프티콘'}을(를) 성공적으로 뿌렸습니다!`,
-        [{ text: '확인', onPress: () => runOnJS(handleApiSuccessAlertConfirm)() }]
-      );
+      Alert.alert('뿌리기 성공', '성공적으로 기프티콘을 뿌렸습니다!', [
+        { text: '확인', onPress: () => runOnJS(handleApiSuccessAlertConfirm)() },
+      ]);
     } catch (apiError) {
       console.error('[API] 호출 실패:', apiError);
       Alert.alert('실패', apiError.message || '기프티콘 전송 중 오류 발생', [
