@@ -43,6 +43,8 @@ const emoji3 = require('../../assets/images/emoji3.png');
 const emoji4 = require('../../assets/images/emoji4.png');
 const emoji5 = require('../../assets/images/emoji5.png');
 
+const lottieAnimationSize = width * 1.05;
+
 const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -246,8 +248,9 @@ const GiveAwayScreen = ({ onClose }) => {
       };
       usersRef.current = mappedUsers;
 
-      setButtonVisible(!userDataRef.current.hasSelectedGifticon);
-      setCenterButtonVisible(userDataRef.current.hasSelectedGifticon);
+      const hasSelectedGifticon = userDataRef.current.hasSelectedGifticon;
+      setButtonVisible(mappedUsers.length > 0 && !hasSelectedGifticon);
+      setCenterButtonVisible(mappedUsers.length > 0 && hasSelectedGifticon);
 
       const positions = calculateUserPositions(mappedUsers);
       setUserPositions(positions);
@@ -265,8 +268,8 @@ const GiveAwayScreen = ({ onClose }) => {
       };
       usersRef.current = [];
       setUserDataReady(false);
-      setButtonVisible(!userDataRef.current.hasSelectedGifticon);
-      setCenterButtonVisible(userDataRef.current.hasSelectedGifticon);
+      setButtonVisible(false);
+      setCenterButtonVisible(false);
     }
   };
 
@@ -404,7 +407,7 @@ const GiveAwayScreen = ({ onClose }) => {
       setListVisible(false);
       setSelectedGifticon(null);
 
-      setButtonVisible(true);
+      setButtonVisible(false);
       setCenterButtonVisible(false);
 
       setConfirmModalVisible(false);
@@ -433,7 +436,7 @@ const GiveAwayScreen = ({ onClose }) => {
       console.error('[새로고침] 오류 발생:', error);
       setLoading(false);
       setIsScanning(false);
-      setButtonVisible(true);
+      setButtonVisible(false);
       Alert.alert('새로고침 실패', '사용자 검색 중 오류가 발생했습니다.');
     }
   };
@@ -513,7 +516,7 @@ const GiveAwayScreen = ({ onClose }) => {
     setConfirmModalVisible(false);
     setListVisible(false);
     setButtonVisible(false);
-    setCenterButtonVisible(true);
+    setCenterButtonVisible(usersRef.current.length > 0 && !!selectedGifticonRef.current);
 
     setShowTooltip(true);
   };
@@ -521,7 +524,8 @@ const GiveAwayScreen = ({ onClose }) => {
   const handleCancel = () => {
     setSelectedGifticon(null);
     setConfirmModalVisible(false);
-    setButtonVisible(true);
+    setButtonVisible(usersRef.current.length > 0);
+    setCenterButtonVisible(false);
 
     selectedGifticonRef.current = null;
     userDataRef.current = {
@@ -529,6 +533,14 @@ const GiveAwayScreen = ({ onClose }) => {
       hasSelectedGifticon: false,
       selectedGifticon: null,
     };
+    setShowTooltip(false);
+
+    setCenterButtonVisible(false);
+    setButtonVisible(usersRef.current.length > 0);
+
+    setSelectedGifticon(null);
+    userDataRef.current.selectedGifticon = null;
+    userDataRef.current.hasSelectedGifticon = false;
   };
 
   const handleOutsidePress = () => {
@@ -769,12 +781,12 @@ const GiveAwayScreen = ({ onClose }) => {
           {loading ? (
             <View style={styles.loadingOverlay}>
               <LottieView
-                source={require('../../assets/lottie/search_users.json')}
+                source={require('../../assets/lottie/giveaway_loading.json')}
                 autoPlay
                 loop
                 style={{
-                  width: secondCircleDiameter,
-                  height: secondCircleDiameter,
+                  width: lottieAnimationSize,
+                  height: lottieAnimationSize,
                 }}
               />
             </View>
