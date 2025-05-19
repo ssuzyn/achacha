@@ -51,25 +51,6 @@ const MapScreen = () => {
     }
   };
 
-  useEffect(() => {
-    // 테스트용: 매장 데이터가 있는지 로깅
-    const checkStoreData = async () => {
-      try {
-        const storeData = await AsyncStorage.getItem('GEOFENCE_STORE_DATA');
-        console.log('[MapScreen] 저장된 매장 데이터 확인:', storeData ? '있음' : '없음');
-
-        if (storeData) {
-          const parsedData = JSON.parse(storeData);
-          console.log('[MapScreen] 저장된 매장 수:', parsedData.length);
-        }
-      } catch (e) {
-        console.error('[MapScreen] 매장 데이터 확인 중 오류:', e);
-      }
-    };
-
-    checkStoreData();
-  }, []);
-
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
     // GeofencingService 인스턴스 가져오기 (싱글톤)
@@ -220,62 +201,6 @@ const MapScreen = () => {
     }
   };
 
-  // 테스트용 - 지오펜스 진입 이벤트 시뮬레이션 함수
-  const testGeofenceTrigger = () => {
-    if (!geofencingServiceRef.current) {
-      Alert.alert('오류', '지오펜싱 서비스가 초기화되지 않았습니다.');
-      return;
-    }
-
-    // 기프티콘 목록 확인
-    const userGifticons = geofencingServiceRef.current.userGifticons || [];
-
-    if (userGifticons.length === 0) {
-      Alert.alert('알림', '기프티콘 목록이 비어 있습니다.');
-      return;
-    }
-
-    // 테스트할 브랜드 ID (예: CU)
-    const testBrandId = 6;
-
-    // 해당 브랜드의 기프티콘 찾기
-    const relevantGifticon = userGifticons.find(g => g.brandId === testBrandId);
-
-    if (relevantGifticon) {
-      Alert.alert(
-        '테스트 정보',
-        `브랜드 ID ${testBrandId}의 기프티콘을 찾았습니다:\n` +
-          `- 이름: ${relevantGifticon.gifticonName}\n` +
-          `- ID: ${relevantGifticon.gifticonId}\n` +
-          `- 만료일: ${relevantGifticon.gifticonExpiryDate}\n\n` +
-          '실제 지오펜스 진입 이벤트가 발생하면 이 기프티콘에 대한 알림이 자동으로 전송됩니다.',
-        [
-          { text: '확인' },
-          {
-            text: 'API 테스트',
-            onPress: async () => {
-              try {
-                console.log(
-                  `[MapScreen] API 테스트: gifticonId=${relevantGifticon.gifticonId} 전송`
-                );
-                const result = await geoNotificationService.requestGeoNotification(
-                  relevantGifticon.gifticonId
-                );
-                console.log('[MapScreen] API 테스트 성공:', result);
-                Alert.alert('성공', 'API 호출이 성공적으로 완료되었습니다!');
-              } catch (error) {
-                console.error('[MapScreen] API 테스트 실패:', error);
-                Alert.alert('오류', `API 호출 실패: ${error.message}`);
-              }
-            },
-          },
-        ]
-      );
-    } else {
-      Alert.alert('알림', `브랜드 ID ${testBrandId}에 해당하는 기프티콘이 없습니다.`);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
@@ -301,11 +226,6 @@ const MapScreen = () => {
         onPress={() => navigation.navigate('GiveAwayScreen')}
       >
         <Icon name="card-giftcard" size={24} color="#278CCC" />
-      </TouchableOpacity>
-
-      {/* 테스트 버튼 (개발 중에만 사용) */}
-      <TouchableOpacity style={[styles.giftButton, { top: 175 }]} onPress={testGeofenceTrigger}>
-        <Icon name="location-on" size={24} color="red" />
       </TouchableOpacity>
 
       {/* 기프티콘 목록 하단 시트 */}

@@ -64,6 +64,19 @@ export const getKakaoMapHtml = () => {
                
                debugLog('카카오맵 생성 성공');
                
+               // 지도 이동 완료 이벤트 리스너 추가
+               kakao.maps.event.addListener(map, 'idle', function() {
+                 const center = map.getCenter();
+                 debugLog('지도 이동 완료. 중심: ' + center.getLat() + ', ' + center.getLng());
+                 if (window.ReactNativeWebView) {
+                   window.ReactNativeWebView.postMessage(JSON.stringify({
+                     type: 'mapMoved',
+                     latitude: center.getLat(),
+                     longitude: center.getLng()
+                   }));
+                 }
+               });
+               
                if (window.ReactNativeWebView) {
                  window.ReactNativeWebView.postMessage(JSON.stringify({
                    type: 'mapLoaded',

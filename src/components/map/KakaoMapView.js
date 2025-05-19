@@ -83,6 +83,14 @@ const KakaoMapView = forwardRef(
             if (location) {
               moveToCurrentLocation();
             }
+            // 초기 로드 시에도 매장 검색 (사용자 현재 위치 기반)
+            // uniqueBrands가 로드된 이후에 호출되어야 하므로, uniqueBrands의 상태에 따라 호출 위치 조정 필요할 수 있음
+            if (location && uniqueBrands && uniqueBrands.length > 0) {
+              debouncedSearchNearbyStores({
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              });
+            }
           }, 1000);
         }
 
@@ -96,6 +104,15 @@ const KakaoMapView = forwardRef(
             onSelectBrand(null);
           } else {
             onSelectBrand(clickedBrandId);
+          }
+        }
+
+        // 지도 이동 완료 이벤트 처리
+        if (data.type === 'mapMoved') {
+          console.log('[KakaoMapView] 지도 이동 완료. 새 중심:', data.latitude, data.longitude);
+          if (uniqueBrands && uniqueBrands.length > 0) {
+            const movedCenter = { latitude: data.latitude, longitude: data.longitude };
+            debouncedSearchNearbyStores(movedCenter);
           }
         }
       } catch (error) {
@@ -179,27 +196,32 @@ const KakaoMapView = forwardRef(
     };
 
     // 연속적인 API 호출 방지를 위한 디바운스 함수
-    const debouncedSearchNearbyStores = () => {
+    const debouncedSearchNearbyStores = centerCoords => {
       if (searchTimerRef.current) {
         clearTimeout(searchTimerRef.current);
       }
 
-      console.log('디바운스 타이머 설정: 1초 후 검색 예정');
+      console.log('디바운스 타이머 설정: 1초 후 검색 예정, 중심:', centerCoords);
       searchTimerRef.current = setTimeout(() => {
-        console.log('디바운스 타이머 만료: 검색 실행');
-        searchNearbyStores();
+        console.log('디바운스 타이머 만료: 검색 실행, 중심:', centerCoords);
+        searchNearbyStores(centerCoords);
       }, 1000); // 1초 디바운스
     };
 
     // 주변 매장 검색 및 지오펜스 설정 함수
-    const searchNearbyStores = async () => {
-      console.log('[KakaoMapView] 매장 검색 요청:', uniqueBrands.map(b => b.brandName).join(', '));
-      if (!location || !uniqueBrands || uniqueBrands.length === 0) {
-        console.log('조건 미충족으로 리턴');
+    const searchNearbyStores = async searchCenter => {
+      console.log(
+        '[KakaoMapView] 매장 검색 요청, 브랜드:',
+        uniqueBrands.map(b => b.brandName).join(', '),
+        '중심:',
+        searchCenter
+      );
+      if (!searchCenter || !uniqueBrands || uniqueBrands.length === 0) {
+        console.log('조건 미충족으로 리턴 (searchCenter 또는 uniqueBrands 없음)');
         return;
       }
 
-      const { latitude, longitude } = location.coords;
+      const { latitude, longitude } = searchCenter;
       console.log(`검색 위치: ${latitude}, ${longitude}`);
 
       try {
@@ -259,8 +281,9 @@ const KakaoMapView = forwardRef(
 
     // 위치 변경 시 100m 이상 이동 시에만 매장 재검색
     useEffect(() => {
-      if (location && mapLoaded && uniqueBrands) {
+      if (location && mapLoaded && uniqueBrands && uniqueBrands.length > 0) {
         const { latitude, longitude } = location.coords;
+        const currentCoords = { latitude, longitude };
 
         // 이전 위치와 비교하여 100m 이상 이동했는지 확인
         const shouldSearchAgain =
@@ -271,7 +294,7 @@ const KakaoMapView = forwardRef(
         if (shouldSearchAgain) {
           console.log('위치 변경 감지: 100m 이상 이동');
           // 디바운스 적용하여 검색 실행
-          debouncedSearchNearbyStores();
+          debouncedSearchNearbyStores(currentCoords); // 현재 위치 좌표 전달
           setPrevLocation({ latitude, longitude });
         } else {
           console.log('작은 위치 변경 무시: 100m 이내 이동');
