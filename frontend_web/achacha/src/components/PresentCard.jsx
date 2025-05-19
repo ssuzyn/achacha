@@ -280,7 +280,7 @@ function PresentCard({ presentCard }) {
       return 145;
     } else {
       // 그 이상일 때는 기존 값 유지
-      return 160;
+      return 150;
     }
   };
   
@@ -734,14 +734,21 @@ function PresentCard({ presentCard }) {
                 border: '1px solid #3B82F6',
                 borderRadius: '8px',
                 padding: '2px',
-                marginBottom: responsiveStyles.thumbnailSize.marginBottom
+                marginBottom: responsiveStyles.thumbnailSize.marginBottom,
+                width: responsiveStyles.thumbnailSize.width,
+                height: responsiveStyles.thumbnailSize.width, // 너비와 동일하게 설정하여 정사각형으로 만듦
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden' // 넘치는 부분 숨김
               }}>
                 <img 
                   src={gifticonThumbnailPath || gifticonOriginalPath} 
                   alt="기프티콘 썸네일" 
                   style={{ 
-                    width: responsiveStyles.thumbnailSize.width,
-                    height: 'auto',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain', // 컨테이너 내에서 비율 유지하며 맞춤
                     display: 'block'
                   }}
                   onError={(e) => {
