@@ -292,8 +292,11 @@ const NotificationScreen = () => {
     isMounted.current = true;
     loadingMoreRef.current = false;
 
-    // 데이터 로딩
-    loadNotifications();
+    // 화면 진입 시 자동으로 데이터 로딩
+    const loadInitialData = async () => {
+      await loadNotifications(true); // true를 전달하여 새로고침 모드로 실행
+    };
+    loadInitialData();
 
     // 화면 진입 시 모든 알림 읽음 처리
     const markAllAsReadOnMount = async () => {
