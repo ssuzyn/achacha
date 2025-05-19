@@ -588,7 +588,7 @@ const BoxDetailAmountScreen = () => {
                       scope === 'USED' && styles.grayScaleImage,
                       scope === 'USED' && usageType === 'SELF_USE' && styles.smallerGifticonImage,
                     ]}
-                    resizeMode="contain"
+                    resizeMode="cover"
                   />
 
                   {/* 상단 액션 아이콘 */}
@@ -667,10 +667,10 @@ const BoxDetailAmountScreen = () => {
               )}
 
               <View style={styles.infoContainer}>
-                <Text weight="bold" style={styles.brandText}>
-                  {brandName}
+                <Text style={styles.brandText}>{brandName}</Text>
+                <Text weight="bold" style={styles.nameText}>
+                  {gifticonName}
                 </Text>
-                <Text style={styles.nameText}>{gifticonName}</Text>
 
                 <View style={styles.infoRow}>
                   <Text style={styles.infoLabel}>유효기간</Text>
@@ -750,50 +750,11 @@ const BoxDetailAmountScreen = () => {
               {isUsing ? (
                 // 사용 모드일 때 - 금액입력/취소 버튼을 두 줄로 표시
                 <>
-                  <TouchableOpacity
-                    onPress={handleAmountInput}
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#56AEE9',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                      marginBottom: 10,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#FFFFFF',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
-                      }}
-                    >
-                      금액입력
-                    </Text>
+                  <TouchableOpacity onPress={handleAmountInput} style={styles.useButton}>
+                    <Text style={styles.useButtonText}>금액입력</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={handleCancel}
-                    style={{
-                      width: '100%',
-                      borderRadius: 8,
-                      height: 56,
-                      backgroundColor: '#E5F4FE',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: 'row',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: '#278CCC',
-                        fontSize: 16,
-                        fontWeight: 'semibold',
-                      }}
-                    >
-                      취소
-                    </Text>
+                  <TouchableOpacity onPress={handleCancel} style={styles.historyButton}>
+                    <Text style={styles.historyButtonText}>취소</Text>
                   </TouchableOpacity>
                 </>
               ) : (
@@ -802,18 +763,7 @@ const BoxDetailAmountScreen = () => {
                   <View style={styles.buttonRow}>
                     {isExpired ? (
                       // 만료된 기프티콘은 사용완료 버튼만 표시
-                      <TouchableOpacity
-                        onPress={handleUse}
-                        style={{
-                          width: '100%',
-                          borderRadius: 8,
-                          height: 56,
-                          backgroundColor: '#56AEE9',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          flexDirection: 'row',
-                        }}
-                      >
+                      <TouchableOpacity onPress={handleUse} style={styles.useButton}>
                         <Text style={styles.useButtonText}>사용완료</Text>
                       </TouchableOpacity>
                     ) : (
@@ -838,29 +788,11 @@ const BoxDetailAmountScreen = () => {
                     <View style={styles.buttonRow}>
                       <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
                         <Icon name="inventory-2" type="material" size={22} color="#000000" />
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            color: '#000000',
-                            fontSize: 16,
-                            fontWeight: 'semibold',
-                          }}
-                        >
-                          공유하기
-                        </Text>
+                        <Text style={styles.shareButtonText}>공유하기</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={handleGift} style={styles.giftButton}>
                         <Icon name="card-giftcard" type="material" size={22} color="#000000" />
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            color: '#000000',
-                            fontSize: 16,
-                            fontWeight: 'semibold',
-                          }}
-                        >
-                          선물하기
-                        </Text>
+                        <Text style={styles.giftButtonText}>선물하기</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -926,8 +858,23 @@ const BoxDetailAmountScreen = () => {
                 placeholder="0"
                 keyboardType="number-pad"
                 value={amount}
-                onChangeText={setAmount}
-                maxLength={10}
+                onChangeText={text => {
+                  const numericValue = text.replace(/[^0-9]/g, '');
+                  if (numericValue === '') {
+                    setAmount('');
+                    return;
+                  }
+
+                  const numValue = parseInt(numericValue, 10);
+                  // 잔액 초과 검사
+                  if (numValue > gifticonData.gifticonRemainingAmount) {
+                    // 잔액으로 제한
+                    setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
+                  } else {
+                    setAmount(numValue.toLocaleString());
+                  }
+                }}
+                maxLength={15}
               />
               <Text style={styles.wonText}>원</Text>
             </View>
@@ -1044,7 +991,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     padding: 16,
     paddingTop: 0,
     borderBottomWidth: 1,
@@ -1055,17 +1002,21 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   gifticonImage: {
-    width: '60%',
-    height: '90%',
+    width: 200,
+    height: 200,
     borderRadius: 8,
+    resizeMode: 'cover',
+    marginBottom: 20,
   },
   grayScaleImage: {
     opacity: 0.7,
   },
   smallerGifticonImage: {
-    height: '50%',
+    width: 160,
+    height: 160,
     marginBottom: 5,
     marginTop: 20,
+    resizeMode: 'cover',
   },
   actionIconsContainer: {
     position: 'absolute',
@@ -1084,7 +1035,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   infoContainer: {
-    marginTop: 16,
     padding: 16,
   },
   brandText: {
@@ -1109,7 +1059,6 @@ const styles = StyleSheet.create({
     width: 80,
     fontSize: 16,
     color: '#737373',
-    fontWeight: '500',
     marginRight: 8,
   },
   infoValue: {
@@ -1133,7 +1082,6 @@ const styles = StyleSheet.create({
     width: 80,
     fontSize: 16,
     color: '#737373',
-    fontWeight: '500',
     marginRight: 8,
   },
   amountValueContainer: {
@@ -1185,6 +1133,38 @@ const styles = StyleSheet.create({
   },
   historyButtonText: {
     color: '#278CCC',
+    fontSize: 16,
+    fontWeight: 'semibold',
+  },
+  shareButton: {
+    flex: 1,
+    marginRight: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#EEEEEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  giftButton: {
+    flex: 1,
+    marginLeft: 4,
+    borderRadius: 8,
+    height: 56,
+    backgroundColor: '#EEEEEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  shareButtonText: {
+    marginLeft: 8,
+    color: '#000000',
+    fontSize: 16,
+    fontWeight: 'semibold',
+  },
+  giftButtonText: {
+    marginLeft: 8,
+    color: '#000000',
     fontSize: 16,
     fontWeight: 'semibold',
   },
@@ -1420,6 +1400,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     fontWeight: '500',
+    marginRight: 2,
   },
   magnifyButton: {
     marginLeft: 12,
@@ -1441,20 +1422,6 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
     marginTop: 5,
-  },
-  shareButton: {
-    flex: 1,
-    marginRight: 4,
-    borderRadius: 8,
-    height: 56,
-    backgroundColor: '#EEEEEE',
-  },
-  giftButton: {
-    flex: 1,
-    marginLeft: 4,
-    borderRadius: 8,
-    height: 56,
-    backgroundColor: '#EEEEEE',
   },
 });
 
