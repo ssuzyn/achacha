@@ -26,6 +26,7 @@ import {
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
+import Switch from '../../components/ui/Switch';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -290,28 +291,11 @@ const BoxSettingScreen = () => {
               <Text variant="body1" weight="medium">
                 멤버 입장 허용
               </Text>
-              <TouchableOpacity
-                style={[
-                  styles.switchContainer,
-                  {
-                    backgroundColor: memberEntryEnabled ? '#C9EAFC' : 'white',
-                    borderColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
-                  },
-                  userId !== shareBoxUserId && { opacity: 0.5 },
-                ]}
-                onPress={toggleMemberEntry}
+              <Switch
+                value={memberEntryEnabled}
+                onValueChange={toggleMemberEntry}
                 disabled={userId !== shareBoxUserId}
-              >
-                <View
-                  style={[
-                    styles.switchThumb,
-                    {
-                      backgroundColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
-                      transform: [{ translateX: memberEntryEnabled ? 22 : 2 }],
-                    },
-                  ]}
-                />
-              </TouchableOpacity>
+              />
             </View>
             {userId !== shareBoxUserId && (
               <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
