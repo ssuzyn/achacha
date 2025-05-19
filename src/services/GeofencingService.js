@@ -127,114 +127,80 @@ class GeofencingService {
   }
 
   // 백그라운드에서 지오펜싱 체크
-  // checkGeofences 메서드 수정
   async checkGeofences(location) {
-    if (!this.initialized) {
-      // 백그라운드에서는 initialized가 false일 수 있으므로 필요시 초기화 시도
-      try {
-        await this.initGeofencing();
-      } catch (error) {
-        console.error('[GeofencingService] 백그라운드 초기화 실패:', error);
-        return;
-      }
-    }
-
-    if (!this.userGifticons || this.userGifticons.length === 0) {
-      console.log('[GeofencingService] 지오펜스 체크 불가: 기프티콘 없음');
+    if (!this.initialized || !this.userGifticons || this.userGifticons.length === 0) {
+      console.log('[GeofencingService] 지오펜스 체크 불가: 초기화되지 않았거나 기프티콘 없음');
       return;
     }
 
     try {
       console.log('[GeofencingService] 현재 위치로 지오펜스 체크 중');
 
+      // 현재 위치
+      const { latitude, longitude } = location.coords;
+
       // 등록된 지오펜스 가져오기
       const registeredGeofences = await Geofencing.getRegisteredGeofences();
 
       if (!registeredGeofences || registeredGeofences.length === 0) {
-        console.log('[GeofencingService] 등록된 지오펜스 없음, 저장된 매장 데이터 확인');
-
-        // AsyncStorage에서 매장 데이터 로드 시도
-        try {
-          const storeDataStr = await AsyncStorage.getItem('GEOFENCE_STORE_DATA');
-          if (storeDataStr) {
-            const storeData = JSON.parse(storeDataStr);
-            console.log(
-              '[GeofencingService] 저장된 매장 데이터 로드:',
-              storeData.length ? '성공' : '실패'
-            );
-
-            // 매장 데이터로 지오펜스 다시 설정
-            if (storeData && storeData.length > 0) {
-              await this.setupGeofences(storeData);
-              console.log('[GeofencingService] 백그라운드에서 지오펜스 재설정 완료');
-
-              // 재설정 후 지오펜스 다시 확인
-              const newGeofences = await Geofencing.getRegisteredGeofences();
-              if (newGeofences && newGeofences.length > 0) {
-                console.log('[GeofencingService] 재설정된 지오펜스:', newGeofences);
-                // 다음 코드에서 계속 처리
-              } else {
-                console.log('[GeofencingService] 지오펜스 재설정 실패');
-                return;
-              }
-            } else {
-              return;
-            }
-          } else {
-            console.log('[GeofencingService] 저장된 매장 데이터 없음');
-            return;
-          }
-        } catch (error) {
-          console.error('[GeofencingService] 매장 데이터 로드 오류:', error);
-          return;
-        }
-      }
-
-      // 재시도 후 다시 지오펜스 가져오기
-      const geofences = await Geofencing.getRegisteredGeofences();
-      if (!geofences || geofences.length === 0) {
-        console.log('[GeofencingService] 여전히 등록된 지오펜스 없음');
+        console.log('[GeofencingService] 등록된 지오펜스 없음');
         return;
       }
 
-      // 현재 위치로 지오펜스 검사 - 수동으로 거리 계산
-      const { latitude, longitude } = location.coords;
-
-      // AsyncStorage에서 매장 정보 가져오기
-      let storeData = this.brandStores || [];
-      if (!storeData || storeData.length === 0) {
-        try {
-          const storeDataStr = await AsyncStorage.getItem('GEOFENCE_STORE_DATA');
-          if (storeDataStr) {
-            storeData = JSON.parse(storeDataStr);
-            this.brandStores = storeData;
-          }
-        } catch (error) {
-          console.error('[GeofencingService] 매장 데이터 로드 오류:', error);
+      // 최근 알림 시간 가져오기 - 단기간 중복 방지용
+      let recentNotifications = {};
+      try {
+        const recentNotificationsStr = await AsyncStorage.getItem('RECENT_NOTIFICATIONS');
+        if (recentNotificationsStr) {
+          recentNotifications = JSON.parse(recentNotificationsStr);
         }
+      } catch (error) {
+        console.error('[GeofencingService] 최근 알림 로드 오류:', error);
       }
 
-      // 모든 브랜드 매장에 대해 거리 계산
-      for (const brandStoreInfo of storeData) {
-        const { brandId, stores } = brandStoreInfo;
+      // 매장 데이터 확인
+      if (!this.brandStores || !Array.isArray(this.brandStores) || this.brandStores.length === 0) {
+        console.log('[GeofencingService] 매장 데이터 없음');
+        return;
+      }
 
-        // 이미 알림을 보낸 브랜드인지 확인
-        if (this.notifiedBrandIdsThisSession.has(parseInt(brandId))) {
-          continue;
-        }
+      // 현재 시간
+      const now = Date.now();
+
+      // 알림 쿨다운 시간 (30분 = 1800000 밀리초)
+      const NOTIFICATION_COOLDOWN = 30 * 60 * 1000;
+
+      // 각 브랜드별 매장 확인
+      for (const brandData of this.brandStores) {
+        const { brandId, stores } = brandData;
 
         // 해당 브랜드의 기프티콘이 있는지 확인
-        const hasGifticon = this.userGifticons.some(g => g.brandId === parseInt(brandId));
-        if (!hasGifticon) continue;
+        const brandGifticon = this.userGifticons.find(g => g.brandId === parseInt(brandId));
+        if (!brandGifticon) continue;
 
-        // 모든 매장과의 거리 계산
-        let foundNearbyStore = false;
+        // 이 세션에서 이미 알림을 보낸 브랜드인지 확인 (앱 재시작 시 리셋)
+        if (this.notifiedBrandIdsThisSession.has(parseInt(brandId))) {
+          // 충분한 시간이 지났는지 확인 (30분)
+          const lastNotifyTime = recentNotifications[`brand_${brandId}`] || 0;
+          if (now - lastNotifyTime < NOTIFICATION_COOLDOWN) {
+            console.log(
+              `[GeofencingService] 브랜드 ${brandId} 알림 쿨다운 중 (${Math.floor((NOTIFICATION_COOLDOWN - (now - lastNotifyTime)) / 60000)}분 남음)`
+            );
+            continue;
+          }
+
+          // 쿨다운 지났으면 세션 기록 초기화
+          this.notifiedBrandIdsThisSession.delete(parseInt(brandId));
+        }
+
+        // 각 매장의 위치와 현재 위치 비교
         for (const store of stores) {
           const storeLatitude = parseFloat(store.y);
           const storeLongitude = parseFloat(store.x);
 
           if (isNaN(storeLatitude) || isNaN(storeLongitude)) continue;
 
+          // 거리 계산
           const distance = this.calculateDistance(
             latitude,
             longitude,
@@ -242,31 +208,30 @@ class GeofencingService {
             storeLongitude
           );
 
-          // 500m 반경 내에 있으면 알림 처리
+          // 반경 내에 있는지 확인 (500m)
           if (distance <= 500) {
             console.log(
               `[GeofencingService] 매장 근처 감지: 브랜드 ${brandId}, 매장 ${store.place_name}, 거리 ${distance.toFixed(0)}m`
             );
-            foundNearbyStore = true;
 
             // 알림 보내기
-            const relevantGifticon = this.userGifticons.find(g => g.brandId === parseInt(brandId));
-            if (relevantGifticon && relevantGifticon.gifticonId) {
-              try {
-                await geoNotificationService.requestGeoNotification(relevantGifticon.gifticonId);
-                this.notifiedBrandIdsThisSession.add(parseInt(brandId));
-                console.log(`[GeofencingService] 알림 전송 성공: ${relevantGifticon.gifticonName}`);
-                break; // 한 브랜드에 대해 하나의 알림만 전송
-              } catch (error) {
-                console.error('[GeofencingService] 알림 전송 실패:', error);
-              }
-            }
-            break;
-          }
-        }
+            try {
+              await geoNotificationService.requestGeoNotification(brandGifticon.gifticonId);
 
-        if (foundNearbyStore) {
-          console.log(`[GeofencingService] 브랜드 ${brandId} 근처 매장 찾음`);
+              // 알림 보낸 기록 저장 (세션 및 최근 알림 시간)
+              this.notifiedBrandIdsThisSession.add(parseInt(brandId));
+              recentNotifications[`brand_${brandId}`] = now;
+              await AsyncStorage.setItem(
+                'RECENT_NOTIFICATIONS',
+                JSON.stringify(recentNotifications)
+              );
+
+              console.log(`[GeofencingService] 알림 전송 성공: ${brandGifticon.gifticonName}`);
+              break; // 이 브랜드의 다음 매장은 확인하지 않음
+            } catch (error) {
+              console.error('[GeofencingService] 알림 전송 실패:', error);
+            }
+          }
         }
       }
     } catch (error) {
@@ -291,8 +256,19 @@ class GeofencingService {
   }
   // 지오펜스 설정
   async setupGeofences(brandResults, selectedBrand) {
+    console.log(
+      '[GeofencingService] setupGeofences 호출됨. brandResults:',
+      brandResults,
+      'selectedBrand:',
+      selectedBrand
+    );
+    console.log('[GeofencingService] 현재 userGifticons:', this.userGifticons);
+
     if (!brandResults || !Array.isArray(brandResults) || brandResults.length === 0) {
-      console.error('[GeofencingService] setupGeofences: 유효하지 않은 매장 데이터', brandResults);
+      console.error(
+        '[GeofencingService] setupGeofences: 유효하지 않거나 비어있는 매장 데이터',
+        brandResults
+      );
       return;
     }
 
@@ -441,6 +417,41 @@ class GeofencingService {
     } catch (error) {
       console.error('[GeofencingService] setupGeofences - 설정 중 오류:', error);
       return [];
+    }
+  }
+
+  async cleanup() {
+    try {
+      console.log('[GeofencingService] 정리 시작');
+
+      // 등록된 지오펜스 제거
+      if (this.initialized) {
+        try {
+          const geofenceIds = await Geofencing.getRegisteredGeofences();
+          if (geofenceIds && geofenceIds.length > 0) {
+            console.log('[GeofencingService] 등록된 지오펜스 제거 중:', geofenceIds);
+            for (const id of geofenceIds) {
+              try {
+                await Geofencing.removeGeofence(id);
+                console.log(`[GeofencingService] 지오펜스 ${id} 제거됨`);
+              } catch (removeError) {
+                console.error(`[GeofencingService] 지오펜스 ${id} 제거 오류:`, removeError);
+              }
+            }
+          }
+        } catch (geofenceError) {
+          console.error('[GeofencingService] 지오펜스 제거 중 오류:', geofenceError);
+        }
+      }
+
+      // 상태 초기화
+      this.initialized = false;
+      this.initializing = false;
+      this.notifiedBrandIdsThisSession.clear();
+
+      console.log('[GeofencingService] 정리 완료');
+    } catch (error) {
+      console.error('[GeofencingService] 정리 중 오류 발생:', error);
     }
   }
 }
