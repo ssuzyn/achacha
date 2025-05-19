@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -31,7 +32,6 @@ import com.eurachacha.achacha.application.port.output.file.FileRepository;
 import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
-import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
@@ -39,6 +39,7 @@ import com.eurachacha.achacha.application.port.output.notification.dto.request.N
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
+import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.file.enums.FileType;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
@@ -84,11 +85,11 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 	private final FileStoragePort fileStoragePort;
 	private final UsageHistoryRepository usageHistoryRepository;
 	private final SecurityServicePort securityServicePort;
-	private final NotificationEventPort notificationEventPort;
 	private final NotificationRepository notificationRepository;
 	private final NotificationTypeRepository notificationTypeRepository;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final FcmTokenRepository fcmTokenRepository;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Transactional
 	@Override
@@ -843,7 +844,7 @@ public class ShareBoxAppServiceImpl implements ShareBoxAppService {
 				.referenceEntityType(referenceEntityType)
 				.build();
 
-			notificationEventPort.sendNotificationEvent(eventDto);
+			applicationEventPublisher.publishEvent(new NotificationEventMessage(eventDto));
 		}
 
 		log.debug("푸시 알림 전송 완료 - 사용자 ID: {}", userId);
