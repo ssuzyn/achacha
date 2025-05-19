@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 function PresentCard({ presentCard }) {
+  const [showFullMessage, setShowFullMessage] = useState(false);
+  const messageRef = useRef(null);
+  const [isLongMessage, setIsLongMessage] = useState(false);
+
   if (!presentCard) {
     console.error('PresentCard: 전달받은 데이터가 없습니다.');
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>선물 정보를 불러오지 못했습니다.</p></div>;
@@ -56,6 +60,17 @@ function PresentCard({ presentCard }) {
   // 메시지가 비어있을 경우 기본 메시지로 대체
   const displayMessage = presentCardMessage || "아차차에서 선물이 도착했어요!";
 
+  // 텍스트가 3줄 이상인지 확인하는 useEffect
+  useEffect(() => {
+    if (messageRef.current) {
+      const lineHeight = parseInt(getComputedStyle(messageRef.current).lineHeight);
+      const messageHeight = messageRef.current.clientHeight;
+      // 대략적으로 3줄 이상인지 계산 (lineHeight가 정확하지 않을 수 있어 대략적인 계산)
+      const lines = messageHeight / (lineHeight || 24); // 기본값 24px
+      setIsLongMessage(lines > 3);
+    }
+  }, [displayMessage]);
+
   // 디버깅용 콘솔 출력 (개발 확인용)
   console.log('PresentCard: 구조분해할당 완료된 데이터:', {
     presentCardCode: presentCardCode || '(없음)',
@@ -88,7 +103,7 @@ function PresentCard({ presentCard }) {
           style={{ 
             width: '100%', 
             display: 'block',
-            borderRadius: '16px',
+            borderRadius: '8px',
             boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
           }} 
         />
@@ -96,30 +111,48 @@ function PresentCard({ presentCard }) {
         {/* 컨텐츠 오버레이 */}
         <div style={{ 
           position: 'absolute', 
-          top: 50, 
-          left: 0, 
-          width: '100%', 
-          height: '100%',
+          top: 145, 
+          left: '50%', 
+          width: '90%', 
+          height: 'auto',
+          minHeight: '80%',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center'
+          alignItems: 'center',
+          transform: 'translateX(-50%)'
         }}>
           {/* 메시지 영역 */}
-          <div style={{ 
-            backgroundColor: 'white', 
-            borderRadius: '12px',
-            padding: '20px',
-            width: '80%',
-            marginTop: '20%',
-            marginBottom: '10px',
-            textAlign: 'center'
-          }}>
-            <p style={{ 
-              fontSize: '18px', 
-              fontWeight: 'bold', 
-              color: '#000',
-              margin: 0
-            }}>
+          <div 
+            style={{ 
+              backgroundColor: 'white', 
+              borderRadius: '12px',
+              padding: '20px',
+              width: '80%',
+              marginTop: '5%',
+              marginBottom: '10px',
+              textAlign: 'center',
+              height: '90px',
+              minHeight: '90px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: isLongMessage ? 'flex-start' : 'center',
+              overflowY: isLongMessage ? 'hidden' : 'auto',
+              cursor: isLongMessage ? 'pointer' : 'default',
+              position: 'relative',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+            }}
+            onClick={() => isLongMessage && setShowFullMessage(true)}
+          >
+            <p 
+              ref={messageRef}
+              style={{ 
+                fontSize: '18px', 
+                fontWeight: 'bold', 
+                color: '#000',
+                margin: 0,
+                wordBreak: 'break-word'
+              }}
+            >
               {displayMessage.split('\n').map((line, i) => (
                 <React.Fragment key={i}>
                   {line}
@@ -127,6 +160,17 @@ function PresentCard({ presentCard }) {
                 </React.Fragment>
               ))}
             </p>
+            {isLongMessage && (
+              <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                height: '30px',
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)',
+                pointerEvents: 'none'
+              }}></div>
+            )}
           </div>
           
           {/* 구분선 */}
@@ -143,7 +187,7 @@ function PresentCard({ presentCard }) {
             width: '80%',
             backgroundColor: '#FFFFFF',
             borderRadius: '12px',
-            padding: '20px',
+            padding: '10px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
@@ -154,14 +198,14 @@ function PresentCard({ presentCard }) {
             <div style={{ 
               border: '1px solid #3B82F6',
               borderRadius: '8px',
-              padding: '3px',
+              padding: '2px',
               marginBottom: '10px'
             }}>
               <img 
                 src={gifticonThumbnailPath || gifticonOriginalPath} 
                 alt="기프티콘 썸네일" 
                 style={{ 
-                  width: '150px',
+                  width: '80px',
                   height: 'auto',
                   display: 'block'
                 }}
@@ -196,9 +240,13 @@ function PresentCard({ presentCard }) {
                 fontWeight: '500',
                 padding: '12px',
                 borderRadius: '8px',
-                width: '100%',
+                height: '35px',
+                width: '90%',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               갤러리에 저장
@@ -212,7 +260,7 @@ function PresentCard({ presentCard }) {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
               color: 'white',
               padding: '8px 12px',
               borderRadius: '8px',
@@ -224,15 +272,75 @@ function PresentCard({ presentCard }) {
                 xmlns="http://www.w3.org/2000/svg" 
                 viewBox="0 0 24 24" 
                 fill="currentColor"
-                style={{ width: '18px', height: '18px', marginRight: '6px' }}
+                style={{ 
+                  width: '18px', 
+                  height: '18px', 
+                  marginRight: '6px',
+                  verticalAlign: 'middle',
+                  position: 'relative',
+                  top: '-1px'
+                }}
               >
                 <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.53614 4 7.33243 5.11383 5.86492 6.86543L8 9H2V3L4.44656 5.44648C6.28002 3.33509 8.9841 2 12 2ZM13 7L12.9998 11.585L16.2426 14.8284L14.8284 16.2426L10.9998 12.413L11 7H13Z"></path>
               </svg>
-              <span style={{ fontSize: '14px' }}>{expiryDateTime}</span>
+              <span style={{ 
+                fontSize: '14px',
+                display: 'inline-block',
+                verticalAlign: 'middle',
+                lineHeight: '18px'
+              }}>{expiryDateTime}</span>
             </div>
           )}
         </div>
       </div>
+
+      {/* 전체 메시지 오버레이 */}
+      {showFullMessage && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+          onClick={() => setShowFullMessage(false)}
+        >
+          <div 
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '16px',
+              padding: '30px',
+              width: '90%',
+              maxWidth: '500px',
+              maxHeight: '80%',
+              overflowY: 'auto',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p style={{ 
+              fontSize: '18px', 
+              fontWeight: 'semibold',
+              lineHeight: '1.6',
+              wordBreak: 'break-word'
+            }}>
+              {displayMessage.split('\n').map((line, i) => (
+                <React.Fragment key={i}>
+                  {line}
+                  {i < displayMessage.split('\n').length - 1 && <br />}
+                </React.Fragment>
+              ))}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
