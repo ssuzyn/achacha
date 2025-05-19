@@ -10,11 +10,13 @@ import com.eurachacha.achacha.infrastructure.config.AwsCloudFrontProperties;
 import com.eurachacha.achacha.infrastructure.config.AwsProperties;
 import com.eurachacha.achacha.infrastructure.config.AwsS3Properties;
 import com.eurachacha.achacha.infrastructure.config.ClovaOcrProperties;
+import com.eurachacha.achacha.infrastructure.config.EncryptionProperties;
 import com.eurachacha.achacha.infrastructure.config.JwtProperties;
 
 @SpringBootApplication
 @EnableConfigurationProperties({ClovaOcrProperties.class, AIServiceProperties.class,
-	AwsProperties.class, AwsS3Properties.class, AwsCloudFrontProperties.class, JwtProperties.class})
+	AwsProperties.class, AwsS3Properties.class, AwsCloudFrontProperties.class, JwtProperties.class,
+	EncryptionProperties.class})
 @EnableScheduling
 public class AchachaApplication {
 

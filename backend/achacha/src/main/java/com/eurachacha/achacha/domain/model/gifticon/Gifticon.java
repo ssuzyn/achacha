@@ -9,8 +9,10 @@ import com.eurachacha.achacha.domain.model.common.TimeStampEntity;
 import com.eurachacha.achacha.domain.model.gifticon.enums.GifticonType;
 import com.eurachacha.achacha.domain.model.sharebox.ShareBox;
 import com.eurachacha.achacha.domain.model.user.User;
+import com.eurachacha.achacha.infrastructure.adapter.output.persistence.common.converter.BarcodeConverter;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -45,6 +47,7 @@ public class Gifticon extends TimeStampEntity {
 	private GifticonType type;
 
 	@Column(length = 32)
+	@Convert(converter = BarcodeConverter.class)
 	private String barcode;
 
 	private Integer originalAmount;

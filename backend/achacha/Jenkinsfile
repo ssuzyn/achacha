@@ -39,6 +39,9 @@ pipeline {
         RABBITMQ_PORT = credentials('RABBITMQ_PORT')
         RABBITMQ_USERNAME = credentials('RABBITMQ_USERNAME')
         RABBITMQ_PASSWORD = credentials('RABBITMQ_PASSWORD')
+
+        // 바코드 암호화 키
+        ENCRYPTION_KEY = credentials('ENCRYPTION_KEY')
     }
 
     stages {
@@ -125,6 +128,7 @@ pipeline {
                                       -e RABBITMQ_PORT="${RABBITMQ_PORT}" \\
                                       -e RABBITMQ_USERNAME="${RABBITMQ_USERNAME}" \\
                                       -e RABBITMQ_PASSWORD="${RABBITMQ_PASSWORD}" \\
+                                      -e ENCRYPTION_KEY="${ENCRYPTION_KEY}" \\
                                       --network achacha-network \\
                                       --restart unless-stopped \\
                                       ${DOCKER_IMAGE}:latest;
