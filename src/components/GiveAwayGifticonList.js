@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(218, 240, 254, 0.8)',
     width: '90%',
     borderRadius: 10,
-    maxHeight: 260, 
+    maxHeight: 260,
   },
   flatListContent: {
     paddingTop: 8,
@@ -103,13 +103,13 @@ const styles = StyleSheet.create({
   },
   brandName: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: 'black',
     marginBottom: 4,
   },
   productName: {
     fontSize: 14,
-    fontWeight: '400',
+    fontFamily: 'Pretendard-Medium',
     color: 'black',
   },
   ddayContainer: {
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
   ddayText: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: '#278CCC',
   },
   listHeader: {
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   listTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: 'white',
     backgroundColor: '#278CCC',
     paddingHorizontal: 15,
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   },
   listSubtitle: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: '#278CCC',
   },
   emptyContainer: {
