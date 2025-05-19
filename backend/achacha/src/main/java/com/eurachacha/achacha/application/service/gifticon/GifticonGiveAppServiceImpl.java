@@ -188,10 +188,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		Gifticon gifticon = gifticonRepository.findById(gifticonId);
 
 		// 본인 소유인지 확인
-		boolean isOwner = gifticonDomainService.hasAccess(user.getId(), gifticon.getUser().getId());
-		if (!isOwner) {
-			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-		}
+		gifticonDomainService.validateGifticonForPresentCancel(user.getId(), gifticon);
 
 		// 기프티콘 사용 완료 취소
 		gifticon.cancelUse();
@@ -202,7 +199,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		}
 		
 		// 기프티콘 소유자 변경 내역 삭제
-		gifticonOwnerHistoryRepository.deleteByGifticonId(gifticonId);
+		gifticonOwnerHistoryRepository.deleteByGifticonIdAndTransferType(gifticonId, TransferType.PRESENT);
 		
 		// 선물 카드 삭제
 		presentCardRepository.deleteByGifticonId(gifticonId);
