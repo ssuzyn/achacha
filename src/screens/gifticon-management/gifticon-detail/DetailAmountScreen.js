@@ -306,6 +306,19 @@ const DetailAmountScreen = () => {
     return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
+  // 입력된 텍스트에서 콤마를 제거하고 숫자만 추출하는 함수
+  const extractNumber = text => {
+    return text.replace(/,/g, '');
+  };
+
+  // 입력된 금액을 포맷팅하는 함수 (천 단위 콤마 추가)
+  const formatInputAmount = text => {
+    if (!text) return '';
+    const onlyNums = text.replace(/[^0-9]/g, '');
+    if (onlyNums === '') return '';
+    return parseInt(onlyNums, 10).toLocaleString();
+  };
+
   // 쉐어박스 목록 불러오기
   const loadShareBoxes = async () => {
     try {
@@ -412,14 +425,17 @@ const DetailAmountScreen = () => {
 
   // 금액 입력 완료 처리
   const handleConfirmAmount = async () => {
+    // 콤마 제거 후 숫자로 변환
+    const numericAmount = amount ? parseInt(extractNumber(amount), 10) : 0;
+
     // 금액 입력 값 검증
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) {
+    if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
       Alert.alert('알림', '유효한 금액을 입력해주세요.');
       return;
     }
 
-    // 입력한 금액이 잔액보다 크면 오류
-    if (Number(amount) > gifticonData.gifticonRemainingAmount) {
+    // 입력한 금액이 잔액보다 크면 오류 (이미 입력 시 제한되지만 추가 검증)
+    if (numericAmount > gifticonData.gifticonRemainingAmount) {
       Alert.alert('알림', '잔액보다 큰 금액을 사용할 수 없습니다.');
       return;
     }
@@ -431,7 +447,7 @@ const DetailAmountScreen = () => {
       setIsLoading(true);
 
       // API 호출로 기프티콘 사용 처리
-      const response = await gifticonService.useAmountGifticon(gifticonId, Number(amount));
+      const response = await gifticonService.useAmountGifticon(gifticonId, numericAmount);
 
       // 사용 모드 종료
       setIsUsing(false);
@@ -503,18 +519,18 @@ const DetailAmountScreen = () => {
   // 금액 칩 선택 처리
   const handleChipSelect = value => {
     if (value === 'all') {
-      // '전액' 선택 시 남은 잔액 전체 설정
-      setAmount(gifticonData.gifticonRemainingAmount.toString());
+      // '전액' 선택 시 남은 잔액 전체 설정 (콤마 포함)
+      setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
     } else {
-      // 기존 금액에 선택한 금액 추가
-      const currentAmount = Number(amount) || 0;
+      // 기존 금액에 선택한 금액 추가 (콤마 제거 후 계산)
+      const currentAmount = amount ? parseInt(extractNumber(amount), 10) : 0;
       const newAmount = currentAmount + value;
 
       // 잔액보다 크면 잔액으로 제한
       if (newAmount > gifticonData.gifticonRemainingAmount) {
-        setAmount(gifticonData.gifticonRemainingAmount.toString());
+        setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
       } else {
-        setAmount(newAmount.toString());
+        setAmount(newAmount.toLocaleString());
       }
     }
   };
@@ -1268,8 +1284,24 @@ const DetailAmountScreen = () => {
                 placeholder="0"
                 keyboardType="number-pad"
                 value={amount}
-                onChangeText={setAmount}
-                maxLength={10}
+                onChangeText={text => {
+                  // 콤마가 포함된 형식으로 표시하되, 입력값이 잔액을 초과하지 않도록 체크
+                  const numericValue = text.replace(/[^0-9]/g, '');
+                  if (numericValue === '') {
+                    setAmount('');
+                    return;
+                  }
+
+                  const numValue = parseInt(numericValue, 10);
+                  // 잔액 초과 검사
+                  if (numValue > gifticonData.gifticonRemainingAmount) {
+                    // 잔액으로 제한
+                    setAmount(gifticonData.gifticonRemainingAmount.toLocaleString());
+                  } else {
+                    setAmount(numValue.toLocaleString());
+                  }
+                }}
+                maxLength={15}
               />
               <Text style={styles.wonText}>원</Text>
             </View>
