@@ -132,7 +132,9 @@ function PresentCard({ presentCard }) {
           {/* 구분선 */}
           <div style={{ 
             width: '80%', 
-            borderTop: '2px dashed #6E6E6E',
+            height: '1px',
+            background: 'linear-gradient(to right, #6E6E6E 50%, transparent 50%)',
+            backgroundSize: '16px 2px',
             margin: '10px 0'
           }}></div>
           
