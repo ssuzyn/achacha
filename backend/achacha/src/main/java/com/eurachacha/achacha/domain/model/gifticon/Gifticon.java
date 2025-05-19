@@ -46,7 +46,7 @@ public class Gifticon extends TimeStampEntity {
 	@Enumerated(EnumType.STRING)
 	private GifticonType type;
 
-	@Column(length = 32)
+	@Column(length = 128)
 	@Convert(converter = BarcodeConverter.class)
 	private String barcode;
 
