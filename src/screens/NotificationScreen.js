@@ -16,7 +16,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useHeaderBar } from '../context/HeaderBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, ListItem, Text } from '../components/ui';
+import { ListItem, Text } from '../components/ui';
 import notificationService from '../api/notificationService';
 
 // 알림 타입에 따른 아이콘 정의
@@ -37,6 +37,32 @@ const REFERENCE_TYPES = {
   SHAREBOX: 'sharebox',
 };
 
+// 날짜 형식을 "YYYY년 MM월 DD일"로 변환하는 함수
+const formatDateToKorean = dateString => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  return `${year}년 ${month}월 ${day}일`;
+};
+
+// 날짜만 추출하는 함수 (YYYY-MM-DD 형식 반환)
+const extractDateOnly = dateTimeString => {
+  if (!dateTimeString) return '';
+
+  // Date 객체 생성
+  const date = new Date(dateTimeString);
+
+  // 년/월/일 추출 (월은 0부터 시작하므로 +1)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  // YYYY-MM-DD 형식으로 반환
+  return `${year}-${month}-${day}`;
+};
+
 const NotificationScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -54,20 +80,82 @@ const NotificationScreen = () => {
   const [nextPage, setNextPage] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState(null);
+  const [displayData, setDisplayData] = useState([]); // 화면에 표시할 데이터
 
   // 페이지 정보 및 로딩 플래그
   const isMounted = useRef(true);
+  const loadingMoreRef = useRef(false); // 중복 로딩 방지용 ref
   const currentParams = useRef({
     sort: 'CREATED_DESC',
-    size: 6,
+    size: 6, // 페이지당 항목 수 6개
   });
 
   // 라우트 파라미터에서 keepTabBarVisible 옵션 확인
   const keepTabBarVisible = route.params?.keepTabBarVisible || false;
 
+  // 알림 데이터를 날짜별로 그룹화
+  useEffect(() => {
+    if (!notifications || notifications.length === 0) {
+      setDisplayData([]);
+      return;
+    }
+
+    // 1. 날짜별로 알림 그룹화 (년월일이 같은 알림끼리 묶기)
+    const dateGroups = {};
+
+    notifications.forEach(notification => {
+      if (!notification || !notification.notificationCreatedAt) return;
+
+      // 년월일만 추출
+      const dateKey = extractDateOnly(notification.notificationCreatedAt);
+
+      // 해당 날짜 그룹이 없으면 생성
+      if (!dateGroups[dateKey]) {
+        dateGroups[dateKey] = [];
+      }
+
+      // 해당 날짜 그룹에 알림 추가
+      dateGroups[dateKey].push({
+        ...notification,
+        type: 'notification',
+        // 고유 ID 생성 (실제 ID + 타임스탬프 + 랜덤값)
+        uniqueId: `${notification.notificationId || '0'}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      });
+    });
+
+    // 2. 날짜 내림차순 정렬 (최신 날짜 먼저)
+    const sortedDates = Object.keys(dateGroups).sort((a, b) => {
+      return new Date(b) - new Date(a);
+    });
+
+    // 3. 최종 표시 데이터 구성
+    const newDisplayData = [];
+
+    sortedDates.forEach(date => {
+      // 날짜 헤더 추가 (각 날짜당 하나만)
+      newDisplayData.push({
+        id: `date-${date}`,
+        type: 'date',
+        date,
+      });
+
+      // 해당 날짜의 알림들 시간 내림차순 정렬 (최신 시간 먼저)
+      const sortedNotifications = dateGroups[date].sort((a, b) => {
+        if (!a.notificationCreatedAt || !b.notificationCreatedAt) return 0;
+        return new Date(b.notificationCreatedAt) - new Date(a.notificationCreatedAt);
+      });
+
+      // 정렬된 알림들 추가
+      newDisplayData.push(...sortedNotifications);
+    });
+
+    // 상태 업데이트
+    setDisplayData(newDisplayData);
+  }, [notifications]);
+
   // 알림 내역 초기 로딩
   const loadNotifications = useCallback(async (refresh = false) => {
-    if (!isMounted.current) return;
+    if (!isMounted.current || isLoading || isRefreshing) return;
 
     try {
       if (refresh) {
@@ -88,12 +176,11 @@ const NotificationScreen = () => {
 
       if (isMounted.current) {
         if (refresh) {
+          // 새로고침 시 데이터 덮어쓰기
           setNotifications(result.notifications || []);
         } else {
-          setNotifications(prevNotifications => [
-            ...prevNotifications,
-            ...(result.notifications || []),
-          ]);
+          // 초기 로딩 시 데이터 설정
+          setNotifications(result.notifications || []);
         }
 
         setHasNextPage(result.hasNextPage || false);
@@ -117,11 +204,16 @@ const NotificationScreen = () => {
 
   // 더 많은 알림 로딩 (페이지네이션)
   const loadMoreNotifications = useCallback(async () => {
-    if (!hasNextPage || isLoadingMore || isLoading || isRefreshing || !isMounted.current) return;
+    // 더 로드할 페이지가 없거나, 현재 로딩 중이거나, 마운트되지 않았을 경우 로딩 중단
+    if (!hasNextPage || isLoadingMore || !isMounted.current || loadingMoreRef.current) {
+      return;
+    }
+
+    // 중복 호출 방지
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
 
     try {
-      setIsLoadingMore(true);
-
       // 다음 페이지 정보 설정
       currentParams.current = {
         ...currentParams.current,
@@ -131,11 +223,34 @@ const NotificationScreen = () => {
       // API 호출
       const result = await notificationService.getNotifications(currentParams.current);
 
-      if (isMounted.current) {
-        setNotifications(prevNotifications => [
-          ...prevNotifications,
-          ...(result.notifications || []),
-        ]);
+      if (!isMounted.current) return;
+
+      if (!result.notifications || result.notifications.length === 0) {
+        // 결과가 없으면 더 이상 로딩 안함
+        setHasNextPage(false);
+      } else {
+        // 기존 알림 리스트에 새로운 알림 추가
+        setNotifications(prev => {
+          // 모든 알림을 합침
+          const combined = [...prev, ...result.notifications];
+
+          // notificationId로 중복 제거 (최신 항목 유지)
+          const uniqueIds = new Set();
+          const uniqueNotifications = [];
+
+          // 역순으로 처리하여 최신 알림 먼저 검사 (중복 시 최신 버전 유지)
+          for (let i = combined.length - 1; i >= 0; i--) {
+            const item = combined[i];
+            if (item && item.notificationId && !uniqueIds.has(item.notificationId)) {
+              uniqueIds.add(item.notificationId);
+              uniqueNotifications.unshift(item); // 원래 순서로 다시 추가
+            }
+          }
+
+          return uniqueNotifications;
+        });
+
+        // 페이지네이션 정보 업데이트
         setHasNextPage(result.hasNextPage || false);
         setNextPage(result.nextPage || null);
       }
@@ -144,9 +259,12 @@ const NotificationScreen = () => {
     } finally {
       if (isMounted.current) {
         setIsLoadingMore(false);
+        setTimeout(() => {
+          loadingMoreRef.current = false;
+        }, 300);
       }
     }
-  }, [hasNextPage, isLoadingMore, isLoading, isRefreshing, nextPage]);
+  }, [hasNextPage, isLoadingMore, nextPage]);
 
   // 미확인 알림 개수 가져오기
   const fetchUnreadCount = useCallback(async () => {
@@ -164,35 +282,6 @@ const NotificationScreen = () => {
     }
   }, [updateNotificationCount]);
 
-  // 알림 일괄 읽음 처리
-  const markAllAsRead = useCallback(async () => {
-    if (unreadCount === 0) {
-      // 읽지 않은 알림이 없으면 처리하지 않음
-      return;
-    }
-
-    try {
-      await notificationService.markAllNotificationsAsRead();
-
-      // 화면에 반영
-      setNotifications(prev =>
-        prev.map(notif => ({
-          ...notif,
-          notificationIsRead: true,
-        }))
-      );
-
-      // 읽지 않은 알림 개수 업데이트
-      setUnreadCount(0);
-      updateNotificationCount(0); // HeaderBar의 알림 카운트도 업데이트
-
-      Alert.alert('알림', '모든 알림을 읽음으로 처리했습니다.');
-    } catch (err) {
-      console.error('알림 읽음 처리 실패:', err);
-      Alert.alert('오류', '알림 읽음 처리에 실패했습니다.');
-    }
-  }, [unreadCount, updateNotificationCount]);
-
   // 사용자 새로고침 핸들러
   const handleRefresh = useCallback(() => {
     loadNotifications(true);
@@ -201,6 +290,7 @@ const NotificationScreen = () => {
   // 화면 진입 시 데이터 로딩 및 탭바 처리
   useEffect(() => {
     isMounted.current = true;
+    loadingMoreRef.current = false;
 
     // 데이터 로딩
     loadNotifications();
@@ -244,6 +334,7 @@ const NotificationScreen = () => {
     // 화면 이탈 시 탭바 복원 및 리소스 정리
     return () => {
       isMounted.current = false;
+      loadingMoreRef.current = false;
       interactionComplete.cancel();
       showTabBar();
     };
@@ -264,6 +355,8 @@ const NotificationScreen = () => {
   // 알림 항목 선택 처리
   const handleNotificationPress = useCallback(
     async item => {
+      if (item.type !== 'notification') return;
+
       // 알림 타입 및 참조 엔티티에 따라 적절한 화면으로 이동
       const { notificationType, referenceEntityType, referenceEntityId } = item;
 
@@ -342,20 +435,41 @@ const NotificationScreen = () => {
     }
   }, []);
 
-  // 알림 아이템 렌더링 - 직접 ListItem.NotificationCard 사용
+  // 날짜 구분선 렌더링
+  const renderDateDivider = useCallback(date => {
+    const formattedDate = formatDateToKorean(date);
+
+    return (
+      <View style={styles.dividerContainer}>
+        <View style={styles.dividerLine} />
+        <Text style={styles.dividerText}>{formattedDate}</Text>
+        <View style={styles.dividerLine} />
+      </View>
+    );
+  }, []);
+
+  // 아이템 렌더링 (알림 또는 날짜 구분선)
   const renderItem = useCallback(
-    ({ item }) => (
-      <ListItem.NotificationCard
-        title={item.notificationTitle}
-        message={item.notificationContent}
-        time={item.notificationCreatedAt}
-        onPress={() => handleNotificationPress(item)}
-        icon={NOTIFICATION_ICONS[item.notificationType] || 'notifications'}
-        iconColor={getIconColorByType(item.notificationType)}
-        isRead={item.notificationIsRead}
-      />
-    ),
-    [handleNotificationPress, getIconColorByType]
+    ({ item }) => {
+      // 날짜 구분선인 경우
+      if (item.type === 'date') {
+        return renderDateDivider(item.date);
+      }
+
+      // 알림 항목인 경우
+      return (
+        <ListItem.NotificationCard
+          title={item.notificationTitle}
+          message={item.notificationContent}
+          time={item.notificationCreatedAt}
+          onPress={() => handleNotificationPress(item)}
+          icon={NOTIFICATION_ICONS[item.notificationType] || 'notifications'}
+          iconColor={getIconColorByType(item.notificationType)}
+          isRead={item.notificationIsRead}
+        />
+      );
+    },
+    [handleNotificationPress, getIconColorByType, renderDateDivider]
   );
 
   // 메시지 표시 (로딩, 오류, 데이터 없음)
@@ -406,10 +520,8 @@ const NotificationScreen = () => {
   }, [isLoadingMore, theme.colors.primary]);
 
   // 고유한 키 값을 생성하는 함수
-  const keyExtractor = useCallback((item, index) => {
-    // notificationId와 함께 생성 시간과 인덱스를 조합하여 중복 방지
-    const uniqueId = `${item.notificationId}_${item.notificationCreatedAt}_${index}`;
-    return uniqueId;
+  const keyExtractor = useCallback(item => {
+    return item.uniqueId || item.id || `${item.notificationId || ''}-${Math.random()}`;
   }, []);
 
   return (
@@ -434,14 +546,14 @@ const NotificationScreen = () => {
 
       {notifications.length > 0 && (
         <FlatList
-          data={notifications}
+          data={displayData}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={5}
-          maxToRenderPerBatch={5}
-          windowSize={5}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={7}
           removeClippedSubviews={Platform.OS === 'android'}
           onEndReached={loadMoreNotifications}
           onEndReachedThreshold={0.3}
@@ -530,6 +642,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#DDDDDD',
+  },
+  dividerText: {
+    paddingHorizontal: 12,
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
   },
 });
 
