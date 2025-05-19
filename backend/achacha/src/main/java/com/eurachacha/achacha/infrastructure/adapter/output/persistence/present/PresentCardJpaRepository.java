@@ -22,4 +22,6 @@ public interface PresentCardJpaRepository extends JpaRepository<PresentCard, Int
 		WHERE p.code = :code
 		""")
 	Optional<PresentCard> findByCodeWithDetails(String code);
+
+	void deleteByGifticonId(Integer gifticonId);
 }

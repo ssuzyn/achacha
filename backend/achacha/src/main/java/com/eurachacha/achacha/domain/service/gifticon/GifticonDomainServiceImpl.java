@@ -210,6 +210,15 @@ public class GifticonDomainServiceImpl implements GifticonDomainService {
 	}
 
 	@Override
+	public void validateGifticonForPresentCancel(Integer userId, Gifticon gifticon) {
+		// 본인 소유인지 확인
+		boolean isOwner = hasAccess(userId, gifticon.getUser().getId());
+		if (!isOwner) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
+	}
+
+	@Override
 	public void validateProductGifticonType(Gifticon gifticon) {
 		if (gifticon.getType() != GifticonType.PRODUCT) {
 			throw new CustomException(ErrorCode.INVALID_GIFTICON_TYPE);
