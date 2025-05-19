@@ -274,13 +274,13 @@ function PresentCard({ presentCard }) {
   const calculateTopPosition = () => {
     if (screenWidth < 460) {
       // 스크린 너비가 460px 미만일 때는 top 값을 줄임
-      return 240;
+      return 150
     } else if (screenWidth < 600) {
       // 600px 미만일 때는 중간 위치
-      return 240;
+      return 145;
     } else {
       // 그 이상일 때는 기존 값 유지
-      return 230;
+      return 160;
     }
   };
   
@@ -297,41 +297,40 @@ function PresentCard({ presentCard }) {
   
   // 화면 너비에 따른 템플릿 내 요소들의 여백 및 크기 조정
   const getResponsiveStyles = () => {
-    const scale = calculateScaling();
-    
+    // 모바일 환경에서는 더 컴팩트한 스타일 적용
     return {
       messageContainerStyle: {
-        width: `${isMobile ? '90%' : '80%'}`,
-        marginTop: `${isMobile ? '2%' : '5%'}`,
-        padding: `${isMobile ? '15px' : '20px'}`,
-        minHeight: `${isMobile ? (70 * scale) : 90}px`,
-        height: `${isMobile ? (70 * scale) : 90}px`,
+        width: `${screenWidth < 460 ? '85%' : '80%'}`,
+        marginTop: `${screenWidth < 460 ? '0%' : '5%'}`,
+        padding: `${screenWidth < 460 ? '12px' : '20px'}`,
+        minHeight: `${screenWidth < 460 ? '70px' : '90px'}`,
+        height: `${screenWidth < 460 ? '70px' : '90px'}`,
       },
       gifticonContainerStyle: {
-        width: `${isMobile ? '90%' : '80%'}`,
-        marginTop: `${isMobile ? '5px' : '10px'}`,
-        padding: `${isMobile ? '8px' : '10px'}`,
+        width: `${screenWidth < 460 ? '85%' : '80%'}`,
+        marginTop: `${screenWidth < 460 ? '5px' : '10px'}`,
+        padding: `${screenWidth < 460 ? '8px' : '10px'}`,
       },
       thumbnailSize: {
-        width: `${isMobile ? '70px' : '80px'}`,
-        marginBottom: `${isMobile ? '5px' : '10px'}`
+        width: `${screenWidth < 460 ? '65px' : '80px'}`,
+        marginBottom: `${screenWidth < 460 ? '5px' : '10px'}`
       },
       buttonStyle: {
-        height: `${isMobile ? '30px' : '35px'}`,
-        padding: `${isMobile ? '8px' : '12px'}`,
+        height: `${screenWidth < 460 ? '30px' : '35px'}`,
+        padding: `${screenWidth < 460 ? '8px' : '12px'}`,
       },
       dividerStyle: {
-        margin: `${isMobile ? '5px 0' : '10px 0'}`
+        margin: `${screenWidth < 460 ? '5px 0' : '10px 0'}`
       },
       expiryContainerStyle: {
-        margin: `${isMobile ? '10px auto' : '15px auto'}`,
-        padding: `${isMobile ? '6px 10px' : '8px 12px'}`,
+        margin: `${screenWidth < 460 ? '8px auto' : '15px auto'}`,
+        padding: `${screenWidth < 460 ? '6px 10px' : '8px 12px'}`,
       },
       modalStyle: {
-        padding: `${isMobile ? '20px' : '30px'}`,
-        width: `${isMobile ? '95%' : '90%'}`,
-        maxWidth: `${isMobile ? '320px' : '500px'}`,
-        borderRadius: `${isMobile ? '12px' : '16px'}`,
+        padding: `${screenWidth < 460 ? '20px' : '30px'}`,
+        width: `${screenWidth < 460 ? '95%' : '90%'}`,
+        maxWidth: `${screenWidth < 460 ? '320px' : '500px'}`,
+        borderRadius: `${screenWidth < 460 ? '12px' : '16px'}`,
       }
     };
   };
@@ -650,11 +649,11 @@ function PresentCard({ presentCard }) {
             left: '50%', 
             width: '90%', 
             height: 'auto',
-            minHeight: '80%',
+            minHeight: screenWidth < 460 ? '70%' : '80%', 
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            transform: `translateX(-50%) ${screenWidth < 460 ? 'scale(' + calculateScaling() + ')' : ''}`
+            transform: 'translateX(-50%)'
           }}>
             {/* 메시지 영역 */}
             <div 
@@ -682,7 +681,7 @@ function PresentCard({ presentCard }) {
               <p 
                 ref={messageRef}
                 style={{ 
-                  fontSize: `${isMobile ? '16px' : '18px'}`, 
+                  fontSize: `${screenWidth < 460 ? '15px' : '18px'}`, 
                   fontWeight: '600',
                   color: '#000',
                   margin: 0,
@@ -784,7 +783,7 @@ function PresentCard({ presentCard }) {
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontFamily: 'Pretendard, sans-serif',
-                  fontSize: `${isMobile ? '14px' : '16px'}`
+                  fontSize: `${screenWidth < 460 ? '14px' : '16px'}`
                 }}
               >
                 갤러리에 저장
@@ -812,8 +811,8 @@ function PresentCard({ presentCard }) {
                   viewBox="0 0 24 24" 
                   fill="currentColor"
                   style={{ 
-                    width: `${isMobile ? '16px' : '18px'}`, 
-                    height: `${isMobile ? '16px' : '18px'}`, 
+                    width: `${screenWidth < 460 ? '16px' : '18px'}`, 
+                    height: `${screenWidth < 460 ? '16px' : '18px'}`, 
                     marginRight: '6px',
                     verticalAlign: 'middle',
                     position: 'relative',
@@ -823,7 +822,7 @@ function PresentCard({ presentCard }) {
                   <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.53614 4 7.33243 5.11383 5.86492 6.86543L8 9H2V3L4.44656 5.44648C6.28002 3.33509 8.9841 2 12 2ZM13 7L12.9998 11.585L16.2426 14.8284L14.8284 16.2426L10.9998 12.413L11 7H13Z"></path>
                 </svg>
                 <span style={{ 
-                  fontSize: `${isMobile ? '12px' : '14px'}`,
+                  fontSize: `${screenWidth < 460 ? '12px' : '14px'}`,
                   display: 'inline-block',
                   verticalAlign: 'middle',
                   lineHeight: '18px',
@@ -866,9 +865,9 @@ function PresentCard({ presentCard }) {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 style={{ fontWeight: '700', fontSize: `${isMobile ? '18px' : '20px'}`, marginBottom: `${isMobile ? '15px' : '20px'}` }}>메시지 전체보기</h3>
+              <h3 style={{ fontWeight: '700', fontSize: `${screenWidth < 460 ? '18px' : '20px'}`, marginBottom: `${screenWidth < 460 ? '15px' : '20px'}` }}>메시지 전체보기</h3>
               <p style={{ 
-                fontSize: `${isMobile ? '16px' : '18px'}`, 
+                fontSize: `${screenWidth < 460 ? '16px' : '18px'}`, 
                 fontWeight: '600',
                 lineHeight: '1.6',
                 wordBreak: 'break-word'
