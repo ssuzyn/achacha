@@ -1,261 +1,319 @@
 import { Platform, Alert, Linking } from 'react-native';
 import Geofencing from '@rn-bridge/react-native-geofencing';
-import * as Notifications from 'expo-notifications';
+import { geoNotificationService } from './geoNotificationService';
+
+// 싱글톤 인스턴스를 저장할 변수
+let instance = null;
 
 class GeofencingService {
-  constructor(uniqueBrands) {
-    this.uniqueBrands = uniqueBrands;
+  constructor() {
+    // 이미 인스턴스가 있으면 그 인스턴스를 반환
+    if (instance) {
+      console.log('[GeofencingService] 기존 인스턴스 반환');
+      return instance;
+    }
+
+    // 새 인스턴스 생성
+    instance = this;
     this.initialized = false;
-    this.initializing = false; // 초기화 중인지 추적하기 위한 플래그
+    this.initializing = false;
+    this.notifiedBrandIdsThisSession = new Set();
+    this.userGifticons = [];
+    this.uniqueBrands = [];
+    console.log('[GeofencingService] 새 인스턴스 생성됨');
+  }
+
+  // 기프티콘 목록 업데이트
+  updateUserGifticons(gifticons) {
+    console.log('[GeofencingService] updateUserGifticons 호출됨.');
+
+    if (gifticons && gifticons.gifticons && Array.isArray(gifticons.gifticons)) {
+      this.userGifticons = gifticons.gifticons;
+      console.log(
+        `[GeofencingService] 사용자 기프티콘 목록 업데이트: ${this.userGifticons.length}개`
+      );
+
+      // 브랜드별 기프티콘 수 로깅
+      const brandCounts = {};
+      this.userGifticons.forEach(g => {
+        brandCounts[g.brandId] = (brandCounts[g.brandId] || 0) + 1;
+      });
+      console.log('[GeofencingService] 업데이트된 기프티콘의 브랜드별 카운트:', brandCounts);
+    } else {
+      console.error('[GeofencingService] updateUserGifticons - 유효하지 않은 기프티콘 목록 구조.');
+      this.userGifticons = [];
+    }
   }
 
   // 지오펜싱 초기화
   async initGeofencing() {
-    // 이미 초기화 중이거나 초기화 완료된 경우 건너뜀
     if (this.initializing || this.initialized) {
-      console.log('지오펜싱이 이미 초기화 중이거나 초기화되어 있습니다.');
+      console.log(
+        '[GeofencingService] 이미 초기화 중이거나 완료됨. 초기화 중:',
+        this.initializing,
+        '초기화 완료:',
+        this.initialized
+      );
       return;
     }
 
-    this.initializing = true; // 초기화 시작 표시
-    console.log('====== 지오펜싱 초기화 시작 ======');
-    try {
-      // 이미 초기화되었다면 실행하지 않음
-      if (this.initialized) {
-        console.log('이미 초기화됨. 건너뜀.');
-        return;
-      }
+    this.initializing = true;
+    console.log('[GeofencingService] 지오펜싱 초기화 시작');
 
-      console.log('백그라운드 위치 권한 확인 중...');
+    try {
       // 백그라운드 위치 권한 확인
       const hasPermission = await this.checkBackgroundLocationPermission();
-      console.log('백그라운드 위치 권한 확인 결과:', hasPermission);
-
       if (!hasPermission) {
-        console.log('위치 권한이 없어 지오펜싱을 초기화할 수 없습니다.');
+        console.log('[GeofencingService] 위치 권한 부족으로 초기화 중단.');
+        this.initializing = false;
         return;
       }
 
-      console.log('위치 권한 요청 중...');
       // 위치 권한 요청
-      const locationPermission = await Geofencing.requestLocation({
-        allowAlways: true, // 백그라운드 위치 권한 요청
-      });
+      await Geofencing.requestLocation({ allowAlways: true });
 
-      console.log('위치 권한 상태:', locationPermission);
-
-      console.log('지오펜스 진입 이벤트 리스너 설정 중...');
-      // 지오펜스 이벤트 리스너 설정
+      // 지오펜스 진입 이벤트 리스너 설정
       Geofencing.onEnter(ids => {
-        console.log('지오펜스 진입:', ids);
+        console.log('[GeofencingService] onEnter - 지오펜스 진입 IDs:', ids);
+
         if (ids && ids.length > 0) {
           const geofenceId = ids[0];
-          const [brandId, storeName] = geofenceId.split('_');
-          this.sendNotification(brandId, storeName);
+          const geofenceBrandId = parseInt(geofenceId, 10);
+
+          console.log('[GeofencingService] onEnter - 브랜드 ID:', geofenceBrandId);
+
+          if (!isNaN(geofenceBrandId)) {
+            // 중복 알림 방지 체크
+            if (!this.notifiedBrandIdsThisSession.has(geofenceBrandId)) {
+              // 기프티콘 목록 체크
+              console.log(
+                `[GeofencingService] onEnter - userGifticons 목록 길이: ${this.userGifticons.length}`
+              );
+
+              if (!this.userGifticons || this.userGifticons.length === 0) {
+                console.error(
+                  '[GeofencingService] onEnter - userGifticons가 비어있어 알림 처리 불가.'
+                );
+                return;
+              }
+
+              // 해당 브랜드 ID와 일치하는 첫 번째 기프티콘 찾기
+              const relevantGifticon = this.userGifticons.find(g => g.brandId === geofenceBrandId);
+
+              if (relevantGifticon && relevantGifticon.gifticonId) {
+                const gifticonIdToSend = relevantGifticon.gifticonId;
+                console.log(
+                  `[GeofencingService] onEnter - 알림 보낼 gifticonId: ${gifticonIdToSend} (브랜드 ID: ${geofenceBrandId}, 기프티콘명: ${relevantGifticon.gifticonName})`
+                );
+
+                geoNotificationService
+                  .requestGeoNotification(gifticonIdToSend)
+                  .then(() => {
+                    console.log(
+                      `[GeofencingService] onEnter - API.requestGeoNotification 성공: gifticonId ${gifticonIdToSend}`
+                    );
+                    this.notifiedBrandIdsThisSession.add(geofenceBrandId);
+                  })
+                  .catch(error => {
+                    console.error(
+                      `[GeofencingService] onEnter - API.requestGeoNotification 실패: gifticonId ${gifticonIdToSend}`,
+                      error
+                    );
+                  });
+              } else {
+                console.log(
+                  `[GeofencingService] onEnter - brandId ${geofenceBrandId}에 해당하는 사용 가능한 기프티콘 없음.`
+                );
+              }
+            } else {
+              console.log(
+                `[GeofencingService] onEnter - 이미 알림 보낸 브랜드 ID: ${geofenceBrandId}`
+              );
+            }
+          } else {
+            console.error(
+              '[GeofencingService] onEnter - 유효하지 않은 브랜드 ID 형식:',
+              geofenceId
+            );
+          }
         }
       });
 
-      console.log('지오펜스 이탈 이벤트 리스너 설정 중...');
-      // 지오펜스 이탈 이벤트 리스너
+      // 지오펜스 이탈 이벤트 리스너 설정
       Geofencing.onExit(ids => {
-        console.log('지오펜스 이탈:', ids);
+        console.log('[GeofencingService] onExit - 지오펜스 이탈 IDs:', ids);
       });
 
       this.initialized = true;
-      console.log('====== 지오펜싱 초기화 완료 ======');
+      console.log('[GeofencingService] 지오펜싱 초기화 완료');
     } catch (error) {
-      console.error('지오펜싱 초기화 실패: ', error);
-      this.initialized = false; // 초기화 실패 시 플래그 재설정
+      console.error('[GeofencingService] 지오펜싱 초기화 실패:', error);
+      this.initialized = false;
     } finally {
-      this.initializing = false; // 초기화 과정 종료 표시
+      this.initializing = false;
     }
   }
 
   // 백그라운드 위치 권한 확인
   async checkBackgroundLocationPermission() {
-    try {
-      // 위치 권한 상태 확인
-      const authStatus = await Geofencing.getLocationAuthorizationStatus();
-      console.log('현재 위치 권한 상태:', authStatus);
+    const authStatus = await Geofencing.getLocationAuthorizationStatus();
 
-      // Android 10 이상에서 백그라운드 위치 권한이 없는 경우
-      if (Platform.OS === 'android' && Platform.Version >= 29 && authStatus !== 'Always') {
-        Alert.alert(
-          '백그라운드 위치 권한 필요',
-          '기프티콘 알림 기능을 사용하려면 "항상 허용" 위치 권한이 필요합니다. 설정에서 이 앱의 위치 권한을 "항상 허용"으로 변경해주세요.',
-          [
-            { text: '나중에', style: 'cancel' },
-            {
-              text: '설정으로 이동',
-              onPress: () => {
-                Linking.openSettings();
-              },
+    console.log('[GeofencingService] 현재 위치 권한 상태:', authStatus);
+
+    if (Platform.OS === 'android' && Platform.Version >= 29 && authStatus !== 'Always') {
+      Alert.alert(
+        '백그라운드 위치 권한 필요',
+        '기프티콘 알림 기능을 사용하려면 "항상 허용" 위치 권한이 필요합니다. 설정에서 이 앱의 위치 권한을 "항상 허용"으로 변경해주세요.',
+        [
+          { text: '나중에', style: 'cancel' },
+          {
+            text: '설정으로 이동',
+            onPress: () => {
+              Linking.openSettings();
             },
-          ]
-        );
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('위치 권한 확인 중 오류:', error);
+          },
+        ]
+      );
       return false;
     }
+
+    return true;
   }
 
-  // 알림 설정 메서드
-  async setupNotifications() {
-    try {
-      // 알림 핸들러 설정
-      Notifications.setNotificationHandler({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-      });
-
-      // 알림 채널 설정 (안드로이드)
-      if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: '기프티콘 알림',
-          importance: Notifications.AndroidImportance.HIGH,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#56AEE9',
-          sound: true,
-        });
-      }
-
-      // 알림 권한 요청
-      const { status } = await Notifications.requestPermissionsAsync();
-      console.log('알림 권한 상태:', status);
-
-      return status === 'granted';
-    } catch (error) {
-      console.log('알림 설정 실패:', error);
-      return false;
-    }
-  }
-
-  // 알림 전송 함수
-  async sendNotification(brandId, storeName) {
-    try {
-      const brand = this.uniqueBrands.find(b => b.brandId.toString() === brandId);
-
-      if (!brand) return;
-
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '근처에서 사용 가능한 기프티콘이 있어요!',
-          body: `${brand.brandName} 매장이 근처에 있습니다. 기프티콘을 사용해보세요!`,
-          data: { brandId, storeName },
-        },
-        trigger: null, // 즉시 알림
-      });
-      console.log('알림 전송 완료');
-    } catch (error) {
-      console.log('알림 전송 실패:', error);
-    }
-  }
-
-  // 지오펜스 설정 함수
+  // 지오펜스 설정
   async setupGeofences(brandResults, selectedBrand) {
     // 초기화 중이면 잠시 대기
     if (this.initializing) {
-      console.log('지오펜싱 초기화 중입니다. 잠시 대기...');
-      // 최대 3초 대기 (초기화가 완료될 때까지)
-      for (let i = 0; i < 30; i++) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        if (!this.initializing) break;
-      }
+      console.log('[GeofencingService] 초기화 중, 잠시 대기 중...');
+      await new Promise(r => setTimeout(r, 1000));
     }
 
     try {
       if (!this.initialized) {
-        console.log('지오펜싱이 초기화되지 않았습니다.');
+        console.log('[GeofencingService] setupGeofences - 초기화되지 않아 건너뜀.');
         return;
       }
 
-      // 백그라운드 위치 권한 확인
-      const authStatus = await Geofencing.getLocationAuthorizationStatus();
-      if (authStatus !== 'Always') {
-        console.log('백그라운드 위치 권한이 없어 지오펜스 설정을 건너뜁니다.');
+      // 싱글톤 인스턴스의 상태 확인
+      console.log('[GeofencingService] setupGeofences - 싱글톤 인스턴스 ID:', this);
+      console.log(
+        '[GeofencingService] setupGeofences - userGifticons 상태:',
+        this.userGifticons
+          ? `배열: ${Array.isArray(this.userGifticons)}, 길이: ${this.userGifticons.length}`
+          : '정의되지 않음'
+      );
+
+      if (this.userGifticons && this.userGifticons.length > 0) {
+        // 브랜드 ID 목록 로깅
+        const brandIds = [...new Set(this.userGifticons.map(g => g.brandId))];
+        console.log('[GeofencingService] setupGeofences - 존재하는 브랜드 ID들:', brandIds);
+      }
+
+      if (!this.userGifticons || this.userGifticons.length === 0) {
+        console.warn(
+          '[GeofencingService] setupGeofences - userGifticons가 비어있어 지오펜스 설정 안 함.'
+        );
+
+        // 기존 지오펜스 제거
+        const registered = await Geofencing.getRegisteredGeofences();
+        if (registered && registered.length > 0) {
+          console.log(
+            '[GeofencingService] setupGeofences - userGifticons 비어있어 기존 지오펜스 제거.'
+          );
+          for (const id of registered) await Geofencing.removeGeofence(id);
+        }
+
         return;
       }
 
-      // 기존 등록된 지오펜스 모두 가져오기
-      const registeredGeofences = await Geofencing.getRegisteredGeofences();
-      console.log('등록된 지오펜스:', registeredGeofences);
+      // 알림 기록 초기화
+      this.notifiedBrandIdsThisSession.clear();
+      console.log('[GeofencingService] setupGeofences - 알림 기록 초기화됨.');
 
       // 기존 지오펜스 제거
+      const registeredGeofences = await Geofencing.getRegisteredGeofences();
       if (registeredGeofences && registeredGeofences.length > 0) {
-        for (const id of registeredGeofences) {
-          await Geofencing.removeGeofence(id);
-        }
+        for (const id of registeredGeofences) await Geofencing.removeGeofence(id);
+        console.log(
+          `[GeofencingService] setupGeofences - 기존 지오펜스 ${registeredGeofences.length}개 제거됨.`
+        );
       }
 
-      // 각 브랜드별 매장에 대한 지오펜스 설정
+      // 새 지오펜스 설정
+      let count = 0;
       for (const brandResult of brandResults) {
-        const { brandId, brandName, stores } = brandResult;
+        const { brandId, stores } = brandResult;
 
-        // 선택된 브랜드가 있고, 현재 브랜드가 선택된 브랜드가 아니면 스킵
+        // 선택된 브랜드가 있으면 해당 브랜드만 설정
         if (selectedBrand !== null && brandId.toString() !== selectedBrand.toString()) {
           continue;
         }
 
         for (const store of stores) {
-          const geofenceId = `${brandId}_${store.place_name}`;
+          const geofenceId = `${brandId}`; // 문자열로 변환
 
           try {
             await Geofencing.addGeofence({
               id: geofenceId,
               latitude: parseFloat(store.y),
               longitude: parseFloat(store.x),
-              radius: 50, // 지오펜싱 범위 설정(미터 단위)
+              radius: 500,
               notifyOnEntry: true,
               notifyOnExit: false,
             });
-            console.log(`지오펜스 설정 완료: ${store.place_name}(${brandName})`);
+            count++;
           } catch (error) {
-            console.error(`지오펜스 설정 실패: ${store.place_name}`, error);
+            console.error(
+              `[GeofencingService] setupGeofences - 지오펜스 설정 실패: 브랜드 ${brandId}, 매장 ${store.place_name}`,
+              error
+            );
           }
         }
       }
+
+      console.log(`[GeofencingService] setupGeofences - 총 ${count}개의 지오펜스 설정 완료.`);
     } catch (error) {
-      console.error('지오펜스 설정 중 오류 발생:', error);
+      console.error('[GeofencingService] setupGeofences - 설정 중 오류:', error);
     }
   }
 
-  // 지오펜싱 정리 함수
+  // 정리 함수
   async cleanup() {
+    console.log('[GeofencingService] 지오펜싱 정리 시작');
+
     try {
-      // 등록된 지오펜스 목록 가져오기
+      // 등록된 지오펜스 제거
       const geofenceIds = await Geofencing.getRegisteredGeofences();
       if (geofenceIds && geofenceIds.length > 0) {
-        // 각 지오펜스 ID에 대해 개별적으로 제거
-        geofenceIds.forEach(id => {
-          Geofencing.removeGeofence(id)
-            .then(() => console.log(`지오펜스 제거 완료: ${id}`))
-            .catch(err => console.error(`지오펜스 제거 실패: ${id}`, err));
-        });
-      } else {
-        console.log('제거할 지오펜스가 없습니다');
+        for (const id of geofenceIds) await Geofencing.removeGeofence(id);
+        console.log(`[GeofencingService] cleanup - 지오펜스 ${geofenceIds.length}개 제거됨.`);
       }
 
       // 이벤트 리스너 제거
-      if (typeof Geofencing.removeOnEnterListener === 'function') {
+      if (typeof Geofencing.removeOnEnterListener === 'function')
         Geofencing.removeOnEnterListener();
-      }
+      if (typeof Geofencing.removeOnExitListener === 'function') Geofencing.removeOnExitListener();
 
-      if (typeof Geofencing.removeOnExitListener === 'function') {
-        Geofencing.removeOnExitListener();
-      }
+      console.log('[GeofencingService] 지오펜싱 정리 완료');
     } catch (error) {
-      console.error('지오펜스 정리 중 오류:', error);
+      console.error('[GeofencingService] 지오펜싱 정리 중 오류:', error);
     }
   }
-  // initialized 플래그 리셋
+
+  // 초기화 상태 리셋
   resetInitialized() {
+    console.log('[GeofencingService] 초기화 상태 리셋됨.');
     this.initialized = false;
     this.initializing = false;
+  }
+
+  // 싱글톤 인스턴스 리셋 (테스트용)
+  static resetInstance() {
+    if (instance) {
+      console.log('[GeofencingService] 싱글톤 인스턴스 리셋');
+      instance.cleanup();
+      instance = null;
+    }
   }
 }
 
