@@ -13,6 +13,24 @@ import { calculateDday } from '../utils/dateUtils';
 const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
   const renderGifticonItem = ({ item }) => {
     const dday = calculateDday(item.gifticonExpiryDate);
+
+    let numericDday = Infinity;
+    if (dday && typeof dday === 'string') {
+      if (dday.toUpperCase() === 'D-DAY') {
+        numericDday = 0;
+      } else if (dday.startsWith('D-')) {
+        const parts = dday.split('-');
+        if (parts.length === 2) {
+          const dayValue = parseInt(parts[1], 10);
+          if (!isNaN(dayValue)) {
+            numericDday = dayValue;
+          }
+        }
+      }
+    }
+
+    const ddayColor = numericDday <= 7 ? '#EA5455' : '#278CCC';
+
     return (
       <TouchableOpacity style={styles.gifticonItem} onPress={() => onSelectGifticon(item)}>
         <View style={styles.contentContainer}>
@@ -28,7 +46,7 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
             </View>
           </View>
           <View style={styles.ddayContainer}>
-            <Text style={styles.ddayText}>{dday}</Text>
+            <Text style={[styles.ddayText, { color: ddayColor }]}>{dday}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -102,7 +120,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandName: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: 'Pretendard-Bold',
     color: 'black',
     marginBottom: 4,
