@@ -8,13 +8,15 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
-import KakaoMapWebView from '../components/map/KakaoMapView';
+import KakaoMapView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import GeofencingService from '../services/GeofencingService';
 import { useNavigation } from '@react-navigation/native';
 import { mapGifticonService } from '../services/mapGifticonService';
 import { geoNotificationService } from '../services/geoNotificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Geofencing from '@rn-bridge/react-native-geofencing';
 
 const MapScreen = () => {
   const navigation = useNavigation();
@@ -31,10 +33,15 @@ const MapScreen = () => {
       const gifticonsArray = response.gifticons || [];
       setGifticons(gifticonsArray);
 
-      // GeofencingService에 기프티콘 목록 전달
-      if (geofencingServiceRef.current) {
-        geofencingServiceRef.current.updateUserGifticons(response);
+      // 기프티콘 AsyncStorage에 저장 (백그라운드 처리용)
+      await AsyncStorage.setItem('USER_GIFTICONS', JSON.stringify(gifticonsArray));
+      console.log('[MapScreen] 기프티콘 AsyncStorage에 저장됨:', gifticonsArray.length);
+
+      // GeofencingService에 기프티콘 목록 전달 (싱글톤 인스턴스 가져오기)
+      if (!geofencingServiceRef.current) {
+        geofencingServiceRef.current = new GeofencingService();
       }
+      geofencingServiceRef.current.updateUserGifticons(response);
 
       return response;
     } catch (error) {
@@ -44,25 +51,33 @@ const MapScreen = () => {
     }
   };
 
+  useEffect(() => {
+    // 테스트용: 매장 데이터가 있는지 로깅
+    const checkStoreData = async () => {
+      try {
+        const storeData = await AsyncStorage.getItem('GEOFENCE_STORE_DATA');
+        console.log('[MapScreen] 저장된 매장 데이터 확인:', storeData ? '있음' : '없음');
+
+        if (storeData) {
+          const parsedData = JSON.parse(storeData);
+          console.log('[MapScreen] 저장된 매장 수:', parsedData.length);
+        }
+      } catch (e) {
+        console.error('[MapScreen] 매장 데이터 확인 중 오류:', e);
+      }
+    };
+
+    checkStoreData();
+  }, []);
+
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
-    // GeofencingService 인스턴스 생성 (싱글톤)
-    if (!geofencingServiceRef.current) {
-      geofencingServiceRef.current = new GeofencingService();
-    }
+    // GeofencingService 인스턴스 가져오기 (싱글톤)
+    geofencingServiceRef.current = new GeofencingService();
 
     const initialize = async () => {
-      // 1. 기프티콘 목록 로드
+      // 기프티콘 목록 로드
       await loadGifticons();
-
-      // 2. 지오펜싱 초기화
-      if (geofencingServiceRef.current && !geofencingServiceRef.current.initialized) {
-        try {
-          await geofencingServiceRef.current.initGeofencing();
-        } catch (error) {
-          console.error('[MapScreen] 지오펜싱 초기화 중 오류:', error);
-        }
-      }
     };
 
     initialize();
@@ -75,33 +90,9 @@ const MapScreen = () => {
       30 * 60 * 1000
     );
 
-    // AppState 이벤트 핸들러
-    const handleAppStateChange = async nextAppState => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        if (geofencingServiceRef.current) {
-          // 지오펜싱 서비스 초기화 상태 리셋
-          geofencingServiceRef.current.resetInitialized();
-
-          // 지오펜싱 다시 초기화 및 기프티콘 목록 갱신
-          await geofencingServiceRef.current.initGeofencing();
-          await loadGifticons();
-        }
-      }
-
-      appState.current = nextAppState;
-    };
-
-    // 이벤트 리스너 설정
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-
     // 컴포넌트 언마운트 시 정리
     return () => {
       clearInterval(refreshInterval);
-      subscription.remove();
-
-      if (geofencingServiceRef.current) {
-        geofencingServiceRef.current.cleanup();
-      }
     };
   }, []);
 
@@ -137,6 +128,7 @@ const MapScreen = () => {
   // 매장 검색 결과 처리 콜백
   const handleStoresFound = async storeResults => {
     console.log('[MapScreen] 매장 검색 결과 수신:', storeResults.length);
+    console.log('[MapScreen] 매장 데이터 구조:', JSON.stringify(storeResults.slice(0, 1)));
 
     if (!geofencingServiceRef.current) {
       console.error('[MapScreen] 지오펜싱 서비스 참조가 없음');
@@ -167,7 +159,34 @@ const MapScreen = () => {
 
     // 지오펜스 설정 진행
     console.log('[MapScreen] 지오펜스 설정 시작, 서비스 참조:', geofencingServiceRef.current);
-    await geofencingServiceRef.current.setupGeofences(storeResults, selectedBrand);
+    try {
+      // storeResults 데이터 구조 확인
+      console.log(
+        '[MapScreen] 매장 데이터 구조 확인:',
+        storeResults.map(br => ({
+          brandId: br.brandId,
+          storeCount: br.stores ? br.stores.length : 0,
+        }))
+      );
+
+      // 지오펜스 설정 결과 저장
+      const setupResult = await geofencingServiceRef.current.setupGeofences(
+        storeResults,
+        selectedBrand
+      );
+
+      // 설정 후 등록된 지오펜스 확인
+      const registeredGeofences = await Geofencing.getRegisteredGeofences();
+      console.log('[MapScreen] 지오펜스 설정 완료, 등록된 지오펜스:', registeredGeofences);
+
+      // 지오펜스 정보를 저장소에 저장 (백그라운드에서 활용하기 위함)
+      await AsyncStorage.setItem('GEOFENCE_STORE_DATA', JSON.stringify(storeResults));
+      console.log('[MapScreen] 매장 데이터 AsyncStorage에 저장 완료');
+
+      return setupResult;
+    } catch (error) {
+      console.error('[MapScreen] 지오펜스 설정 중 오류:', error);
+    }
   };
 
   // 기프티콘 사용 처리 함수
@@ -262,7 +281,7 @@ const MapScreen = () => {
       <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
 
       <View style={styles.mapContainer}>
-        <KakaoMapWebView
+        <KakaoMapView
           ref={mapRef}
           uniqueBrands={uniqueBrands}
           selectedBrand={selectedBrand}
