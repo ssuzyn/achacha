@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 const colorEnv = '#0077B2';
 const colorEnv2 = '#006A9E'; // darken($color-env, 3%)
 const colorFlap = '#004466'; // darken($color-env, 20%)
-const colorBg = '#C0E5F5';   // lighten($color-env, 48%)
+const colorBg = '#D9EFFF';   // 사용자가 최종적으로 요청한 body 배경색
 const colorHeart = '#D00000';
 
 const envBorderRadius = '6px';
@@ -63,6 +63,17 @@ function PresentCard({ presentCard }) {
   const confettiItemsRef = useRef([]);
   const confettiGenStartTimeRef = useRef(0);
   // --- 컨페티 상태 및 Ref 끝 ---
+
+  // --- Body 배경색 설정 및 해제 ---
+  useEffect(() => {
+    const originalBodyColor = document.body.style.backgroundColor;
+    document.body.style.backgroundColor = colorBg;
+
+    return () => {
+      document.body.style.backgroundColor = originalBodyColor; // 컴포넌트 언마운트 시 원래 색으로 복원
+    };
+  }, []); // 마운트 시 한 번만 실행
+  // --- Body 배경색 설정 및 해제 끝 ---
 
   // 애니메이션 로직
   useEffect(() => {
@@ -250,7 +261,7 @@ function PresentCard({ presentCard }) {
           /* Envelope specific styles */
           .envelope-container {
             font-family: 'Pretendard', sans-serif;
-            background-color: ${colorBg}; /* $color-bg */
+            background-color: ${colorBg};
           }
           #envelope {
             position: relative;
@@ -436,14 +447,14 @@ function PresentCard({ presentCard }) {
 
   if (!presentCard) {
     console.error('PresentCard: 전달받은 데이터가 없습니다.');
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>선물 정보를 불러오지 못했습니다.</p></div>;
+    return <div className="min-h-screen flex items-center justify-center p-4" style={{ fontFamily: 'Pretendard, sans-serif' }}><p>선물 정보를 불러오지 못했습니다.</p></div>;
   }
   
   // HTML 응답 체크
   if (typeof presentCard === 'string' && presentCard.includes('<!doctype html>')) {
     console.error('PresentCard: HTML이 데이터로 전달되었습니다. API 응답 확인이 필요합니다.');
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ fontFamily: 'Pretendard, sans-serif' }}>
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
           <h2 className="font-bold mb-2">API 응답 오류</h2>
           <p>서버가 JSON 데이터 대신 HTML을 반환했습니다.</p>
@@ -464,7 +475,7 @@ function PresentCard({ presentCard }) {
   if (!isValidData) {
     console.error('PresentCard: 필수 데이터가 누락되었습니다. 받은 데이터:', presentCard);
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ fontFamily: 'Pretendard, sans-serif' }}>
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded max-w-md">
           <h2 className="font-bold mb-2">데이터 형식 오류</h2>
           <p>필수 정보가 누락되었습니다.</p>
@@ -531,7 +542,7 @@ function PresentCard({ presentCard }) {
       {/* --- 컨페티 캔버스 끝 --- */}
 
       {/* 전체 카드 컨테이너 */}
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ fontFamily: 'Pretendard, sans-serif' }}>
         {/* 전체 카드 컨테이너 */}
         <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
           {/* 템플릿 이미지 (배경) */}
