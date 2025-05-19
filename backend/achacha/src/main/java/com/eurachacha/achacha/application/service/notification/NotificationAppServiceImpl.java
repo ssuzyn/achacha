@@ -3,6 +3,7 @@ package com.eurachacha.achacha.application.service.notification;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,12 @@ import com.eurachacha.achacha.application.port.input.notification.dto.response.N
 import com.eurachacha.achacha.application.port.input.notification.dto.response.NotificationsResponseDto;
 import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
-import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.application.port.output.notification.dto.request.NotificationEventDto;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
+import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
@@ -50,7 +51,7 @@ public class NotificationAppServiceImpl implements NotificationAppService {
 	private final NotificationTypeRepository notificationTypeRepository;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final FcmTokenRepository fcmTokenRepository;
-	private final NotificationEventPort notificationEventPort;
+	private final ApplicationEventPublisher applicationEventPublisher;
 	private final NotificationSettingDomainService notificationSettingDomainService;
 	private final GifticonRepository gifticonRepository;
 
@@ -215,7 +216,7 @@ public class NotificationAppServiceImpl implements NotificationAppService {
 				.referenceEntityType(referenceEntityType)
 				.build();
 
-			notificationEventPort.sendNotificationEvent(eventDto);
+			applicationEventPublisher.publishEvent(new NotificationEventMessage(eventDto));
 		}
 
 		log.debug("푸시 알림 전송 완료 - 사용자 ID: {}", userId);

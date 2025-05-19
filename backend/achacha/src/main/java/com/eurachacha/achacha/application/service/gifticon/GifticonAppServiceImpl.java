@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,6 @@ import com.eurachacha.achacha.application.port.output.file.FileStoragePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
 import com.eurachacha.achacha.application.port.output.history.UsageHistoryRepository;
-import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
@@ -45,6 +45,7 @@ import com.eurachacha.achacha.application.port.output.ocr.OcrPort;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.sharebox.ShareBoxRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
+import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 import com.eurachacha.achacha.domain.model.ai.OcrTrainingData;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
@@ -102,7 +103,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 	private final NotificationTypeRepository notificationTypeRepository;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final NotificationSettingDomainService notificationSettingDomainService;
-	private final NotificationEventPort notificationEventPort;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Override
 	public GifticonMetadataResponseDto extractGifticonMetadata(MultipartFile image, GifticonType gifticonType) {
@@ -882,7 +883,7 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 				.referenceEntityType(referenceEntityType)
 				.build();
 
-			notificationEventPort.sendNotificationEvent(eventDto);
+			applicationEventPublisher.publishEvent(new NotificationEventMessage(eventDto));
 		}
 
 		log.debug("푸시 알림 전송 완료 - 사용자 ID: {}", userId);

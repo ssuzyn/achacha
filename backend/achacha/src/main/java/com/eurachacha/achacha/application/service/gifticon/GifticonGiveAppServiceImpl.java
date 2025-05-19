@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,7 +16,6 @@ import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.ble.BleTokenRepository;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
 import com.eurachacha.achacha.application.port.output.history.GifticonOwnerHistoryRepository;
-import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
@@ -24,6 +24,7 @@ import com.eurachacha.achacha.application.port.output.present.ColorPaletteReposi
 import com.eurachacha.achacha.application.port.output.present.PresentCardRepository;
 import com.eurachacha.achacha.application.port.output.present.PresentTemplateRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
+import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 import com.eurachacha.achacha.domain.model.ble.BleToken;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
@@ -69,7 +70,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	private final FcmTokenRepository fcmTokenRepository;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final NotificationSettingDomainService notificationSettingDomainService;
-	private final NotificationEventPort notificationEventPort;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Override
 	@Transactional
@@ -318,7 +319,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 				.referenceEntityType(referenceEntityType)
 				.build();
 
-			notificationEventPort.sendNotificationEvent(eventDto);
+			applicationEventPublisher.publishEvent(new NotificationEventMessage(eventDto));
 		}
 
 		log.debug("푸시 알림 전송 완료 - 사용자 ID: {}", userId);

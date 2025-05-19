@@ -14,16 +14,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.eurachacha.achacha.application.port.input.notification.dto.request.LocationBasedNotificationRequestDto;
 import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
-import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.application.port.output.notification.dto.request.NotificationEventDto;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
+import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
@@ -54,8 +55,9 @@ public class NotificationAppServiceImplTest {
 	@Mock
 	private FcmTokenRepository fcmTokenRepository;
 
+	// NotificationEventPort 대신 ApplicationEventPublisher 사용
 	@Mock
-	private NotificationEventPort notificationEventPort;
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@Mock
 	private NotificationSettingDomainService notificationSettingDomainService;
@@ -161,18 +163,21 @@ public class NotificationAppServiceImplTest {
 		// FCM 토큰 조회가 호출되었는지 검증
 		verify(fcmTokenRepository).findAllByUserId(loggedInUser.getId());
 
-		// 푸시 알림 전송이 호출되었는지 검증
-		ArgumentCaptor<NotificationEventDto> eventCaptor = ArgumentCaptor.forClass(NotificationEventDto.class);
-		verify(notificationEventPort).sendNotificationEvent(eventCaptor.capture());
+		// 이벤트 발행이 호출되었는지 검증 (NotificationEventPort 대신 ApplicationEventPublisher 사용)
+		ArgumentCaptor<NotificationEventMessage> eventMessageCaptor = ArgumentCaptor.forClass(
+			NotificationEventMessage.class);
+		verify(applicationEventPublisher).publishEvent(eventMessageCaptor.capture());
 
-		NotificationEventDto capturedEvent = eventCaptor.getValue();
-		assertThat(capturedEvent.getFcmToken()).isEqualTo("fcm-token-123");
-		assertThat(capturedEvent.getUserId()).isEqualTo(loggedInUser.getId());
-		assertThat(capturedEvent.getNotificationTypeCode()).isEqualTo(NotificationTypeCode.LOCATION_BASED.name());
-		assertThat(capturedEvent.getTitle()).isEqualTo(NotificationTypeCode.LOCATION_BASED.getDisplayName());
-		assertThat(capturedEvent.getBody()).isEqualTo(expectedContent);
-		assertThat(capturedEvent.getReferenceEntityType()).isEqualTo("gifticon");
-		assertThat(capturedEvent.getReferenceEntityId()).isEqualTo(gifticonId);
+		NotificationEventMessage capturedEventMessage = eventMessageCaptor.getValue();
+		NotificationEventDto capturedEventDto = capturedEventMessage.getEventDto();
+
+		assertThat(capturedEventDto.getFcmToken()).isEqualTo("fcm-token-123");
+		assertThat(capturedEventDto.getUserId()).isEqualTo(loggedInUser.getId());
+		assertThat(capturedEventDto.getNotificationTypeCode()).isEqualTo(NotificationTypeCode.LOCATION_BASED.name());
+		assertThat(capturedEventDto.getTitle()).isEqualTo(NotificationTypeCode.LOCATION_BASED.getDisplayName());
+		assertThat(capturedEventDto.getBody()).isEqualTo(expectedContent);
+		assertThat(capturedEventDto.getReferenceEntityType()).isEqualTo("gifticon");
+		assertThat(capturedEventDto.getReferenceEntityId()).isEqualTo(gifticonId);
 	}
 
 	// 테스트 헬퍼 메서드
