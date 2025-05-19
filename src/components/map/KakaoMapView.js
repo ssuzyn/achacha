@@ -263,9 +263,9 @@ const KakaoMapView = forwardRef(
           results.reduce((sum, brand) => sum + brand.stores.length, 0)
         );
 
-        // 전체 매장 데이터 저장 및 지도에 표시
+        // 전체 매장 데이터 저장 및 지도에 표시 (selectedBrand 함께 전달)
         window.allStoreData = results;
-        updateMapMarkers(webViewRef, results);
+        updateMapMarkers(webViewRef, results, selectedBrand);
 
         // 중요: 여기에서 부모 컴포넌트에 결과 전달 추가
         if (typeof onStoresFound === 'function') {
