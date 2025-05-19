@@ -180,13 +180,13 @@ const BoxSettingScreen = () => {
   const handleLeavePress = () => {
     if (userId && shareBoxUserId && userId === shareBoxUserId) {
       Alert.alert('알림', '쉐어박스가 모든 인원에게 삭제됩니다. 정말 나가시겠습니까?', [
-        { text: '확인', onPress: leaveShareBoxHandler },
         { text: '취소', style: 'cancel' },
+        { text: '확인', onPress: leaveShareBoxHandler },
       ]);
     } else {
       Alert.alert('알림', '쉐어박스에서 나가면 기프티콘이 회수됩니다. 정말 나가시겠습니까?', [
-        { text: '확인', onPress: leaveShareBoxHandler },
         { text: '취소', style: 'cancel' },
+        { text: '확인', onPress: leaveShareBoxHandler },
       ]);
     }
   };
