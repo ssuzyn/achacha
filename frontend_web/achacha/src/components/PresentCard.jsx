@@ -93,7 +93,7 @@ function PresentCard({ presentCard }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100" style={{ fontFamily: 'Pretendard, sans-serif' }}>
       {/* 전체 카드 컨테이너 */}
       <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
         {/* 템플릿 이미지 (배경) */}
@@ -135,11 +135,12 @@ function PresentCard({ presentCard }) {
               minHeight: '90px',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: isLongMessage ? 'flex-start' : 'center',
+              justifyContent: 'center',
               overflowY: isLongMessage ? 'hidden' : 'auto',
               cursor: isLongMessage ? 'pointer' : 'default',
               position: 'relative',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+              fontFamily: 'Pretendard, sans-serif'
             }}
             onClick={() => isLongMessage && setShowFullMessage(true)}
           >
@@ -147,7 +148,7 @@ function PresentCard({ presentCard }) {
               ref={messageRef}
               style={{ 
                 fontSize: '18px', 
-                fontWeight: 'bold', 
+                fontWeight: '600',
                 color: '#000',
                 margin: 0,
                 wordBreak: 'break-word'
@@ -246,7 +247,8 @@ function PresentCard({ presentCard }) {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                fontFamily: 'Pretendard, sans-serif'
               }}
             >
               갤러리에 저장
@@ -266,7 +268,8 @@ function PresentCard({ presentCard }) {
               borderRadius: '8px',
               margin: '15px auto',
               width: '60%',
-              textAlign: 'center'
+              textAlign: 'center',
+              fontFamily: 'Pretendard, sans-serif'
             }}>
               <svg 
                 xmlns="http://www.w3.org/2000/svg" 
@@ -287,7 +290,8 @@ function PresentCard({ presentCard }) {
                 fontSize: '14px',
                 display: 'inline-block',
                 verticalAlign: 'middle',
-                lineHeight: '18px'
+                lineHeight: '18px',
+                fontWeight: '400'
               }}>{expiryDateTime}</span>
             </div>
           )}
@@ -308,7 +312,8 @@ function PresentCard({ presentCard }) {
             justifyContent: 'center',
             alignItems: 'center',
             zIndex: 1000,
-            padding: '20px'
+            padding: '20px',
+            fontFamily: 'Pretendard, sans-serif'
           }}
           onClick={() => setShowFullMessage(false)}
         >
@@ -325,9 +330,10 @@ function PresentCard({ presentCard }) {
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            <h3 style={{ fontWeight: '700', fontSize: '20px', marginBottom: '20px' }}>메시지 전체보기</h3>
             <p style={{ 
               fontSize: '18px', 
-              fontWeight: 'semibold',
+              fontWeight: '600',
               lineHeight: '1.6',
               wordBreak: 'break-word'
             }}>
