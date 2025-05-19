@@ -39,8 +39,6 @@ export const getKakaoMapHtml = () => {
        }
 
        document.addEventListener('DOMContentLoaded', function() {
-         debugLog('DOM 로드됨, 카카오맵 SDK 로드 시작...');
-         
          const script = document.createElement('script');
          script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_MAP_API_KEY}&autoload=false';
          
@@ -62,10 +60,9 @@ export const getKakaoMapHtml = () => {
                  level: 4
                };
 
-               debugLog('지도 생성 중...');
                map = new kakao.maps.Map(mapContainer, mapOption);
                
-               debugLog('지도 생성 성공!');
+               debugLog('카카오맵 생성 성공');
                
                if (window.ReactNativeWebView) {
                  window.ReactNativeWebView.postMessage(JSON.stringify({
