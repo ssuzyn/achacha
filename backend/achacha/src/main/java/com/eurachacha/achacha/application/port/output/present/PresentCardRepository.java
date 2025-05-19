@@ -8,4 +8,6 @@ public interface PresentCardRepository {
 	boolean existsByPresentCardCode(String presentCardCode);
 
 	PresentCard findByPresentCardCode(String presentCardCode);
+
+	void deleteByGifticonId(Integer gifticonId);
 }

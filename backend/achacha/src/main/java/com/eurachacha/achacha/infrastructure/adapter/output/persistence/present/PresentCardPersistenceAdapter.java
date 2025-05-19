@@ -29,4 +29,9 @@ public class PresentCardPersistenceAdapter implements PresentCardRepository {
 		return presentCardJpaRepository.findByCodeWithDetails(presentCardCode)
 			.orElseThrow(() -> new CustomException(ErrorCode.PRESENT_CARD_NOT_FOUND));
 	}
+
+	@Override
+	public void deleteByGifticonId(Integer gifticonId) {
+		presentCardJpaRepository.deleteByGifticonId(gifticonId);
+	}
 }
