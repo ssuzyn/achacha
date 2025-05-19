@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,7 +12,7 @@ import KakaoMapView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import GeofencingService from '../services/GeofencingService';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { mapGifticonService } from '../services/mapGifticonService';
 import { geoNotificationService } from '../services/geoNotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -194,12 +194,24 @@ const MapScreen = () => {
   };
 
   // 현재 위치로 이동하는 함수
-  const moveToCurrentLocation = () => {
+  const moveToCurrentLocation = useCallback(() => {
     if (mapRef.current && mapRef.current.moveToCurrentLocation) {
-      console.log('[MapScreen] 현재 위치로 이동');
+      console.log('[MapScreen] 현재 위치로 이동 요청 (moveToCurrentLocation)');
       mapRef.current.moveToCurrentLocation();
     }
-  };
+  }, []);
+
+  // 화면 포커스 시 현재 위치로 이동
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[MapScreen] 화면 포커스됨, 현재 위치로 이동 시도');
+      moveToCurrentLocation();
+      return () => {
+        // 화면을 벗어날 때 정리할 작업이 있다면 여기에 추가
+        // console.log('[MapScreen] 화면 포커스 벗어남');
+      };
+    }, [moveToCurrentLocation])
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
