@@ -5,6 +5,20 @@ function PresentCard({ presentCard }) {
     console.error('PresentCard: 전달받은 데이터가 없습니다.');
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>선물 정보를 불러오지 못했습니다.</p></div>;
   }
+  
+  // HTML 응답 체크
+  if (typeof presentCard === 'string' && presentCard.includes('<!doctype html>')) {
+    console.error('PresentCard: HTML이 데이터로 전달되었습니다. API 응답 확인이 필요합니다.');
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-md">
+          <h2 className="font-bold mb-2">API 응답 오류</h2>
+          <p>서버가 JSON 데이터 대신 HTML을 반환했습니다.</p>
+          <p className="text-sm mt-2">서버 설정이나 API 엔드포인트를 확인해주세요.</p>
+        </div>
+      </div>
+    );
+  }
 
   // 디버깅용 콘솔 출력 (개발 확인용)
   console.log('PresentCard: 전달받은 데이터 (타입):', typeof presentCard, presentCard);
@@ -17,6 +31,19 @@ function PresentCard({ presentCard }) {
     
   if (!isValidData) {
     console.error('PresentCard: 필수 데이터가 누락되었습니다. 받은 데이터:', presentCard);
+    return (
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+        <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded max-w-md">
+          <h2 className="font-bold mb-2">데이터 형식 오류</h2>
+          <p>필수 정보가 누락되었습니다.</p>
+          <p className="text-sm mt-2">
+            {!presentCard.presentCardMessage && <span className="block">- 메시지 누락</span>}
+            {!presentCard.gifticonOriginalPath && <span className="block">- 기프티콘 이미지 누락</span>}
+            {!presentCard.templateCardPath && <span className="block">- 템플릿 카드 이미지 누락</span>}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const {

@@ -1,12 +1,29 @@
 import axios from 'axios';
 
-const API_URL = '/api/presents/cards'; // API 기본 URL, 필요에 따라 수정하세요.
+// 프록시 설정으로 인해 상대 경로 사용 (vite.config.js에서 프록시 설정됨)
+const API_URL = '/api/presents/cards'; 
 
 export const getPresentCardByCode = async (presentCardCode) => {
   try {
     console.log(`API 호출 시작: ${API_URL}/${presentCardCode}`);
-    const response = await axios.get(`${API_URL}/${presentCardCode}`);
-    // API 응답을 그대로 반환 (어떤 변환도 수행하지 않음)
+    
+    // 명시적인 Content-Type 헤더 추가
+    const response = await axios.get(`${API_URL}/${presentCardCode}`, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    // API 응답 검증
+    console.log('API 호출 응답 타입:', typeof response.data);
+    
+    // HTML 응답 감지
+    if (typeof response.data === 'string' && response.data.includes('<!doctype html>')) {
+      console.error('API가 HTML을 반환했습니다. API 서버 설정을 확인하세요.');
+      throw new Error('API가 HTML을 반환했습니다. 서버 설정을 확인하세요.');
+    }
+    
     console.log('API 호출 성공! 받은 원본 데이터:', response.data);
     
     // 응답 데이터의 구조 검증
@@ -23,12 +40,21 @@ export const getPresentCardByCode = async (presentCardCode) => {
   } catch (error) {
     if (error.response) {
       // 서버에서 응답이 왔지만 에러인 경우
-      console.error('API Error:', error.response.data);
+      console.error('API Error Status:', error.response.status);
+      console.error('API Error Headers:', error.response.headers);
+      console.error('API Error Data:', error.response.data);
+      
+      // HTML 응답 감지
+      if (typeof error.response.data === 'string' && error.response.data.includes('<!doctype html>')) {
+        console.error('API가 HTML 에러 페이지를 반환했습니다. 백엔드 로그를 확인하세요.');
+        throw new Error('API가 HTML을 반환했습니다. 서버 설정을 확인하세요.');
+      }
+      
       throw new Error(error.response.data.message || '선물카드를 불러오는데 실패했습니다.');
     } else if (error.request) {
       // 요청은 보냈지만 응답이 없는 경우
       console.error('Network Error:', error.request);
-      throw new Error('서버와 통신할 수 없습니다. 네트워크 연결을 확인해주세요.');
+      throw new Error('서버와 통신할 수 없습니다. 네트워크 연결 또는 CORS 설정을 확인해주세요.');
     } else {
       // 요청 설정 중 에러가 발생한 경우
       console.error('Error:', error.message);

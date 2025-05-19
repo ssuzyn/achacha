@@ -17,6 +17,13 @@ function PresentPage() {
           console.log(`PresentPage: presentCardCode=${presentCardCode} 데이터 요청 시작`);
           
           const data = await getPresentCardByCode(presentCardCode);
+          
+          // HTML 응답 체크
+          if (typeof data === 'string' && data.includes('<!doctype html>')) {
+            console.error('PresentPage: API가 HTML을 반환했습니다');
+            throw new Error('API가 HTML을 반환했습니다. 서버 설정을 확인하세요.');
+          }
+          
           console.log('PresentPage: API 응답 데이터 수신 완료', data);
           
           // 데이터 검증
@@ -36,7 +43,19 @@ function PresentPage() {
           setError(null);
         } catch (err) {
           console.error('PresentPage: 선물 카드 데이터 요청 실패:', err);
-          setError(err.response?.data?.message || err.message || '선물 카드를 불러오는 데 실패했습니다. 링크가 만료되었거나 유효하지 않을 수 있습니다.');
+          
+          // 사용자 친화적인 오류 메시지
+          let errorMessage = '선물 카드를 불러오는 데 실패했습니다.';
+          
+          if (err.message.includes('HTML')) {
+            errorMessage = 'API 서버 구성 오류: HTML 응답이 반환되었습니다. 관리자에게 문의하세요.';
+          } else if (err.message.includes('Network Error')) {
+            errorMessage = '네트워크 오류: 서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.';
+          } else if (err.response?.status === 404) {
+            errorMessage = '선물 카드를 찾을 수 없습니다. 링크가 만료되었거나 유효하지 않습니다.';
+          }
+          
+          setError(errorMessage);
           setPresentCardData(null);
         }
         setLoading(false);
@@ -67,6 +86,7 @@ function PresentPage() {
     return <div className="flex justify-center items-center h-screen">선물 카드 정보를 찾을 수 없습니다.</div>;
   }
 
+  // API로부터 받은 데이터 그대로 PresentCard 컴포넌트에 전달
   return <PresentCard presentCard={presentCardData} />;
 }
 
