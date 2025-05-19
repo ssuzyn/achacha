@@ -245,7 +245,11 @@ const DetailAmountHistoryScreen = () => {
           text: '확인',
           onPress: () => {
             // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
-            NavigationService.goBack({ refresh: true });
+            navigation.navigate('DetailAmountScreen', {
+              gifticonId: gifticonId,
+              scope: scope,
+              refresh: true,
+            });
           },
         },
       ]);
@@ -326,7 +330,11 @@ const DetailAmountHistoryScreen = () => {
                 text: '확인',
                 onPress: () => {
                   // DetailAmountScreen으로 돌아가고 refresh 플래그 전달
-                  NavigationService.goBack({ refresh: true });
+                  navigation.navigate('DetailAmountScreen', {
+                    gifticonId: gifticonId,
+                    scope: scope,
+                    refresh: true,
+                  });
                 },
               },
             ]);

@@ -93,13 +93,21 @@ const DetailAmountScreen = () => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       showTabBar();
+
+      // 화면에 포커스가 있을 때마다 데이터 새로고침
+      if (gifticonId) {
+        console.log('[DetailAmountScreen] 화면 포커스 - 데이터 새로고침:', gifticonId);
+        loadGifticonData(gifticonId);
+        // 사용하기 모드 종료
+        setIsUsing(false);
+      }
     });
 
     // 초기 로드 시에도 바텀탭 표시
     showTabBar();
 
     return unsubscribe;
-  }, [navigation, showTabBar]);
+  }, [navigation, showTabBar, gifticonId]);
 
   // route.params에서 scope, gifticonId를 가져오는 부분
   useEffect(() => {
@@ -110,6 +118,9 @@ const DetailAmountScreen = () => {
         isSharer: newIsSharer,
         refresh,
       } = route.params;
+
+      console.log('[DetailAmountScreen] 라우트 파라미터 변경:', route.params);
+
       if (newScope) {
         setScope(newScope);
       }
@@ -119,11 +130,14 @@ const DetailAmountScreen = () => {
       if (newIsSharer !== undefined) {
         setIsSharer(newIsSharer);
       }
-      // refresh 플래그가 true이면 데이터 다시 로드
-      if (refresh && (newGifticonId || gifticonId)) {
+
+      // refresh 플래그가 true이거나 새 gifticonId가 있을 경우 데이터 다시 로드
+      if ((refresh || newGifticonId !== gifticonId) && (newGifticonId || gifticonId)) {
         console.log(
           '[DetailAmountScreen] 데이터 새로고침 요청 - 기프티콘 ID:',
-          newGifticonId || gifticonId
+          newGifticonId || gifticonId,
+          '리프레시:',
+          refresh
         );
         loadGifticonData(newGifticonId || gifticonId);
         // 사용하기 모드 종료
@@ -392,6 +406,7 @@ const DetailAmountScreen = () => {
       gifticonId: gifticonData.gifticonId,
       brandName: gifticonData.brandName,
       gifticonName: gifticonData.gifticonName,
+      scope: scope,
     });
   };
 
@@ -458,6 +473,7 @@ const DetailAmountScreen = () => {
           usedAmount: amount,
           brandName: gifticonData.brandName,
           gifticonName: gifticonData.gifticonName,
+          scope: scope,
         });
       }
     } catch (error) {
