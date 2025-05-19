@@ -9,4 +9,6 @@ public interface GifticonGiveAppService {
 	void giveAwayGifticon(Integer gifticonId, List<String> uuids);
 
 	GifticonPresentResponseDto presentGifticon(Integer gifticonId, GifticonPresentRequestDto gifticonPresentRequestDto);
+
+	void cancelPresentGifticon(Integer gifticonId);
 }

@@ -181,6 +181,26 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 			.build();
 	}
 
+	@Override
+	@Transactional
+	public void cancelPresentGifticon(Integer gifticonId) {
+		Gifticon gifticon = gifticonRepository.findById(gifticonId);
+
+		// 기프티콘 사용 완료 취소
+		gifticon.cancelUse();
+
+		// 금액형 잔액 되돌리기
+		if(gifticon.getType() == GifticonType.AMOUNT) {
+			gifticon.updateRemainingAmount(gifticon.getOriginalAmount());
+		}
+		
+		// 기프티콘 소유자 변경 내역 삭제
+		gifticonOwnerHistoryRepository.deleteByGifticonId(gifticonId);
+		
+		// 선물 카드 삭제
+		presentCardRepository.deleteByGifticonId(gifticonId);
+	}
+
 	private String getRandomUuid(List<String> validUuids) {
 		Random random = new Random();
 		return validUuids.get(random.nextInt(validUuids.size()));
