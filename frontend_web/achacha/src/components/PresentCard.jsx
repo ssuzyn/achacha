@@ -2,73 +2,84 @@ import React from 'react';
 
 function PresentCard({ presentCard }) {
   if (!presentCard) {
-    // 데이터가 로드되지 않았거나 오류 발생 시 아무것도 표시하지 않음
-    // PresentPage에서 로딩 및 오류 UI를 처리하므로 여기서는 null 반환 유지 가능
-    return null;
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>선물 정보를 불러오지 못했습니다.</p></div>;
   }
 
-  // API 응답 데이터 구조
+  // 디버깅용 콘솔 출력 (개발 확인용)
+  console.log('PresentCard에 전달된 데이터:', presentCard);
+
   const {
-    presentCardMessage: message,
-    gifticonOriginalPath: gifticonImageUrl,
+    presentCardCode,
+    presentCardMessage,
+    gifticonOriginalPath,
+    gifticonThumbnailPath,
     templateCardPath,
     expiryDateTime
   } = presentCard;
 
-  // 템플릿 타입 판단 (GENERAL 여부)
-  const fileName = templateCardPath ? templateCardPath.substring(templateCardPath.lastIndexOf('/') + 1) : '';
-  const isGeneralTemplate = fileName.toLowerCase().startsWith('general_');
-  
-  // GENERAL 템플릿인 경우 색상 코드 추출
-  let backgroundColor = 'transparent';
-  if (isGeneralTemplate) {
-    const parts = fileName.split('_');
-    if (parts.length > 1) {
-      backgroundColor = `#${parts[1].split('.')[0]}`; // e.g., "FFDC4F"
-    }
-  }
+  // 디버깅용 콘솔 출력 (개발 확인용)
+  console.log('구조분해할당 후 데이터:', {
+    presentCardCode,
+    presentCardMessage,
+    gifticonOriginalPath,
+    gifticonThumbnailPath,
+    templateCardPath,
+    expiryDateTime
+  });
+
+  // 브라우저에서 이미지 저장 기능
+  const handleSaveImage = () => {
+    // 카드 이미지를 새 창에서 열기 (사용자가 직접 저장할 수 있도록)
+    window.open(gifticonOriginalPath, '_blank');
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 font-sans">
-      <div
-        className="present-card-container w-full max-w-md rounded-xl shadow-2xl overflow-hidden my-8"
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <div 
+        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-lg"
         style={{
-          backgroundColor: isGeneralTemplate ? backgroundColor : 'transparent',
-          backgroundImage: !isGeneralTemplate ? `url(${templateCardPath})` : 'none',
+          backgroundImage: `url(${templateCardPath})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          aspectRatio: '9/16',
-          display: 'flex',
-          flexDirection: 'column'
+          aspectRatio: '3/5', // 카드 비율 조정
         }}
       >
-        <div className={`present-card p-6 sm:p-8 flex flex-col flex-grow justify-between ${isGeneralTemplate ? 'text-black' : 'text-white'}`}>
-          <div className="message-area mb-6 min-h-[120px] flex-grow">
-            <p className="text-xl sm:text-2xl leading-relaxed whitespace-pre-wrap break-words filter drop-shadow-sm">
-              {message}
-            </p>
+        {/* 메시지 영역 */}
+        <div className="flex flex-col items-center pt-40 px-5 pb-5">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-800">{presentCardMessage}</h2>
           </div>
-
-          {gifticonImageUrl && (
-            <div className="gifticon-area border-t border-gray-300 pt-6 mt-auto">
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-center filter drop-shadow-sm">
-                받으신 선물
-              </h3>
-              <img
-                src={gifticonImageUrl}
-                alt="기프티콘 이미지"
-                className="w-full h-auto rounded-lg object-contain max-h-80 sm:max-h-96 mx-auto shadow-md"
+          
+          {/* 점선 구분선 */}
+          <div className="w-full border-t border-dashed border-gray-400 my-4"></div>
+          
+          {/* 기프티콘 이미지 영역 */}
+          <div className="w-full flex justify-center my-4">
+            <div className="rounded-lg border-2 border-blue-300 overflow-hidden w-64 h-64 bg-white flex items-center justify-center">
+              <img 
+                src={gifticonOriginalPath}
+                alt="기프티콘" 
+                className="max-w-full max-h-full object-contain"
               />
-              {expiryDateTime && (
-                <p className="text-xs text-center mt-2 text-gray-500">
-                  유효기간: {expiryDateTime}
-                </p>
-              )}
             </div>
-          )}
+          </div>
+          
+          {/* 갤러리에 저장 버튼 */}
+          <button
+            onClick={handleSaveImage}
+            className="mt-6 bg-blue-100 text-blue-600 font-semibold py-3 px-6 rounded-full w-full"
+          >
+            갤러리에 저장
+          </button>
         </div>
       </div>
-      <p className="mt-4 mb-8 text-sm text-gray-600">선물을 확인했습니다!</p>
+      
+      {/* 유효기간 정보 */}
+      {expiryDateTime && (
+        <div className="mt-4 text-sm text-gray-500">
+          유효기간: {expiryDateTime}
+        </div>
+      )}
     </div>
   );
 }

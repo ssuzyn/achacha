@@ -5,47 +5,9 @@ const API_URL = '/api/presents/cards'; // API 기본 URL, 필요에 따라 수�
 export const getPresentCardByCode = async (presentCardCode) => {
   try {
     const response = await axios.get(`${API_URL}/${presentCardCode}`);
-    
-    // API 응답 데이터 구조 확인
-    const {
-      presentCardCode: code,
-      presentCardMessage: message,
-      gifticonOriginalPath,
-      gifticonThumbnailPath,
-      templateCardPath,
-      expiryDateTime
-    } = response.data;
-
-    // templateCardPath에서 템플릿 정보 추출
-    const fileName = templateCardPath ? templateCardPath.substring(templateCardPath.lastIndexOf('/') + 1) : '';
-    const isGeneralTemplate = fileName.toLowerCase().startsWith('general_');
-    
-    // GENERAL 템플릿인 경우 색상 코드 추출
-    let colorCode = 'transparent';
-    if (isGeneralTemplate) {
-      const parts = fileName.split('_');
-      if (parts.length > 1) {
-        colorCode = parts[1].split('.')[0]; // e.g., "FFDC4F"
-      }
-    }
-
-    // PresentCard 컴포넌트가 기대하는 형태로 데이터 구조화
-    return {
-      template: {
-        category: isGeneralTemplate ? 'GENERAL' : 'CUSTOM',
-        templateImageUrl: !isGeneralTemplate ? templateCardPath : null
-      },
-      color: {
-        code: isGeneralTemplate ? `#${colorCode}` : 'transparent'
-      },
-      message: message,
-      gifticon: {
-        imageUrl: gifticonOriginalPath,
-        thumbnailUrl: gifticonThumbnailPath,
-        name: '선물 이미지' // API 응답에 기프티콘 이름이 있다면 추가
-      },
-      expiryDateTime: expiryDateTime
-    };
+    // API 응답을 그대로 반환 (어떤 변환도 수행하지 않음)
+    console.log('API로부터 받은 원본 데이터:', response.data);
+    return response.data;
   } catch (error) {
     if (error.response) {
       // 서버에서 응답이 왔지만 에러인 경우
