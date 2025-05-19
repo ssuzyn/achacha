@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { isMobile, isTablet } from 'react-device-detect';
 
 // SCSS 변수값에 해당하는 상수 정의
 const colorEnv = '#0077B2';
@@ -50,7 +51,10 @@ function PresentCard({ presentCard }) {
   // 애니메이션 상태
   const [showEnvelope, setShowEnvelope] = useState(true);
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
-
+  
+  // 화면 크기 감지를 위한 상태
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  
   // 기존 PresentCard 상태
   const [showFullMessage, setShowFullMessage] = useState(false);
   const messageRef = useRef(null);
@@ -252,6 +256,85 @@ function PresentCard({ presentCard }) {
     };
   }, [runConfetti]); // runConfetti 상태에 따라 이 효과를 재실행
   // --- 컨페티 애니메이션 효과 끝 ---
+
+  // 화면 크기 변경 감지
+  useEffect(() => {
+    const handleWindowResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleWindowResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  }, []);
+  
+  // 템플릿 내 컴포넌트 위치 계산 함수
+  const calculateTopPosition = () => {
+    if (screenWidth < 460) {
+      // 스크린 너비가 460px 미만일 때는 top 값을 줄임
+      return 240;
+    } else if (screenWidth < 600) {
+      // 600px 미만일 때는 중간 위치
+      return 240;
+    } else {
+      // 그 이상일 때는 기존 값 유지
+      return 230;
+    }
+  };
+  
+  // 스케일링 수치 계산 (반응형을 위한 비율 조정)
+  const calculateScaling = () => {
+    if (screenWidth < 360) {
+      return 0.85; // 매우 작은 화면
+    } else if (screenWidth < 460) {
+      return 0.9; // 작은 화면
+    } else {
+      return 1; // 기본 크기
+    }
+  };
+  
+  // 화면 너비에 따른 템플릿 내 요소들의 여백 및 크기 조정
+  const getResponsiveStyles = () => {
+    const scale = calculateScaling();
+    
+    return {
+      messageContainerStyle: {
+        width: `${isMobile ? '90%' : '80%'}`,
+        marginTop: `${isMobile ? '2%' : '5%'}`,
+        padding: `${isMobile ? '15px' : '20px'}`,
+        minHeight: `${isMobile ? (70 * scale) : 90}px`,
+        height: `${isMobile ? (70 * scale) : 90}px`,
+      },
+      gifticonContainerStyle: {
+        width: `${isMobile ? '90%' : '80%'}`,
+        marginTop: `${isMobile ? '5px' : '10px'}`,
+        padding: `${isMobile ? '8px' : '10px'}`,
+      },
+      thumbnailSize: {
+        width: `${isMobile ? '70px' : '80px'}`,
+        marginBottom: `${isMobile ? '5px' : '10px'}`
+      },
+      buttonStyle: {
+        height: `${isMobile ? '30px' : '35px'}`,
+        padding: `${isMobile ? '8px' : '12px'}`,
+      },
+      dividerStyle: {
+        margin: `${isMobile ? '5px 0' : '10px 0'}`
+      },
+      expiryContainerStyle: {
+        margin: `${isMobile ? '10px auto' : '15px auto'}`,
+        padding: `${isMobile ? '6px 10px' : '8px 12px'}`,
+      },
+      modalStyle: {
+        padding: `${isMobile ? '20px' : '30px'}`,
+        width: `${isMobile ? '95%' : '90%'}`,
+        maxWidth: `${isMobile ? '320px' : '500px'}`,
+        borderRadius: `${isMobile ? '12px' : '16px'}`,
+      }
+    };
+  };
 
   // 편지봉투 애니메이션 JSX
   if (showEnvelope) {
@@ -521,6 +604,9 @@ function PresentCard({ presentCard }) {
     document.body.removeChild(link);
   };
 
+  // 반응형 스타일 가져오기
+  const responsiveStyles = getResponsiveStyles();
+
   return (
     <>
       {/* --- 컨페티 캔버스 --- */}
@@ -560,7 +646,7 @@ function PresentCard({ presentCard }) {
           {/* 컨텐츠 오버레이 */}
           <div style={{ 
             position: 'absolute', 
-            top: 145, 
+            top: calculateTopPosition(), 
             left: '50%', 
             width: '90%', 
             height: 'auto',
@@ -568,20 +654,20 @@ function PresentCard({ presentCard }) {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            transform: 'translateX(-50%)'
+            transform: `translateX(-50%) ${screenWidth < 460 ? 'scale(' + calculateScaling() + ')' : ''}`
           }}>
             {/* 메시지 영역 */}
             <div 
               style={{ 
                 backgroundColor: 'white', 
                 borderRadius: '12px',
-                padding: '20px',
-                width: '80%',
-                marginTop: '5%',
+                padding: responsiveStyles.messageContainerStyle.padding,
+                width: responsiveStyles.messageContainerStyle.width,
+                marginTop: responsiveStyles.messageContainerStyle.marginTop,
                 marginBottom: '10px',
                 textAlign: 'center',
-                height: '90px',
-                minHeight: '90px',
+                height: responsiveStyles.messageContainerStyle.height,
+                minHeight: responsiveStyles.messageContainerStyle.minHeight,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
@@ -596,7 +682,7 @@ function PresentCard({ presentCard }) {
               <p 
                 ref={messageRef}
                 style={{ 
-                  fontSize: '18px', 
+                  fontSize: `${isMobile ? '16px' : '18px'}`, 
                   fontWeight: '600',
                   color: '#000',
                   margin: 0,
@@ -625,23 +711,23 @@ function PresentCard({ presentCard }) {
             
             {/* 구분선 */}
             <div style={{ 
-              width: '80%', 
+              width: responsiveStyles.messageContainerStyle.width, 
               height: '1px',
               background: 'linear-gradient(to right, #6E6E6E 50%, transparent 50%)',
               backgroundSize: '16px 2px',
-              margin: '10px 0'
+              margin: responsiveStyles.dividerStyle.margin
             }}></div>
             
             {/* 기프티콘 영역 - 하나의 흰색 컨테이너로 통합 */}
             <div style={{ 
-              width: '80%',
+              width: responsiveStyles.gifticonContainerStyle.width,
               backgroundColor: '#FFFFFF',
               borderRadius: '12px',
-              padding: '10px',
+              padding: responsiveStyles.gifticonContainerStyle.padding,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              marginTop: '10px',
+              marginTop: responsiveStyles.gifticonContainerStyle.marginTop,
               boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
             }}>
               {/* 썸네일 이미지 */}
@@ -649,13 +735,13 @@ function PresentCard({ presentCard }) {
                 border: '1px solid #3B82F6',
                 borderRadius: '8px',
                 padding: '2px',
-                marginBottom: '10px'
+                marginBottom: responsiveStyles.thumbnailSize.marginBottom
               }}>
                 <img 
                   src={gifticonThumbnailPath || gifticonOriginalPath} 
                   alt="기프티콘 썸네일" 
                   style={{ 
-                    width: '80px',
+                    width: responsiveStyles.thumbnailSize.width,
                     height: 'auto',
                     display: 'block'
                   }}
@@ -688,16 +774,17 @@ function PresentCard({ presentCard }) {
                   backgroundColor: '#E8F4FC',
                   color: '#3669A1',
                   fontWeight: '500',
-                  padding: '12px',
+                  padding: responsiveStyles.buttonStyle.padding,
                   borderRadius: '8px',
-                  height: '35px',
+                  height: responsiveStyles.buttonStyle.height,
                   width: '90%',
                   border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontFamily: 'Pretendard, sans-serif'
+                  fontFamily: 'Pretendard, sans-serif',
+                  fontSize: `${isMobile ? '14px' : '16px'}`
                 }}
               >
                 갤러리에 저장
@@ -713,9 +800,9 @@ function PresentCard({ presentCard }) {
                 justifyContent: 'center',
                 backgroundColor: 'rgba(0, 0, 0, 0.3)',
                 color: 'white',
-                padding: '8px 12px',
+                padding: responsiveStyles.expiryContainerStyle.padding,
                 borderRadius: '8px',
-                margin: '15px auto',
+                margin: responsiveStyles.expiryContainerStyle.margin,
                 width: '60%',
                 textAlign: 'center',
                 fontFamily: 'Pretendard, sans-serif'
@@ -725,8 +812,8 @@ function PresentCard({ presentCard }) {
                   viewBox="0 0 24 24" 
                   fill="currentColor"
                   style={{ 
-                    width: '18px', 
-                    height: '18px', 
+                    width: `${isMobile ? '16px' : '18px'}`, 
+                    height: `${isMobile ? '16px' : '18px'}`, 
                     marginRight: '6px',
                     verticalAlign: 'middle',
                     position: 'relative',
@@ -736,7 +823,7 @@ function PresentCard({ presentCard }) {
                   <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.53614 4 7.33243 5.11383 5.86492 6.86543L8 9H2V3L4.44656 5.44648C6.28002 3.33509 8.9841 2 12 2ZM13 7L12.9998 11.585L16.2426 14.8284L14.8284 16.2426L10.9998 12.413L11 7H13Z"></path>
                 </svg>
                 <span style={{ 
-                  fontSize: '14px',
+                  fontSize: `${isMobile ? '12px' : '14px'}`,
                   display: 'inline-block',
                   verticalAlign: 'middle',
                   lineHeight: '18px',
@@ -769,19 +856,19 @@ function PresentCard({ presentCard }) {
             <div 
               style={{
                 backgroundColor: 'white',
-                borderRadius: '16px',
-                padding: '30px',
-                width: '90%',
-                maxWidth: '500px',
+                borderRadius: responsiveStyles.modalStyle.borderRadius,
+                padding: responsiveStyles.modalStyle.padding,
+                width: responsiveStyles.modalStyle.width,
+                maxWidth: responsiveStyles.modalStyle.maxWidth,
                 maxHeight: '80%',
                 overflowY: 'auto',
                 position: 'relative'
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 style={{ fontWeight: '700', fontSize: '20px', marginBottom: '20px' }}>메시지 전체보기</h3>
+              <h3 style={{ fontWeight: '700', fontSize: `${isMobile ? '18px' : '20px'}`, marginBottom: `${isMobile ? '15px' : '20px'}` }}>메시지 전체보기</h3>
               <p style={{ 
-                fontSize: '18px', 
+                fontSize: `${isMobile ? '16px' : '18px'}`, 
                 fontWeight: '600',
                 lineHeight: '1.6',
                 wordBreak: 'break-word'
