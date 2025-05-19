@@ -18,6 +18,34 @@ const flapBorderBottomWidth = 'calc(180px / 2 - 8px)'; // calc(${halfEnvHeight} 
 const flapBorderTopWidth = 'calc(180px / 2 + 8px)';    // calc(${halfEnvHeight} + 8px) -> 98px
 const letterTransformY = '-60px'; // -(180px / 3)
 
+// --- 컨페티 관련 설정 ---
+const confettiColors = ['#3788c7', '#f298be', '#f6e25b', '#8a5bac', '#00a944', '#ec2a28', '#43c4c0', '#f4b92f'];
+const initialConfettiCount = 50; // 초기 터지는 컨페티 수 (150 -> 50으로 줄임)
+const maxConfettiParticles = 200; // 최대 컨페티 입자 수 (600 -> 200으로 줄임)
+
+// 컨페티 입자 생성 함수 (컴포넌트 외부에 정의)
+const createConfettiParticle = (x, y, i, minVelocity, canvasWidth) => {
+  const angle = Math.random() * (Math.PI * 2);
+  const amount = Math.random() * 8.0 + (minVelocity * 0.7);
+  const vx = Math.sin(angle) * amount;
+  const vy = Math.cos(angle) * amount * 0.5 + (Math.random() * 2 + 1);
+
+  return {
+    x: x,
+    y: y,
+    vx: vx,
+    vy: vy,
+    width: (Math.random() * 15) + 8,
+    height: (Math.random() * 20) + 8,
+    color: confettiColors[i % confettiColors.length],
+    circle: (Math.random() > 0.8),
+    rotate: Math.random() * 360,
+    direction: (Math.random() * 10) - 5,
+    fallSpeed: (Math.random() / 12) + 0.08,
+  };
+};
+// --- 컨페티 관련 설정 끝 ---
+
 function PresentCard({ presentCard }) {
   // 애니메이션 상태
   const [showEnvelope, setShowEnvelope] = useState(true);
@@ -27,6 +55,14 @@ function PresentCard({ presentCard }) {
   const [showFullMessage, setShowFullMessage] = useState(false);
   const messageRef = useRef(null);
   const [isLongMessage, setIsLongMessage] = useState(false);
+
+  // --- 컨페티 상태 및 Ref ---
+  const [runConfetti, setRunConfetti] = useState(false);
+  const confettiCanvasRef = useRef(null);
+  const animationFrameIdRef = useRef(null);
+  const confettiItemsRef = useRef([]);
+  const confettiGenStartTimeRef = useRef(0);
+  // --- 컨페티 상태 및 Ref 끝 ---
 
   // 애니메이션 로직
   useEffect(() => {
@@ -53,6 +89,158 @@ function PresentCard({ presentCard }) {
       setIsLongMessage(lines > 3);
     }
   }, [showEnvelope, presentCard?.presentCardMessage, showFullMessage]); // showFullMessage 추가하여 모달 닫힐 때 재계산
+
+  // --- 컨페티 시작/중지 로직 ---
+  useEffect(() => {
+    if (!showEnvelope) { // 편지봉투 애니메이션 끝나고 카드 보일 때
+      setRunConfetti(true);
+      confettiGenStartTimeRef.current = Date.now(); // 새 입자 생성 시작 시간 기록
+
+      const confettiTimer = setTimeout(() => {
+        setRunConfetti(false);
+      }, 5000); // 5초 후 컨페티 중지
+
+      return () => clearTimeout(confettiTimer);
+    }
+  }, [showEnvelope]);
+  // --- 컨페티 시작/중지 로직 끝 ---
+
+  // --- 컨페티 애니메이션 효과 ---
+  useEffect(() => {
+    if (!runConfetti || !confettiCanvasRef.current) {
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+      }
+      if (confettiCanvasRef.current) {
+        const canvas = confettiCanvasRef.current;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      confettiItemsRef.current = []; // 입자 배열 초기화
+      return;
+    }
+
+    const canvas = confettiCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    let canvasWidth = window.innerWidth;
+    let canvasHeight = window.innerHeight;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+
+    // 초기 입자 생성
+    if (confettiItemsRef.current.length === 0) {
+        for (let i = 0; i < initialConfettiCount; i++) {
+            confettiItemsRef.current.push(
+            createConfettiParticle(canvasWidth / 2, canvasHeight / 3, i, 10, canvasWidth)
+            );
+        }
+    }
+    
+    let lastTime = Date.now();
+
+    const renderConfettiFrame = () => {
+      if (!runConfetti && confettiItemsRef.current.length === 0) { // 이미 중지되었고 입자도 없으면 루프 종료
+        if (animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+        return;
+      }
+
+      const currentTime = Date.now();
+      const deltaTime = (currentTime - lastTime) / (1000 / 60); // 60FPS 기준 delta
+      lastTime = currentTime;
+
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+      // 추가 입자 생성 (처음 2초 동안)
+      if (runConfetti && currentTime - confettiGenStartTimeRef.current < 2000) {
+        if (confettiItemsRef.current.length < maxConfettiParticles) {
+          for (let k = 0; k < 2; k++) { // 매 프레임마다 추가 입자 수 (5 -> 2로 줄임)
+            confettiItemsRef.current.push(
+              createConfettiParticle(Math.random() * canvasWidth, -20, confettiItemsRef.current.length, 10, canvasWidth)
+            );
+          }
+        }
+      }
+      
+      let activeParticles = 0;
+      confettiItemsRef.current.forEach((item, index) => {
+        if (item.y > canvasHeight + item.height * 2 && item.vy > 0) { // 화면 아래로 사라진 입자는 건너뛰기 (배열에서 제거는 복잡하므로)
+             if (!runConfetti) { // 중지 명령 후 화면 밖으로 나간 입자는 그냥 두어 자연스럽게 사라지도록
+                // confettiItemsRef.current.splice(index, 1); // runConfetti false면 더이상 추가 안되므로 그냥두면 됨.
+             }
+             // return; // 활성 입자 카운트에서 제외
+        } else {
+            activeParticles++;
+        }
+
+
+        item.vx *= (1.0 - 0.02 * deltaTime); // X축 공기저항/감속 (레퍼런스보다 약간 줄임)
+        item.vy += (deltaTime * item.fallSpeed); // 중력
+        // item.vy /= (1.0 + 0.05 * deltaTime); // Y축 감속 (레퍼런스 스타일, 필요시 활성화)
+
+        item.x += (deltaTime * item.vx);
+        item.y += (deltaTime * item.vy);
+        item.rotate += (deltaTime * item.direction);
+
+        ctx.fillStyle = item.color;
+        if (item.circle) {
+          ctx.beginPath();
+          ctx.arc(item.x, item.y, item.width / 2, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.closePath();
+        } else {
+          ctx.save();
+          ctx.translate(item.x, item.y);
+          ctx.rotate(item.rotate * Math.PI / 180);
+          ctx.fillRect(-item.width / 2, -item.height / 2, item.width, item.height);
+          ctx.restore();
+        }
+      });
+
+      // runConfetti가 false가 되었고, 모든 입자가 화면 밖으로 나갔거나 매우 적으면 최종 정리
+      if (!runConfetti && activeParticles === 0 && confettiItemsRef.current.length > 0) {
+          confettiItemsRef.current = []; // 모든 입자 제거
+          ctx.clearRect(0,0, canvasWidth, canvasHeight);
+          if(animationFrameIdRef.current) cancelAnimationFrame(animationFrameIdRef.current);
+          return;
+      }
+      
+      // runConfetti가 true이거나, false라도 아직 활성 입자가 있으면 계속 애니메이션
+      if (runConfetti || activeParticles > 0) {
+        animationFrameIdRef.current = requestAnimationFrame(renderConfettiFrame);
+      } else {
+        ctx.clearRect(0,0,canvasWidth,canvasHeight); // 모든 애니메이션 종료 후 최종 클리어
+        confettiItemsRef.current = [];
+      }
+    };
+
+    renderConfettiFrame();
+
+    const handleResize = () => {
+      canvasWidth = window.innerWidth;
+      canvasHeight = window.innerHeight;
+      if (canvas) {
+        canvas.width = canvasWidth;
+        canvas.height = canvasHeight;
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
+      // 컴포넌트 언마운트 시 클린업
+      if(ctx) {
+        ctx.clearRect(0,0,canvasWidth,canvasHeight);
+      }
+      confettiItemsRef.current = [];
+    };
+  }, [runConfetti]); // runConfetti 상태에 따라 이 효과를 재실행
+  // --- 컨페티 애니메이션 효과 끝 ---
 
   // 편지봉투 애니메이션 JSX
   if (showEnvelope) {
@@ -323,261 +511,282 @@ function PresentCard({ presentCard }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100" style={{ fontFamily: 'Pretendard, sans-serif' }}>
-      {/* 전체 카드 컨테이너 */}
-      <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
-        {/* 템플릿 이미지 (배경) */}
-        <img 
-          src={templateCardPath} 
-          alt="템플릿 카드" 
-          style={{ 
-            width: '100%', 
-            display: 'block',
-            borderRadius: '8px',
-            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
-          }} 
-        />
-        
-        {/* 컨텐츠 오버레이 */}
-        <div style={{ 
-          position: 'absolute', 
-          top: 145, 
-          left: '50%', 
-          width: '90%', 
-          height: 'auto',
-          minHeight: '80%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          transform: 'translateX(-50%)'
-        }}>
-          {/* 메시지 영역 */}
-          <div 
-            style={{ 
-              backgroundColor: 'white', 
-              borderRadius: '12px',
-              padding: '20px',
-              width: '80%',
-              marginTop: '5%',
-              marginBottom: '10px',
-              textAlign: 'center',
-              height: '90px',
-              minHeight: '90px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              overflowY: isLongMessage && !showFullMessage ? 'hidden' : 'auto',
-              cursor: isLongMessage ? 'pointer' : 'default',
-              position: 'relative',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-              fontFamily: 'Pretendard, sans-serif'
-            }}
-            onClick={() => isLongMessage && setShowFullMessage(true)}
-          >
-            <p 
-              ref={messageRef}
-              style={{ 
-                fontSize: '18px', 
-                fontWeight: '600',
-                color: '#000',
-                margin: 0,
-                wordBreak: 'break-word'
-              }}
-            >
-              {displayMessage.split('\n').map((line, i) => (
-                <React.Fragment key={i}>
-                  {line}
-                  {i < displayMessage.split('\n').length - 1 && <br />}
-                </React.Fragment>
-              ))}
-            </p>
-            {isLongMessage && !showFullMessage && (
-              <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                width: '100%',
-                height: '30px',
-                background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)',
-                pointerEvents: 'none'
-              }}></div>
-            )}
-          </div>
-          
-          {/* 구분선 */}
-          <div style={{ 
-            width: '80%', 
-            height: '1px',
-            background: 'linear-gradient(to right, #6E6E6E 50%, transparent 50%)',
-            backgroundSize: '16px 2px',
-            margin: '10px 0'
-          }}></div>
-          
-          {/* 기프티콘 영역 - 하나의 흰색 컨테이너로 통합 */}
-          <div style={{ 
-            width: '80%',
-            backgroundColor: '#FFFFFF',
-            borderRadius: '12px',
-            padding: '10px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            marginTop: '10px',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
-          }}>
-            {/* 썸네일 이미지 */}
-            <div style={{ 
-              border: '1px solid #3B82F6',
-              borderRadius: '8px',
-              padding: '2px',
-              marginBottom: '10px'
-            }}>
-              <img 
-                src={gifticonThumbnailPath || gifticonOriginalPath} 
-                alt="기프티콘 썸네일" 
-                style={{ 
-                  width: '80px',
-                  height: 'auto',
-                  display: 'block'
-                }}
-                onError={(e) => {
-                  console.error('썸네일 이미지 로드 실패:', e);
-                  if (e.target.src.includes('fallback-image.png')) {
-                    e.target.onerror = null;
-                    return;
-                  }
-                  
-                  if (gifticonOriginalPath && e.target.src !== gifticonOriginalPath) {
-                    e.target.src = gifticonOriginalPath;
-                    e.target.onerror = (e2) => {
-                      console.error('원본 이미지도 로드 실패:', e2);
-                      e2.target.src = "/fallback-image.png";
-                      e2.target.onerror = null;
-                    };
-                  } else {
-                    e.target.src = "/fallback-image.png";
-                    e.target.onerror = null;
-                  }
-                }}
-              />
-            </div>
-            
-            {/* 갤러리에 저장 버튼 */}
-            <button 
-              onClick={handleSaveImage} 
-              style={{ 
-                backgroundColor: '#E8F4FC',
-                color: '#3669A1',
-                fontWeight: '500',
-                padding: '12px',
-                borderRadius: '8px',
-                height: '35px',
-                width: '90%',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontFamily: 'Pretendard, sans-serif'
-              }}
-            >
-              갤러리에 저장
-            </button>
-          </div>
-
-          {/* 유효기간 정보 - 검정색 배경(40% 불투명도)과 시계 아이콘 */}
-          {expiryDateTime && (
-            <div style={{
-              display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              color: 'white',
-              padding: '8px 12px',
-              borderRadius: '8px',
-              margin: '15px auto',
-              width: '60%',
-              textAlign: 'center',
-              fontFamily: 'Pretendard, sans-serif'
-            }}>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                viewBox="0 0 24 24" 
-                fill="currentColor"
-                style={{ 
-                  width: '18px', 
-                  height: '18px', 
-                  marginRight: '6px',
-                  verticalAlign: 'middle',
-                  position: 'relative',
-                  top: '-1px'
-                }}
-              >
-                <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.53614 4 7.33243 5.11383 5.86492 6.86543L8 9H2V3L4.44656 5.44648C6.28002 3.33509 8.9841 2 12 2ZM13 7L12.9998 11.585L16.2426 14.8284L14.8284 16.2426L10.9998 12.413L11 7H13Z"></path>
-              </svg>
-              <span style={{ 
-                fontSize: '14px',
-                display: 'inline-block',
-                verticalAlign: 'middle',
-                lineHeight: '18px',
-                fontWeight: '400'
-              }}>{expiryDateTime}</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 전체 메시지 오버레이 */}
-      {showFullMessage && (
-        <div 
+    <>
+      {/* --- 컨페티 캔버스 --- */}
+      {runConfetti && (
+        <canvas
+          ref={confettiCanvasRef}
+          id="confetti-canvas"
           style={{
             position: 'fixed',
             top: 0,
             left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-            padding: '20px',
-            fontFamily: 'Pretendard, sans-serif'
+            width: '100vw',
+            height: '100vh',
+            pointerEvents: 'none',
+            zIndex: 9999, // 다른 요소들 위에 오도록 z-index 설정
           }}
-          onClick={() => setShowFullMessage(false)}
-        >
-          <div 
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              padding: '30px',
-              width: '90%',
-              maxWidth: '500px',
-              maxHeight: '80%',
-              overflowY: 'auto',
-              position: 'relative'
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ fontWeight: '700', fontSize: '20px', marginBottom: '20px' }}>메시지 전체보기</h3>
-            <p style={{ 
-              fontSize: '18px', 
-              fontWeight: '600',
-              lineHeight: '1.6',
-              wordBreak: 'break-word'
+        />
+      )}
+      {/* --- 컨페티 캔버스 끝 --- */}
+
+      {/* 전체 카드 컨테이너 */}
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+        {/* 전체 카드 컨테이너 */}
+        <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+          {/* 템플릿 이미지 (배경) */}
+          <img 
+            src={templateCardPath} 
+            alt="템플릿 카드" 
+            style={{ 
+              width: '100%', 
+              display: 'block',
+              borderRadius: '8px',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+            }} 
+          />
+          
+          {/* 컨텐츠 오버레이 */}
+          <div style={{ 
+            position: 'absolute', 
+            top: 145, 
+            left: '50%', 
+            width: '90%', 
+            height: 'auto',
+            minHeight: '80%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            transform: 'translateX(-50%)'
+          }}>
+            {/* 메시지 영역 */}
+            <div 
+              style={{ 
+                backgroundColor: 'white', 
+                borderRadius: '12px',
+                padding: '20px',
+                width: '80%',
+                marginTop: '5%',
+                marginBottom: '10px',
+                textAlign: 'center',
+                height: '90px',
+                minHeight: '90px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                overflowY: isLongMessage && !showFullMessage ? 'hidden' : 'auto',
+                cursor: isLongMessage ? 'pointer' : 'default',
+                position: 'relative',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                fontFamily: 'Pretendard, sans-serif'
+              }}
+              onClick={() => isLongMessage && setShowFullMessage(true)}
+            >
+              <p 
+                ref={messageRef}
+                style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '600',
+                  color: '#000',
+                  margin: 0,
+                  wordBreak: 'break-word'
+                }}
+              >
+                {displayMessage.split('\n').map((line, i) => (
+                  <React.Fragment key={i}>
+                    {line}
+                    {i < displayMessage.split('\n').length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </p>
+              {isLongMessage && !showFullMessage && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '30px',
+                  background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)',
+                  pointerEvents: 'none'
+                }}></div>
+              )}
+            </div>
+            
+            {/* 구분선 */}
+            <div style={{ 
+              width: '80%', 
+              height: '1px',
+              background: 'linear-gradient(to right, #6E6E6E 50%, transparent 50%)',
+              backgroundSize: '16px 2px',
+              margin: '10px 0'
+            }}></div>
+            
+            {/* 기프티콘 영역 - 하나의 흰색 컨테이너로 통합 */}
+            <div style={{ 
+              width: '80%',
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              padding: '10px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              marginTop: '10px',
+              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
             }}>
-              {displayMessage.split('\n').map((line, i) => (
-                <React.Fragment key={i}>
-                  {line}
-                  {i < displayMessage.split('\n').length - 1 && <br />}
-                </React.Fragment>
-              ))}
-            </p>
+              {/* 썸네일 이미지 */}
+              <div style={{ 
+                border: '1px solid #3B82F6',
+                borderRadius: '8px',
+                padding: '2px',
+                marginBottom: '10px'
+              }}>
+                <img 
+                  src={gifticonThumbnailPath || gifticonOriginalPath} 
+                  alt="기프티콘 썸네일" 
+                  style={{ 
+                    width: '80px',
+                    height: 'auto',
+                    display: 'block'
+                  }}
+                  onError={(e) => {
+                    console.error('썸네일 이미지 로드 실패:', e);
+                    if (e.target.src.includes('fallback-image.png')) {
+                      e.target.onerror = null;
+                      return;
+                    }
+                    
+                    if (gifticonOriginalPath && e.target.src !== gifticonOriginalPath) {
+                      e.target.src = gifticonOriginalPath;
+                      e.target.onerror = (e2) => {
+                        console.error('원본 이미지도 로드 실패:', e2);
+                        e2.target.src = "/fallback-image.png";
+                        e2.target.onerror = null;
+                      };
+                    } else {
+                      e.target.src = "/fallback-image.png";
+                      e.target.onerror = null;
+                    }
+                  }}
+                />
+              </div>
+              
+              {/* 갤러리에 저장 버튼 */}
+              <button 
+                onClick={handleSaveImage} 
+                style={{ 
+                  backgroundColor: '#E8F4FC',
+                  color: '#3669A1',
+                  fontWeight: '500',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  height: '35px',
+                  width: '90%',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'Pretendard, sans-serif'
+                }}
+              >
+                갤러리에 저장
+              </button>
+            </div>
+
+            {/* 유효기간 정보 - 검정색 배경(40% 불투명도)과 시계 아이콘 */}
+            {expiryDateTime && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                color: 'white',
+                padding: '8px 12px',
+                borderRadius: '8px',
+                margin: '15px auto',
+                width: '60%',
+                textAlign: 'center',
+                fontFamily: 'Pretendard, sans-serif'
+              }}>
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  viewBox="0 0 24 24" 
+                  fill="currentColor"
+                  style={{ 
+                    width: '18px', 
+                    height: '18px', 
+                    marginRight: '6px',
+                    verticalAlign: 'middle',
+                    position: 'relative',
+                    top: '-1px'
+                  }}
+                >
+                  <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.53614 4 7.33243 5.11383 5.86492 6.86543L8 9H2V3L4.44656 5.44648C6.28002 3.33509 8.9841 2 12 2ZM13 7L12.9998 11.585L16.2426 14.8284L14.8284 16.2426L10.9998 12.413L11 7H13Z"></path>
+                </svg>
+                <span style={{ 
+                  fontSize: '14px',
+                  display: 'inline-block',
+                  verticalAlign: 'middle',
+                  lineHeight: '18px',
+                  fontWeight: '400'
+                }}>{expiryDateTime}</span>
+              </div>
+            )}
           </div>
         </div>
-      )}
-    </div>
+
+        {/* 전체 메시지 오버레이 */}
+        {showFullMessage && (
+          <div 
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000,
+              padding: '20px',
+              fontFamily: 'Pretendard, sans-serif'
+            }}
+            onClick={() => setShowFullMessage(false)}
+          >
+            <div 
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                padding: '30px',
+                width: '90%',
+                maxWidth: '500px',
+                maxHeight: '80%',
+                overflowY: 'auto',
+                position: 'relative'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 style={{ fontWeight: '700', fontSize: '20px', marginBottom: '20px' }}>메시지 전체보기</h3>
+              <p style={{ 
+                fontSize: '18px', 
+                fontWeight: '600',
+                lineHeight: '1.6',
+                wordBreak: 'break-word'
+              }}>
+                {displayMessage.split('\n').map((line, i) => (
+                  <React.Fragment key={i}>
+                    {line}
+                    {i < displayMessage.split('\n').length - 1 && <br />}
+                  </React.Fragment>
+                ))}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
