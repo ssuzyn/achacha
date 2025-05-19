@@ -71,7 +71,7 @@ const HomeScreen = () => {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       const bleToken = await AsyncStorage.getItem('bleToken');
       const userId = await AsyncStorage.getItem('userId');
-      
+
       // userId로 사용자 정보 조회
       if (userId) {
         try {
@@ -139,16 +139,20 @@ const HomeScreen = () => {
     loadExpiringGifticons();
     loadNotificationCount();
 
-    // 화면에 포커스될 때마다 알림 개수 갱신 - 구독 관리 추가
+    // 화면에 포커스될 때마다 알림 개수 및 기프티콘 목록 모두 새로고침
     const unsubscribeFocus = navigation.addListener('focus', () => {
+      // 알림 개수 갱신
       loadNotificationCount();
+
+      // 만료 임박 기프티콘 목록 새로고침
+      loadExpiringGifticons();
     });
 
     // 컴포넌트 언마운트 시 이벤트 리스너 정리
     return () => {
       unsubscribeFocus();
     };
-  }, []); // 의존성 배열에서 navigation과 updateNotificationCount 제거
+  }, []);
 
   const calculateDaysLeft = expiryDate => {
     const today = new Date();
