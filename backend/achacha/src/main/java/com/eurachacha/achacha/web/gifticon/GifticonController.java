@@ -92,4 +92,10 @@ public class GifticonController {
 
 		return ResponseEntity.ok(result);
 	}
+
+	@DeleteMapping("/{gifticonId}/present")
+	public ResponseEntity<String> cancelPresentGifticon(@PathVariable Integer gifticonId) {
+		gifticonGiveAppService.cancelPresentGifticon(gifticonId);
+		return ResponseEntity.ok("선물한 기프티콘 취소 성공");
+	}
 }
