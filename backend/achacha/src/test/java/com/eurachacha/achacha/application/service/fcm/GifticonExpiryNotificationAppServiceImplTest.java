@@ -16,16 +16,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
-import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
-import com.eurachacha.achacha.application.port.output.notification.dto.request.NotificationEventDto;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
 import com.eurachacha.achacha.application.service.notification.GifticonExpiryNotificationAppServiceImpl;
+import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 import com.eurachacha.achacha.domain.model.brand.Brand;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
@@ -61,8 +61,9 @@ class GifticonExpiryNotificationAppServiceImplTest {
 	@Mock
 	private FcmTokenRepository fcmTokenRepository;
 
+	// NotificationEventPort 대신 ApplicationEventPublisher을 모킹합니다.
 	@Mock
-	private NotificationEventPort notificationEventPort;
+	private ApplicationEventPublisher applicationEventPublisher;
 
 	@Mock
 	private NotificationRepository notificationRepository;
@@ -132,12 +133,18 @@ class GifticonExpiryNotificationAppServiceImplTest {
 
 		verify(notificationRepository, times(1)).save(any(Notification.class));
 
-		// 알림 이벤트 전송 검증
-		ArgumentCaptor<NotificationEventDto> eventDtoCaptor = ArgumentCaptor.forClass(NotificationEventDto.class);
-		verify(notificationEventPort).sendNotificationEvent(eventDtoCaptor.capture());
-		NotificationEventDto capturedEventDto = eventDtoCaptor.getValue();
+		// ApplicationEventPublisher로 이벤트 발행 검증
+		ArgumentCaptor<NotificationEventMessage> eventMessageCaptor = ArgumentCaptor.forClass(
+			NotificationEventMessage.class);
+		verify(applicationEventPublisher).publishEvent(eventMessageCaptor.capture());
+		NotificationEventMessage capturedEventMessage = eventMessageCaptor.getValue();
 
-		verify(notificationEventPort, times(1)).sendNotificationEvent(any(NotificationEventDto.class));
+		verify(applicationEventPublisher, times(1)).publishEvent(any(NotificationEventMessage.class));
+
+		// 이벤트 메시지의 EventDto 검증
+		assertThat(capturedEventMessage.getEventDto().getFcmToken()).isEqualTo("test_fcm_token");
+		assertThat(capturedEventMessage.getEventDto().getUserId()).isEqualTo(user.getId());
+		assertThat(capturedEventMessage.getEventDto().getReferenceEntityId()).isEqualTo(gifticon.getId());
 	}
 
 	@Test
@@ -232,7 +239,7 @@ class GifticonExpiryNotificationAppServiceImplTest {
 		// then
 		// 두 참여자 모두에게 알림 저장 및 전송
 		verify(notificationRepository, times(2)).save(any(Notification.class));
-		verify(notificationEventPort, times(2)).sendNotificationEvent(any(NotificationEventDto.class));
+		verify(applicationEventPublisher, times(2)).publishEvent(any(NotificationEventMessage.class));
 
 		// 알림 저장 검증
 		ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -247,14 +254,15 @@ class GifticonExpiryNotificationAppServiceImplTest {
 		assertThat(userIds).containsExactlyInAnyOrder(owner.getId(), participant.getId());
 
 		// 알림 이벤트 전송 검증
-		ArgumentCaptor<NotificationEventDto> eventDtoCaptor = ArgumentCaptor.forClass(NotificationEventDto.class);
-		verify(notificationEventPort, times(2)).sendNotificationEvent(eventDtoCaptor.capture());
-		List<NotificationEventDto> capturedEventDtos = eventDtoCaptor.getAllValues();
+		ArgumentCaptor<NotificationEventMessage> eventMessageCaptor = ArgumentCaptor.forClass(
+			NotificationEventMessage.class);
+		verify(applicationEventPublisher, times(2)).publishEvent(eventMessageCaptor.capture());
+		List<NotificationEventMessage> capturedEventMessages = eventMessageCaptor.getAllValues();
 
 		// 두 알림 이벤트가 발송되었는지 확인
-		assertThat(capturedEventDtos).hasSize(2);
-		List<String> fcmTokens = capturedEventDtos.stream()
-			.map(NotificationEventDto::getFcmToken)
+		assertThat(capturedEventMessages).hasSize(2);
+		List<String> fcmTokens = capturedEventMessages.stream()
+			.map(message -> message.getEventDto().getFcmToken())
 			.toList();
 		assertThat(fcmTokens).containsExactlyInAnyOrder("test_fcm_token_1", "test_fcm_token_2");
 	}
@@ -292,12 +300,6 @@ class GifticonExpiryNotificationAppServiceImplTest {
 			.isEnabled(false) // 알림 비활성화
 			.build();
 
-		FcmToken fcmToken = FcmToken.builder()
-			.id(1)
-			.user(user)
-			.value("test_fcm_token")
-			.build();
-
 		// mock 설정
 		given(gifticonRepository.findGifticonsWithExpiryDates(anyList())).willReturn(List.of(gifticon));
 		given(notificationTypeRepository.findByCode(NotificationTypeCode.EXPIRY_DATE)).willReturn(notificationType);
@@ -315,7 +317,7 @@ class GifticonExpiryNotificationAppServiceImplTest {
 
 		// FCM 토큰 조회 및 알림 전송은 수행하지 않음
 		verify(fcmTokenRepository, never()).findAllByUserId(anyInt());
-		verify(notificationEventPort, never()).sendNotificationEvent(any(NotificationEventDto.class));
+		verify(applicationEventPublisher, never()).publishEvent(any(NotificationEventMessage.class));
 	}
 
 	@Test
@@ -333,7 +335,7 @@ class GifticonExpiryNotificationAppServiceImplTest {
 		verify(notificationSettingRepository, never()).findByUserIdAndNotificationTypeId(anyInt(), anyInt());
 		verify(notificationSettingRepository, never()).findByUserIdInAndNotificationTypeId(anyList(), anyInt());
 		verify(notificationRepository, never()).save(any());
-		verify(notificationEventPort, never()).sendNotificationEvent(any());
+		verify(applicationEventPublisher, never()).publishEvent(any());
 	}
 
 	@Test
@@ -401,7 +403,7 @@ class GifticonExpiryNotificationAppServiceImplTest {
 		// 두 기프티콘 모두에 대해 알림 저장 및 전송이 이루어짐 (총 2회)
 		verify(notificationRepository, times(2)).save(any(Notification.class));
 		verify(fcmTokenRepository, times(2)).findAllByUserId(anyInt());
-		verify(notificationEventPort, times(2)).sendNotificationEvent(any(NotificationEventDto.class));
+		verify(applicationEventPublisher, times(2)).publishEvent(any(NotificationEventMessage.class));
 
 		// 알림 내용 검증
 		ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -409,9 +411,10 @@ class GifticonExpiryNotificationAppServiceImplTest {
 		List<Notification> capturedNotifications = notificationCaptor.getAllValues();
 
 		// 알림 이벤트 검증
-		ArgumentCaptor<NotificationEventDto> eventDtoCaptor = ArgumentCaptor.forClass(NotificationEventDto.class);
-		verify(notificationEventPort, times(2)).sendNotificationEvent(eventDtoCaptor.capture());
-		List<NotificationEventDto> capturedEventDtos = eventDtoCaptor.getAllValues();
+		ArgumentCaptor<NotificationEventMessage> eventMessageCaptor = ArgumentCaptor.forClass(
+			NotificationEventMessage.class);
+		verify(applicationEventPublisher, times(2)).publishEvent(eventMessageCaptor.capture());
+		List<NotificationEventMessage> capturedEventMessages = eventMessageCaptor.getAllValues();
 
 		// 두 알림이 모두 저장되었는지 확인 (ID로 확인 가능)
 		assertThat(capturedNotifications).hasSize(2);
@@ -478,7 +481,7 @@ class GifticonExpiryNotificationAppServiceImplTest {
 		// 알림 저장 및 전송이 이루어지지 않음
 		verify(notificationRepository, never()).save(any());
 		verify(fcmTokenRepository, never()).findAllByUserId(anyInt());
-		verify(notificationEventPort, never()).sendNotificationEvent(any());
+		verify(applicationEventPublisher, never()).publishEvent(any());
 	}
 
 	private List<LocalDate> getExpiryDates(LocalDate today) {

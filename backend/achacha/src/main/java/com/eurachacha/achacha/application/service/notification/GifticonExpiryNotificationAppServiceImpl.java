@@ -4,18 +4,19 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.notification.GifticonExpiryNotificationAppService;
 import com.eurachacha.achacha.application.port.output.gifticon.GifticonRepository;
-import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
 import com.eurachacha.achacha.application.port.output.notification.dto.request.NotificationEventDto;
 import com.eurachacha.achacha.application.port.output.sharebox.ParticipationRepository;
 import com.eurachacha.achacha.application.port.output.user.FcmTokenRepository;
+import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 import com.eurachacha.achacha.domain.model.fcm.FcmToken;
 import com.eurachacha.achacha.domain.model.gifticon.Gifticon;
 import com.eurachacha.achacha.domain.model.notification.Notification;
@@ -42,7 +43,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 	private final NotificationTypeRepository notificationTypeRepository;
 	private final NotificationSettingRepository notificationSettingRepository;
 	private final FcmTokenRepository fcmTokenRepository;
-	private final NotificationEventPort notificationEventPort;
+	private final ApplicationEventPublisher applicationEventPublisher;
 	private final NotificationRepository notificationRepository;
 	private final NotificationSettingDomainService notificationSettingDomainService;
 
@@ -136,7 +137,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 						.referenceEntityType("gifticon")
 						.build();
 
-					notificationEventPort.sendNotificationEvent(dto);
+					applicationEventPublisher.publishEvent(new NotificationEventMessage(dto));
 				});
 			}
 		}
