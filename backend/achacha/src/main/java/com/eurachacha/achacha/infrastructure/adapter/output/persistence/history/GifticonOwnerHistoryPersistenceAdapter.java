@@ -31,4 +31,9 @@ public class GifticonOwnerHistoryPersistenceAdapter implements GifticonOwnerHist
 		return gifticonOwnerHistoryJpaRepository.findLatestForEachGifticonByIdsAndFromUserId(ids,
 			fromUserId);
 	}
+
+	@Override
+	public void deleteByGifticonId(Integer gifticonId) {
+		gifticonOwnerHistoryJpaRepository.deleteByGifticonId(gifticonId);
+	}
 }

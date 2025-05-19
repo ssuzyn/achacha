@@ -11,4 +11,6 @@ public interface GifticonOwnerHistoryRepository {
 
 	List<GifticonOwnerHistory> findLatestForEachGifticonByIdsAndFromUserId(List<Integer> ids,
 		Integer fromUserId);
+
+	void deleteByGifticonId(Integer gifticonId);
 }

@@ -37,4 +37,5 @@ public interface GifticonOwnerHistoryJpaRepository extends JpaRepository<Giftico
 		@Param("ids") List<Integer> ids,
 		@Param("userId") Integer userId);
 
+	void deleteByGifticonId(Integer gifticonId);
 }
