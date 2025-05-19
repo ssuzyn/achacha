@@ -184,7 +184,14 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	@Override
 	@Transactional
 	public void cancelPresentGifticon(Integer gifticonId) {
+		User user = securityServicePort.getLoggedInUser();
 		Gifticon gifticon = gifticonRepository.findById(gifticonId);
+
+		// 본인 소유인지 확인
+		boolean isOwner = gifticonDomainService.hasAccess(user.getId(), gifticon.getUser().getId());
+		if (!isOwner) {
+			throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
+		}
 
 		// 기프티콘 사용 완료 취소
 		gifticon.cancelUse();
