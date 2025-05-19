@@ -265,7 +265,7 @@ const Slider = ({
           minimumTrackTintColor={minimumTrackTintColor || activeColor || primaryColor}
           maximumTrackTintColor={maximumTrackTintColor || inactiveColor || theme.colors.grey2}
           thumbTintColor={thumbTintColor || backgroundColor}
-          allowTouchTrack={false} // 트랙 터치 비활성화, 오직 드래그로만 조작
+          allowTouchTrack={true} // 트랙 터치 활성화, 슬라이더를 터치하면 해당 위치로 이동
           thumbProps={{
             children: showThumbLabel ? (
               <View style={styles.thumbLabelContainer}>

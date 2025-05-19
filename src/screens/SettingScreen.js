@@ -19,7 +19,7 @@ import { useTheme, Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabBar } from '../context/TabBarContext';
-import Slider from '../components/ui/Slider';
+import CommunitySlider from '@react-native-community/slider';
 import { Divider, Text, Button } from '../components/ui';
 import Switch from '../components/ui/Switch';
 import { Svg, Path } from 'react-native-svg';
@@ -91,6 +91,10 @@ const SettingScreen = () => {
   const [editingInterval, setEditingInterval] = useState(false);
   // 임시 값을 저장할 상태 추가
   const [tempExpiryInterval, setTempExpiryInterval] = useState(7);
+
+  // 슬라이더 드래그 중 상태
+  const [sliderDragging, setSliderDragging] = useState(false);
+  const [visualExpiryInterval, setVisualExpiryInterval] = useState(7);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -176,15 +180,6 @@ const SettingScreen = () => {
     ]
   );
 
-  // 알림 주기 변경 핸들러
-  const handleExpirationCycleChange = useCallback(value => {
-    // 유효한 값인지 확인
-    if (typeof value === 'number' && markers.includes(value)) {
-      setTempExpiryInterval(value);
-      console.log('알림주기 변경:', value);
-    }
-  }, []);
-
   // 수정/저장 버튼 클릭 핸들러
   const handleEditSaveClick = useCallback(async () => {
     if (editingInterval) {
@@ -208,6 +203,7 @@ const SettingScreen = () => {
     } else {
       // 수정 모드로 전환 - 현재 서버에 저장된 값으로 슬라이더 초기화
       setTempExpiryInterval(expiryNotificationInterval);
+      setVisualExpiryInterval(expiryNotificationInterval);
       console.log('[알림설정] 수정 모드 전환, 현재 값:', expiryNotificationInterval);
       // 모드 전환
       setEditingInterval(true);
@@ -461,6 +457,7 @@ const SettingScreen = () => {
   useEffect(() => {
     // 앱 시작 시 서버 값으로 tempExpiryInterval 초기화
     setTempExpiryInterval(expiryNotificationInterval);
+    setVisualExpiryInterval(expiryNotificationInterval);
   }, [expiryNotificationInterval]);
 
   // 탭바 처리 - 화면 진입 시 및 이탈 시
@@ -657,23 +654,94 @@ const SettingScreen = () => {
                   editingInterval ? styles.activeSlider : styles.disabledSlider,
                 ]}
               >
-                <Slider
-                  value={tempExpiryInterval}
-                  values={markers}
-                  onValueChange={handleExpirationCycleChange}
-                  minimumTrackTintColor={editingInterval ? theme.colors.primary : '#CCCCCC'}
-                  maximumTrackTintColor={editingInterval ? theme.colors.grey2 : '#EEEEEE'}
-                  showValue={false}
-                  containerStyle={styles.sliderStyle}
-                  disabled={!editingInterval}
-                  thumbStyle={{
-                    backgroundColor: editingInterval ? '#56AEE9' : '#CCCCCC',
-                    transform: [{ scale: editingInterval ? 1 : 0.8 }],
+                <View style={styles.adjustmentTextContainer}>
+                  <Text
+                    variant="body1"
+                    weight="medium"
+                    color="#56AEE9"
+                    style={styles.adjustmentText}
+                  >
+                    {(sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 0
+                      ? '당일만'
+                      : `당일 ~ ${(sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 1 ? '1일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 2 ? '2일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 3 ? '3일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 7 ? '일주일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 30 ? '30일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 60 ? '60일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 90 ? '90일 전' : `${sliderDragging ? visualExpiryInterval : tempExpiryInterval}일 전`}`}
+                  </Text>
+                </View>
+
+                <View style={styles.markersContainer}>
+                  {markers.map((val, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      onPress={() => {
+                        if (editingInterval) {
+                          setTempExpiryInterval(val);
+                          setVisualExpiryInterval(val);
+                        }
+                      }}
+                      disabled={!editingInterval}
+                    >
+                      <View
+                        style={[
+                          styles.marker,
+                          (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === val &&
+                            styles.activeMarker,
+                          !editingInterval && styles.disabledMarker,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.markerText,
+                            (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === val &&
+                              styles.activeMarkerText,
+                            !editingInterval && styles.disabledMarkerText,
+                          ]}
+                        >
+                          {val}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <CommunitySlider
+                  style={styles.slider}
+                  value={
+                    markers.indexOf(sliderDragging ? visualExpiryInterval : tempExpiryInterval) !==
+                    -1
+                      ? markers.indexOf(sliderDragging ? visualExpiryInterval : tempExpiryInterval)
+                      : 0
+                  }
+                  minimumValue={0}
+                  maximumValue={markers.length - 1}
+                  step={1}
+                  minimumTrackTintColor="#56AEE9"
+                  maximumTrackTintColor="#E0E0E0"
+                  thumbTintColor="#56AEE9"
+                  onSlidingStart={() => {
+                    setSliderDragging(true);
                   }}
-                  trackStyle={{ height: editingInterval ? 6 : 4 }}
-                  thumbTintColor={editingInterval ? '#56AEE9' : '#CCCCCC'}
-                  showThumbLabel={editingInterval}
-                  thumbLabelStyle={{ fontWeight: 'bold' }}
+                  onValueChange={value => {
+                    if (editingInterval) {
+                      const index = Math.round(value);
+                      if (index >= 0 && index < markers.length) {
+                        // 드래그 중에는 시각적 상태만 업데이트
+                        setVisualExpiryInterval(markers[index]);
+                      }
+                    }
+                  }}
+                  onSlidingComplete={value => {
+                    if (editingInterval) {
+                      const index = Math.round(value);
+                      if (index >= 0 && index < markers.length) {
+                        // 드래그 완료 시 실제 상태 업데이트
+                        setTempExpiryInterval(markers[index]);
+                        setVisualExpiryInterval(markers[index]);
+                        setSliderDragging(false);
+                      }
+                    } else {
+                      setEditingInterval(true);
+                    }
+                  }}
+                  disabled={!editingInterval}
                 />
               </View>
             </View>
@@ -856,10 +924,6 @@ const SettingScreen = () => {
 
         {/* 버튼 영역 */}
         <View style={styles.footerButtonsWrapper}>
-          <TouchableOpacity style={styles.withdrawTouchable}>
-            <Text style={styles.withdrawText}>회원탈퇴</Text>
-          </TouchableOpacity>
-          <View style={styles.buttonSpacer} />
           <TouchableOpacity style={styles.logoutTouchable} onPress={handleLogout}>
             <Text style={styles.logoutText}>로그아웃</Text>
           </TouchableOpacity>
@@ -961,51 +1025,41 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   customSliderContainer: {
-    marginTop: 20,
-    marginBottom: 2,
+    marginTop: 15,
+    marginBottom: 10,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 8,
+    padding: 15,
     borderRadius: 10,
-    transition: 'all 0.3s',
+    backgroundColor: 'rgba(86, 174, 233, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(86, 174, 233, 0.2)',
+  },
+  sliderInstructionText: {
+    fontSize: 13,
+    color: '#278CCC',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   footerButtonsWrapper: {
     marginVertical: 25,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  buttonSpacer: {
-    width: 10,
-  },
-  withdrawTouchable: {
-    borderColor: '#718096',
-    borderWidth: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 6,
-    alignItems: 'center',
     justifyContent: 'center',
-    width: '30%',
+    alignItems: 'center',
   },
   logoutTouchable: {
-    borderColor: '#A7DAF9',
-    borderWidth: 1,
     paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 20,
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
-    width: '30%',
-  },
-  withdrawText: {
-    color: '#718096',
-    fontSize: 16,
+    width: '40%',
   },
   logoutText: {
-    color: '#A7DAF9',
-    fontSize: 16,
+    color: '#737373',
+    fontSize: 18,
+    textDecorationLine: 'underline',
   },
   sectionDivider: {
     marginBottom: 20,
@@ -1174,16 +1228,6 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#FFFFFF',
   },
-  customSliderContainer: {
-    marginTop: 20,
-    marginBottom: 2,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 10,
-    transition: 'all 0.3s',
-  },
   activeSlider: {
     backgroundColor: 'rgba(86, 174, 233, 0.05)',
     borderWidth: 1,
@@ -1191,6 +1235,57 @@ const styles = StyleSheet.create({
   },
   disabledSlider: {
     opacity: 0.8,
+  },
+  sliderStyle: {
+    width: '100%',
+    paddingHorizontal: 10,
+  },
+  adjustmentTextContainer: {
+    alignItems: 'center',
+    marginBottom: 15,
+    width: '100%',
+  },
+  adjustmentText: {
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+    color: '#56AEE9',
+  },
+  markersContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
+    marginBottom: 10,
+    width: '100%',
+  },
+  marker: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(224, 224, 224, 0.2)',
+  },
+  activeMarker: {
+    backgroundColor: 'rgba(86, 174, 233, 0.1)',
+  },
+  disabledMarker: {
+    opacity: 0.5,
+  },
+  markerText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  activeMarkerText: {
+    color: '#56AEE9',
+    fontWeight: 'bold',
+  },
+  disabledMarkerText: {
+    color: '#999',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
   },
 });
 

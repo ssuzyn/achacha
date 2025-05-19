@@ -5,8 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bb904452-4e09-4cd1-bcac-a9f38dbb20c3" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxDetailAmountHistoryScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxDetailAmountHistoryScreen.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxDetailAmountScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/gifticon-share-box/BoxDetailAmountScreen.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/ui/Slider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/ui/Slider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/screens/SettingScreen.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/screens/SettingScreen.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
