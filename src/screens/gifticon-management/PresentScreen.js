@@ -18,15 +18,14 @@ import {
   Linking,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
-import { getPresentTemplates, getPresentTemplateColors, getPresentTemplateDetail, presentGifticon } from '../../api/presentService';
+import { getPresentTemplates, getPresentTemplateColors, getPresentTemplateDetail, presentGifticon,presentCancelGifticon } from '../../api/presentService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
-import { WebView } from 'react-native-webview';
 import KakaoShareLink from 'react-native-kakao-share-link';
 
 // 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
@@ -169,35 +168,6 @@ const PresentScreen = () => {
     fetchTemplateDetail();
   }, [selectedTemplateId]);
 
-  // 카카오톡에서 돌아올 때 체크
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log('[PresentScreen] 화면 포커스됨 - 카카오톡에서 돌아옴');
-      
-      if (isShared) {
-        console.log('[PresentScreen] 공유 완료 후 돌아옴');
-        // 공유 완료 후 돌아왔을 때의 처리
-        Alert.alert('선물하기 완료', '기프티콘이 성공적으로 선물되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // 이전 화면으로 이동
-              navigation.pop(2);
-            },
-          },
-        ]);
-      } else {
-        console.log('[PresentScreen] 뒤로가기로 돌아옴');
-        // 뒤로가기로 돌아왔을 때의 처리
-      }
-      
-      return () => {
-        console.log('[PresentScreen] 화면 포커스 해제');
-        setIsShared(false); // 상태 초기화
-      };
-    }, [isShared])
-  );
-
   // 뒤로가기 처리 함수
   const handleGoBack = () => {
     NavigationService.goBack();
@@ -235,6 +205,27 @@ const PresentScreen = () => {
         selectedTemplateId === 1 ? selectedColorVariant : null,
         message
       );
+      setTimeout(() => {
+        Alert.alert(
+          '알림',
+          '기프티콘 선물하기를 완료하셨나요?!',
+          [
+            { text: '아니요', onPress: async () => {
+                try {
+                  await presentCancelGifticon(gifticonData.id);
+                } catch (e) {
+                  // 에러는 이미 presentCancelGifticon에서 콘솔 출력됨
+                } finally {
+                  navigation.goBack();
+                }
+              }
+            },
+            { text: '네', onPress: () => navigation.pop(2) },
+          ]
+        );
+      }, 3000);
+      
+      // API 호출 및 카카오링크 이동 후 Alert 표시
       await handleOpenKakaoShare(res.presentCardCode, res.gifticonName, res.brandName);
     } catch (e) {
       Alert.alert('에러', '선물하기에 실패했습니다.');
