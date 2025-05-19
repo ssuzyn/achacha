@@ -27,6 +27,7 @@ import NavigationService from '../../navigation/NavigationService';
 import { getPresentTemplates, getPresentTemplateColors, getPresentTemplateDetail, presentGifticon,presentCancelGifticon } from '../../api/presentService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import KakaoShareLink from 'react-native-kakao-share-link';
+import AlertDialog from '../../components/ui/AlertDialog';
 
 // 이미지 소스를 안전하게 가져오는 헬퍼 함수 (DetailProductScreen과 동일)
 const getImageSource = path => {
@@ -74,6 +75,9 @@ const PresentScreen = () => {
 
   // 공유 완료 상태 추적
   const [isShared, setIsShared] = useState(false);
+
+  // AlertDialog 노출 상태
+  const [presentDialogVisible, setPresentDialogVisible] = useState(false);
 
   // 탭바 숨기기
   useEffect(() => {
@@ -206,25 +210,8 @@ const PresentScreen = () => {
         message
       );
       setTimeout(() => {
-        Alert.alert(
-          '알림',
-          '기프티콘 선물하기를 완료하셨나요?!',
-          [
-            { text: '아니요', onPress: async () => {
-                try {
-                  await presentCancelGifticon(gifticonData.id);
-                } catch (e) {
-                  // 에러는 이미 presentCancelGifticon에서 콘솔 출력됨
-                } finally {
-                  navigation.goBack();
-                }
-              }
-            },
-            { text: '네', onPress: () => navigation.pop(2) },
-          ]
-        );
+        setPresentDialogVisible(true);
       }, 3000);
-      
       // API 호출 및 카카오링크 이동 후 Alert 표시
       await handleOpenKakaoShare(res.presentCardCode, res.gifticonName, res.brandName);
     } catch (e) {
@@ -395,6 +382,28 @@ const PresentScreen = () => {
           </View>
         </View>
       </ScrollView>
+      {/* 선물완료 AlertDialog */}
+      <AlertDialog
+        isVisible={presentDialogVisible}
+        onBackdropPress={() => setPresentDialogVisible(false)}
+        title="알림"
+        message="기프티콘 선물하기를 완료하셨나요?!"
+        confirmText="네"
+        cancelText="아니요"
+        onConfirm={() => {
+          setPresentDialogVisible(false);
+          navigation.pop(2);
+        }}
+        onCancel={async () => {
+          setPresentDialogVisible(false);
+          try {
+            await presentCancelGifticon(gifticonData.id);
+          } finally {
+            navigation.goBack();
+          }
+        }}
+        type="warning"
+      />
     </View>
   );
 };
