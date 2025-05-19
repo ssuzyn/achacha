@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../components/ui';
 import AlertDialog from '../../components/ui/AlertDialog';
@@ -78,72 +78,62 @@ const BoxDetailAmountScreen = () => {
 
   // route.params에서 scope, gifticonId, usageType, usedAt을 가져오는 부분
   useEffect(() => {
-    console.log('[DEBUG] route.params 변경:', route.params);
     if (route.params) {
-      // scope 설정 - 사용완료 탭에서 접근한 경우 'USED'로 설정
       if (route.params.scope) {
-        console.log('[DEBUG] scope 설정:', route.params.scope);
         setScope(route.params.scope);
-      } else if (route.params.gifticon?.scope) {
-        console.log('[DEBUG] gifticon.scope 설정:', route.params.gifticon.scope);
-        setScope(route.params.gifticon.scope);
-      } else if (route.params.usageType) {
-        // usageType이 있으면 사용완료로 간주
-        console.log('[DEBUG] usageType으로 인한 USED scope 설정');
-        setScope('USED');
       }
       if (route.params.gifticonId) {
-        console.log('[DEBUG] gifticonId 설정:', route.params.gifticonId);
         setGifticonId(route.params.gifticonId);
       }
       if (route.params.usageType) {
-        console.log('[DEBUG] usageType 설정:', route.params.usageType);
         setUsageType(route.params.usageType);
       }
       if (route.params.usedAt) {
-        console.log('[DEBUG] usedAt 설정:', route.params.usedAt);
         setUsedAt(route.params.usedAt);
       }
       // 공유박스에서 내가 공유한 것인지 확인
       if (route.params.isSharer) {
-        console.log('[DEBUG] isSharer 설정:', route.params.isSharer);
         setIsSharer(route.params.isSharer);
       }
       // refresh 플래그가 true이면 데이터 다시 로드
       if (route.params.refresh && gifticonId) {
-        console.log('[DEBUG] refresh 요청됨');
         loadGifticonData(gifticonId);
       }
     }
   }, [route.params, gifticonId]);
 
+  // 화면이 포커스될 때마다 데이터 새로고침
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('[BoxDetailAmountScreen] 화면 포커스됨');
+      const id = route.params?.gifticonId || route.params?.gifticon?.gifticonId;
+      if (id) {
+        console.log('[BoxDetailAmountScreen] 데이터 새로고침 시작, gifticonId:', id);
+        loadGifticonData(id);
+      }
+    }, [route.params?.gifticonId, route.params?.gifticon?.gifticonId])
+  );
+
   // 상세 정보 조회 useEffect
   useEffect(() => {
-    console.log('[DEBUG] 상세 정보 조회 시작');
     // 1. route.params.gifticon이 있으면 우선 세팅
     if (route.params?.gifticon) {
-      console.log('[DEBUG] route.params.gifticon 존재:', route.params.gifticon);
       setGifticonData(route.params.gifticon);
       setIsLoading(false);
     }
     // 2. gifticonId가 있으면 추가 API로 최신 정보 조회
     const id = route.params?.gifticonId || route.params?.gifticon?.gifticonId;
-    const scopeParam = route.params?.scope || route.params?.gifticon?.scope || 'SHARE_BOX';
-    console.log('[DEBUG] API 호출 파라미터:', { id, scopeParam });
-    
+    const scopeParam = route.params?.scope || 'SHARE_BOX';
     if (id) {
       const requestId = ++latestRequestId.current;
       setIsLoading(true);
-      console.log('[DEBUG] API 호출 시작');
       gifticonService.getGifticonDetail(id, scopeParam)
         .then(data => {
-          console.log('[DEBUG] API 응답 데이터:', data);
           if (requestId === latestRequestId.current) {
             setGifticonData(data);
           }
         })
         .catch(e => {
-          console.error('[DEBUG] API 호출 실패:', e);
           if (requestId === latestRequestId.current) {
             setGifticonData(null);
           }
@@ -151,11 +141,8 @@ const BoxDetailAmountScreen = () => {
         .finally(() => {
           if (requestId === latestRequestId.current) {
             setIsLoading(false);
-            console.log('[DEBUG] API 호출 완료');
           }
         });
-    } else {
-      console.log('[DEBUG] gifticonId가 없음');
     }
   }, [route.params]);
 
@@ -174,13 +161,16 @@ const BoxDetailAmountScreen = () => {
 
   // 기프티콘 데이터 로드 함수
   const loadGifticonData = async id => {
+    console.log('[BoxDetailAmountScreen] loadGifticonData 시작, id:', id);
     setIsLoading(true);
     try {
       // 실제 API 호출
       const data = await gifticonService.getGifticonDetail(id, scope);
+      console.log('[BoxDetailAmountScreen] API 응답 데이터:', data);
       setGifticonData(data);
       setIsSharer(data.isSharer);
     } catch (error) {
+      console.error('[BoxDetailAmountScreen] 데이터 로드 실패:', error);
       setGifticonData(null);
     } finally {
       setIsLoading(false);
@@ -227,7 +217,6 @@ const BoxDetailAmountScreen = () => {
 
   // 금액 포맷 함수
   const formatAmount = amount => {
-    if (amount === undefined || amount === null) return '0원';
     return amount.toLocaleString() + '원';
   };
 
@@ -664,7 +653,7 @@ const BoxDetailAmountScreen = () => {
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>사용일시</Text>
                     <Text style={styles.infoValue}>
-                      {formatDateTime(gifticonData.usageHistoryCreatedAt)}
+                      {formatDateTime(gifticonData.usedAt)}
                     </Text>
                   </View>
                 )}

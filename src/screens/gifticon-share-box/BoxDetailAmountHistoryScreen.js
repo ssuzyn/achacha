@@ -15,8 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Divider } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
-import NavigationService from '../../navigation/NavigationService';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import gifticonService from '../../api/gifticonService';
 
 const BoxDetailAmountHistoryScreen = () => {
@@ -24,6 +23,7 @@ const BoxDetailAmountHistoryScreen = () => {
   const { theme } = useTheme();
   const { showTabBar } = useTabBar();
   const route = useRoute();
+  const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
@@ -87,7 +87,16 @@ const BoxDetailAmountHistoryScreen = () => {
 
   // 뒤로가기 함수
   const handleGoBack = () => {
-    NavigationService.goBack();
+    console.log('[BoxDetailAmountHistoryScreen] 뒤로가기 버튼 클릭');
+    const params = { 
+      refresh: true, 
+      gifticonId: gifticonData?.gifticonId || gifticonData?.id,
+      scope: scope,
+      brandName: route.params?.brandName || gifticonData?.brandName,
+      gifticonName: route.params?.gifticonName || gifticonData?.gifticonName
+    };
+    console.log('[BoxDetailAmountHistoryScreen] 전달할 파라미터:', params);
+    navigation.goBack(params);
   };
 
   // 수정하기 함수
@@ -218,6 +227,38 @@ const BoxDetailAmountHistoryScreen = () => {
     const min = String(date.getMinutes()).padStart(2, '0');
     return `${yyyy}.${mm}.${dd} ${hh}:${min}`;
   };
+
+  // 화면이 포커스될 때마다 데이터 새로고침
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('[BoxDetailAmountHistoryScreen] 화면 포커스됨');
+      const gifticonId = route.params?.id;
+      if (gifticonId) {
+        (async () => {
+          setIsLoading(true);
+          try {
+            const data = await gifticonService.getAmountGifticonUsageHistory(gifticonId);
+            const transactions = (data.usageHistories || []).map(item => ({
+              id: item.usageHistoryId?.toString(),
+              userName: item.userName,
+              amount: item.usageAmount,
+              date: formatDateTime(item.usageHistoryCreatedAt),
+              type: 'payment',
+              timestamp: new Date(item.usageHistoryCreatedAt).getTime(),
+            })).sort((a, b) => b.timestamp - a.timestamp);
+            setTransactions(transactions);
+            setGifticonData(data);
+          } catch (e) {
+            setTransactions([]);
+            setGifticonData(null);
+            Alert.alert('오류', '기프티콘 사용내역을 불러오지 못했습니다.');
+          } finally {
+            setIsLoading(false);
+          }
+        })();
+      }
+    }, [route.params?.id])
+  );
 
   console.log('[HISTORY PAGE] brandName:', route.params?.brandName, 'gifticonName:', route.params?.gifticonName);
 

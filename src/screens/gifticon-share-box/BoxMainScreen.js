@@ -136,6 +136,10 @@ const BoxMainScreen = () => {
   const handleCloseModal = () => {
     setIsJoinModalVisible(false);
     setInviteCode('');
+    // route.params.code가 존재하면 초기화
+    if (route.params?.code) {
+      navigation.setParams({ code: null });
+    }
   };
 
   // 취소 버튼 핸들러
