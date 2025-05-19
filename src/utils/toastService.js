@@ -63,6 +63,16 @@ export const toastConfig = {
  * @param {Object} message - FCM 메시지 객체
  */
 export const showNotificationToast = message => {
+  const currentTime = new Date().toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
   const { title, body } = message.notification || {};
   const data = message.data || {};
 
@@ -88,7 +98,7 @@ export const showNotificationToast = message => {
     referenceEntityId: parsedReferenceEntityId,
   };
 
-  console.log('[토스트 서비스] 알림 토스트 데이터:', {
+  console.log(`[${currentTime}] [토스트 서비스] 알림 토스트 데이터:`, {
     title,
     body,
     notificationData,
@@ -99,14 +109,14 @@ export const showNotificationToast = message => {
   // 직접 처리할 onPress 핸들러 정의
   const handleToastPress = async () => {
     try {
-      console.log('[토스트 서비스] 토스트 클릭 처리 시작');
+      console.log(`[${currentTime}] [토스트 서비스] 토스트 클릭 처리 시작`);
 
       // 먼저 토스트 숨기기
       Toast.hide();
 
       // 필요한 데이터 확인
       if (!notificationData || !notificationData.referenceEntityId) {
-        console.error('[토스트 서비스] 알림 데이터 부족:', notificationData);
+        console.error(`[${currentTime}] [토스트 서비스] 알림 데이터 부족:`, notificationData);
         return;
       }
 
@@ -119,7 +129,7 @@ export const showNotificationToast = message => {
         ) &&
         referenceEntityType === REFERENCE_TYPES.GIFTICON
       ) {
-        console.log('[토스트 서비스] 기프티콘 알림 처리:', referenceEntityId);
+        console.log(`[${currentTime}] [토스트 서비스] 기프티콘 알림 처리:`, referenceEntityId);
 
         // API 호출로 기프티콘 타입 확인
         const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
@@ -144,7 +154,7 @@ export const showNotificationToast = message => {
         ) &&
         referenceEntityType === REFERENCE_TYPES.SHAREBOX
       ) {
-        console.log('[토스트 서비스] 쉐어박스 알림 처리 시작:', {
+        console.log(`[${currentTime}] [토스트 서비스] 쉐어박스 알림 처리 시작:`, {
           notificationType,
           referenceEntityType,
           referenceEntityId,
@@ -157,7 +167,7 @@ export const showNotificationToast = message => {
           shareBoxId = parseInt(shareBoxId, 10);
         }
 
-        console.log('[토스트 서비스] 쉐어박스 네비게이션 시도:', {
+        console.log(`[${currentTime}] [토스트 서비스] 쉐어박스 네비게이션 시도:`, {
           shareBoxId,
           shareBoxIdType: typeof shareBoxId,
           initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
@@ -169,10 +179,10 @@ export const showNotificationToast = message => {
           initialTab: notificationType === 'SHAREBOX_USAGE_COMPLETE' ? 'used' : 'available',
         });
 
-        console.log('[토스트 서비스] BoxList 네비게이션 성공');
+        console.log(`[${currentTime}] [토스트 서비스] BoxList 네비게이션 성공`);
       }
     } catch (error) {
-      console.error('[토스트 서비스] 알림 처리 중 오류:', error);
+      console.error(`[${currentTime}] [토스트 서비스] 알림 처리 중 오류:`, error);
     }
   };
 
@@ -196,8 +206,8 @@ export const showNotificationToast = message => {
     visibilityTime: 5000,
     autoHide: true,
     topOffset: 0,
-    onShow: () => console.log('[토스트 서비스] 알림 토스트가 표시되었습니다.'),
-    onHide: () => console.log('[토스트 서비스] 알림 토스트가 숨겨졌습니다.'),
+    onShow: () => console.log(`[${currentTime}] [토스트 서비스] 알림 토스트가 표시되었습니다.`),
+    onHide: () => console.log(`[${currentTime}] [토스트 서비스] 알림 토스트가 숨겨졌습니다.`),
   });
 };
 

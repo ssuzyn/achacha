@@ -154,7 +154,21 @@ export const handleNotificationNavigation = async navigationInfo => {
  */
 export const handleForegroundNotification = message => {
   // 앱이 포그라운드 상태일 때 알림 처리
-  console.log('포그라운드 알림 수신 (토스트 알림 생성):', message.notification?.title);
+  const currentTime = new Date().toLocaleString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  console.log(`[${currentTime}] 포그라운드 알림 수신:`, {
+    title: message.notification?.title,
+    body: message.notification?.body,
+    data: message.data,
+  });
 
   // 토스트 메시지로 알림 표시
   toastService.showNotificationToast(message);
@@ -172,7 +186,21 @@ export const initializeNotifications = async () => {
 
     // 포그라운드 상태에서 메시지 수신 시 이벤트 리스너
     const unsubscribeForeground = messaging().onMessage(async remoteMessage => {
-      console.log('포그라운드 메시지 수신:', remoteMessage);
+      const currentTime = new Date().toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+
+      console.log(`[${currentTime}] 포그라운드 메시지 수신:`, {
+        title: remoteMessage.notification?.title,
+        body: remoteMessage.notification?.body,
+        data: remoteMessage.data,
+      });
 
       // 토스트 메시지로 알림 표시
       handleForegroundNotification(remoteMessage);
@@ -180,7 +208,22 @@ export const initializeNotifications = async () => {
 
     // 백그라운드에서 알림 클릭 시 이벤트 핸들링
     messaging().onNotificationOpenedApp(async remoteMessage => {
-      console.log('백그라운드에서 알림 클릭:', remoteMessage);
+      const currentTime = new Date().toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+
+      console.log(`[${currentTime}] 백그라운드에서 알림 클릭:`, {
+        title: remoteMessage.notification?.title,
+        body: remoteMessage.notification?.body,
+        data: remoteMessage.data,
+      });
+
       const navigationInfo = extractNavigationInfo(remoteMessage);
       await handleNotificationNavigation(navigationInfo);
     });
@@ -188,7 +231,22 @@ export const initializeNotifications = async () => {
     // 앱이 종료된 상태에서 알림 클릭으로 실행된 경우
     const initialMessage = await messaging().getInitialNotification();
     if (initialMessage) {
-      console.log('종료 상태에서 알림 클릭으로 실행:', initialMessage);
+      const currentTime = new Date().toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+
+      console.log(`[${currentTime}] 종료 상태에서 알림 클릭으로 실행:`, {
+        title: initialMessage.notification?.title,
+        body: initialMessage.notification?.body,
+        data: initialMessage.data,
+      });
+
       // 앱 초기화가 완료된 후에 처리하기 위해 약간의 지연 추가
       setTimeout(async () => {
         const navigationInfo = extractNavigationInfo(initialMessage);
