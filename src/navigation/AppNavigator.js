@@ -20,6 +20,7 @@ import PresentScreen from '../screens/gifticon-management/PresentScreen';
 import GiveAwayScreen from '../screens/give-away/GiveAwayScreen';
 import SettingScreen from '../screens/SettingScreen';
 import WatchGuideScreen from '../screens/WatchGuideScreen';
+import MapScreen from '../screens/MapScreen';
 // 쉐어박스 스크린 추가
 import BoxMainScreen from '../screens/gifticon-share-box/BoxMainScreen';
 import BoxCreateScreen from '../screens/gifticon-share-box/BoxCreateScreen';
@@ -136,6 +137,14 @@ const AppNavigator = () => {
       <Stack.Screen
         name="GiveAwayScreen"
         component={GiveAwayScreen}
+        options={{
+          animation: 'slide_from_right',
+          animationDuration: 200,
+        }}
+      />
+      <Stack.Screen
+        name="MapScreen"
+        component={MapScreen}
         options={{
           animation: 'slide_from_right',
           animationDuration: 200,

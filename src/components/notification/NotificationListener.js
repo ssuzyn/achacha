@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { NativeEventEmitter, NativeModules, Platform, ToastAndroid } from 'react-native';
+import { NativeEventEmitter, NativeModules, Platform } from 'react-native';
 import toastService from '../../utils/toastService';
 
 /**
@@ -29,17 +29,10 @@ const NotificationListener = () => {
             console.log('[알림 리스너] FCM 메시지 수신:', remoteMessage);
 
             try {
-              // Android 네이티브 토스트로 디버깅용 메시지 표시
-              ToastAndroid.showWithGravity(
-                `${remoteMessage.notification?.title || '알림'}`,
-                ToastAndroid.SHORT,
-                ToastAndroid.TOP
-              );
-
-              // React-Native 토스트 메시지로 알림 표시
+              // 커스텀 토스트 메시지로 알림 표시
               if (remoteMessage) {
                 toastService.showNotificationToast(remoteMessage);
-                console.log('[알림 리스너] FCM 메시지를 토스트로 표시했습니다.');
+                console.log('[알림 리스너] 포그라운드 알림 토스트 메시지로 표시됨');
               }
             } catch (error) {
               console.error('[알림 리스너] 토스트 표시 중 오류:', error);

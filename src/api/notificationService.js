@@ -244,7 +244,11 @@ const notificationService = {
    */
   async updateFcmToken(token) {
     try {
-      const response = await apiClient.post('/api/notifications/token', { token });
+      console.log('[API] FCM 토큰 업데이트 요청:', token);
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.FCM_TOKEN_UPDATE, {
+        fcmToken: token,
+      });
+      console.log('[API] FCM 토큰 업데이트 성공:', response.data);
       return response.data;
     } catch (error) {
       console.error('[API] FCM 토큰 업데이트 실패:', error);

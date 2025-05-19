@@ -1,6 +1,6 @@
 import Toast from 'react-native-toast-message';
 import React from 'react';
-import ToastNotification from '../components/ui/ToastNotification';
+import HeadupToast from '../components/ui/HeadupToast';
 import NavigationService from '../navigation/NavigationService';
 import notificationService from '../api/notificationService';
 
@@ -14,19 +14,31 @@ const REFERENCE_TYPES = {
  * 커스텀 토스트 설정
  */
 export const toastConfig = {
-  notificationToast: ({ props, hide }) => {
-    const { notificationType, title, message, referenceEntityType, referenceEntityId } = props;
+  // 성공 토스트
+  success: props => <HeadupToast {...props} />,
+
+  // 에러 토스트
+  error: props => <HeadupToast {...props} />,
+
+  // 정보 토스트
+  info: props => <HeadupToast {...props} />,
+
+  // 알림 토스트
+  notificationToast: props => {
+    const data = props.props || {};
 
     // 알림 클릭 핸들러
     const handleNotificationPress = async () => {
-      if (!referenceEntityId) {
-        console.log('참조 ID가 없습니다:', props);
-        return;
-      }
-
       try {
         // 알림 닫기
         Toast.hide();
+
+        const { referenceEntityType, referenceEntityId, notificationType } = data;
+
+        if (!referenceEntityId) {
+          console.log('참조 ID가 없습니다:', data);
+          return;
+        }
 
         // 기프티콘 관련 알림 처리
         if (
@@ -73,16 +85,17 @@ export const toastConfig = {
       }
     };
 
-    return (
-      <ToastNotification
-        notificationType={notificationType}
-        title={title}
-        message={message}
-        onPress={handleNotificationPress}
-        onClose={() => Toast.hide()}
-        hide={hide}
-      />
-    );
+    // HeadupToast에 전달할 props
+    const propsWithHandler = {
+      ...props,
+      props: {
+        ...data,
+        type: data.notificationType,
+        onPress: handleNotificationPress,
+      },
+    };
+
+    return <HeadupToast {...propsWithHandler} />;
   },
 };
 
@@ -107,23 +120,46 @@ export const showNotificationToast = message => {
   // 토스트 메시지 표시
   Toast.show({
     type: 'notificationToast',
+    position: 'top',
     props: {
-      notificationType: notificationData.notificationType,
       title: title || '새로운 알림',
       message: body || '새로운 알림이 도착했습니다.',
+      notificationType: notificationData.notificationType,
       referenceEntityType: notificationData.referenceEntityType,
       referenceEntityId: notificationData.referenceEntityId,
     },
-    position: 'top',
-    visibilityTime: 7000,
+    visibilityTime: 5000,
     autoHide: true,
-    topOffset: 40,
+    topOffset: 0,
     onShow: () => console.log('알림 토스트가 표시되었습니다.'),
     onHide: () => console.log('알림 토스트가 숨겨졌습니다.'),
+  });
+};
+
+/**
+ * 일반 토스트 메시지 표시
+ * @param {string} type - 토스트 타입 (success, error, info)
+ * @param {string} title - 토스트 제목
+ * @param {string} message - 토스트 메시지
+ */
+export const showToast = (type, title, message) => {
+  // 기존 토스트 모두 제거
+  Toast.hide();
+
+  // 토스트 표시
+  Toast.show({
+    type: type || 'info',
+    position: 'top',
+    text1: title,
+    text2: message,
+    visibilityTime: 3000,
+    autoHide: true,
+    topOffset: 0,
   });
 };
 
 export default {
   toastConfig,
   showNotificationToast,
+  showToast,
 };

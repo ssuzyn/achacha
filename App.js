@@ -186,8 +186,24 @@ export default function App() {
         // 백그라운드 메시지 핸들러 설정
         setupBackgroundHandler();
 
-        // 알림 클릭 이벤트 처리
-        handleNotificationOpen(navigationRef.current);
+        // 알림 클릭 이벤트 처리 - navigationRef가 준비된 후에만 처리
+        // 앱이 완전히 로드된 후에 알림 핸들러 설정
+        const handleNavigationReady = () => {
+          if (navigationRef.current) {
+            handleNotificationOpen(navigationRef.current);
+          } else {
+            // navigationRef가 아직 준비되지 않았다면 짧은 지연 후 재시도
+            setTimeout(handleNavigationReady, 500);
+          }
+        };
+        
+        // 앱 로딩이 완료된 후 실행
+        setIsReady(prevIsReady => {
+          if (prevIsReady) {
+            handleNavigationReady();
+          }
+          return prevIsReady;
+        });
 
         // 토큰 갱신 리스너 설정
         const unsubscribeTokenRefresh = setupTokenRefresh();

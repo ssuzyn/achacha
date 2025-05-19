@@ -1,18 +1,49 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { calculateDday } from '../../utils/dateUtils';
-const StarbucksImg = require('../../assets/images/starbucks.png');
+import { useNavigation } from '@react-navigation/native';
 
-const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
-  const { brandName, gifticonExpiryDate, gifticonName, thumbnailPath, gifticonId, brandId } =
-    gifticon;
+const MapGifticonItem = ({
+  gifticon,
+  onUse = () => {},
+  onSelectBrand = () => {},
+  isSelected = false,
+}) => {
+  const {
+    brandName,
+    gifticonExpiryDate,
+    gifticonName,
+    thumbnailPath,
+    gifticonId,
+    brandId,
+    gifticonType,
+  } = gifticon;
   const [imageError, setImageError] = useState(false);
+  const navigation = useNavigation();
 
   const dday = calculateDday(gifticonExpiryDate);
 
   // 아이템 클릭 핸들러
   const handleItemPress = () => {
     onSelectBrand(brandId);
+  };
+
+  // 사용 버튼 클릭 핸들러
+  const handleUsePress = e => {
+    e.stopPropagation();
+
+    // 기프티콘 타입에 따라 다른 페이지로 이동
+    if (gifticonType === 'AMOUNT') {
+      navigation.navigate('DetailAmount', {
+        gifticonId: gifticonId,
+        scope: 'MY_BOX',
+      });
+    } else {
+      navigation.navigate('DetailProduct', {
+        gifticonId: gifticonId,
+        scope: 'MY_BOX',
+      });
+    }
   };
 
   return (
@@ -25,20 +56,19 @@ const MapGifticonItem = ({ gifticon, onUse, onSelectBrand, isSelected }) => {
       {/* 기프티콘 정보 */}
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>
-          <Text style={styles.brand}>{brandName}</Text>
+          <Text style={styles.brand}>
+            {brandName.length > 10 ? `${brandName.substring(0, 10)}...` : brandName}
+          </Text>
           <Text style={styles.dday}>{dday}</Text>
         </View>
-        <Text style={styles.menuName}>{gifticonName}</Text>
+
+        <Text style={styles.menuName}>
+          {gifticonName.length > 10 ? `${gifticonName.substring(0, 10)}...` : gifticonName}
+        </Text>
       </View>
 
       {/* 사용 버튼 */}
-      <TouchableOpacity
-        style={styles.useButton}
-        onPress={e => {
-          e.stopPropagation(); // 부모 터치 이벤트 전파 중단
-          onUse(gifticonId);
-        }}
-      >
+      <TouchableOpacity style={styles.useButton} onPress={handleUsePress}>
         <Text style={styles.buttonText}>사용</Text>
       </TouchableOpacity>
     </TouchableOpacity>
