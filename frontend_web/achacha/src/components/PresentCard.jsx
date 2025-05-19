@@ -78,77 +78,162 @@ function PresentCard({ presentCard }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-100">
       {/* 전체 카드 컨테이너 */}
-      <div className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-lg">
-        {/* 템플릿 이미지 (배경) - z-0 */}
+      <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+        {/* 템플릿 이미지 (배경) */}
         <img 
           src={templateCardPath} 
           alt="템플릿 카드" 
-          className="w-full h-auto z-0 relative"
+          style={{ 
+            width: '100%', 
+            display: 'block',
+            borderRadius: '16px',
+            boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+          }} 
         />
         
-        {/* 메시지 영역 (중앙) - z-10 */}
-        <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center z-10">
-          <div className="bg-white rounded-xl p-4 mx-4 w-[80%] shadow-md">
-            <h2 className="text-xl text-center font-medium text-gray-700">
-              {displayMessage}
-            </h2>
+        {/* 컨텐츠 오버레이 */}
+        <div style={{ 
+          position: 'absolute', 
+          top: 50, 
+          left: 0, 
+          width: '100%', 
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          {/* 메시지 영역 */}
+          <div style={{ 
+            backgroundColor: 'white', 
+            borderRadius: '12px',
+            padding: '20px',
+            width: '80%',
+            marginTop: '20%',
+            marginBottom: '10px',
+            textAlign: 'center'
+          }}>
+            <p style={{ 
+              fontSize: '18px', 
+              fontWeight: 'bold', 
+              color: '#000',
+              margin: 0
+            }}>
+              {displayMessage.split('\n').map((line, i) => (
+                <React.Fragment key={i}>
+                  {line}
+                  {i < displayMessage.split('\n').length - 1 && <br />}
+                </React.Fragment>
+              ))}
+            </p>
           </div>
-        </div>
-        
-        {/* 기프티콘 썸네일 이미지 (하단 중앙) - z-20 */}
-        <div className="absolute left-0 right-0 bottom-[25%] flex justify-center z-20">
-          <div className="border border-blue-300 rounded-lg overflow-hidden w-56 h-56 bg-white shadow-md">
-            <img 
-              src={gifticonThumbnailPath || gifticonOriginalPath} 
-              alt="기프티콘 썸네일" 
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                console.error('썸네일 이미지 로드 실패:', e);
-                // 이미 fallback 이미지인 경우 더 이상 처리하지 않음
-                if (e.target.src.includes('fallback-image.png')) {
-                  e.target.onerror = null;
-                  return;
-                }
-                
-                // 썸네일이 실패했고, 원본을 시도하지 않은 경우만 원본으로 교체
-                if (e.target.src !== gifticonOriginalPath && gifticonOriginalPath) {
-                  e.target.src = gifticonOriginalPath;
-                  e.target.onerror = (e2) => {
-                    console.error('원본 이미지도 로드 실패:', e2);
-                    e2.target.src = "/fallback-image.png";
-                    e2.target.onerror = null;
-                  };
-                } else {
-                  // 원본도 실패한 경우 기본 이미지로
-                  e.target.src = "/fallback-image.png";
-                  e.target.onerror = null;
-                }
+          
+          {/* 구분선 */}
+          <div style={{ 
+            width: '80%', 
+            borderTop: '2px dashed #6E6E6E',
+            margin: '10px 0'
+          }}></div>
+          
+          {/* 기프티콘 영역 - 하나의 흰색 컨테이너로 통합 */}
+          <div style={{ 
+            width: '80%',
+            backgroundColor: '#FFFFFF',
+            borderRadius: '12px',
+            padding: '20px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginTop: '10px',
+            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)'
+          }}>
+            {/* 썸네일 이미지 */}
+            <div style={{ 
+              border: '1px solid #3B82F6',
+              borderRadius: '8px',
+              padding: '3px',
+              marginBottom: '10px'
+            }}>
+              <img 
+                src={gifticonThumbnailPath || gifticonOriginalPath} 
+                alt="기프티콘 썸네일" 
+                style={{ 
+                  width: '150px',
+                  height: 'auto',
+                  display: 'block'
+                }}
+                onError={(e) => {
+                  console.error('썸네일 이미지 로드 실패:', e);
+                  if (e.target.src.includes('fallback-image.png')) {
+                    e.target.onerror = null;
+                    return;
+                  }
+                  
+                  if (e.target.src !== gifticonOriginalPath && gifticonOriginalPath) {
+                    e.target.src = gifticonOriginalPath;
+                    e.target.onerror = (e2) => {
+                      console.error('원본 이미지도 로드 실패:', e2);
+                      e2.target.src = "/fallback-image.png";
+                      e2.target.onerror = null;
+                    };
+                  } else {
+                    e.target.src = "/fallback-image.png";
+                    e.target.onerror = null;
+                  }
+                }}
+              />
+            </div>
+            
+            {/* 갤러리에 저장 버튼 */}
+            <button 
+              onClick={handleSaveImage} 
+              style={{ 
+                backgroundColor: '#E8F4FC',
+                color: '#3669A1',
+                fontWeight: '500',
+                padding: '12px',
+                borderRadius: '8px',
+                width: '100%',
+                border: 'none',
+                cursor: 'pointer'
               }}
-            />
+            >
+              갤러리에 저장
+            </button>
           </div>
-        </div>
-        
-        {/* 저장 버튼 (하단에 고정) - z-30 */}
-        <div className="absolute left-0 right-0 bottom-6 flex justify-center z-30">
-          <button
-            onClick={handleSaveImage}
-            className="bg-blue-100 text-blue-600 font-semibold py-3 px-6 rounded-full w-[80%] shadow-md"
-          >
-            갤러리에 저장
-          </button>
+
+          {/* 유효기간 정보 - 검정색 배경(40% 불투명도)과 시계 아이콘 */}
+          {expiryDateTime && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              color: 'white',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              margin: '15px auto',
+              width: '60%',
+              textAlign: 'center'
+            }}>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                viewBox="0 0 24 24" 
+                fill="currentColor"
+                style={{ width: '18px', height: '18px', marginRight: '6px' }}
+              >
+                <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12H4C4 16.4183 7.58172 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4C9.53614 4 7.33243 5.11383 5.86492 6.86543L8 9H2V3L4.44656 5.44648C6.28002 3.33509 8.9841 2 12 2ZM13 7L12.9998 11.585L16.2426 14.8284L14.8284 16.2426L10.9998 12.413L11 7H13Z"></path>
+              </svg>
+              <span style={{ fontSize: '14px' }}>{expiryDateTime}</span>
+            </div>
+          )}
         </div>
       </div>
-      
-      {/* 유효기간 정보 */}
-      {expiryDateTime && (
-        <div className="mt-4 text-sm text-gray-500">
-          {expiryDateTime}
-        </div>
-      )}
     </div>
   );
 }
 
 export default PresentCard;
+
