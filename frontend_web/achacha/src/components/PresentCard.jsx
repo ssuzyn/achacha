@@ -25,7 +25,6 @@ function PresentCard({ presentCard }) {
   
   // 데이터 유효성 검사
   const isValidData = 
-    presentCard.presentCardMessage && 
     presentCard.gifticonOriginalPath &&
     presentCard.templateCardPath;
     
@@ -37,9 +36,8 @@ function PresentCard({ presentCard }) {
           <h2 className="font-bold mb-2">데이터 형식 오류</h2>
           <p>필수 정보가 누락되었습니다.</p>
           <p className="text-sm mt-2">
-            {!presentCard.presentCardMessage && <span className="block">- 메시지 누락</span>}
-            {!presentCard.gifticonOriginalPath && <span className="block">- 기프티콘 이미지 누락</span>}
-            {!presentCard.templateCardPath && <span className="block">- 템플릿 카드 이미지 누락</span>}
+            {!presentCard.gifticonOriginalPath && <span className="block">기프티콘 이미지 누락</span>}
+            {!presentCard.templateCardPath && <span className="block">템플릿 카드 이미지 누락</span>}
           </p>
         </div>
       </div>
@@ -54,6 +52,9 @@ function PresentCard({ presentCard }) {
     templateCardPath,
     expiryDateTime
   } = presentCard;
+  
+  // 메시지가 비어있을 경우 기본 메시지로 대체
+  const displayMessage = presentCardMessage || "아차차에서 선물이 도착했어요!";
 
   // 디버깅용 콘솔 출력 (개발 확인용)
   console.log('PresentCard: 구조분해할당 완료된 데이터:', {
@@ -65,52 +66,75 @@ function PresentCard({ presentCard }) {
     expiryDateTime: expiryDateTime || '(없음)'
   });
 
-  // 브라우저에서 이미지 저장 기능
+  // 이미지 다운로드 함수
   const handleSaveImage = () => {
-    // 카드 이미지를 새 창에서 열기 (사용자가 직접 저장할 수 있도록)
-    window.open(gifticonOriginalPath, '_blank');
+    // 이미지 다운로드 링크 생성
+    const link = document.createElement('a');
+    link.href = gifticonOriginalPath;
+    link.download = `기프티콘_${presentCardCode || 'image'}.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <div 
-        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-lg"
-        style={{
-          backgroundImage: `url(${templateCardPath})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          aspectRatio: '3/5', // 카드 비율 조정
-        }}
-      >
-        {/* 메시지 영역 */}
-        <div className="flex flex-col items-center pt-40 px-5 pb-5">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-800">{presentCardMessage}</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center p-4">
+      {/* 전체 카드 컨테이너 */}
+      <div className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-lg">
+        {/* 템플릿 이미지 (배경) - z-0 */}
+        <img 
+          src={templateCardPath} 
+          alt="템플릿 카드" 
+          className="w-full h-auto z-0 relative"
+        />
+        
+        {/* 메시지 영역 (중앙) - z-10 */}
+        <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center z-10">
+          <div className="bg-white rounded-xl p-4 mx-4 w-[80%] shadow-md">
+            <h2 className="text-xl text-center font-medium text-gray-700">
+              {displayMessage}
+            </h2>
           </div>
-          
-          {/* 점선 구분선 */}
-          <div className="w-full border-t border-dashed border-gray-400 my-4"></div>
-          
-          {/* 기프티콘 이미지 영역 */}
-          <div className="w-full flex justify-center my-4">
-            <div className="rounded-lg border-2 border-blue-300 overflow-hidden w-64 h-64 bg-white flex items-center justify-center">
-              <img 
-                src={gifticonOriginalPath}
-                alt="기프티콘" 
-                className="max-w-full max-h-full object-contain"
-                onError={(e) => {
-                  console.error('기프티콘 이미지 로드 실패:', e);
-                  e.target.src = "/fallback-image.png"; // 기본 이미지로 대체
-                  e.target.onerror = null; // 추가 에러 방지
-                }}
-              />
-            </div>
+        </div>
+        
+        {/* 기프티콘 썸네일 이미지 (하단 중앙) - z-20 */}
+        <div className="absolute left-0 right-0 bottom-[25%] flex justify-center z-20">
+          <div className="border border-blue-300 rounded-lg overflow-hidden w-56 h-56 bg-white shadow-md">
+            <img 
+              src={gifticonThumbnailPath || gifticonOriginalPath} 
+              alt="기프티콘 썸네일" 
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                console.error('썸네일 이미지 로드 실패:', e);
+                // 이미 fallback 이미지인 경우 더 이상 처리하지 않음
+                if (e.target.src.includes('fallback-image.png')) {
+                  e.target.onerror = null;
+                  return;
+                }
+                
+                // 썸네일이 실패했고, 원본을 시도하지 않은 경우만 원본으로 교체
+                if (e.target.src !== gifticonOriginalPath && gifticonOriginalPath) {
+                  e.target.src = gifticonOriginalPath;
+                  e.target.onerror = (e2) => {
+                    console.error('원본 이미지도 로드 실패:', e2);
+                    e2.target.src = "/fallback-image.png";
+                    e2.target.onerror = null;
+                  };
+                } else {
+                  // 원본도 실패한 경우 기본 이미지로
+                  e.target.src = "/fallback-image.png";
+                  e.target.onerror = null;
+                }
+              }}
+            />
           </div>
-          
-          {/* 갤러리에 저장 버튼 */}
+        </div>
+        
+        {/* 저장 버튼 (하단에 고정) - z-30 */}
+        <div className="absolute left-0 right-0 bottom-6 flex justify-center z-30">
           <button
             onClick={handleSaveImage}
-            className="mt-6 bg-blue-100 text-blue-600 font-semibold py-3 px-6 rounded-full w-full"
+            className="bg-blue-100 text-blue-600 font-semibold py-3 px-6 rounded-full w-[80%] shadow-md"
           >
             갤러리에 저장
           </button>
@@ -120,7 +144,7 @@ function PresentCard({ presentCard }) {
       {/* 유효기간 정보 */}
       {expiryDateTime && (
         <div className="mt-4 text-sm text-gray-500">
-          유효기간: {expiryDateTime}
+          {expiryDateTime}
         </div>
       )}
     </div>
