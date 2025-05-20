@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   StyleSheet,
@@ -8,13 +8,15 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
-import KakaoMapWebView from '../components/map/KakaoMapView';
+import KakaoMapView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import GeofencingService from '../services/GeofencingService';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { mapGifticonService } from '../services/mapGifticonService';
 import { geoNotificationService } from '../services/geoNotificationService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Geofencing from '@rn-bridge/react-native-geofencing';
 
 const MapScreen = () => {
   const navigation = useNavigation();
@@ -31,10 +33,14 @@ const MapScreen = () => {
       const gifticonsArray = response.gifticons || [];
       setGifticons(gifticonsArray);
 
-      // GeofencingService에 기프티콘 목록 전달
-      if (geofencingServiceRef.current) {
-        geofencingServiceRef.current.updateUserGifticons(response);
+      // 기프티콘 AsyncStorage에 저장 (백그라운드 처리용)
+      await AsyncStorage.setItem('USER_GIFTICONS', JSON.stringify(gifticonsArray));
+
+      // GeofencingService에 기프티콘 목록 전달 (싱글톤 인스턴스 가져오기)
+      if (!geofencingServiceRef.current) {
+        geofencingServiceRef.current = new GeofencingService();
       }
+      geofencingServiceRef.current.updateUserGifticons(response);
 
       return response;
     } catch (error) {
@@ -46,23 +52,12 @@ const MapScreen = () => {
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
-    // GeofencingService 인스턴스 생성 (싱글톤)
-    if (!geofencingServiceRef.current) {
-      geofencingServiceRef.current = new GeofencingService();
-    }
+    // GeofencingService 인스턴스 가져오기 (싱글톤)
+    geofencingServiceRef.current = new GeofencingService();
 
     const initialize = async () => {
-      // 1. 기프티콘 목록 로드
+      // 기프티콘 목록 로드
       await loadGifticons();
-
-      // 2. 지오펜싱 초기화
-      if (geofencingServiceRef.current && !geofencingServiceRef.current.initialized) {
-        try {
-          await geofencingServiceRef.current.initGeofencing();
-        } catch (error) {
-          console.error('[MapScreen] 지오펜싱 초기화 중 오류:', error);
-        }
-      }
     };
 
     initialize();
@@ -75,33 +70,9 @@ const MapScreen = () => {
       30 * 60 * 1000
     );
 
-    // AppState 이벤트 핸들러
-    const handleAppStateChange = async nextAppState => {
-      if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-        if (geofencingServiceRef.current) {
-          // 지오펜싱 서비스 초기화 상태 리셋
-          geofencingServiceRef.current.resetInitialized();
-
-          // 지오펜싱 다시 초기화 및 기프티콘 목록 갱신
-          await geofencingServiceRef.current.initGeofencing();
-          await loadGifticons();
-        }
-      }
-
-      appState.current = nextAppState;
-    };
-
-    // 이벤트 리스너 설정
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-
     // 컴포넌트 언마운트 시 정리
     return () => {
       clearInterval(refreshInterval);
-      subscription.remove();
-
-      if (geofencingServiceRef.current) {
-        geofencingServiceRef.current.cleanup();
-      }
     };
   }, []);
 
@@ -137,6 +108,7 @@ const MapScreen = () => {
   // 매장 검색 결과 처리 콜백
   const handleStoresFound = async storeResults => {
     console.log('[MapScreen] 매장 검색 결과 수신:', storeResults.length);
+    console.log('[MapScreen] 매장 데이터 구조:', JSON.stringify(storeResults.slice(0, 1)));
 
     if (!geofencingServiceRef.current) {
       console.error('[MapScreen] 지오펜싱 서비스 참조가 없음');
@@ -166,14 +138,37 @@ const MapScreen = () => {
     }
 
     // 지오펜스 설정 진행
-    console.log('[MapScreen] 지오펜스 설정 시작, 서비스 참조:', geofencingServiceRef.current);
-    await geofencingServiceRef.current.setupGeofences(storeResults, selectedBrand);
+    try {
+      // storeResults 데이터 구조 확인
+      console.log(
+        '[MapScreen] 매장 데이터 구조 확인:',
+        storeResults.map(br => ({
+          brandId: br.brandId,
+          storeCount: br.stores ? br.stores.length : 0,
+        }))
+      );
+
+      // 지오펜스 설정 결과 저장
+      const setupResult = await geofencingServiceRef.current.setupGeofences(
+        storeResults,
+        selectedBrand
+      );
+
+      // 설정 후 등록된 지오펜스 확인
+      const registeredGeofences = await Geofencing.getRegisteredGeofences();
+      console.log('[MapScreen] 지오펜스 설정 완료, 등록된 지오펜스:', registeredGeofences);
+
+      // 지오펜스 정보를 저장소에 저장 (백그라운드에서 활용하기 위함)
+      await AsyncStorage.setItem('GEOFENCE_STORE_DATA', JSON.stringify(storeResults));
+
+      return setupResult;
+    } catch (error) {
+      console.error('[MapScreen] 지오펜스 설정 중 오류:', error);
+    }
   };
 
   // 기프티콘 사용 처리 함수
-  const handleUseGifticon = id => {
-    console.log(`[MapScreen] 기프티콘 ${id} 사용됨`);
-  };
+  const handleUseGifticon = id => {};
 
   // 브랜드 선택 처리 함수
   const handleSelectBrand = brandId => {
@@ -181,88 +176,38 @@ const MapScreen = () => {
     const currentBrandId = selectedBrand !== null ? Number(selectedBrand) : null;
     const newBrandId = brandId !== null ? Number(brandId) : null;
 
-    console.log(`[MapScreen] 브랜드 선택 변경 - 현재: ${currentBrandId}, 새로운: ${newBrandId}`);
-
     // 같은 브랜드를 다시 선택하면 선택 해제
     if (currentBrandId === newBrandId) {
-      console.log('[MapScreen] 같은 브랜드 다시 선택 - 선택 해제');
       setSelectedBrand(null);
     } else {
-      console.log(`[MapScreen] 새 브랜드 선택: ${newBrandId}`);
       setSelectedBrand(newBrandId);
     }
   };
 
   // 현재 위치로 이동하는 함수
-  const moveToCurrentLocation = () => {
+  const moveToCurrentLocation = useCallback(() => {
     if (mapRef.current && mapRef.current.moveToCurrentLocation) {
-      console.log('[MapScreen] 현재 위치로 이동');
       mapRef.current.moveToCurrentLocation();
     }
-  };
+  }, []);
 
-  // 테스트용 - 지오펜스 진입 이벤트 시뮬레이션 함수
-  const testGeofenceTrigger = () => {
-    if (!geofencingServiceRef.current) {
-      Alert.alert('오류', '지오펜싱 서비스가 초기화되지 않았습니다.');
-      return;
-    }
-
-    // 기프티콘 목록 확인
-    const userGifticons = geofencingServiceRef.current.userGifticons || [];
-
-    if (userGifticons.length === 0) {
-      Alert.alert('알림', '기프티콘 목록이 비어 있습니다.');
-      return;
-    }
-
-    // 테스트할 브랜드 ID (예: CU)
-    const testBrandId = 6;
-
-    // 해당 브랜드의 기프티콘 찾기
-    const relevantGifticon = userGifticons.find(g => g.brandId === testBrandId);
-
-    if (relevantGifticon) {
-      Alert.alert(
-        '테스트 정보',
-        `브랜드 ID ${testBrandId}의 기프티콘을 찾았습니다:\n` +
-          `- 이름: ${relevantGifticon.gifticonName}\n` +
-          `- ID: ${relevantGifticon.gifticonId}\n` +
-          `- 만료일: ${relevantGifticon.gifticonExpiryDate}\n\n` +
-          '실제 지오펜스 진입 이벤트가 발생하면 이 기프티콘에 대한 알림이 자동으로 전송됩니다.',
-        [
-          { text: '확인' },
-          {
-            text: 'API 테스트',
-            onPress: async () => {
-              try {
-                console.log(
-                  `[MapScreen] API 테스트: gifticonId=${relevantGifticon.gifticonId} 전송`
-                );
-                const result = await geoNotificationService.requestGeoNotification(
-                  relevantGifticon.gifticonId
-                );
-                console.log('[MapScreen] API 테스트 성공:', result);
-                Alert.alert('성공', 'API 호출이 성공적으로 완료되었습니다!');
-              } catch (error) {
-                console.error('[MapScreen] API 테스트 실패:', error);
-                Alert.alert('오류', `API 호출 실패: ${error.message}`);
-              }
-            },
-          },
-        ]
-      );
-    } else {
-      Alert.alert('알림', `브랜드 ID ${testBrandId}에 해당하는 기프티콘이 없습니다.`);
-    }
-  };
+  // 화면 포커스 시 현재 위치로 이동
+  useFocusEffect(
+    useCallback(() => {
+      moveToCurrentLocation();
+      return () => {
+        // 화면을 벗어날 때 정리할 작업이 있다면 여기에 추가
+        // console.log('[MapScreen] 화면 포커스 벗어남');
+      };
+    }, [moveToCurrentLocation])
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <StatusBar barStyle="dark-content" backgroundColor="#fafafa" />
 
       <View style={styles.mapContainer}>
-        <KakaoMapWebView
+        <KakaoMapView
           ref={mapRef}
           uniqueBrands={uniqueBrands}
           selectedBrand={selectedBrand}
@@ -282,11 +227,6 @@ const MapScreen = () => {
         onPress={() => navigation.navigate('GiveAwayScreen')}
       >
         <Icon name="card-giftcard" size={24} color="#278CCC" />
-      </TouchableOpacity>
-
-      {/* 테스트 버튼 (개발 중에만 사용) */}
-      <TouchableOpacity style={[styles.giftButton, { top: 175 }]} onPress={testGeofenceTrigger}>
-        <Icon name="location-on" size={24} color="red" />
       </TouchableOpacity>
 
       {/* 기프티콘 목록 하단 시트 */}

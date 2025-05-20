@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import BottomSheet from '@gorhom/bottom-sheet';
 import MapGifticonList from './map/MapGifticonList';
@@ -6,7 +6,13 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const GifticonBottomSheet = ({ gifticons, onUseGifticon, onSelectBrand, selectedBrand }) => {
   const bottomSheetRef = useRef(null);
-  const snapPoints = useMemo(() => ['5%', '25%', '50%'], []);
+  const snapPoints = useMemo(() => ['5%', '30%', '50%'], []);
+
+  useEffect(() => {
+    if (selectedBrand && bottomSheetRef.current) {
+      bottomSheetRef.current.snapToIndex(1); // '25%'에 해당하는 인덱스
+    }
+  }, [selectedBrand]);
 
   const handleSheetChanges = useCallback(index => {
     console.log('handleSheetChanges', index);

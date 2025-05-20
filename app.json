@@ -14,7 +14,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["location", "fetch"],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "주변 매장에서 기프티콘 알림을 받기 위해 항상 위치 권한이 필요합니다.",
+        "NSLocationAlwaysUsageDescription": "주변 매장에서 기프티콘 알림을 받기 위해 항상 위치 권한이 필요합니다.",
+        "NSLocationWhenInUseUsageDescription": "주변 매장에서 기프티콘 알림을 받기 위해 위치 권한이 필요합니다."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +31,9 @@
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
-        "ACCESS_BACKGROUND_LOCATION"
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "RECEIVE_BOOT_COMPLETED"
       ]
     },
     "web": {
@@ -46,7 +54,18 @@
             "extraMavenRepos": ["https://devrepo.kakao.com/nexus/content/groups/public/"]
           }
         }
-      ]
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "주변 매장에서 기프티콘 알림을 받기 위해 항상 위치 권한이 필요합니다.",
+          "locationAlwaysPermission": "주변 매장에서 기프티콘 알림을 받기 위해 항상 위치 권한이 필요합니다.",
+          "locationWhenInUsePermission": "주변 매장에서 기프티콘 알림을 받기 위해 위치 권한이 필요합니다.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      "./headlessLocationPlugin.js"
     ]
   }
 }
