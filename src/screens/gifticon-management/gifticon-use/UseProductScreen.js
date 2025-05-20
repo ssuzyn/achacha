@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../../components/ui';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
+import BrightnessControl from '../../../utils/BrightnessControl';
 
 const UseProductScreen = () => {
   const navigation = useNavigation();
@@ -31,14 +32,20 @@ const UseProductScreen = () => {
   const { id, gifticonId, barcodeNumber, brandName, gifticonName } = route.params || {};
   const actualGifticonId = id || gifticonId;
 
-  // 화면 로드 시 가로 모드로 설정
+  // 화면 로드 시 가로 모드로 설정 및 화면 밝기 최대로 설정
   useEffect(() => {
     // 가로 모드로 고정
     Orientation.lockToLandscape();
 
-    // 컴포넌트 언마운트 시 원래 모드로 복귀
+    // 화면 밝기 최대로 설정
+    BrightnessControl.setMaxBrightness();
+
+    // 컴포넌트 언마운트 시 원래 모드로 복귀 및 밝기 복원
     return () => {
       Orientation.lockToPortrait();
+
+      // 화면 밝기 원래대로 복원
+      BrightnessControl.restoreBrightness();
     };
   }, []);
 
