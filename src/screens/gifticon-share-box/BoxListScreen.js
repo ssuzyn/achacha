@@ -11,6 +11,7 @@ import {
   Animated,
   TouchableWithoutFeedback,
   FlatList,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Icon } from 'react-native-elements';
@@ -30,6 +31,7 @@ import {
 } from '../../api/shareBoxService';
 import { API_BASE_URL } from '../../api/config';
 import { useAuth } from '../../hooks/useAuth';
+import gifticonService from '../../api/gifticonService';
 
 const BoxListScreen = () => {
   const { theme } = useTheme();
@@ -122,6 +124,13 @@ const BoxListScreen = () => {
 
   // 새로고침 상태 추가
   const [refreshing, setRefreshing] = useState(false);
+
+  // 사용완료 목록 콘솔 출력
+  useEffect(() => {
+    if (selectedCategory === 'used') {
+      console.log('[사용완료 탭] usedGifticons 리스트:', usedGifticons);
+    }
+  }, [usedGifticons, selectedCategory]);
 
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({
@@ -536,28 +545,61 @@ const BoxListScreen = () => {
   };
 
   // 사용 완료 처리
-  const handleMarkAsUsed = () => {
+  const handleMarkAsUsed = async () => {
     if (!selectedGifticon) return;
 
-    // 여기서 API 호출로 상태 변경 (예시)
+    try {
+      // 실제 상품형 기프티콘 사용완료 API 호출
+      await gifticonService.markProductGifticonAsUsed(selectedGifticon.gifticonId);
 
-    // 상태 업데이트 및 화면 갱신 (임시 구현)
-    const updatedGifticons = filteredGifticons.filter(
-      gifticon => gifticon.gifticonId !== selectedGifticon.gifticonId
-    );
-    setFilteredGifticons(updatedGifticons);
+      // 성공 알림
+      Alert.alert('성공', '기프티콘이 사용완료 처리되었습니다.');
 
-    // 다이얼로그 닫기
-    setDialogVisible(false);
-    setSelectedGifticon(null);
+      // 새로고침 트리거 (refreshing 상태 활용)
+      setRefreshing(true);
+      // 사용완료 탭이면 usedGifticons 새로고침
+      if (selectedCategory === 'used') {
+        const res = await fetchUsedGifticons({
+          shareBoxId,
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+          sort: 'USED_DESC',
+          page: undefined,
+          size: 20,
+        });
+        setUsedGifticons(res.gifticons);
+        setUsedHasNextPage(res.hasNextPage);
+        setUsedNextPage(res.nextPage);
+      } else {
+        // 사용가능 탭이면 availableGifticons 새로고침
+        const res = await fetchAvailableGifticons({
+          shareBoxId,
+          type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
+          sort: sortBy.available === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+          page: undefined,
+          size: 20,
+        });
+        setAvailableGifticons(res.gifticons);
+        setHasNextPage(res.hasNextPage);
+        setNextPage(res.nextPage);
+      }
+    } catch (error) {
+      Alert.alert(
+        '사용완료 실패',
+        error?.response?.data?.message || '기프티콘 사용완료 처리에 실패했습니다.'
+      );
+    } finally {
+      setDialogVisible(false);
+      setSelectedGifticon(null);
+      setRefreshing(false);
+    }
   };
 
   // 기프티콘 클릭 핸들러
   const handleGifticonPress = item => {
     if (item.gifticonType === 'PRODUCT') {
-      navigation.navigate('BoxDetailProduct', { gifticon: item });
+      navigation.navigate('BoxDetailProduct', { gifticon: item, scope: item.scope });
     } else if (item.gifticonType === 'AMOUNT') {
-      navigation.navigate('BoxDetailAmount', { gifticon: item });
+      navigation.navigate('BoxDetailAmount', { gifticon: item, scope: item.scope });
     }
   };
 
