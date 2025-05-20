@@ -380,48 +380,62 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		UsageHistory findUsageHistory = usageHistoryRepository.findLatestByUserIdAndGifticonId(userId,
 			findGifticon.getId());
 
-		// 둘 다 없을 경우 사용하지 않은 기프티콘으로 간주
-		if (findOwnerHistory == null && findUsageHistory == null) {
+		// 기프티콘이 공유 중인지 확인
+		boolean isShared = gifticonDomainService.isAlreadyShared(findGifticon);
+		// 기본적으로 참여하지 않은 것으로 설정
+		boolean isParticipating = false;
+
+		// 기프티콘이 공유 중이라면, 사용자의 참여 여부 확인
+		if (isShared) {
+			// 기프티콘이 속한 쉐어박스 ID 가져오기
+			Integer shareBoxId = findGifticon.getSharebox().getId();
+			isParticipating = participationRepository.checkParticipation(userId, shareBoxId);
+		}
+
+		// 해당 사용자가 기프티콘 선물 및 뿌리기를 한 적이 없었고, 사용자가 기프티콘을 사용한 적이 없었고, 쉐어박스에 올라온 기프티콘도 아닌 경우 에러 발생
+		if (findOwnerHistory == null && findUsageHistory == null && !isParticipating) {
 			throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
 		}
 
 		UsageType usageType = UsageType.SELF_USE; // 사용 타입
 		LocalDateTime usedAt = null; // 사용 시간
-		String thumbnailPath = null; // 썸네일 파일 경로
+		String thumbnailPath = getGifticonImageUrl(findGifticon.getId(), FileType.THUMBNAIL);
 		String originalImagePath = null; // 원본 이미지 파일 경로
 
-		// 타인에게 넘겨준 경우
-		if (findOwnerHistory != null) {
-			// 송신자 검토
-			boolean isSendUser = gifticonDomainService.hasAccess(userId,
-				findOwnerHistory.getFromUser().getId());
-			if (!isSendUser) {
-				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-			}
-
-			usageType =
-				findOwnerHistory.getTransferType() == TransferType.GIVE_AWAY ? UsageType.GIVE_AWAY : UsageType.PRESENT;
-			usedAt = findOwnerHistory.getCreatedAt();
-			thumbnailPath = getGifticonImageUrl(findGifticon.getId(), FileType.THUMBNAIL);
-		}
-
-		// 본인이 사용한 경우
+		// 본인이 사용한 기록이 있는 경우
 		if (findUsageHistory != null) {
-			// 사용자 검토
-			boolean isUsedUser = gifticonDomainService.hasAccess(userId,
-				findUsageHistory.getUser().getId());
-			if (!isUsedUser) {
-				throw new CustomException(ErrorCode.UNAUTHORIZED_GIFTICON_ACCESS);
-			}
 
-			// 사용 여부 검토 (금액권 기준)
+			// 사용을 전부했는지 확인
 			boolean used = gifticonDomainService.isUsed(findGifticon);
+
+			// 사용을 덜 했다면 에러 발생
 			if (!used) {
 				throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
 			}
 
 			usedAt = findUsageHistory.getCreatedAt();
-			thumbnailPath = getGifticonImageUrl(findGifticon.getId(), FileType.THUMBNAIL);
+			originalImagePath = getGifticonImageUrl(findGifticon.getId(), FileType.ORIGINAL);
+		}
+		// 타인에게 넘겨준 경우
+		else if (findOwnerHistory != null) {
+
+			usageType =
+				findOwnerHistory.getTransferType() == TransferType.GIVE_AWAY ? UsageType.GIVE_AWAY : UsageType.PRESENT;
+			usedAt = findOwnerHistory.getCreatedAt();
+		}
+		// 쉐어박스 참여만 한 경우
+		else if (isParticipating) {
+			// usedAt = findUsageHistory.getCreatedAt();
+			// 사용을 전부했는지 확인
+			boolean used = gifticonDomainService.isUsed(findGifticon);
+
+			// 사용을 덜 했다면 에러 발생
+			if (!used) {
+				throw new CustomException(ErrorCode.GIFTICON_AVAILABLE);
+			}
+			usedAt = usageHistoryRepository.findAllByGifticonIdOrderByCreatedAtDesc(findGifticon.getId())
+				.get(0)
+				.getCreatedAt();
 			originalImagePath = getGifticonImageUrl(findGifticon.getId(), FileType.ORIGINAL);
 		}
 
