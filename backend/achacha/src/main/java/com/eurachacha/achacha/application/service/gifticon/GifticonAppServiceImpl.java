@@ -513,7 +513,9 @@ public class GifticonAppServiceImpl implements GifticonAppService {
 		// 해당 기프티콘에 대한 사용 내역 조회
 		UsageHistory findUsageHistory = usageHistoryRepository.findLatestByUserIdAndGifticonId(userId,
 			findGifticon.getId());
-		if (findUsageHistory == null) {
+
+		// 쉐어박스 기프티콘이 아니고, 본인 사용 내역도 없는 경우에만 예외 발생
+		if (findUsageHistory == null && findGifticon.getSharebox() == null) {
 			throw new CustomException(ErrorCode.GIFTICON_NO_USAGE_HISTORY);
 		}
 
