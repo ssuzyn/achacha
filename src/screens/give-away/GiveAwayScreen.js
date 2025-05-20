@@ -43,6 +43,21 @@ const emoji3 = require('../../assets/images/emoji3.png');
 const emoji4 = require('../../assets/images/emoji4.png');
 const emoji5 = require('../../assets/images/emoji5.png');
 
+// 사용 가능한 이미지 (5개)
+const availableImages = [emoji1, emoji2, emoji3, emoji4, emoji5];
+
+// 사용 가능한 설명 (7개)
+const availableDescriptions = [
+  '익명의 도넛',
+  '익명의 개구리',
+  '익명의 그림자',
+  '익명의 거북이',
+  '익명의 만두',
+  '익명의 펭귄',
+  '익명의 유령',
+];
+const lottieAnimationSize = width * 1.05;
+
 const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -137,7 +152,7 @@ const GiveAwayScreen = ({ onClose }) => {
     const angleStep = (2 * Math.PI) / users.length;
 
     const maxAllowedPhysicalRadius = radiusArray[2];
-    const emojiDisplayBaseSize = 80;
+    const emojiDisplayBaseSize = 90;
     const screenEdgePadding = 15;
 
     for (let i = 0; i < users.length; i++) {
@@ -219,18 +234,14 @@ const GiveAwayScreen = ({ onClose }) => {
     if (allUsers && allUsers.length > 0) {
       const mappedUsers = allUsers
         .map((user, index) => {
-          let userEmoji;
-          if (typeof user.emoji === 'number') {
-            userEmoji = getEmojiFromIndex(user.emoji);
-          } else {
-            const randomEmojiIndex = Math.floor(Math.random() * 5);
-            userEmoji = getEmojiFromIndex(randomEmojiIndex);
-          }
+          const randomImageIndex = Math.floor(Math.random() * availableImages.length);
+          const randomDescriptionIndex = Math.floor(Math.random() * availableDescriptions.length);
 
           return {
             uuid: user.uuid || `user-${index}`,
             name: user.name || `사용자 ${index + 1}`,
-            emoji: userEmoji,
+            displayImageIndex: randomImageIndex,
+            displayDescriptionIndex: randomDescriptionIndex,
             deviceId: user.deviceId || `device-${index}`,
             bleToken: user.bleToken || `token-${index}`,
           };
@@ -246,8 +257,9 @@ const GiveAwayScreen = ({ onClose }) => {
       };
       usersRef.current = mappedUsers;
 
-      setButtonVisible(!userDataRef.current.hasSelectedGifticon);
-      setCenterButtonVisible(userDataRef.current.hasSelectedGifticon);
+      const hasSelectedGifticon = userDataRef.current.hasSelectedGifticon;
+      setButtonVisible(mappedUsers.length > 0 && !hasSelectedGifticon);
+      setCenterButtonVisible(mappedUsers.length > 0 && hasSelectedGifticon);
 
       const positions = calculateUserPositions(mappedUsers);
       setUserPositions(positions);
@@ -265,8 +277,8 @@ const GiveAwayScreen = ({ onClose }) => {
       };
       usersRef.current = [];
       setUserDataReady(false);
-      setButtonVisible(!userDataRef.current.hasSelectedGifticon);
-      setCenterButtonVisible(userDataRef.current.hasSelectedGifticon);
+      setButtonVisible(false);
+      setCenterButtonVisible(false);
     }
   };
 
@@ -404,7 +416,7 @@ const GiveAwayScreen = ({ onClose }) => {
       setListVisible(false);
       setSelectedGifticon(null);
 
-      setButtonVisible(true);
+      setButtonVisible(false);
       setCenterButtonVisible(false);
 
       setConfirmModalVisible(false);
@@ -433,7 +445,7 @@ const GiveAwayScreen = ({ onClose }) => {
       console.error('[새로고침] 오류 발생:', error);
       setLoading(false);
       setIsScanning(false);
-      setButtonVisible(true);
+      setButtonVisible(false);
       Alert.alert('새로고침 실패', '사용자 검색 중 오류가 발생했습니다.');
     }
   };
@@ -513,7 +525,7 @@ const GiveAwayScreen = ({ onClose }) => {
     setConfirmModalVisible(false);
     setListVisible(false);
     setButtonVisible(false);
-    setCenterButtonVisible(true);
+    setCenterButtonVisible(usersRef.current.length > 0 && !!selectedGifticonRef.current);
 
     setShowTooltip(true);
   };
@@ -521,7 +533,8 @@ const GiveAwayScreen = ({ onClose }) => {
   const handleCancel = () => {
     setSelectedGifticon(null);
     setConfirmModalVisible(false);
-    setButtonVisible(true);
+    setButtonVisible(usersRef.current.length > 0);
+    setCenterButtonVisible(false);
 
     selectedGifticonRef.current = null;
     userDataRef.current = {
@@ -529,6 +542,14 @@ const GiveAwayScreen = ({ onClose }) => {
       hasSelectedGifticon: false,
       selectedGifticon: null,
     };
+    setShowTooltip(false);
+
+    setCenterButtonVisible(false);
+    setButtonVisible(usersRef.current.length > 0);
+
+    setSelectedGifticon(null);
+    userDataRef.current.selectedGifticon = null;
+    userDataRef.current.hasSelectedGifticon = false;
   };
 
   const handleOutsidePress = () => {
@@ -548,14 +569,6 @@ const GiveAwayScreen = ({ onClose }) => {
     PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE,
     PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
   ];
-
-  const getEmojiFromIndex = index => {
-    const emojiOptions = [emoji1, emoji2, emoji3, emoji4, emoji5];
-    if (typeof index === 'number' && index >= 0) {
-      return emojiOptions[index % emojiOptions.length];
-    }
-    return emojiOptions[Math.floor(Math.random() * emojiOptions.length)];
-  };
 
   const triggerSendGifticonAPI = userWithPosition => {
     console.log('[runOnJS] triggerSendGifticonAPI 호출됨, user:', userWithPosition.name);
@@ -691,11 +704,9 @@ const GiveAwayScreen = ({ onClose }) => {
       // });
       // runOnJS(setIsSuccessModalVisible)(true); // 이 부분이 에러의 원인이었을 가능성이 높음
 
-      Alert.alert(
-        '성공',
-        `${user.name}님에게 ${gifticonToSend.gifticonName || '기프티콘'}을(를) 성공적으로 뿌렸습니다!`,
-        [{ text: '확인', onPress: () => runOnJS(handleApiSuccessAlertConfirm)() }]
-      );
+      Alert.alert('뿌리기 성공', '성공적으로 기프티콘을 뿌렸습니다!', [
+        { text: '확인', onPress: () => runOnJS(handleApiSuccessAlertConfirm)() },
+      ]);
     } catch (apiError) {
       console.error('[API] 호출 실패:', apiError);
       Alert.alert('실패', apiError.message || '기프티콘 전송 중 오류 발생', [
@@ -771,12 +782,12 @@ const GiveAwayScreen = ({ onClose }) => {
           {loading ? (
             <View style={styles.loadingOverlay}>
               <LottieView
-                source={require('../../assets/lottie/search_users.json')}
+                source={require('../../assets/lottie/giveaway_loading.json')}
                 autoPlay
                 loop
                 style={{
-                  width: secondCircleDiameter,
-                  height: secondCircleDiameter,
+                  width: lottieAnimationSize,
+                  height: lottieAnimationSize,
                 }}
               />
             </View>
@@ -809,7 +820,7 @@ const GiveAwayScreen = ({ onClose }) => {
                     style={[styles.emojiContainer, { width: adjustedSize, height: adjustedSize }]}
                   >
                     <Image
-                      source={user.emoji}
+                      source={availableImages[user.displayImageIndex]}
                       style={{
                         width: adjustedSize,
                         height: adjustedSize,
@@ -817,6 +828,9 @@ const GiveAwayScreen = ({ onClose }) => {
                       }}
                     />
                   </View>
+                  <Text style={[styles.userName, { color: theme.colors.text }]}>
+                    {availableDescriptions[user.displayDescriptionIndex]}
+                  </Text>
                 </Animated.View>
               );
             })

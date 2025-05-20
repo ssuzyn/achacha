@@ -1,5 +1,5 @@
 // 지도에 마커 업데이트
-export const updateMapMarkers = (webViewRef, brandStores) => {
+export const updateMapMarkers = (webViewRef, brandStores, selectedBrandId) => {
   if (!webViewRef.current) return;
 
   const script = `
@@ -16,9 +16,10 @@ export const updateMapMarkers = (webViewRef, brandStores) => {
           window.allMarkers = [];
           
           // 브랜드별로 마커 생성 및 저장
-          const brandStores = ${JSON.stringify(brandStores)};
+          const brandStoresData = ${JSON.stringify(brandStores)};
+          const currentSelectedBrandId = ${selectedBrandId === null || selectedBrandId === undefined ? 'null' : Number(selectedBrandId)};
           
-          brandStores.forEach(brandData => {
+          brandStoresData.forEach(brandData => {
             const brandId = Number(brandData.brandId);
             
             // 이 브랜드의 마커 배열 초기화
@@ -49,8 +50,12 @@ export const updateMapMarkers = (webViewRef, brandStores) => {
                 }));
               });
               
-              // 일단 모든 마커 표시
-              marker.setMap(map);
+              // 선택된 브랜드에 따라 마커 표시 여부 결정
+              if (currentSelectedBrandId === null || Number(marker.brandId) === currentSelectedBrandId) {
+                marker.setMap(map);
+              } else {
+                marker.setMap(null);
+              }
               
               // 브랜드별 배열과 전체 배열에 추가
               window.brandMarkers[brandId].push(marker);
@@ -60,7 +65,7 @@ export const updateMapMarkers = (webViewRef, brandStores) => {
           
           window.ReactNativeWebView.postMessage(JSON.stringify({
             type: 'markersCreated',
-            message: \`총 \${window.allMarkers.length}개의 마커 생성됨\`
+            message: \`총 \${window.allMarkers.length}개의 마커 생성됨 (필터 적용됨)\`
           }));
         } catch (error) {
           console.error('마커 생성 중 오류:', error);

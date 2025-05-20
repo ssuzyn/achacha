@@ -346,8 +346,8 @@ class NearbyUsersService {
       }
 
       // 광고 시작 전 서비스 UUID, 토큰 로그
-      console.log('[BLE 광고] 서비스 UUID:', this.serviceUUID);
-      console.log('[BLE 광고] 광고할 디바이스 ID(토큰):', this.deviceId);
+      // console.log('[BLE 광고] 서비스 UUID:', this.serviceUUID);
+      // console.log('[BLE 광고] 광고할 디바이스 ID(토큰):', this.deviceId);
 
       if (!this.deviceId) {
         return false;
@@ -393,7 +393,7 @@ class NearbyUsersService {
           try {
             // 방법 1: startAdvertising 메서드 사용 (있다면)
             if (typeof NativeModules.BleModule.startAdvertising === 'function') {
-              console.log('\n[BLE 광고] 방법 1: UUID와 토큰 직접 전달');
+              // console.log('\n[BLE 광고] 방법 1: UUID와 토큰 직접 전달');
               await NativeModules.BleModule.startAdvertising(this.serviceUUID, tokenToUse);
               console.log('\n✅ 광고 시작됨 (방법 1)');
               this.isAdvertising = true;
@@ -421,7 +421,7 @@ class NearbyUsersService {
 
               // Base64로 인코딩
               const base64Data = btoa(String.fromCharCode.apply(null, combinedBytes));
-              console.log('\n[BLE 광고] 방법 2: 결합 데이터 사용');
+              // console.log('\n[BLE 광고] 방법 2: 결합 데이터 사용');
               await NativeModules.BleModule.startAdvertisingOptimized(base64Data);
               console.log('\n✅ 광고 시작됨 (방법 2)');
               this.isAdvertising = true;
@@ -433,7 +433,7 @@ class NearbyUsersService {
               try {
                 // 매우 짧은 토큰 (8자 이하)
                 const shortToken = this.deviceId.substring(0, 8);
-                console.log('\n[BLE 광고] 방법 3: 매우 짧은 토큰 사용');
+                // console.log('\n[BLE 광고] 방법 3: 매우 짧은 토큰 사용');
                 await NativeModules.BleModule.startAdvertising(this.serviceUUID, shortToken);
                 console.log('\n✅ 광고 시작됨 (방법 3)');
                 this.isAdvertising = true;
@@ -464,7 +464,7 @@ class NearbyUsersService {
   // 광고 중지
   async stopAdvertising() {
     try {
-      console.log('[BLE 광고] 광고 중지 요청');
+      // console.log('[BLE 광고] 광고 중지 요청');
 
       // BleModule 확인
       if (!NativeModules.BleModule) {
