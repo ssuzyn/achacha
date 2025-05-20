@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
-import { StyleSheet, Image, Platform, Dimensions, View } from 'react-native';
+import { StyleSheet, Platform, Dimensions, View } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useTabBar } from '../../context/TabBarContext';
 import { Icon, useTheme } from 'react-native-elements';
 import { Badge } from '../ui';
@@ -53,10 +54,10 @@ const HeaderBar = ({ notificationCount = 3 }) => {
       <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
         {/* 로고 영역 */}
         <View style={styles.logoContainer}>
-          <Image
+          <FastImage
             source={require('../../assets/images/splash_icon.png')}
             style={styles.logo}
-            resizeMode="contain"
+            resizeMode={FastImage.resizeMode.contain}
           />
         </View>
 

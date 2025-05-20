@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StatusBar, StyleSheet, View, SafeAreaView } from 'react-native';
+import { StatusBar, StyleSheet, View, SafeAreaView } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { CommonActions } from '@react-navigation/native';
 import { useTheme } from 'react-native-elements';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -70,10 +71,10 @@ const SplashScreenComponent = ({ navigation }) => {
       <SafeAreaView style={styles.safeAreaContainer}>
         <View style={styles.centerContainer}>
           <View style={styles.imageContainer}>
-            <Image
+            <FastImage
               source={require('../assets/images/splash_icon.png')}
               style={styles.image}
-              resizeMode="contain"
+              resizeMode={FastImage.resizeMode.contain}
             />
           </View>
         </View>
