@@ -1177,7 +1177,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   activeSlider: {
-    backgroundColor: 'rgba(86, 174, 233, 0.8)',
+    backgroundColor: 'rgba(86, 174, 233, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(86, 174, 233, 0.2)',
   },
