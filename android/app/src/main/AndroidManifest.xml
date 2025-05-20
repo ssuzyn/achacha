@@ -131,8 +131,11 @@
     <!-- 헤드리스 서비스  -->
     <service android:name="com.rnbridge.react.native.geofencing.GeofencingService" />
     
-    <!-- 추가: 백그라운드 위치 서비스 -->
-    <service android:name=".BackgroundLocationService" android:exported="true" />
+    <!-- 백그라운드 위치 서비스 -->
+  <service 
+    android:name=".BackgroundLocationService" 
+    android:exported="true"
+    android:foregroundServiceType="location" />
     
     <!-- 부팅 완료 리시버 -->
     <receiver
