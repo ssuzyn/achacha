@@ -19,6 +19,7 @@ import com.facebook.react.soloader.OpenSourceMergedSoMapping
 import com.facebook.soloader.SoLoader
 import com.koup28.achacha_app.WearSyncPackage
 import com.koup28.achacha_app.NotificationPackage
+import com.koup28.achacha_app.BrightnessPackage
 
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
@@ -43,6 +44,7 @@ class MainApplication : Application(), ReactApplication {
             packages.add(WearSyncPackage())
             packages.add(BlePackage())
             packages.add(NotificationPackage())
+            packages.add(BrightnessPackage())
             packages.add(LocationAlarmPackage())
             return packages
           }

@@ -28,6 +28,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import gifticonService from '../../api/gifticonService';
 import FastImage from 'react-native-fast-image';
 
+// 문자열을 15자로 제한하는 유틸 함수 추가
+const truncateText = (text, maxLength) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
 const ManageListScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -270,7 +276,7 @@ const ManageListScreen = () => {
     },
     sharedByText: {
       fontSize: 12,
-      color: '#737373',
+      color: '#278CCC',
       fontStyle: 'normal',
       fontFamily: theme.fonts.fontWeight.bold,
     },
@@ -925,11 +931,6 @@ const ManageListScreen = () => {
     return (
       <View style={styles.gifticonList}>
         {filteredGifticons.map(item => renderGifticonItem(item))}
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#278CCC" />
-          </View>
-        )}
       </View>
     );
   };
@@ -957,8 +958,51 @@ const ManageListScreen = () => {
       />
     );
 
-    // 만료된 기프티콘은 Swipeable 기능 비활성화
-    if (isExpired) {
+    // 쉐어박스 정보를 렌더링하는 함수 추가
+    const renderShareBoxInfo = () => {
+      if (item.scope !== 'SHARE_BOX') return null;
+
+      return (
+        <View style={styles.shareBoxInfoContainer}>
+          {item.shareBoxName && (
+            <>
+              <Icon
+                name="inventory-2"
+                type="material"
+                size={12}
+                color="#278CCC"
+                containerStyle={styles.shareBoxIcon}
+              />
+              <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
+            </>
+          )}
+
+          {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
+          {isSharedByOther && (
+            <>
+              <Icon
+                name="person"
+                type="material"
+                size={12}
+                color="#278CCC"
+                containerStyle={{ ...styles.shareBoxIcon, marginLeft: 4 }}
+              />
+              <Text style={styles.sharedByText}>{item.userName}님 공유</Text>
+            </>
+          )}
+        </View>
+      );
+    };
+
+    // 텍스트 정보 영역에서 gifticonName을 표시하는 부분
+    const renderNameText = name => (
+      <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+        {truncateText(name, 15)}
+      </Text>
+    );
+
+    // 만료된 기프티콘이나 사용완료 탭의 기프티콘은 Swipeable 기능 비활성화
+    if (isExpired || selectedCategory === 'used') {
       return (
         <TouchableOpacity
           key={item.gifticonId}
@@ -974,7 +1018,7 @@ const ManageListScreen = () => {
             <View
               style={[
                 styles.gifticonContent,
-                { opacity: 0.7 },
+                { opacity: isExpired ? 0.7 : 1 },
                 isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
               ]}
             >
@@ -984,32 +1028,53 @@ const ManageListScreen = () => {
               {/* 텍스트 정보 영역 */}
               <View style={styles.textContainer}>
                 <Text style={styles.brandText}>{item.brandName}</Text>
-                <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-                  {item.gifticonName}
-                </Text>
+                {renderNameText(item.gifticonName)}
 
                 {/* 쉐어박스 정보 */}
-                {item.scope === 'SHARE_BOX' && item.shareBoxName && (
-                  <View style={styles.shareBoxInfoContainer}>
-                    <Icon
-                      name="inventory-2"
-                      type="material"
-                      size={12}
-                      color="#278CCC"
-                      containerStyle={styles.shareBoxIcon}
-                    />
-                    <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                    {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                    {isSharedByOther && (
-                      <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                    )}
-                  </View>
+                {renderShareBoxInfo()}
+
+                {/* 금액형 기프티콘의 경우 잔액 정보 표시 */}
+                {item.gifticonType === 'AMOUNT' && item.gifticonRemainingAmount && (
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: '#278CCC',
+                      fontFamily: theme.fonts.fontWeight.bold,
+                      marginTop: 3,
+                    }}
+                  >
+                    잔액: {item.gifticonRemainingAmount.toLocaleString()}원
+                  </Text>
                 )}
               </View>
 
-              {/* 만료 태그 */}
-              <View style={[styles.dDayContainer, styles.expiredDDay]}>
-                <Text style={[styles.dDayText, styles.expiredDDayText]}>{daysLeft}</Text>
+              {/* D-day 태그 또는 사용일자 */}
+              <View
+                style={[
+                  styles.dDayContainer,
+                  isExpired
+                    ? styles.expiredDDay
+                    : isUrgent || isDDay
+                      ? styles.urgentDDay
+                      : styles.normalDDay,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.dDayText,
+                    isExpired
+                      ? styles.expiredDDayText
+                      : isUrgent || isDDay
+                        ? styles.urgentDDayText
+                        : styles.normalDDayText,
+                  ]}
+                >
+                  {item.scope === 'USED'
+                    ? formatDate(item.usedAt)
+                    : typeof daysLeft === 'string'
+                      ? daysLeft
+                      : `D-${daysLeft}`}
+                </Text>
               </View>
             </View>
           </Shadow>
@@ -1066,27 +1131,10 @@ const ManageListScreen = () => {
                 {/* 텍스트 정보 영역 */}
                 <View style={styles.textContainer}>
                   <Text style={styles.brandText}>{item.brandName}</Text>
-                  <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-                    {item.gifticonName}
-                  </Text>
+                  {renderNameText(item.gifticonName)}
 
                   {/* 쉐어박스 정보 */}
-                  {item.scope === 'SHARE_BOX' && item.shareBoxName && (
-                    <View style={styles.shareBoxInfoContainer}>
-                      <Icon
-                        name="inventory-2"
-                        type="material"
-                        size={12}
-                        color="#278CCC"
-                        containerStyle={styles.shareBoxIcon}
-                      />
-                      <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                      {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                      {isSharedByOther && (
-                        <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                      )}
-                    </View>
-                  )}
+                  {renderShareBoxInfo()}
 
                   {/* 금액형 기프티콘의 경우 잔액 정보 표시 */}
                   {item.gifticonType === 'AMOUNT' && item.gifticonRemainingAmount && (
@@ -1188,30 +1236,13 @@ const ManageListScreen = () => {
               {/* 텍스트 정보 영역 */}
               <View style={styles.textContainer}>
                 <Text style={styles.brandText}>{item.brandName}</Text>
-                <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-                  {item.gifticonName}
-                </Text>
+                {renderNameText(item.gifticonName)}
 
-                {/* 쉐어박스 정보 다시 추가 */}
-                {item.scope === 'SHARE_BOX' && item.shareBoxName && (
-                  <View style={styles.shareBoxInfoContainer}>
-                    <Icon
-                      name="inventory-2"
-                      type="material"
-                      size={12}
-                      color="#278CCC"
-                      containerStyle={styles.shareBoxIcon}
-                    />
-                    <Text style={styles.shareBoxText}>{item.shareBoxName}</Text>
-                    {/* 다른 사람이 공유한 경우 공유자 정보 표시 */}
-                    {isSharedByOther && (
-                      <Text style={styles.sharedByText}> · {item.userName}님 공유</Text>
-                    )}
-                  </View>
-                )}
+                {/* 쉐어박스 정보 */}
+                {renderShareBoxInfo()}
               </View>
 
-              {/* D-day 또는 사용일자 태그 */}
+              {/* D-day 태그 */}
               <View
                 style={[
                   styles.dDayContainer,

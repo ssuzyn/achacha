@@ -37,9 +37,9 @@ const NOTIFICATION_HANDLERS = {
     try {
       console.log('쉐어박스 처리 시작:', referenceEntityId, notificationType);
 
-      // 쉐어박스 삭제인 경우 앱 메인으로 이동 (처리 제외 요구사항)
+      // 쉐어박스 삭제인 경우 홈 화면으로 이동
       if (notificationType === 'SHAREBOX_DELETED') {
-        NavigationService.navigate('Main');
+        NavigationService.navigate('BoxMainScreen');
         return;
       }
 
@@ -103,9 +103,9 @@ export const handleNotificationNavigation = async navigationInfo => {
       return;
     }
 
-    // 쉐어박스 삭제 알림은 메인 화면으로 이동
+    // 쉐어박스 삭제 알림은 홈 화면으로 이동
     if (notificationType === 'SHAREBOX_DELETED') {
-      NavigationService.navigate('Main');
+      NavigationService.navigate('BoxMainScreen');
       return;
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // 쉐어박스 상세 상품형 스크린
 
 import React, { useState, useEffect } from 'react';
@@ -26,7 +27,6 @@ import { cancelShareGifticon } from '../../api/shareBoxService';
 import gifticonService from '../../api/gifticonService';
 
 const BoxDetailProductScreen = () => {
-  console.log('🔥 BoxDetailProductScreen 진입!');
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -39,8 +39,10 @@ const BoxDetailProductScreen = () => {
   // 기프티콘 ID 관리
   const [gifticonId, setGifticonId] = useState(null);
   // 사용 유형 관리 (사용완료 경우에만)
+  // eslint-disable-next-line no-unused-vars
   const [usageType, setUsageType] = useState(null);
   // 사용일시 관리 (사용완료 경우에만)
+  // eslint-disable-next-line no-unused-vars
   const [usedAt, setUsedAt] = useState(null);
   // 기프티콘 데이터 상태
   const [gifticonData, setGifticonData] = useState(null);
@@ -56,6 +58,8 @@ const BoxDetailProductScreen = () => {
   // 공유 위치 선택 상태
   const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+  // 이미지 확대 보기 상태 추가
+  const [isImageViewVisible, setImageViewVisible] = useState(false);
   // 바코드 정보 별도 상태로 분리
   const [barcodeInfo, setBarcodeInfo] = useState(null);
 
@@ -370,6 +374,11 @@ const BoxDetailProductScreen = () => {
     setAlertVisible(false);
   };
 
+  // 이미지 확대 보기 토글 함수 추가
+  const toggleImageView = () => {
+    setImageViewVisible(!isImageViewVisible);
+  };
+
   console.log('BoxDetailProductScreen 렌더링, route:', route);
   console.log('BoxDetailProductScreen 렌더링, route.params:', route.params);
 
@@ -456,17 +465,19 @@ const BoxDetailProductScreen = () => {
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: gifticonData.thumbnailPath }}
-                    style={[
-                      styles.gifticonImage,
-                      isUsed && styles.grayScaleImage,
-                      isUsed &&
-                        gifticonData.usageType === 'SELF_USE' &&
-                        styles.smallerGifticonImage,
-                    ]}
-                    resizeMode="contain"
-                  />
+                  <TouchableOpacity onPress={toggleImageView} activeOpacity={0.9}>
+                    <Image
+                      source={{ uri: gifticonData.thumbnailPath }}
+                      style={[
+                        styles.gifticonImage,
+                        isUsed && styles.grayScaleImage,
+                        isUsed &&
+                          gifticonData.usageType === 'SELF_USE' &&
+                          styles.smallerGifticonImage,
+                      ]}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
 
                   {/* 상단 액션 아이콘 */}
                   {!isUsed && (
@@ -631,7 +642,11 @@ const BoxDetailProductScreen = () => {
                       marginBottom: 10,
                     }}
                   >
-                    <Text variant="body1" weight="semibold" style={{ color: '#FFFFFF' }}>
+                    <Text
+                      variant="body1"
+                      weight="semibold"
+                      style={{ color: '#FFFFFF', fontFamily: 'Pretendard-Regular' }}
+                    >
                       사용완료
                     </Text>
                   </TouchableOpacity>
@@ -647,7 +662,11 @@ const BoxDetailProductScreen = () => {
                       flexDirection: 'row',
                     }}
                   >
-                    <Text variant="body1" weight="semibold" style={{ color: '#278CCC' }}>
+                    <Text
+                      variant="body1"
+                      weight="semibold"
+                      style={{ color: '#278CCC', fontFamily: 'Pretendard-Regular' }}
+                    >
                       취소
                     </Text>
                   </TouchableOpacity>
@@ -666,7 +685,10 @@ const BoxDetailProductScreen = () => {
                     flexDirection: 'row',
                   }}
                 >
-                  <Text variant="body1" weight="semibold" style={{ color: '#FFFFFF' }}>
+                  <Text
+                    variant="body1"
+                    style={{ color: '#FFFFFF', fontFamily: 'Pretendard-Regular' }}
+                  >
                     {calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨'
                       ? '사용완료'
                       : '사용하기'}
@@ -808,6 +830,36 @@ const BoxDetailProductScreen = () => {
         onCancel={handleCancelDialog}
         type="warning"
       />
+      {/* 이미지 확대 보기 모달 추가 */}
+      <Modal
+        visible={isImageViewVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleImageView}
+      >
+        <View style={styles.imageViewModal}>
+          <TouchableOpacity
+            style={styles.imageViewCloseButton}
+            onPress={toggleImageView}
+            activeOpacity={0.7}
+          >
+            <Icon name="close" type="material" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.imageViewContainer}
+            activeOpacity={1}
+            onPress={toggleImageView}
+          >
+            <Image
+              source={{
+                uri: gifticonData?.originalImagePath || gifticonData?.thumbnailPath,
+              }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -869,11 +921,12 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   gifticonImage: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     aspectRatio: 1,
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     marginBottom: 20,
+    borderRadius: 8,
   },
   // 바코드 관련 스타일
   barcodeContainer: {
@@ -957,24 +1010,22 @@ const styles = StyleSheet.create({
   },
   grayScaleImage: {
     opacity: 0.7,
-    // React Native는 기본적으로 grayscale 필터를 지원하지 않기 때문에
-    // 투명도를 낮춰 흑백처럼 보이게 합니다.
-    // 실제 앱에서는 이미지 처리 라이브러리 사용을 고려할 수 있습니다.
   },
   smallerGifticonImage: {
     width: 160,
     height: 160,
     aspectRatio: 1,
-    marginTop: 10,
-    marginBottom: 10,
-    resizeMode: 'contain',
+    marginTop: 20,
+    marginBottom: 5,
+    resizeMode: 'cover',
+    borderRadius: 8,
   },
   usedBarcodeContainer: {
     alignItems: 'center',
     width: '90%',
     marginTop: 5, // 바코드 상단 여백 추가
     marginBottom: 10,
-    padding: 10,
+    padding: 5,
     borderRadius: 8,
   },
   usedBarcodeImage: {
@@ -1001,6 +1052,7 @@ const styles = StyleSheet.create({
   usedText: {
     color: 'white',
     fontSize: 28,
+    fontFamily: 'Pretendard-Bold',
     textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,
@@ -1142,6 +1194,35 @@ const styles = StyleSheet.create({
   },
   confirmShareButtonText: {
     color: '#FFFFFF',
+  },
+  // 이미지 확대 모달 스타일 추가
+  imageViewModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
+  },
+  imageViewCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

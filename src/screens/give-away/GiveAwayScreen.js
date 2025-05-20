@@ -58,6 +58,9 @@ const availableDescriptions = [
 ];
 const lottieAnimationSize = width * 1.2;
 
+// 로티 애니메이션 파일을 미리 변수에 저장
+const giveawayLoadingAnimation = require('../../assets/lottie/giveaway_loading.json');
+
 const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
@@ -785,7 +788,7 @@ const GiveAwayScreen = ({ onClose }) => {
           {loading ? (
             <View style={styles.loadingOverlay}>
               <LottieView
-                source={require('../../assets/lottie/giveaway_loading.json')}
+                source={giveawayLoadingAnimation}
                 autoPlay
                 loop
                 style={{

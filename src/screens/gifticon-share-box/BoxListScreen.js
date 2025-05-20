@@ -1152,11 +1152,14 @@ const BoxListScreen = () => {
         const data = await fetchShareBoxSettings(shareBoxId);
         setBoxName(data.shareBoxName);
       } catch (e) {
-        setBoxName('쉐어박스');
+        console.error('쉐어박스 정보 조회 실패:', e);
+        Alert.alert('알림', '삭제되었거나 접근할 수 없는 쉐어박스입니다.', [
+          { text: '확인', onPress: () => navigation.goBack() },
+        ]);
       }
     };
     fetchBoxInfo();
-  }, [shareBoxId]);
+  }, [shareBoxId, navigation]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -1184,7 +1187,7 @@ const BoxListScreen = () => {
             const res = await fetchUsedGifticons({
               shareBoxId,
               type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
-              sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+              sort: 'USED_DESC',
               page: undefined,
               size: 20,
             });
@@ -1244,7 +1247,7 @@ const BoxListScreen = () => {
       fetchUsedGifticons({
         shareBoxId,
         type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
-        sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+        sort: 'USED_DESC',
         page: nextPageNum,
         size: 20,
       }).then(res => {

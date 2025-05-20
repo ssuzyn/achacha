@@ -22,7 +22,7 @@ import gifticonService from '../../api/gifticonService';
 const BoxDetailAmountHistoryScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { showTabBar } = useTabBar();
+  const { showTabBar, hideTabBar } = useTabBar();
   const route = useRoute();
   const navigation = useNavigation();
   const [transactions, setTransactions] = useState([]);
@@ -33,6 +33,10 @@ const BoxDetailAmountHistoryScreen = () => {
   const [gifticonId, setGifticonId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [gifticonData, setGifticonData] = useState(null);
+  const [brandName, setBrandName] = useState('');
+  const [gifticonName, setGifticonName] = useState('');
+  const [usedAmount, setUsedAmount] = useState(null);
+  const [error, setError] = useState(null);
 
   // 바텀탭 표시
   useEffect(() => {
@@ -61,6 +65,11 @@ const BoxDetailAmountHistoryScreen = () => {
           brand: route.params.brandName,
           name: route.params.gifticonName || '',
         }));
+      }
+
+      // 사용 금액 정보 있는 경우 설정
+      if (route.params.usedAmount) {
+        setUsedAmount(route.params.usedAmount);
       }
     }
   }, [route.params, showTabBar, gifticonData]);
@@ -122,6 +131,15 @@ const BoxDetailAmountHistoryScreen = () => {
         setTransactions([]);
       }
 
+      // 만약 API에서 브랜드명과 기프티콘명을 제공하는 경우, 여기에 추가
+      if (response.brandName && !brandName) {
+        setBrandName(response.brandName);
+      }
+
+      if (response.gifticonName && !gifticonName) {
+        setGifticonName(response.gifticonName);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('사용내역 로드 중 오류 발생:', error);
@@ -143,6 +161,23 @@ const BoxDetailAmountHistoryScreen = () => {
         }
       } else {
         Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+      }
+
+      // 오류 발생 시 route.params에서 전달된 정보를 사용해 임시 트랜잭션 생성
+      if (route.params?.usedAmount) {
+        const tempTransaction = {
+          id: '1',
+          userName: '사용자',
+          date: formatDateTime(new Date()),
+          amount:
+            typeof route.params.usedAmount === 'string'
+              ? parseInt(route.params.usedAmount.replace(/,/g, ''), 10)
+              : route.params.usedAmount,
+          type: 'payment',
+          rawDate: new Date(),
+        };
+
+        setTransactions([tempTransaction]);
       }
 
       setLoading(false);
@@ -415,9 +450,9 @@ const BoxDetailAmountHistoryScreen = () => {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.contentContainer}>
             <View style={styles.infoHeaderContainer}>
-              <Text style={styles.brandText}>{gifticonData.brand}</Text>
+              <Text style={styles.brandText}>{brandName}</Text>
               <Text weight="bold" style={styles.nameText}>
-                {gifticonData.name}
+                {gifticonName}
               </Text>
             </View>
 

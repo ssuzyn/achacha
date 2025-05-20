@@ -67,9 +67,10 @@ export const handleNotificationPress = async notification => {
     else if (referenceEntityType.toLowerCase() === 'sharebox') {
       const shareBoxId = referenceEntityId;
 
-      // 쉐어박스 삭제 알림은 제외 (요구사항에 명시됨)
-      if (notificationType === 'SHAREBOX_DELETE') {
-        console.log('[NotificationHandler] 쉐어박스 삭제 알림은 처리하지 않음');
+      // 쉐어박스 삭제 알림은 홈 화면으로 이동
+      if (notificationType === 'SHAREBOX_DELETED') {
+        console.log('[NotificationHandler] 쉐어박스 삭제 알림: BoxMainScreen으로 이동');
+        NavigationService.navigate('BoxMainScreen');
         return;
       }
 

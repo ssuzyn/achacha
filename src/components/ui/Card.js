@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { Shadow } from 'react-native-shadow-2';
+import FastImage from 'react-native-fast-image';
 import { Text } from './index';
 
 /**
@@ -37,7 +38,11 @@ const GiftCard = ({ brand, name, image, daysLeft, style, ...props }) => {
       >
         <View style={[styles.giftCard, style]} {...props}>
           <View style={styles.giftImageContainer}>
-            <Image source={image} style={styles.giftImage} resizeMode="contain" />
+            <FastImage
+              source={image}
+              style={styles.giftImage}
+              resizeMode={FastImage.resizeMode.contain}
+            />
           </View>
           <View style={styles.giftInfo}>
             <Text variant="caption" weight="semiBold" style={styles.giftBrand}>
@@ -77,7 +82,11 @@ const FeatureCard = ({ title, iconName, count, imageSource, style, onPress, ...p
         </View>
       )}
       {imageSource && (
-        <Image source={imageSource} style={styles.featureImage} resizeMode="contain" />
+        <FastImage
+          source={imageSource}
+          style={styles.featureImage}
+          resizeMode={FastImage.resizeMode.contain}
+        />
       )}
     </View>
   );
@@ -118,7 +127,11 @@ const RadarCard = ({ text, image, style, onPress, ...props }) => {
       <Text variant="h5" weight="bold" style={styles.radarText}>
         {text}
       </Text>
-      <Image source={image} style={styles.fullRadarImage} />
+      <FastImage
+        source={image}
+        style={styles.fullRadarImage}
+        resizeMode={FastImage.resizeMode.cover}
+      />
     </View>
   );
 
@@ -169,7 +182,11 @@ const GiftCard2 = ({ title, subtitle, image, style, ...props }) => {
               {subtitle}
             </Text>
           </View>
-          <Image source={image} style={styles.giftCard2Image} resizeMode="contain" />
+          <FastImage
+            source={image}
+            style={styles.giftCard2Image}
+            resizeMode={FastImage.resizeMode.contain}
+          />
         </View>
       </View>
     </Shadow>

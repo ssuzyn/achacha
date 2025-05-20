@@ -1,12 +1,5 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Dimensions } from 'react-native';
+import FastImage from 'react-native-fast-image';
 const { width } = Dimensions.get('window');
 import { calculateDday } from '../utils/dateUtils';
 
@@ -35,7 +28,11 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
       <TouchableOpacity style={styles.gifticonItem} onPress={() => onSelectGifticon(item)}>
         <View style={styles.contentContainer}>
           <View style={styles.gifticonDetails}>
-            <Image source={{ uri: item.thumbnailPath }} style={styles.productImg} />
+            <FastImage
+              source={{ uri: item.thumbnailPath }}
+              style={styles.productImg}
+              resizeMode={FastImage.resizeMode.cover}
+            />
             <View style={styles.textContainer}>
               <Text style={styles.brandName}>{item.brandName}</Text>
               <Text style={styles.productName}>
