@@ -253,28 +253,43 @@ const DetailAmountHistoryScreen = () => {
     } catch (error) {
       console.error('사용내역 수정 오류:', error);
 
-      // 에러 메시지 표시
+      // 에러 메시지 처리
       let errorMessage = '사용내역 수정 중 오류가 발생했습니다.';
+      let isZeroBalanceError = false;
 
       if (error.response) {
         console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
 
         const status = error.response.status;
+        const errorData = error.response.data;
+        const errorCode = errorData?.errorCode || errorData?.code || '';
 
-        // 특정 에러 코드에 따른 메시지 처리
-        if (status === 400) {
-          errorMessage = '잘못된 요청입니다. 금액을 확인해주세요.';
-        } else if (status === 403) {
-          errorMessage = '권한이 없습니다.';
-        } else if (status === 404) {
-          errorMessage = '해당 사용내역을 찾을 수 없습니다.';
-        } else if (status === 500) {
-          errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        }
+        // 에러 메시지에 잔액 관련 키워드가 있는지 확인
+        if (errorData?.message) {
+          errorMessage = errorData.message;
 
-        // 서버에서 온 메시지가 있으면 이를 우선 사용
-        if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
+          // 잔액 관련 에러 체크
+          if (
+            errorMessage.includes('잔액') ||
+            errorMessage.includes('금액') ||
+            errorCode.includes('AMOUNT') ||
+            // 기타 관련 키워드 체크
+            errorMessage.includes('소진') ||
+            errorMessage.includes('초과')
+          ) {
+            isZeroBalanceError = true;
+          }
+        } else {
+          // 특정 에러 코드에 따른 메시지 처리
+          if (status === 400) {
+            errorMessage = '잘못된 요청입니다. 금액을 확인해주세요.';
+          } else if (status === 403) {
+            errorMessage = '권한이 없습니다.';
+          } else if (status === 404) {
+            errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+          } else if (status === 500) {
+            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          }
         }
       } else if (error.request) {
         errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
@@ -282,7 +297,20 @@ const DetailAmountHistoryScreen = () => {
         errorMessage = `오류: ${error.message}`;
       }
 
-      Alert.alert('오류', errorMessage);
+      // 잔액 소진 관련 에러인 경우
+      if (isZeroBalanceError) {
+        Alert.alert('사용 완료', '수정으로 인해 잔액이 소진되어 사용완료 처리되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // 이전 화면으로 돌아가기
+              navigation.goBack();
+            },
+          },
+        ]);
+      } else {
+        Alert.alert('오류', errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -334,28 +362,43 @@ const DetailAmountHistoryScreen = () => {
           } catch (error) {
             console.error('사용내역 삭제 오류:', error);
 
-            // 에러 메시지 표시
+            // 에러 메시지 처리
             let errorMessage = '사용내역 삭제 중 오류가 발생했습니다.';
+            let isZeroBalanceError = false;
 
             if (error.response) {
               console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
 
               const status = error.response.status;
+              const errorData = error.response.data;
+              const errorCode = errorData?.errorCode || errorData?.code || '';
 
-              // 특정 에러 코드에 따른 메시지 처리
-              if (status === 400) {
-                errorMessage = '잘못된 요청입니다.';
-              } else if (status === 403) {
-                errorMessage = '권한이 없습니다.';
-              } else if (status === 404) {
-                errorMessage = '해당 사용내역을 찾을 수 없습니다.';
-              } else if (status === 500) {
-                errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-              }
+              // 에러 메시지에 잔액 관련 키워드가 있는지 확인
+              if (errorData?.message) {
+                errorMessage = errorData.message;
 
-              // 서버에서 온 메시지가 있으면 이를 우선 사용
-              if (error.response.data?.message) {
-                errorMessage = error.response.data.message;
+                // 잔액 관련 에러 체크
+                if (
+                  errorMessage.includes('잔액') ||
+                  errorMessage.includes('금액') ||
+                  errorCode.includes('AMOUNT') ||
+                  // 기타 관련 키워드 체크
+                  errorMessage.includes('소진') ||
+                  errorMessage.includes('초과')
+                ) {
+                  isZeroBalanceError = true;
+                }
+              } else {
+                // 특정 에러 코드에 따른 메시지 처리
+                if (status === 400) {
+                  errorMessage = '잘못된 요청입니다.';
+                } else if (status === 403) {
+                  errorMessage = '권한이 없습니다.';
+                } else if (status === 404) {
+                  errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+                } else if (status === 500) {
+                  errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                }
               }
             } else if (error.request) {
               errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
@@ -363,7 +406,20 @@ const DetailAmountHistoryScreen = () => {
               errorMessage = `오류: ${error.message}`;
             }
 
-            Alert.alert('오류', errorMessage);
+            // 잔액 소진 관련 에러인 경우
+            if (isZeroBalanceError) {
+              Alert.alert('사용 완료', '삭제로 인해 잔액이 소진되어 사용완료 처리되었습니다.', [
+                {
+                  text: '확인',
+                  onPress: () => {
+                    // 이전 화면으로 돌아가기
+                    navigation.goBack();
+                  },
+                },
+              ]);
+            } else {
+              Alert.alert('오류', errorMessage);
+            }
           } finally {
             setLoading(false);
           }

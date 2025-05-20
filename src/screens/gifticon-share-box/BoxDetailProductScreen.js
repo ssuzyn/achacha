@@ -253,7 +253,10 @@ const BoxDetailProductScreen = () => {
           },
         ]);
       } catch (error) {
-        Alert.alert('사용완료 실패', error?.response?.data?.message || '기프티콘 사용완료 처리에 실패했습니다.');
+        Alert.alert(
+          '사용완료 실패',
+          error?.response?.data?.message || '기프티콘 사용완료 처리에 실패했습니다.'
+        );
       } finally {
         setIsLoading(false);
       }
@@ -261,7 +264,9 @@ const BoxDetailProductScreen = () => {
       // 만료되지 않은 경우 바코드 이미지 조회 후 사용 모드로 전환
       try {
         setIsLoading(true);
-        const barcodeRes = await gifticonService.getAvailableGifticonBarcode(gifticonData.gifticonId);
+        const barcodeRes = await gifticonService.getAvailableGifticonBarcode(
+          gifticonData.gifticonId
+        );
         setGifticonData(prev => {
           const updated = {
             ...prev,
@@ -336,7 +341,10 @@ const BoxDetailProductScreen = () => {
       } catch (error) {
         console.log('공유 취소 에러:', error?.response);
         const errorCode = error?.response?.data?.code;
-        const errorMessage = ERROR_MESSAGES[errorCode] || error?.response?.data?.message || '알 수 없는 오류가 발생했습니다.';
+        const errorMessage =
+          ERROR_MESSAGES[errorCode] ||
+          error?.response?.data?.message ||
+          '알 수 없는 오류가 발생했습니다.';
         Alert.alert('공유 취소 실패', errorMessage);
       }
     }
@@ -575,9 +583,7 @@ const BoxDetailProductScreen = () => {
                 {isUsed && (
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>사용일시</Text>
-                    <Text style={styles.infoValue}>
-                      {formatDateTime(gifticonData.usedAt)}
-                    </Text>
+                    <Text style={styles.infoValue}>{formatDateTime(gifticonData.usedAt)}</Text>
                   </View>
                 )}
 
@@ -842,19 +848,19 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     backgroundColor: '#EEEEEE',
-    padding: 16,
-    paddingTop: 0,
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     height: 300,
     borderBottomWidth: 1,
     borderBottomColor: '#E6F4FB',
     position: 'relative',
   },
   gifticonImage: {
-    width: '60%',
-    height: '90%',
-    marginTop: 5,
+    width: 200,
+    height: 200,
+    aspectRatio: 1,
+    resizeMode: 'contain',
+    marginBottom: 20,
   },
   // 바코드 관련 스타일
   barcodeContainer: {
@@ -943,9 +949,12 @@ const styles = StyleSheet.create({
     // 실제 앱에서는 이미지 처리 라이브러리 사용을 고려할 수 있습니다.
   },
   smallerGifticonImage: {
-    height: '55%', // 기존 높이보다 살짝 줄임
-    marginTop: 25, // 상단 여백 추가
-    marginBottom: 8, // 하단 여백 조정
+    width: 160,
+    height: 160,
+    aspectRatio: 1,
+    marginTop: 10,
+    marginBottom: 10,
+    resizeMode: 'contain',
   },
   usedBarcodeContainer: {
     alignItems: 'center',
