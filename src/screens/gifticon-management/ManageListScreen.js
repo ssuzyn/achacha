@@ -28,6 +28,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import gifticonService from '../../api/gifticonService';
 import FastImage from 'react-native-fast-image';
 
+// 문자열을 15자로 제한하는 유틸 함수 추가
+const truncateText = (text, maxLength) => {
+  if (!text) return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+};
+
 const ManageListScreen = () => {
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -993,6 +999,13 @@ const ManageListScreen = () => {
       );
     };
 
+    // 텍스트 정보 영역에서 gifticonName을 표시하는 부분
+    const renderNameText = name => (
+      <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
+        {truncateText(name, 15)}
+      </Text>
+    );
+
     // 만료된 기프티콘이나 사용완료 탭의 기프티콘은 Swipeable 기능 비활성화
     if (isExpired || selectedCategory === 'used') {
       return (
@@ -1020,9 +1033,7 @@ const ManageListScreen = () => {
               {/* 텍스트 정보 영역 */}
               <View style={styles.textContainer}>
                 <Text style={styles.brandText}>{item.brandName}</Text>
-                <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-                  {item.gifticonName}
-                </Text>
+                {renderNameText(item.gifticonName)}
 
                 {/* 쉐어박스 정보 */}
                 {renderShareBoxInfo()}
@@ -1125,9 +1136,7 @@ const ManageListScreen = () => {
                 {/* 텍스트 정보 영역 */}
                 <View style={styles.textContainer}>
                   <Text style={styles.brandText}>{item.brandName}</Text>
-                  <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-                    {item.gifticonName}
-                  </Text>
+                  {renderNameText(item.gifticonName)}
 
                   {/* 쉐어박스 정보 */}
                   {renderShareBoxInfo()}
@@ -1232,9 +1241,7 @@ const ManageListScreen = () => {
               {/* 텍스트 정보 영역 */}
               <View style={styles.textContainer}>
                 <Text style={styles.brandText}>{item.brandName}</Text>
-                <Text style={styles.nameText} numberOfLines={1} ellipsizeMode="tail">
-                  {item.gifticonName}
-                </Text>
+                {renderNameText(item.gifticonName)}
 
                 {/* 쉐어박스 정보 */}
                 {renderShareBoxInfo()}

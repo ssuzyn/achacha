@@ -19,10 +19,9 @@ import { useTheme, Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabBar } from '../context/TabBarContext';
-import CommunitySlider from '@react-native-community/slider';
 import { Divider, Text, Button } from '../components/ui';
 import Switch from '../components/ui/Switch';
-import { Svg, Path } from 'react-native-svg';
+import { Svg, Path, Line } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchUserById, logout as logoutApi } from '../api/userInfo';
 import { ERROR_MESSAGES } from '../constants/errorMessages';
@@ -91,10 +90,6 @@ const SettingScreen = () => {
   const [editingInterval, setEditingInterval] = useState(false);
   // 임시 값을 저장할 상태 추가
   const [tempExpiryInterval, setTempExpiryInterval] = useState(7);
-
-  // 슬라이더 드래그 중 상태
-  const [sliderDragging, setSliderDragging] = useState(false);
-  const [visualExpiryInterval, setVisualExpiryInterval] = useState(7);
 
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
@@ -203,7 +198,6 @@ const SettingScreen = () => {
     } else {
       // 수정 모드로 전환 - 현재 서버에 저장된 값으로 슬라이더 초기화
       setTempExpiryInterval(expiryNotificationInterval);
-      setVisualExpiryInterval(expiryNotificationInterval);
       console.log('[알림설정] 수정 모드 전환, 현재 값:', expiryNotificationInterval);
       // 모드 전환
       setEditingInterval(true);
@@ -335,7 +329,7 @@ const SettingScreen = () => {
                 style={[styles.buttonContainer, styles.cancelButton]}
                 onPress={closeWatchModal}
               >
-                <Text style={styles.buttonText}>취소</Text>
+                <Text style={styles.cancelbuttonText}>취소</Text>
               </TouchableOpacity>
               <View style={styles.buttonSpacer} />
               <TouchableOpacity
@@ -457,7 +451,6 @@ const SettingScreen = () => {
   useEffect(() => {
     // 앱 시작 시 서버 값으로 tempExpiryInterval 초기화
     setTempExpiryInterval(expiryNotificationInterval);
-    setVisualExpiryInterval(expiryNotificationInterval);
   }, [expiryNotificationInterval]);
 
   // 탭바 처리 - 화면 진입 시 및 이탈 시
@@ -661,37 +654,49 @@ const SettingScreen = () => {
                     color="#56AEE9"
                     style={styles.adjustmentText}
                   >
-                    {(sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 0
+                    {tempExpiryInterval === 0
                       ? '당일만'
-                      : `당일 ~ ${(sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 1 ? '1일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 2 ? '2일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 3 ? '3일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 7 ? '일주일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 30 ? '30일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 60 ? '60일 전' : (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === 90 ? '90일 전' : `${sliderDragging ? visualExpiryInterval : tempExpiryInterval}일 전`}`}
+                      : `당일 ~ ${tempExpiryInterval === 1 ? '1일 전' : tempExpiryInterval === 2 ? '2일 전' : tempExpiryInterval === 3 ? '3일 전' : tempExpiryInterval === 7 ? '일주일 전' : tempExpiryInterval === 30 ? '30일 전' : tempExpiryInterval === 60 ? '60일 전' : tempExpiryInterval === 90 ? '90일 전' : `${tempExpiryInterval}일 전`}`}
                   </Text>
                 </View>
 
                 <View style={styles.markersContainer}>
+                  {/* 연결선 추가 - 배경에 깔리는 회색 선 */}
+                  <Svg height="30" width="100%" style={styles.markerLine}>
+                    <Line x1="15" y1="15" x2="95%" y2="15" stroke="#E0E0E0" strokeWidth="2" />
+                    {/* 활성화된 연결선 - 선택된 마커까지의 선 */}
+                    <Line
+                      x1="15"
+                      y1="15"
+                      x2={`${(markers.indexOf(tempExpiryInterval) / (markers.length - 1)) * 90 + 5}%`}
+                      y2="15"
+                      stroke="#56AEE9"
+                      strokeWidth="2"
+                    />
+                  </Svg>
+
                   {markers.map((val, idx) => (
                     <TouchableOpacity
                       key={idx}
                       onPress={() => {
                         if (editingInterval) {
                           setTempExpiryInterval(val);
-                          setVisualExpiryInterval(val);
                         }
                       }}
                       disabled={!editingInterval}
+                      style={styles.markerTouchable}
                     >
                       <View
                         style={[
                           styles.marker,
-                          (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === val &&
-                            styles.activeMarker,
+                          tempExpiryInterval >= val && styles.activeMarker,
                           !editingInterval && styles.disabledMarker,
                         ]}
                       >
                         <Text
                           style={[
                             styles.markerText,
-                            (sliderDragging ? visualExpiryInterval : tempExpiryInterval) === val &&
-                              styles.activeMarkerText,
+                            tempExpiryInterval >= val && styles.activeMarkerText,
                             !editingInterval && styles.disabledMarkerText,
                           ]}
                         >
@@ -701,48 +706,6 @@ const SettingScreen = () => {
                     </TouchableOpacity>
                   ))}
                 </View>
-
-                <CommunitySlider
-                  style={styles.slider}
-                  value={
-                    markers.indexOf(sliderDragging ? visualExpiryInterval : tempExpiryInterval) !==
-                    -1
-                      ? markers.indexOf(sliderDragging ? visualExpiryInterval : tempExpiryInterval)
-                      : 0
-                  }
-                  minimumValue={0}
-                  maximumValue={markers.length - 1}
-                  step={1}
-                  minimumTrackTintColor="#56AEE9"
-                  maximumTrackTintColor="#E0E0E0"
-                  thumbTintColor="#56AEE9"
-                  onSlidingStart={() => {
-                    setSliderDragging(true);
-                  }}
-                  onValueChange={value => {
-                    if (editingInterval) {
-                      const index = Math.round(value);
-                      if (index >= 0 && index < markers.length) {
-                        // 드래그 중에는 시각적 상태만 업데이트
-                        setVisualExpiryInterval(markers[index]);
-                      }
-                    }
-                  }}
-                  onSlidingComplete={value => {
-                    if (editingInterval) {
-                      const index = Math.round(value);
-                      if (index >= 0 && index < markers.length) {
-                        // 드래그 완료 시 실제 상태 업데이트
-                        setTempExpiryInterval(markers[index]);
-                        setVisualExpiryInterval(markers[index]);
-                        setSliderDragging(false);
-                      }
-                    } else {
-                      setEditingInterval(true);
-                    }
-                  }}
-                  disabled={!editingInterval}
-                />
               </View>
             </View>
           )}
@@ -1036,12 +999,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(86, 174, 233, 0.2)',
   },
-  sliderInstructionText: {
-    fontSize: 13,
-    color: '#278CCC',
-    marginBottom: 8,
-    fontWeight: '500',
-  },
   footerButtonsWrapper: {
     marginVertical: 25,
     flexDirection: 'row',
@@ -1118,10 +1075,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   cancelButton: {
-    backgroundColor: '#A7DAF9',
+    backgroundColor: 'rgba(86, 174, 233, 0.2)',
+    color: '#278CCC',
+    paddingHorizontal: 5,
+    marginRight: 10,
+  },
+  cancelbuttonText: {
+    color: '#278CCC',
+    fontSize: 16,
+    fontWeight: '600',
   },
   connectButton: {
     backgroundColor: '#56AEE9',
+    paddingHorizontal: 5,
   },
   confirmButton: {
     backgroundColor: '#56AEE9',
@@ -1180,24 +1146,6 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 8,
   },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 999,
-  },
-  currentValueText: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    padding: 5,
-    color: '#333',
-  },
   notificationTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1207,7 +1155,7 @@ const styles = StyleSheet.create({
   editSaveButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 4,
+    borderRadius: 8,
     marginLeft: 8,
   },
   editButton: {
@@ -1229,16 +1177,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   activeSlider: {
-    backgroundColor: 'rgba(86, 174, 233, 0.05)',
+    backgroundColor: 'rgba(86, 174, 233, 0.8)',
     borderWidth: 1,
     borderColor: 'rgba(86, 174, 233, 0.2)',
   },
   disabledSlider: {
     opacity: 0.8,
-  },
-  sliderStyle: {
-    width: '100%',
-    paddingHorizontal: 10,
   },
   adjustmentTextContainer: {
     alignItems: 'center',
@@ -1255,8 +1199,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 5,
-    marginBottom: 10,
+    marginVertical: 5,
     width: '100%',
+    position: 'relative',
+    alignItems: 'center',
+  },
+  markerLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  markerTouchable: {
+    zIndex: 1,
   },
   marker: {
     width: 30,
@@ -1264,28 +1219,27 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(224, 224, 224, 0.2)',
+    backgroundColor: 'rgba(86, 174, 233, 0.1)',
+    borderWidth: 1,
+    borderColor: '#56AEE9',
   },
   activeMarker: {
-    backgroundColor: 'rgba(86, 174, 233, 0.1)',
+    backgroundColor: '#A7DAF9',
+    borderColor: '#278CCC',
   },
   disabledMarker: {
     opacity: 0.5,
   },
   markerText: {
     fontSize: 12,
-    color: '#666',
+    color: '#737373',
   },
   activeMarkerText: {
-    color: '#56AEE9',
+    color: '#FFFFFF',
     fontWeight: 'bold',
   },
   disabledMarkerText: {
     color: '#999',
-  },
-  slider: {
-    width: '100%',
-    height: 40,
   },
 });
 
