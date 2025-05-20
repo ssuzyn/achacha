@@ -421,6 +421,14 @@ const NotificationScreen = () => {
             // 문자열이 아닌 숫자로 변환하여 전달
             const shareBoxId = parseInt(referenceEntityId, 10);
 
+            // 쉐어박스 접근 가능 여부 확인 (API 호출)
+            const isAccessible = await notificationService.checkShareBoxAccessibility(shareBoxId);
+
+            if (!isAccessible) {
+              Alert.alert('알림', '참여 중이지 않거나 삭제된 쉐어박스입니다.');
+              return;
+            }
+
             // 쉐어박스 기프티콘 목록 화면으로 이동
             navigation.navigate('BoxList', {
               shareBoxId: shareBoxId,
@@ -428,6 +436,7 @@ const NotificationScreen = () => {
             });
           } catch (navError) {
             console.error('[디버그] 쉐어박스 네비게이션 오류:', navError);
+            Alert.alert('알림', '삭제되었거나 나가기 처리한 쉐어박스입니다.');
           }
         } else {
           console.log('처리되지 않은 알림 타입:', notificationType);

@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 import { API_CONFIG } from './config';
 import gifticonService from './gifticonService';
+import { checkShareBoxAccessibility } from './shareBoxService';
 
 /**
  * 알림 설정 관련 기능을 제공하는 서비스
@@ -252,6 +253,23 @@ const notificationService = {
       return response.data;
     } catch (error) {
       console.error('[API] FCM 토큰 업데이트 실패:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * 쉐어박스 접근 가능 여부 확인
+   * @param {number} shareBoxId - 쉐어박스 ID
+   * @returns {Promise<boolean>} - 접근 가능 여부
+   */
+  async checkShareBoxAccessibility(shareBoxId) {
+    try {
+      console.log('[API] 쉐어박스 접근 가능 여부 확인 요청:', shareBoxId);
+      const response = await checkShareBoxAccessibility(shareBoxId);
+      console.log('[API] 쉐어박스 접근 가능 여부 확인 성공:', response);
+      return response;
+    } catch (error) {
+      console.error('[API] 쉐어박스 접근 가능 여부 확인 실패:', error);
       throw error;
     }
   },

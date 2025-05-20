@@ -121,3 +121,16 @@ export const cancelShareGifticon = async (shareBoxId, gifticonId) => {
   );
   return response.data;
 };
+
+// 쉐어박스 접근 가능 여부 확인 API
+export const checkShareBoxAccessibility = async shareBoxId => {
+  try {
+    // 쉐어박스 설정 조회로 접근 가능 여부 확인
+    const response = await apiClient.get(API_CONFIG.ENDPOINTS.SHARE_BOX_SETTINGS(shareBoxId));
+    return response.status === 200;
+  } catch (error) {
+    console.error(`쉐어박스(${shareBoxId}) 접근 가능 여부 확인 실패:`, error);
+    // 403 Forbidden, 404 Not Found 등의 오류는 접근 불가능으로 처리
+    return false;
+  }
+};
