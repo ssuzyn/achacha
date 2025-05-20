@@ -296,6 +296,17 @@ const BoxDetailAmountScreen = () => {
       if (data && data.isSharer !== undefined) {
         console.log('[BoxDetailAmountScreen] isSharer 존재:', data.isSharer);
       }
+
+      // 기프티콘이 사용완료 상태라면 바로 사용내역도 로드
+      if (isUsedGifticon || data.status === 'USED' || data.usageType) {
+        console.log('[BoxDetailAmountScreen] 사용완료 상태 - 사용내역 자동 로드');
+        setScope('USED');
+        try {
+          await loadTransactionHistory(data);
+        } catch (historyError) {
+          console.error('[BoxDetailAmountScreen] 사용내역 로드 실패:', historyError);
+        }
+      }
     } catch (error) {
       console.error('[BoxDetailAmountScreen] 데이터 로드 실패:', error);
       console.error('[BoxDetailAmountScreen] 에러 응답:', error.response?.data);
@@ -426,9 +437,19 @@ const BoxDetailAmountScreen = () => {
           ? response.gifticonRemainingAmount
           : gifticonData.gifticonRemainingAmount - Number(amount);
 
+      console.log('[BoxDetailAmountScreen] 사용 처리 완료, 남은 잔액:', remainingAmount);
+
       // 잔액이 0원이면 사용완료 처리
       if (remainingAmount === 0) {
-        // 사용 완료 모달 표시
+        // 먼저 사용내역 저장 API 호출
+        try {
+          console.log('[BoxDetailAmountScreen] 전액 사용 완료 - 사용내역 로드 시작');
+          await loadTransactionHistory();
+        } catch (historyError) {
+          console.error('[BoxDetailAmountScreen] 사용내역 로드 실패:', historyError);
+        }
+
+        // 그 후 사용 완료 모달 표시
         Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
           {
             text: '확인',
@@ -465,13 +486,29 @@ const BoxDetailAmountScreen = () => {
       const errorMessage = errorData?.message || '';
       const errorCode = errorData?.errorCode || errorData?.code || '';
 
+      console.log('[BoxDetailAmountScreen] 에러 데이터:', {
+        message: errorMessage,
+        code: errorCode,
+        amount: Number(amount),
+        remainingAmount: gifticonData.gifticonRemainingAmount,
+      });
+
       // 에러 메시지나 코드에 잔액 관련 문구가 있거나, 사용 금액이 잔액과 동일한 경우
       if (
         errorMessage.includes('잔액') ||
         errorMessage.includes('금액') ||
         errorCode.includes('AMOUNT') ||
-        Number(amount) === gifticonData.gifticonRemainingAmount
+        Number(amount) === gifticonData.gifticonRemainingAmount ||
+        Number(amount) >= gifticonData.gifticonRemainingAmount
       ) {
+        // 먼저 사용내역 저장 API 호출
+        try {
+          console.log('[BoxDetailAmountScreen] 에러 발생 시에도 사용내역 로드 시도');
+          await loadTransactionHistory();
+        } catch (historyError) {
+          console.error('[BoxDetailAmountScreen] 사용내역 로드 실패:', historyError);
+        }
+
         // 잔액 부족 에러인 경우 사용완료 처리
         Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
           {
@@ -680,16 +717,12 @@ const BoxDetailAmountScreen = () => {
 
   // 사용완료 기프티콘의 바코드 정보 로드
   useEffect(() => {
-    // 사용완료된 기프티콘이고, SELF_USE 타입이면서 바코드 정보가 없을 때만 바코드 정보 로드
-    if (
-      gifticonData &&
-      scope === 'USED' &&
-      gifticonData.usageType === 'SELF_USE' &&
-      !barcodeImageUrl
-    ) {
+    // 사용완료된 기프티콘이고, SELF_USE 타입일 때 바코드 정보 로드
+    if (gifticonData && scope === 'USED' && usageType === 'SELF_USE') {
+      console.log('[BoxDetailAmountScreen] 사용완료 기프티콘 바코드 정보 자동 로드 시작');
       loadUsedGifticonBarcode(gifticonData.gifticonId);
     }
-  }, [gifticonData, scope]);
+  }, [gifticonData, scope, usageType]);
 
   // 사용완료 기프티콘의 바코드 정보 로드 함수
   const loadUsedGifticonBarcode = async id => {
@@ -701,7 +734,7 @@ const BoxDetailAmountScreen = () => {
       const response = await gifticonService.getUsedGifticonBarcode(id);
 
       if (response) {
-        console.log('[BoxDetailAmountScreen] 사용완료 바코드 정보 응답 성공');
+        console.log('[BoxDetailAmountScreen] 사용완료 바코드 정보 응답 성공:', response);
         setBarcodeImageUrl(response.barcodePath);
         setBarcodeNumber(response.gifticonBarcodeNumber);
       }
@@ -720,10 +753,10 @@ const BoxDetailAmountScreen = () => {
     setBarcodeLoading(true);
     try {
       console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 요청:', gifticonId);
-      const response = await gifticonService.getAvailableGifticonBarcode(gifticonId);
+      const response = await gifticonService.getGifticonBarcode(gifticonId, scope);
 
       if (response) {
-        console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 응답 성공');
+        console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 응답 성공:', response);
         setBarcodeImageUrl(response.barcodePath);
         setBarcodeNumber(response.gifticonBarcodeNumber);
       }
@@ -739,6 +772,85 @@ const BoxDetailAmountScreen = () => {
   const toggleImageView = () => {
     setImageViewVisible(!isImageViewVisible);
   };
+
+  // 사용내역 로드 함수 개선
+  const loadTransactionHistory = async dataSource => {
+    const targetData = dataSource || gifticonData;
+    if (!targetData || !targetData.gifticonId) {
+      console.error('[BoxDetailAmountScreen] 사용내역 로드 실패: 기프티콘 데이터 없음');
+      return [];
+    }
+
+    try {
+      console.log('[BoxDetailAmountScreen] 사용내역 로드 시작 - ID:', targetData.gifticonId);
+      const response = await gifticonService.getAmountGifticonUsageHistory(targetData.gifticonId);
+
+      console.log('[BoxDetailAmountScreen] 사용내역 응답:', response ? 'Success' : 'No Data');
+
+      if (response && response.usageHistories && response.usageHistories.length > 0) {
+        // 날짜 기준 내림차순 정렬
+        const sortedHistories = [...response.usageHistories].sort((a, b) => {
+          return new Date(b.usageHistoryCreatedAt) - new Date(a.usageHistoryCreatedAt);
+        });
+
+        console.log('[BoxDetailAmountScreen] 사용내역 개수:', sortedHistories.length);
+        console.log(
+          '[BoxDetailAmountScreen] 첫 번째 사용내역:',
+          JSON.stringify(sortedHistories[0], null, 2)
+        );
+
+        // 트랜잭션 데이터 구성
+        const formattedTransactions = sortedHistories.map(history => {
+          return {
+            id: history.usageHistoryId.toString(),
+            userName: history.userName || '사용자',
+            date: formatDateTime(history.usageHistoryCreatedAt),
+            amount: history.usageAmount,
+            type: 'payment',
+            rawDate: history.usageHistoryCreatedAt,
+          };
+        });
+
+        console.log('[BoxDetailAmountScreen] 변환된 트랜잭션 개수:', formattedTransactions.length);
+
+        // 기존 기프티콘 데이터에 트랜잭션 정보 업데이트
+        setGifticonData(prev => {
+          if (!prev) return { ...targetData, transactions: formattedTransactions };
+          return { ...prev, transactions: formattedTransactions };
+        });
+
+        return formattedTransactions;
+      } else {
+        console.log('[BoxDetailAmountScreen] 사용내역이 없음');
+        setGifticonData(prev => {
+          if (!prev) return { ...targetData, transactions: [] };
+          return { ...prev, transactions: [] };
+        });
+        return [];
+      }
+    } catch (error) {
+      console.error('[BoxDetailAmountScreen] 사용내역 로드 실패:', error);
+      console.error('[BoxDetailAmountScreen] 에러 응답:', error.response?.data);
+
+      // 오류 발생 시 빈 배열 설정
+      setGifticonData(prev => {
+        if (!prev) return { ...targetData, transactions: [] };
+        return { ...prev, transactions: [] };
+      });
+      return [];
+    }
+  };
+
+  // 화면이 로드될 때 사용내역 불러오는 useEffect 추가
+  useEffect(() => {
+    if (scope === 'USED' && gifticonData && gifticonData.gifticonId) {
+      console.log('[BoxDetailAmountScreen] 사용완료 기프티콘의 사용내역 자동 로드', {
+        id: gifticonData.gifticonId,
+        scope: scope,
+      });
+      loadTransactionHistory();
+    }
+  }, [scope, gifticonData?.gifticonId]);
 
   // 렌더링 분기 직전 로그
   if (isLoading || !gifticonData) {
@@ -809,12 +921,18 @@ const BoxDetailAmountScreen = () => {
                   ) : (
                     <>
                       <Image
-                        source={{ uri: barcodeImageUrl }}
+                        source={
+                          barcodeImageUrl
+                            ? { uri: barcodeImageUrl }
+                            : require('../../assets/images/barcode.png')
+                        }
                         style={styles.barcodeImage}
                         resizeMode="contain"
                       />
                       <View style={styles.barcodeNumberContainer}>
-                        <Text style={styles.barcodeNumberText}>{barcodeNumber}</Text>
+                        <Text style={styles.barcodeNumberText}>
+                          {barcodeNumber || '바코드 번호 없음'}
+                        </Text>
                         <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
                           <Icon name="search" type="material" size={24} color="#4A90E2" />
                         </TouchableOpacity>
@@ -867,13 +985,15 @@ const BoxDetailAmountScreen = () => {
                             source={
                               barcodeImageUrl
                                 ? { uri: barcodeImageUrl }
-                                : require('../../assets/images/barcode.png')
+                                : gifticonData.barcodeImageUrl
+                                  ? { uri: gifticonData.barcodeImageUrl }
+                                  : require('../../assets/images/barcode.png')
                             }
                             style={styles.usedBarcodeImage}
                             resizeMode="contain"
                           />
                           <Text style={styles.usedBarcodeNumberText}>
-                            {barcodeNumber || '바코드 정보 없음'}
+                            {barcodeNumber || gifticonData.barcodeNumber || '바코드 정보 없음'}
                           </Text>
                         </>
                       )}
@@ -997,7 +1117,6 @@ const BoxDetailAmountScreen = () => {
               </View>
             </View>
           </View>
-
           {/* 버튼 영역 - 사용완료가 아닌 경우에만 표시 */}
           {scope !== 'USED' && (
             <View style={styles.buttonContainer}>
@@ -1055,22 +1174,21 @@ const BoxDetailAmountScreen = () => {
               )}
             </View>
           )}
-
           {/* 사용내역 섹션 - 사용완료된 경우에만 표시 */}
-          {scope === 'USED' &&
-            gifticonData.transactions &&
-            gifticonData.transactions.length > 0 && (
-              <View style={styles.transactionSection}>
-                <Text style={styles.transactionTitle}>사용 내역</Text>
-
+          {scope === 'USED' && (
+            <View style={styles.transactionSection}>
+              <Text style={styles.transactionTitle} weight="bold">
+                사용 내역
+              </Text>
+              {gifticonData.transactions && gifticonData.transactions.length > 0 ? (
                 <View style={styles.transactionsContainer}>
                   {gifticonData.transactions.map(transaction => (
                     <View key={transaction.id} style={styles.transactionItem}>
                       <View style={styles.transactionInfo}>
-                        <Text style={styles.transactionUser}>{transaction.userName}</Text>
-                        <Text style={styles.transactionDate}>
-                          {formatDate(transaction.date)} {transaction.time}
+                        <Text style={styles.transactionUser} weight="bold">
+                          {transaction.userName}
                         </Text>
+                        <Text style={styles.transactionDate}>{transaction.date}</Text>
                       </View>
                       <View style={styles.transactionAmount}>
                         <Text
@@ -1078,6 +1196,7 @@ const BoxDetailAmountScreen = () => {
                             styles.amountText,
                             { color: transaction.type === 'charge' ? '#1E88E5' : '#56AEE9' },
                           ]}
+                          weight="bold"
                         >
                           {transaction.type === 'charge' ? '' : '-'}
                           {formatNumber(transaction.amount)}원
@@ -1086,9 +1205,13 @@ const BoxDetailAmountScreen = () => {
                     </View>
                   ))}
                 </View>
-              </View>
-            )}
-
+              ) : (
+                <View style={styles.emptyTransactionContainer}>
+                  <Text style={styles.emptyTransactionText}>사용내역이 없습니다.</Text>
+                </View>
+              )}
+            </View>
+          )}
           {/* 하단 여백 추가 */}
           <View style={styles.bottomPadding} />
         </View>
@@ -1492,7 +1615,6 @@ const styles = StyleSheet.create({
   },
   transactionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 12,
   },
@@ -1513,7 +1635,6 @@ const styles = StyleSheet.create({
   },
   transactionUser: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#333',
   },
   transactionDate: {
@@ -1526,7 +1647,6 @@ const styles = StyleSheet.create({
   },
   amountText: {
     fontSize: 18,
-    fontWeight: 'bold',
   },
   bottomPadding: {
     height: 60,
@@ -1711,6 +1831,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#333',
     fontWeight: '500',
+    fontFamily: 'Pretendard-Medium',
     marginRight: 2,
   },
   magnifyButton: {
@@ -1748,6 +1869,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
   },
   imageViewModal: {
     flex: 1,
@@ -1776,6 +1898,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyTransactionContainer: {
+    padding: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  emptyTransactionText: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+    textAlign: 'center',
   },
 });
 

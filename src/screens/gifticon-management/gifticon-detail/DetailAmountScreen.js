@@ -457,6 +457,73 @@ const DetailAmountScreen = () => {
     });
   };
 
+  // 사용내역 로드 함수 (사용완료된 경우 자동 로드)
+  const loadTransactionHistory = async () => {
+    if (isUsed && gifticonData && !gifticonData.transactions) {
+      try {
+        // 사용내역 API 호출
+        console.log('[DetailAmountScreen] 사용내역 로드 시작 - ID:', gifticonData.gifticonId);
+        const response = await gifticonService.getAmountGifticonUsageHistory(
+          gifticonData.gifticonId
+        );
+
+        console.log('[DetailAmountScreen] 사용내역 응답:', response);
+
+        if (response && response.usageHistories) {
+          // 날짜 기준 내림차순 정렬
+          const sortedHistories = [...response.usageHistories].sort((a, b) => {
+            return new Date(b.usageHistoryCreatedAt) - new Date(a.usageHistoryCreatedAt);
+          });
+
+          console.log('[DetailAmountScreen] 사용내역 데이터:', sortedHistories);
+
+          // 트랜잭션 데이터 구성
+          const formattedTransactions = sortedHistories.map(history => {
+            return {
+              id: history.usageHistoryId.toString(),
+              userName: history.userName || '사용자',
+              // 날짜 및 시간을 직접 포맷팅
+              date: formatDateTime(history.usageHistoryCreatedAt),
+              amount: history.usageAmount,
+              type: 'payment',
+              rawDate: history.usageHistoryCreatedAt, // 원본 날짜 데이터도 저장
+            };
+          });
+
+          console.log('[DetailAmountScreen] 변환된 트랜잭션:', formattedTransactions);
+
+          // 기존 기프티콘 데이터에 트랜잭션 정보 업데이트
+          setGifticonData(prev => ({
+            ...prev,
+            transactions: formattedTransactions,
+          }));
+        } else {
+          // 사용내역 없음 상태 처리
+          console.log('[DetailAmountScreen] 사용내역이 없음');
+          setGifticonData(prev => ({
+            ...prev,
+            transactions: [],
+          }));
+        }
+      } catch (error) {
+        console.error('[DetailAmountScreen] 사용내역 로드 실패:', error);
+        console.error('[DetailAmountScreen] 에러 응답:', error.response?.data);
+        // 오류 발생 시 빈 배열 설정
+        setGifticonData(prev => ({
+          ...prev,
+          transactions: [],
+        }));
+      }
+    }
+  };
+
+  // 화면 포커스 시 사용내역 로드
+  useEffect(() => {
+    if (isUsed) {
+      loadTransactionHistory();
+    }
+  }, [isUsed, gifticonData?.gifticonId]);
+
   // 금액 입력 완료 처리
   const handleConfirmAmount = async () => {
     // 콤마 제거 후 숫자로 변환
@@ -1266,33 +1333,42 @@ const DetailAmountScreen = () => {
           )}
 
           {/* 사용내역 섹션 - 사용완료된 경우에만 표시 */}
-          {isUsed && gifticonData.transactions && gifticonData.transactions.length > 0 && (
+          {isUsed && (
             <View style={styles.transactionSection}>
-              <Text style={styles.transactionTitle}>사용 내역</Text>
+              <Text style={styles.transactionTitle} weight="bold">
+                사용 내역
+              </Text>
 
-              <View style={styles.transactionsContainer}>
-                {gifticonData.transactions.map(transaction => (
-                  <View key={transaction.id} style={styles.transactionItem}>
-                    <View style={styles.transactionInfo}>
-                      <Text style={styles.transactionUser}>{transaction.userName}</Text>
-                      <Text style={styles.transactionDate}>
-                        {formatDate(transaction.date)} {transaction.time}
-                      </Text>
+              {gifticonData.transactions && gifticonData.transactions.length > 0 ? (
+                <View style={styles.transactionsContainer}>
+                  {gifticonData.transactions.map(transaction => (
+                    <View key={transaction.id} style={styles.transactionItem}>
+                      <View style={styles.transactionInfo}>
+                        <Text style={styles.transactionUser} weight="bold">
+                          {transaction.userName}
+                        </Text>
+                        <Text style={styles.transactionDate}>{transaction.date}</Text>
+                      </View>
+                      <View style={styles.transactionAmount}>
+                        <Text
+                          style={[
+                            styles.amountText,
+                            { color: transaction.type === 'charge' ? '#1E88E5' : '#56AEE9' },
+                          ]}
+                          weight="bold"
+                        >
+                          {transaction.type === 'charge' ? '' : '-'}
+                          {formatNumber(transaction.amount)}원
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.transactionAmount}>
-                      <Text
-                        style={[
-                          styles.amountText,
-                          { color: transaction.type === 'charge' ? '#1E88E5' : '#56AEE9' },
-                        ]}
-                      >
-                        {transaction.type === 'charge' ? '' : '-'}
-                        {formatNumber(transaction.amount)}원
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyTransactionContainer}>
+                  <Text style={styles.emptyTransactionText}>사용내역이 없습니다.</Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -1762,7 +1838,7 @@ const styles = StyleSheet.create({
   },
   transactionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+
     marginTop: 10,
     marginBottom: 12,
   },
@@ -1783,7 +1859,6 @@ const styles = StyleSheet.create({
   },
   transactionUser: {
     fontSize: 16,
-    fontWeight: 'bold',
     color: '#333',
   },
   transactionDate: {
@@ -1796,7 +1871,6 @@ const styles = StyleSheet.create({
   },
   amountText: {
     fontSize: 18,
-    fontWeight: 'bold',
   },
   transactionSection: {
     marginTop: 16,
@@ -2124,6 +2198,34 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyTransactionContainer: {
+    padding: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F9F9F9',
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  emptyTransactionText: {
+    fontSize: 16,
+    fontFamily: 'Pretendard-Medium',
+    color: '#666',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  viewHistoryButton: {
+    backgroundColor: '#56AEE9',
+    borderRadius: 8,
+    padding: 10,
+    paddingHorizontal: 20,
+    marginTop: 4,
+  },
+  viewHistoryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '500',
+    fontFamily: 'Pretendard-Medium',
   },
 });
 
