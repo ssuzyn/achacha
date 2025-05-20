@@ -164,14 +164,18 @@ const DetailProductScreen = () => {
       // 사용완료 기프티콘인 경우 바코드 정보도 함께 로드
       if (scope === 'USED' && response.usageType === 'SELF_USE') {
         try {
+          console.log(`[DetailProductScreen] 사용완료 바코드 정보 로드 시작 - ID: ${id}`);
           const barcodeResponse = await gifticonService.getUsedGifticonBarcode(id);
           if (barcodeResponse) {
+            console.log('[DetailProductScreen] 바코드 정보 로드 성공');
             setBarcodeInfo({
               barcodeNumber: barcodeResponse.gifticonBarcodeNumber,
               barcodePath: barcodeResponse.barcodePath,
             });
           }
-        } catch (barcodeError) {}
+        } catch (barcodeError) {
+          console.error('[DetailProductScreen] 바코드 정보 로드 실패:', barcodeError);
+        }
       }
 
       setIsLoading(false);
@@ -605,7 +609,7 @@ const DetailProductScreen = () => {
                           gifticonData.usageType === 'SELF_USE' &&
                           styles.smallerGifticonImage,
                       ]}
-                      resizeMode="contain"
+                      resizeMode="cover"
                     />
                   </TouchableOpacity>
 
@@ -1089,6 +1093,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     resizeMode: 'cover',
     marginBottom: 20,
+    borderRadius: 8,
   },
   // 바코드 관련 스타일
   barcodeContainer: {
@@ -1181,7 +1186,8 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     marginTop: 10,
     marginBottom: 10,
-    resizeMode: 'contain',
+    resizeMode: 'cover',
+    borderRadius: 8,
   },
   usedBarcodeContainer: {
     alignItems: 'center',

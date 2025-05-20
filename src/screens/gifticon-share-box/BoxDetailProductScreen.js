@@ -458,7 +458,7 @@ const BoxDetailProductScreen = () => {
                           gifticonData.usageType === 'SELF_USE' &&
                           styles.smallerGifticonImage,
                       ]}
-                      resizeMode="contain"
+                      resizeMode="cover"
                     />
                   </TouchableOpacity>
 
@@ -895,11 +895,12 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   gifticonImage: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     aspectRatio: 1,
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     marginBottom: 20,
+    borderRadius: 8,
   },
   // 바코드 관련 스타일
   barcodeContainer: {
@@ -993,7 +994,8 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     marginTop: 10,
     marginBottom: 10,
-    resizeMode: 'contain',
+    resizeMode: 'cover',
+    borderRadius: 8,
   },
   usedBarcodeContainer: {
     alignItems: 'center',

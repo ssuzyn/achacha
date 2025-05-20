@@ -56,6 +56,8 @@ const BoxDetailAmountScreen = () => {
   const [barcodeImageUrl, setBarcodeImageUrl] = useState(null);
   const [barcodeNumber, setBarcodeNumber] = useState(null);
   const [barcodeLoading, setBarcodeLoading] = useState(false);
+  // 이미지 확대 보기 상태 추가
+  const [isImageViewVisible, setImageViewVisible] = useState(false);
 
   const latestRequestId = useRef(0);
 
@@ -733,6 +735,11 @@ const BoxDetailAmountScreen = () => {
     }
   };
 
+  // 이미지 확대 보기 토글 함수 추가
+  const toggleImageView = () => {
+    setImageViewVisible(!isImageViewVisible);
+  };
+
   // 렌더링 분기 직전 로그
   if (isLoading || !gifticonData) {
     // 로딩 중 표시
@@ -819,15 +826,19 @@ const BoxDetailAmountScreen = () => {
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
                   <View style={styles.imageWrapper}>
-                    <Image
-                      source={imageSource}
-                      style={[
-                        styles.gifticonImage,
-                        scope === 'USED' && styles.grayScaleImage,
-                        scope === 'USED' && usageType === 'SELF_USE' && styles.smallerGifticonImage,
-                      ]}
-                      resizeMode="contain"
-                    />
+                    <TouchableOpacity onPress={toggleImageView} activeOpacity={0.9}>
+                      <Image
+                        source={imageSource}
+                        style={[
+                          styles.gifticonImage,
+                          scope === 'USED' && styles.grayScaleImage,
+                          scope === 'USED' &&
+                            usageType === 'SELF_USE' &&
+                            styles.smallerGifticonImage,
+                        ]}
+                        resizeMode="cover"
+                      />
+                    </TouchableOpacity>
                   </View>
 
                   {/* 상단 액션 아이콘 */}
@@ -1182,6 +1193,49 @@ const BoxDetailAmountScreen = () => {
         onCancel={handleCancelDialog}
         type="warning"
       />
+
+      {/* 이미지 확대 보기 모달 추가 */}
+      <Modal
+        visible={isImageViewVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleImageView}
+      >
+        <View style={styles.imageViewModal}>
+          <TouchableOpacity
+            style={styles.imageViewCloseButton}
+            onPress={toggleImageView}
+            activeOpacity={0.7}
+          >
+            <Icon name="close" type="material" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.imageViewContainer}
+            activeOpacity={1}
+            onPress={toggleImageView}
+          >
+            <Image
+              source={
+                // 원본 이미지 표시를 위한 소스 선택 로직 개선
+                (() => {
+                  // 원본 이미지 경로 우선 사용
+                  if (gifticonData?.originalImagePath) {
+                    return { uri: getImageUrl(gifticonData.originalImagePath) };
+                  }
+                  // 원본 이미지가 없는 경우 썸네일 경로 사용
+                  else if (gifticonData?.thumbnailPath) {
+                    return { uri: getImageUrl(gifticonData.thumbnailPath) };
+                  }
+                  // 모두 없는 경우 기본 이미지
+                  return require('../../assets/images/dummy_starbuckscard.png');
+                })()
+              }
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1248,11 +1302,13 @@ const styles = StyleSheet.create({
   imageWrapper: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 150,
-    height: 150,
+    width: 180,
+    height: 180,
     margin: 'auto',
-    marginTop: 20,
+    marginTop: 10,
     marginBottom: 10,
+    borderRadius: 8,
+    overflow: 'hidden',
   },
   gifticonImage: {
     width: '100%',
@@ -1270,6 +1326,8 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     marginBottom: 5,
     marginTop: 5,
+    resizeMode: 'cover',
+    borderRadius: 8,
   },
   actionIconsContainer: {
     position: 'absolute',
@@ -1690,6 +1748,34 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  imageViewModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
+  },
+  imageViewCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
