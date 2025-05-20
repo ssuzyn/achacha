@@ -60,6 +60,8 @@ const BoxDetailProductScreen = () => {
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
   // 이미지 확대 보기 상태 추가
   const [isImageViewVisible, setImageViewVisible] = useState(false);
+  // 바코드 정보 별도 상태로 분리
+  const [barcodeInfo, setBarcodeInfo] = useState(null);
 
   // 더미 데이터: 쉐어박스 목록
   const shareBoxes = [
@@ -80,21 +82,17 @@ const BoxDetailProductScreen = () => {
     return unsubscribe;
   }, [navigation, showTabBar]);
 
-  // route.params에서 scope와 gifticonId, usageType, usedAt을 가져오는 부분
+  // 페이지 진입 시 gifticonId를 추출해서 무조건 API 호출
   useEffect(() => {
-    if (route.params) {
-      if (route.params.scope) {
-        setScope(route.params.scope);
-      }
-      if (route.params.gifticonId) {
-        setGifticonId(route.params.gifticonId);
-      }
-      if (route.params.usageType) {
-        setUsageType(route.params.usageType);
-      }
-      if (route.params.usedAt) {
-        setUsedAt(route.params.usedAt);
-      }
+    let id = null;
+    if (route.params?.gifticonId) {
+      id = route.params.gifticonId;
+    } else if (route.params?.gifticon?.gifticonId) {
+      id = route.params.gifticon.gifticonId;
+    }
+    if (id) {
+      setGifticonId(id);
+      loadGifticonData(id); // 무조건 API 호출
     }
   }, [route.params]);
 
@@ -114,18 +112,47 @@ const BoxDetailProductScreen = () => {
   const loadGifticonData = async id => {
     setIsLoading(true);
     try {
-      // 실제 구현에서는 API 호출로 대체
-      // 예시: const response = await api.getGifticonDetail(id);
-      // setGifticonData(response.data);
-      // setIsSharer(response.data.isSharer); // 필요시
-      //
-      // 임시로 로딩만 false 처리
+      let response, data;
+      if (scope === 'USED') {
+        response = await apiClient.get(`/api/used-gifticons/${id}`);
+        data = response.data;
+      } else {
+        response = await apiClient.get(`/api/available-gifticons/${id}`);
+        data = response.data;
+      }
+      console.log('[DEBUG] gifticon API 응답:', data);
+      setGifticonData(prev => {
+        const merged = {
+          ...prev,
+          ...data,
+          gifticonCreatedAt: data.createdAt || data.gifticonCreatedAt,
+        };
+        console.log('[DEBUG] gifticonCreatedAt:', merged.gifticonCreatedAt);
+        return merged;
+      });
       setIsLoading(false);
-      console.log('등록일시:', gifticonData.gifticonCreatedAt);
-      console.log('바코드 이미지 URL:', gifticonData.barcodeImageUrl);
     } catch (error) {
       setIsLoading(false);
-      // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
+    }
+  };
+
+  // 바코드 정보 로드 함수
+  const loadBarcodeInfo = async id => {
+    try {
+      const barcodeRes = await gifticonService.getAvailableGifticonBarcode(id);
+      setBarcodeInfo(barcodeRes);
+      setGifticonData(prev => {
+        const updated = {
+          ...prev,
+          barcodeImageUrl: barcodeRes.barcodePath,
+          barcodeNumber: barcodeRes.gifticonBarcodeNumber,
+        };
+        console.log('바코드 API 응답:', barcodeRes);
+        console.log('업데이트된 gifticonData:', updated);
+        return updated;
+      });
+    } catch (error) {
+      console.log('바코드 조회 실패:', error?.message || '바코드 정보를 불러오지 못했습니다.');
     }
   };
 
@@ -268,19 +295,7 @@ const BoxDetailProductScreen = () => {
       // 만료되지 않은 경우 바코드 이미지 조회 후 사용 모드로 전환
       try {
         setIsLoading(true);
-        const barcodeRes = await gifticonService.getAvailableGifticonBarcode(
-          gifticonData.gifticonId
-        );
-        setGifticonData(prev => {
-          const updated = {
-            ...prev,
-            barcodeImageUrl: barcodeRes.barcodePath,
-            barcodeNumber: barcodeRes.gifticonBarcodeNumber,
-          };
-          console.log('바코드 API 응답:', barcodeRes);
-          console.log('업데이트된 gifticonData:', updated);
-          return updated;
-        });
+        await loadBarcodeInfo(gifticonData.gifticonId);
         setIsUsing(true);
       } catch (error) {
         Alert.alert('바코드 조회 실패', error?.message || '바코드 이미지를 불러오지 못했습니다.');
@@ -562,17 +577,15 @@ const BoxDetailProductScreen = () => {
                   </Text>
                 </View>
 
-                {/* 등록일시: 마이박스(MY_BOX)일 때만 표시 */}
-                {scope === 'MY_BOX' && (
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>등록일시</Text>
-                    <Text style={styles.infoValue}>
-                      {gifticonData.gifticonCreatedAt
-                        ? formatDateTime(gifticonData.gifticonCreatedAt)
-                        : '-'}
-                    </Text>
-                  </View>
-                )}
+                {/* 등록일시: 항상 표시 */}
+                <View style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>등록일시</Text>
+                  <Text style={styles.infoValue}>
+                    {gifticonData.gifticonCreatedAt
+                      ? formatDateTime(gifticonData.gifticonCreatedAt)
+                      : '-'}
+                  </Text>
+                </View>
 
                 {/* 등록자 정보 표시 (항상 표시) */}
                 {gifticonData.userName && (
