@@ -459,6 +459,11 @@ const NotificationScreen = () => {
             console.error('[디버그] 쉐어박스 네비게이션 오류:', navError);
             Alert.alert('알림', '삭제되었거나 나가기 처리한 쉐어박스입니다.');
           }
+        }
+        // 쉐어박스 삭제 알림 처리
+        else if (notificationType === 'SHAREBOX_DELETED') {
+          console.log('[디버그] 쉐어박스 삭제 알림: BoxMain으로 이동');
+          navigation.navigate('BoxMain');
         } else {
           console.log('처리되지 않은 알림 타입:', notificationType);
         }

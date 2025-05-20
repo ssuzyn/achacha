@@ -69,8 +69,8 @@ export const handleNotificationPress = async notification => {
 
       // 쉐어박스 삭제 알림은 홈 화면으로 이동
       if (notificationType === 'SHAREBOX_DELETED') {
-        console.log('[NotificationHandler] 쉐어박스 삭제 알림: 홈 화면으로 이동');
-        NavigationService.navigate('Main', { screen: 'Home' });
+        console.log('[NotificationHandler] 쉐어박스 삭제 알림: BoxMainScreen으로 이동');
+        NavigationService.navigate('BoxMainScreen');
         return;
       }
 

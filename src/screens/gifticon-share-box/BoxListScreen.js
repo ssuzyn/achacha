@@ -1152,11 +1152,14 @@ const BoxListScreen = () => {
         const data = await fetchShareBoxSettings(shareBoxId);
         setBoxName(data.shareBoxName);
       } catch (e) {
-        setBoxName('쉐어박스');
+        console.error('쉐어박스 정보 조회 실패:', e);
+        Alert.alert('알림', '삭제되었거나 접근할 수 없는 쉐어박스입니다.', [
+          { text: '확인', onPress: () => navigation.goBack() },
+        ]);
       }
     };
     fetchBoxInfo();
-  }, [shareBoxId]);
+  }, [shareBoxId, navigation]);
 
   useFocusEffect(
     React.useCallback(() => {
