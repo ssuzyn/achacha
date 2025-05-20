@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
   tooltipText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     textAlign: 'center',
   },
 });
