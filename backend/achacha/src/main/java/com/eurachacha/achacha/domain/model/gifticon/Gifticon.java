@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.domain.model.gifticon;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.hibernate.annotations.SQLRestriction;
 
@@ -116,5 +117,9 @@ public class Gifticon extends TimeStampEntity {
 
 	public void updateUser(User user) {
 		this.user = user;
+	}
+
+	public void updateCreatedAt(LocalDateTime timeStamp) {
+		this.createdAt = timeStamp;
 	}
 }
