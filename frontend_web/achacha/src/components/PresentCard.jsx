@@ -51,6 +51,10 @@ function PresentCard({ presentCard }) {
   // 애니메이션 상태
   const [showEnvelope, setShowEnvelope] = useState(true);
   const [isEnvelopeOpen, setIsEnvelopeOpen] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // 로딩 상태 추가
+  const [isLoading, setIsLoading] = useState(true);
   
   // 화면 크기 감지를 위한 상태
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
@@ -68,6 +72,9 @@ function PresentCard({ presentCard }) {
   const confettiGenStartTimeRef = useRef(0);
   // --- 컨페티 상태 및 Ref 끝 ---
 
+  // 리소스 프리로딩을 위한 상태
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  
   // --- Body 배경색 설정 및 해제 ---
   useEffect(() => {
     const originalBodyColor = document.body.style.backgroundColor;
@@ -77,23 +84,114 @@ function PresentCard({ presentCard }) {
       document.body.style.backgroundColor = originalBodyColor; // 컴포넌트 언마운트 시 원래 색으로 복원
     };
   }, []); // 마운트 시 한 번만 실행
-  // --- Body 배경색 설정 및 해제 끝 ---
+
+  // 이미지 프리로딩 로직
+  useEffect(() => {
+    if (!presentCard) return;
+
+    const imagesToLoad = [];
+    let loadedCount = 0;
+    
+    // 편지봉투가 표시되는 동안 기프티콘과 템플릿 이미지를 미리 로드
+    if (presentCard.gifticonOriginalPath) {
+      const img1 = new Image();
+      img1.src = presentCard.gifticonOriginalPath;
+      imagesToLoad.push(img1);
+      img1.onload = () => {
+        loadedCount++;
+        if (loadedCount >= imagesToLoad.length) setImagesLoaded(true);
+      };
+      img1.onerror = () => {
+        loadedCount++;
+        if (loadedCount >= imagesToLoad.length) setImagesLoaded(true);
+      };
+    }
+    
+    if (presentCard.gifticonThumbnailPath) {
+      const img2 = new Image();
+      img2.src = presentCard.gifticonThumbnailPath;
+      imagesToLoad.push(img2);
+      img2.onload = () => {
+        loadedCount++;
+        if (loadedCount >= imagesToLoad.length) setImagesLoaded(true);
+      };
+      img2.onerror = () => {
+        loadedCount++;
+        if (loadedCount >= imagesToLoad.length) setImagesLoaded(true);
+      };
+    }
+    
+    if (presentCard.templateCardPath) {
+      const img3 = new Image();
+      img3.src = presentCard.templateCardPath;
+      imagesToLoad.push(img3);
+      img3.onload = () => {
+        loadedCount++;
+        if (loadedCount >= imagesToLoad.length) setImagesLoaded(true);
+      };
+      img3.onerror = () => {
+        loadedCount++;
+        if (loadedCount >= imagesToLoad.length) setImagesLoaded(true);
+      };
+    }
+    
+    // 이미지가 없거나 모두 로딩 실패해도 계속 진행
+    if (imagesToLoad.length === 0) {
+      setImagesLoaded(true);
+    }
+  }, [presentCard]);
+
+  // 초기 로딩 상태 처리
+  useEffect(() => {
+    // 리소스 및 애니메이션 준비를 위한 짧은 지연
+    const loadingTimer = setTimeout(() => {
+      if (imagesLoaded) {
+        setIsLoading(false);
+      } else {
+        // 이미지가 아직 로딩 중이면 추가 확인
+        const checkImagesLoaded = setInterval(() => {
+          if (imagesLoaded) {
+            setIsLoading(false);
+            clearInterval(checkImagesLoaded);
+          }
+        }, 100);
+        
+        // 최대 3초까지만 기다림
+        setTimeout(() => {
+          clearInterval(checkImagesLoaded);
+          setIsLoading(false);
+        }, 3000);
+        
+        return () => clearInterval(checkImagesLoaded);
+      }
+    }, 500); // 시간을 300ms에서 500ms로 늘려 충분한 로딩 시간 확보
+
+    return () => clearTimeout(loadingTimer);
+  }, [imagesLoaded]);
 
   // 애니메이션 로직
   useEffect(() => {
+    if (isLoading) return; // 로딩 중일 때는 애니메이션 시작하지 않음
+    
     const openTimer = setTimeout(() => {
       setIsEnvelopeOpen(true);
     }, 100); // 약간의 딜레이 후 열기 시작
 
+    const transitionStartTimer = setTimeout(() => {
+      setIsTransitioning(true);
+    }, 3000); // 3초 후 페이드아웃 시작
+
     const switchTimer = setTimeout(() => {
       setShowEnvelope(false);
+      setIsTransitioning(false);
     }, 3500); // 3.5초 후 카드 내용 표시
 
     return () => {
       clearTimeout(openTimer);
+      clearTimeout(transitionStartTimer);
       clearTimeout(switchTimer);
     };
-  }, []);
+  }, [isLoading]); // isLoading 의존성 추가
 
   // 메시지 길이 감지 로직
   useEffect(() => {
@@ -145,9 +243,11 @@ function PresentCard({ presentCard }) {
 
     // 초기 입자 생성
     if (confettiItemsRef.current.length === 0) {
-        for (let i = 0; i < initialConfettiCount; i++) {
+        // 모바일 환경에서는 입자 수 줄이기
+        const particleCount = (isMobile || screenWidth < 768) ? Math.floor(initialConfettiCount / 2) : initialConfettiCount;
+        for (let i = 0; i < particleCount; i++) {
             confettiItemsRef.current.push(
-            createConfettiParticle(canvasWidth / 2, canvasHeight / 3, i, 10, canvasWidth)
+              createConfettiParticle(canvasWidth / 2, canvasHeight / 3, i, 10, canvasWidth)
             );
         }
     }
@@ -170,7 +270,9 @@ function PresentCard({ presentCard }) {
       // 추가 입자 생성 (처음 2초 동안)
       if (runConfetti && currentTime - confettiGenStartTimeRef.current < 2000) {
         if (confettiItemsRef.current.length < maxConfettiParticles) {
-          for (let k = 0; k < 2; k++) { // 매 프레임마다 추가 입자 수 (5 -> 2로 줄임)
+          // 모바일 환경에서는 프레임당 생성 입자 수 줄이기
+          const newParticlesPerFrame = (isMobile || screenWidth < 768) ? 1 : 2;
+          for (let k = 0; k < newParticlesPerFrame; k++) {
             confettiItemsRef.current.push(
               createConfettiParticle(Math.random() * canvasWidth, -20, confettiItemsRef.current.length, 10, canvasWidth)
             );
@@ -335,6 +437,30 @@ function PresentCard({ presentCard }) {
     };
   };
 
+  // 로딩 중이면 빈 div 반환 (화면에 아무것도 보이지 않음)
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colorBg }}>
+        <style>
+          {`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+            .loader {
+              width: 50px;
+              height: 50px;
+              border-radius: 50%;
+              border: 3px solid rgba(0, 0, 0, 0.1);
+              border-top-color: ${colorEnv};
+              animation: spin 1s linear infinite;
+            }
+          `}
+        </style>
+        <div className="loader"></div>
+      </div>
+    );
+  }
+
   // 편지봉투 애니메이션 JSX
   if (showEnvelope) {
     return (
@@ -344,6 +470,8 @@ function PresentCard({ presentCard }) {
           .envelope-container {
             font-family: 'Pretendard', sans-serif;
             background-color: ${colorBg};
+            opacity: ${isTransitioning ? '0' : '1'};
+            transition: opacity 0.5s ease-out;
           }
           #envelope {
             position: relative;
@@ -621,13 +749,29 @@ function PresentCard({ presentCard }) {
             height: '100vh',
             pointerEvents: 'none',
             zIndex: 9999, // 다른 요소들 위에 오도록 z-index 설정
+            willChange: 'transform', // 성능 최적화를 위한 레이어 힌트
           }}
         />
       )}
       {/* --- 컨페티 캔버스 끝 --- */}
 
       {/* 전체 카드 컨테이너 */}
-      <div className="min-h-screen flex flex-col items-center justify-center p-4" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+      <div 
+        className="min-h-screen flex flex-col items-center justify-center p-4" 
+        style={{ 
+          fontFamily: 'Pretendard, sans-serif',
+          opacity: 0,
+          animation: 'fadeIn 0.5s forwards',
+        }}
+      >
+        <style>
+          {`
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+          `}
+        </style>
         {/* 전체 카드 컨테이너 */}
         <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
           {/* 템플릿 이미지 (배경) */}
