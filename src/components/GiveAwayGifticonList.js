@@ -13,6 +13,24 @@ import { calculateDday } from '../utils/dateUtils';
 const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
   const renderGifticonItem = ({ item }) => {
     const dday = calculateDday(item.gifticonExpiryDate);
+
+    let numericDday = Infinity;
+    if (dday && typeof dday === 'string') {
+      if (dday.toUpperCase() === 'D-DAY') {
+        numericDday = 0;
+      } else if (dday.startsWith('D-')) {
+        const parts = dday.split('-');
+        if (parts.length === 2) {
+          const dayValue = parseInt(parts[1], 10);
+          if (!isNaN(dayValue)) {
+            numericDday = dayValue;
+          }
+        }
+      }
+    }
+
+    const ddayColor = numericDday <= 7 ? '#EA5455' : '#278CCC';
+
     return (
       <TouchableOpacity style={styles.gifticonItem} onPress={() => onSelectGifticon(item)}>
         <View style={styles.contentContainer}>
@@ -28,7 +46,7 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
             </View>
           </View>
           <View style={styles.ddayContainer}>
-            <Text style={styles.ddayText}>{dday}</Text>
+            <Text style={[styles.ddayText, { color: ddayColor }]}>{dday}</Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -64,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(218, 240, 254, 0.8)',
     width: '90%',
     borderRadius: 10,
-    maxHeight: 260, 
+    maxHeight: 260,
   },
   flatListContent: {
     paddingTop: 8,
@@ -102,14 +120,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   brandName: {
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontFamily: 'Pretendard-Bold',
     color: 'black',
     marginBottom: 4,
   },
   productName: {
     fontSize: 14,
-    fontWeight: '400',
+    fontFamily: 'Pretendard-Medium',
     color: 'black',
   },
   ddayContainer: {
@@ -119,7 +137,7 @@ const styles = StyleSheet.create({
   },
   ddayText: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: '#278CCC',
   },
   listHeader: {
@@ -131,7 +149,7 @@ const styles = StyleSheet.create({
   },
   listTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: 'white',
     backgroundColor: '#278CCC',
     paddingHorizontal: 15,
@@ -140,7 +158,7 @@ const styles = StyleSheet.create({
   },
   listSubtitle: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     color: '#278CCC',
   },
   emptyContainer: {
