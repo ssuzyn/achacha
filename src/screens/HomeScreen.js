@@ -38,7 +38,7 @@ const CAROUSEL_CARDS = [
   {
     id: '2',
     type: 'radar',
-    title: '쓱 - 뿌리기\n행운의 주인공은?',
+    title: '쓱- 뿌리기\n행운의 주인공은?',
     image: require('../assets/images/home_radar.png'),
     onPress: () => NavigationService.navigate('TabMap'),
   },
@@ -69,9 +69,6 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const printTokens = async () => {
-      const accessToken = await AsyncStorage.getItem('accessToken');
-      const refreshToken = await AsyncStorage.getItem('refreshToken');
-      const bleToken = await AsyncStorage.getItem('bleToken');
       const userId = await AsyncStorage.getItem('userId');
 
       // userId로 사용자 정보 조회
@@ -81,6 +78,7 @@ const HomeScreen = () => {
           if (userInfo && userInfo.userName) {
             setNickname(userInfo.userName);
           }
+          // eslint-disable-next-line no-catch-shadow
         } catch (error) {
           console.error('사용자 정보 조회 실패:', error);
         }
@@ -518,6 +516,7 @@ const HomeScreen = () => {
       marginRight: 5,
     },
     watchGuideImage: {
+      marginTop: 15,
       width: 75,
       height: 75,
     },
@@ -744,10 +743,7 @@ const HomeScreen = () => {
             <Text variant="h3" weight="bold" color="primary" style={null}>
               {nickname || '아차차'}
             </Text>{' '}
-            님,
-          </Text>
-          <Text variant="h3" weight="bold" style={styles.welcomeText}>
-            당신을 위한 기프티콘이 기다려요.
+            님,{'\n'}당신을 위한 기프티콘이 기다려요.
           </Text>
         </View>
 
