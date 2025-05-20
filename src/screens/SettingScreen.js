@@ -29,6 +29,7 @@ import { ERROR_MESSAGES } from '../constants/errorMessages';
 import { getFcmToken } from '../services/NotificationService';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
+import GeofencingService from '../services/GeofencingService';
 
 // 알림 타입 enum (API와 일치)
 const NOTIFICATION_TYPES = {
@@ -759,13 +760,20 @@ const SettingScreen = () => {
             </View>
             <Switch
               value={nearbyStoreNotification}
-              onValueChange={value => {
+              onValueChange={async value => {
                 // 낙관적 UI 업데이트를 위해 상태를 먼저 변경
                 useNotificationStore.setState(state => ({
                   ...state,
                   nearbyStoreNotification: value,
                 }));
-                handleNotificationToggle(NOTIFICATION_TYPES.LOCATION_BASED, value);
+                // API 호출
+                await handleNotificationToggle(NOTIFICATION_TYPES.LOCATION_BASED, value);
+
+                // 스위치가 켜질 때 쿨다운 리셋
+                if (value) {
+                  const geofencingService = new GeofencingService();
+                  await geofencingService.resetNotificationCooldowns();
+                }
               }}
             />
           </View>
