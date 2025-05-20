@@ -56,6 +56,8 @@ const BoxDetailProductScreen = () => {
   // 공유 위치 선택 상태
   const [shareBoxType, setShareBoxType] = useState('SHARE_BOX');
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
+  // 이미지 확대 보기 상태 추가
+  const [isImageViewVisible, setImageViewVisible] = useState(false);
 
   // 더미 데이터: 쉐어박스 목록
   const shareBoxes = [
@@ -355,6 +357,11 @@ const BoxDetailProductScreen = () => {
     setAlertVisible(false);
   };
 
+  // 이미지 확대 보기 토글 함수 추가
+  const toggleImageView = () => {
+    setImageViewVisible(!isImageViewVisible);
+  };
+
   console.log('BoxDetailProductScreen 렌더링, route:', route);
   console.log('BoxDetailProductScreen 렌더링, route.params:', route.params);
 
@@ -441,17 +448,19 @@ const BoxDetailProductScreen = () => {
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={{ uri: gifticonData.thumbnailPath }}
-                    style={[
-                      styles.gifticonImage,
-                      isUsed && styles.grayScaleImage,
-                      isUsed &&
-                        gifticonData.usageType === 'SELF_USE' &&
-                        styles.smallerGifticonImage,
-                    ]}
-                    resizeMode="contain"
-                  />
+                  <TouchableOpacity onPress={toggleImageView} activeOpacity={0.9}>
+                    <Image
+                      source={{ uri: gifticonData.thumbnailPath }}
+                      style={[
+                        styles.gifticonImage,
+                        isUsed && styles.grayScaleImage,
+                        isUsed &&
+                          gifticonData.usageType === 'SELF_USE' &&
+                          styles.smallerGifticonImage,
+                      ]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
 
                   {/* 상단 액션 아이콘 */}
                   {!isUsed && (
@@ -795,6 +804,36 @@ const BoxDetailProductScreen = () => {
         onCancel={handleCancelDialog}
         type="warning"
       />
+      {/* 이미지 확대 보기 모달 추가 */}
+      <Modal
+        visible={isImageViewVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={toggleImageView}
+      >
+        <View style={styles.imageViewModal}>
+          <TouchableOpacity
+            style={styles.imageViewCloseButton}
+            onPress={toggleImageView}
+            activeOpacity={0.7}
+          >
+            <Icon name="close" type="material" size={28} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.imageViewContainer}
+            activeOpacity={1}
+            onPress={toggleImageView}
+          >
+            <Image
+              source={{
+                uri: gifticonData?.originalImagePath || gifticonData?.thumbnailPath,
+              }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1130,6 +1169,35 @@ const styles = StyleSheet.create({
   },
   confirmShareButtonText: {
     color: '#FFFFFF',
+  },
+  // 이미지 확대 모달 스타일 추가
+  imageViewModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imageViewContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  fullImage: {
+    width: '90%',
+    height: '80%',
+  },
+  imageViewCloseButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

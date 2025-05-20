@@ -154,13 +154,12 @@ const DetailProductScreen = () => {
   const loadGifticonData = async id => {
     setIsLoading(true);
     try {
-      // 실제 구현에서는 API 호출로 대체
       const response = await gifticonService.getGifticonDetail(id, scope);
       setGifticonData(response);
       // gifticonData가 세팅된 후 경로 확인
       if (response) {
+        setIsSharer(response.isSharer);
       }
-      setIsSharer(response.isSharer);
 
       // 사용완료 기프티콘인 경우 바코드 정보도 함께 로드
       if (scope === 'USED' && response.usageType === 'SELF_USE') {
