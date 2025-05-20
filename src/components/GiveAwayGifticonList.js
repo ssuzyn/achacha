@@ -29,7 +29,7 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
       }
     }
 
-    const ddayColor = numericDday <= 7 ? '#EA5455' : '#278CCC';
+    const isExpired = dday === '만료됨';
 
     return (
       <TouchableOpacity style={styles.gifticonItem} onPress={() => onSelectGifticon(item)}>
@@ -45,8 +45,28 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
               </Text>
             </View>
           </View>
-          <View style={styles.ddayContainer}>
-            <Text style={[styles.ddayText, { color: ddayColor }]}>{dday}</Text>
+          <View
+            style={[
+              styles.ddayContainer,
+              isExpired
+                ? styles.expiredDDayBackground
+                : numericDday <= 7
+                  ? styles.urgentDDayBackground
+                  : styles.normalDDayBackground,
+            ]}
+          >
+            <Text
+              style={[
+                styles.ddayText,
+                isExpired
+                  ? styles.expiredDDayText
+                  : numericDday <= 7
+                    ? styles.urgentDDayText
+                    : styles.normalDDayText,
+              ]}
+            >
+              {dday}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -136,9 +156,27 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   ddayText: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: 'Pretendard-Bold',
-    color: '#278CCC',
+  },
+  urgentDDayBackground: {
+    backgroundColor: 'rgba(234, 84, 85, 0.15)',
+  },
+  normalDDayBackground: {
+    backgroundColor: 'rgba(114, 191, 255, 0.15)',
+  },
+  urgentDDayText: {
+    color: '#EA5455',
+  },
+  normalDDayText: {
+    color: '#72BFFF',
+  },
+  expiredDDayBackground: {
+    backgroundColor: 'rgba(153, 153, 153, 0.15)',
+  },
+  expiredDDayText: {
+    color: '#737373',
+    fontFamily: 'Pretendard-Bold',
   },
   listHeader: {
     flexDirection: 'row',

@@ -31,9 +31,9 @@ import Animated, {
   withSpring,
   withTiming,
   runOnJS,
-  interpolate,
   withSequence,
 } from 'react-native-reanimated';
+import useGifticonListStore from '../../store/gifticonListStore';
 
 const { width, height } = Dimensions.get('window');
 const giveAwayButtonImg = require('../../assets/images/giveaway_button.png');
@@ -56,7 +56,7 @@ const availableDescriptions = [
   '익명의 펭귄',
   '익명의 유령',
 ];
-const lottieAnimationSize = width * 1.05;
+const lottieAnimationSize = width * 1.2;
 
 const GiveAwayScreen = ({ onClose }) => {
   const { theme } = useTheme();
@@ -696,6 +696,9 @@ const GiveAwayScreen = ({ onClose }) => {
       // });
       const response = await giveAwayService.giveAwayGifticon(gifticonIdToUse, [user.bleToken]);
       // console.log('[API] 호출 성공:', response);
+
+      // 로컬 스토어에서 기프티콘 제거
+      useGifticonListStore.getState().removeGifticon(gifticonIdToUse);
 
       // 커스텀 모달 관련 호출 제거하고 Alert 사용
       // runOnJS(setLastSentUserInfo)({
