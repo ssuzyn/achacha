@@ -993,7 +993,9 @@ const DetailAmountScreen = () => {
 
                   {isUsed && (
                     <View style={styles.usedOverlay}>
-                      <Text style={styles.usedText}>{getUsageTypeText()}</Text>
+                      <Text weight="bold" style={styles.usedText}>
+                        {getUsageTypeText()}
+                      </Text>
                     </View>
                   )}
 
