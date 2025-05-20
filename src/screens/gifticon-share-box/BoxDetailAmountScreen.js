@@ -818,15 +818,17 @@ const BoxDetailAmountScreen = () => {
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={imageSource}
-                    style={[
-                      styles.gifticonImage,
-                      scope === 'USED' && styles.grayScaleImage,
-                      scope === 'USED' && usageType === 'SELF_USE' && styles.smallerGifticonImage,
-                    ]}
-                    resizeMode="contain"
-                  />
+                  <View style={styles.imageWrapper}>
+                    <Image
+                      source={imageSource}
+                      style={[
+                        styles.gifticonImage,
+                        scope === 'USED' && styles.grayScaleImage,
+                        scope === 'USED' && usageType === 'SELF_USE' && styles.smallerGifticonImage,
+                      ]}
+                      resizeMode="contain"
+                    />
+                  </View>
 
                   {/* 상단 액션 아이콘 */}
                   {scope !== 'USED' && (
@@ -1243,24 +1245,31 @@ const styles = StyleSheet.create({
     position: 'relative',
     paddingBottom: 10,
   },
+  imageWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 150,
+    height: 150,
+    margin: 'auto',
+    marginTop: 20,
+    marginBottom: 10,
+  },
   gifticonImage: {
-    width: 200,
-    height: 200,
+    width: '100%',
+    height: '100%',
     aspectRatio: 1,
     borderRadius: 8,
-    resizeMode: 'contain',
-    marginBottom: 20,
+    resizeMode: 'cover',
   },
   grayScaleImage: {
     opacity: 0.7,
   },
   smallerGifticonImage: {
-    width: 160,
-    height: 160,
+    width: '80%',
+    height: '80%',
     aspectRatio: 1,
     marginBottom: 5,
-    marginTop: 20,
-    resizeMode: 'contain',
+    marginTop: 5,
   },
   actionIconsContainer: {
     position: 'absolute',
