@@ -57,6 +57,13 @@ export const getPresentCardByCode = async (presentCardCode) => {
         throw error;
       }
       
+      // 선물 카드를 찾을 수 없음 에러 (PRESENT_CARD_NOT_FOUND) 감지 및 처리
+      if (error.response.data && error.response.data.errorCode === 'PRESENT_CARD_NOT_FOUND') {
+        console.log('선물 카드를 찾을 수 없습니다 (PRESENT_CARD_NOT_FOUND)');
+        // 에러 객체에 response 데이터를 그대로 포함시켜 상위 컴포넌트에서 처리할 수 있도록 함
+        throw error;
+      }
+      
       throw new Error(error.response.data.message || '선물카드를 불러오는데 실패했습니다.');
     } else if (error.request) {
       // 요청은 보냈지만 응답이 없는 경우

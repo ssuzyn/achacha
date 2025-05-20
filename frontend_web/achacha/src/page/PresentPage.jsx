@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'; // react-router-dom이 설치되�
 import { getPresentCardByCode } from '../api/PresentApi';
 import PresentCard from '../components/PresentCard';
 import TimeOverCard from '../components/TimeOverCard';
+import NotFoundCard from '../components/NotFoundCard';
 
 function PresentPage() {
   const { presentCardCode } = useParams(); // URL에서 presentCardCode 추출
@@ -10,6 +11,7 @@ function PresentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   useEffect(() => {
     if (presentCardCode) {
@@ -44,6 +46,7 @@ function PresentPage() {
           setPresentCardData(data);
           setError(null);
           setIsExpired(false);
+          setIsNotFound(false);
         } catch (err) {
           console.error('PresentPage: 선물 카드 데이터 요청 실패:', err);
           
@@ -51,8 +54,17 @@ function PresentPage() {
           if (err.response?.data?.errorCode === 'PRESENT_005') {
             console.log('PresentPage: 선물 카드가 만료되었습니다.');
             setIsExpired(true);
+            setIsNotFound(false);
             setError(null);
-          } else {
+          } 
+          // 찾을 수 없는 선물 카드 처리 (PRESENT_CARD_NOT_FOUND 에러코드)
+          else if (err.response?.data?.errorCode === 'PRESENT_CARD_NOT_FOUND') {
+            console.log('PresentPage: 선물 카드를 찾을 수 없습니다.');
+            setIsNotFound(true);
+            setIsExpired(false);
+            setError(null);
+          } 
+          else {
             // 그 외 다른 오류 처리
             let errorMessage = '선물 카드를 불러오는 데 실패했습니다.';
             
@@ -66,6 +78,7 @@ function PresentPage() {
             
             setError(errorMessage);
             setIsExpired(false);
+            setIsNotFound(false);
           }
           setPresentCardData(null);
         }
@@ -89,11 +102,15 @@ function PresentPage() {
     return <TimeOverCard />;
   }
 
+  // 카드를 찾을 수 없는 경우 NotFoundCard 컴포넌트를 보여줌
+  if (isNotFound) {
+    return <NotFoundCard />;
+  }
+
   if (error) {
     return <div className="flex flex-col justify-center items-center h-screen text-red-500 text-center">
-      <p className="text-2xl mb-4">오류</p>
-      <p>{error}</p>
-      <p className="mt-2 text-sm text-gray-600">선물 링크를 다시 확인해주세요.</p>
+      <h2 className="text-2xl font-bold">{error}</h2>
+      <h3 className="mt-2 text-sm text-gray-600">선물 링크를 다시 확인해주세요.</h3>
       </div>;
   }
 
