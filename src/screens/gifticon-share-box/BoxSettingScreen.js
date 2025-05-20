@@ -9,6 +9,7 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  Image,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -26,6 +27,8 @@ import {
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
+import Switch from '../../components/ui/Switch';
+import KakaoShareLink from 'react-native-kakao-share-link';
 
 const BoxSettingScreen = () => {
   const insets = useSafeAreaInsets();
@@ -220,6 +223,21 @@ const BoxSettingScreen = () => {
     }
   };
 
+  // 카카오톡 공유 함수
+  const handleKakaoShare = async () => {
+    try {
+      await KakaoShareLink.sendCustom({
+        templateId: 120597, // 실제 사용하는 템플릿 ID로 교체
+        templateArgs: [
+          { key: 'invite_code', value: shareBoxCode },
+        ],
+      });
+    } catch (e) {
+      console.error(e);
+      Alert.alert('에러', '카카오톡 공유에 실패했습니다.');
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -247,7 +265,7 @@ const BoxSettingScreen = () => {
           {/* 쉐어박스 이름 */}
           <View style={styles.section}>
             <Text variant="body1" weight="medium" style={styles.sectionLabel}>
-              쉐어박스 이름
+              이름
             </Text>
             <View style={styles.inputContainer}>
               <TextInput
@@ -279,7 +297,7 @@ const BoxSettingScreen = () => {
             </View>
             {userId !== shareBoxUserId && (
               <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
-                방장만 쉐어박스 이름을 변경할 수 있습니다.
+                방장만 이름을 변경할 수 있습니다.
               </Text>
             )}
           </View>
@@ -290,28 +308,11 @@ const BoxSettingScreen = () => {
               <Text variant="body1" weight="medium">
                 멤버 입장 허용
               </Text>
-              <TouchableOpacity
-                style={[
-                  styles.switchContainer,
-                  {
-                    backgroundColor: memberEntryEnabled ? '#C9EAFC' : 'white',
-                    borderColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
-                  },
-                  userId !== shareBoxUserId && { opacity: 0.5 },
-                ]}
-                onPress={toggleMemberEntry}
+              <Switch
+                value={memberEntryEnabled}
+                onValueChange={toggleMemberEntry}
                 disabled={userId !== shareBoxUserId}
-              >
-                <View
-                  style={[
-                    styles.switchThumb,
-                    {
-                      backgroundColor: memberEntryEnabled ? '#83C8F5' : '#A7DAF9',
-                      transform: [{ translateX: memberEntryEnabled ? 22 : 2 }],
-                    },
-                  ]}
-                />
-              </TouchableOpacity>
+              />
             </View>
             {userId !== shareBoxUserId && (
               <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
@@ -323,17 +324,26 @@ const BoxSettingScreen = () => {
           {/* 쉐어박스 초대 코드 */}
           <View style={styles.section}>
             <Text variant="body1" weight="medium" style={styles.sectionTitle}>
-              쉐어박스 초대 코드
+              초대 코드
             </Text>
             <View style={[styles.codeContainer, { backgroundColor: '#F0F9FF' }]}>
               <Text variant="h3" weight="bold" style={styles.codeText}>
                 {shareBoxCode}
               </Text>
-              <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
-                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
-                  복사
-                </Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={[styles.confirmButton, { marginRight: 6 ,backgroundColor: '#FFEB00', minWidth: 40}]} onPress={handleKakaoShare}>
+                <Image
+                    source={require('../../assets/images/kakaotalk_sharing_btn_small.png')}
+                    style={{ width: 15, height: 15 }}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
+                  <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
+                    복사
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -358,7 +368,7 @@ const BoxSettingScreen = () => {
           {/* 쉐어박스 나가기 버튼 */}
           <TouchableOpacity style={styles.leaveButton} onPress={handleLeavePress}>
             <Text variant="body1" weight="semibold" style={styles.leaveButtonText}>
-              쉐어박스 나가기
+              나가기
             </Text>
           </TouchableOpacity>
         </View>
@@ -486,7 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   codeText: {
-    fontSize: 20,
+    fontSize: 16,
   },
   memberItem: {
     flexDirection: 'row',
