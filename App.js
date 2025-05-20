@@ -3,7 +3,16 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, StyleSheet, LogBox, Text, TextInput, Platform, AppState } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  LogBox,
+  Text,
+  TextInput,
+  Platform,
+  AppState,
+  NativeModules,
+} from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TabBarProvider } from './src/context/TabBarContext';
 import { HeaderBarProvider } from './src/context/HeaderBarContext';
@@ -18,6 +27,7 @@ import { Linking } from 'react-native';
 import NavigationService from './src/navigation/NavigationService';
 import { KAKAO_REST_API_KEY } from '@env';
 import Geofencing from '@rn-bridge/react-native-geofencing';
+import useGifticonListStore from './src/store/gifticonListStore';
 
 // FCM 알림 관련 서비스 import
 import {
@@ -40,7 +50,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as TaskManager from 'expo-task-manager';
 import * as Location from 'expo-location';
 
-// 백그라운드 위치 추적을 위한 task 이름 정의
+// 알람 서비스 import
+const { LocationAlarmModule } = NativeModules;
+
+// 백그라운드 위치 추적을 위한 task 이름 정의 - Native 코드와 일치시켜야 함
 const LOCATION_TRACKING = 'background-location-tracking';
 
 // 백그라운드 위치 추적 Task 정의
@@ -56,7 +69,7 @@ TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
       console.log('[BackgroundLocationTask] 위치 업데이트:', location.coords);
 
       try {
-        // AsyncStorage에서 기프티콘 불러오기
+        // AsyncStorage에서 기프티콘 불러오기 (백그라운드에서는 Zustand 스토어 접근 불가)
         const gifticonsStr = await AsyncStorage.getItem('USER_GIFTICONS');
         const storeDataStr = await AsyncStorage.getItem('GEOFENCE_STORE_DATA');
 
@@ -92,7 +105,6 @@ TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
         const geofencingService = new GeofencingService();
 
         // 데이터 주입
-        // GeofencingService의 updateUserGifticons는 { gifticons: [] } 형태를 기대하므로 직접 할당하거나 해당 형식으로 전달
         geofencingService.userGifticons = gifticons;
         geofencingService.brandStores = storeData;
 
@@ -102,10 +114,8 @@ TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
         });
 
         // 지오펜싱 서비스 초기화 (권한 확인 등)
-        // 백그라운드에서는 UI를 통한 권한 요청이 불가능하므로, 권한은 이미 부여된 상태여야 합니다.
-        // initGeofencing은 내부적으로 initialized 플래그를 확인하므로 여러 번 호출해도 안전합니다.
         if (!geofencingService.initialized) {
-          await geofencingService.initGeofencing(); // 리스너 설정 등을 포함할 수 있음
+          await geofencingService.initGeofencing();
         }
 
         if (geofencingService.initialized) {
@@ -118,7 +128,6 @@ TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
           );
         }
       } catch (e) {
-        // try-catch 블록의 변수명을 error에서 e로 변경하여 외부 스코프의 error와 충돌 방지
         console.error('[BackgroundLocationTask] 처리 중 오류:', e);
       }
     }
@@ -132,7 +141,7 @@ LogBox.ignoreLogs([
   'Component is not a function',
 ]);
 
-// 텍스트 컴포넌트에 전역 스타일 적용
+// 텍스트 컴포넌트에 전역 스타일 적용 함수
 const setDefaultFontFamily = () => {
   // 폰트 굵기에 따른 폰트 패밀리 매핑 함수
   const getFontFamily = style => {
@@ -187,7 +196,6 @@ const setDefaultFontFamily = () => {
             includeFontPadding: false,
             textAlignVertical: 'center',
           },
-          // fontWeight가 있는 경우 그대로 유지 (숫자를 문자열로 변환하지 않도록)
           origin.props.style,
         ],
         allowFontScaling: false,
@@ -216,7 +224,6 @@ const setDefaultFontFamily = () => {
             includeFontPadding: false,
             textAlignVertical: 'center',
           },
-          // fontWeight가 있는 경우 그대로 유지
           origin.props.style,
         ],
         allowFontScaling: false,
@@ -239,7 +246,7 @@ const AppWrapper = ({ children }) => {
   return children;
 };
 
-// Keep the splash screen visible while we fetch resources
+// 스플래시 화면 표시 유지
 SplashScreen.preventAutoHideAsync();
 
 const linking = {
@@ -254,11 +261,218 @@ const linking = {
               code: code => code,
             },
           },
-          // ...다른 탭
         },
       },
-      // ...다른 스크린
     },
+  },
+};
+
+// 위치 서비스 유틸리티 함수들
+const LocationService = {
+  // 위치 권한 요청 함수
+  requestLocationPermissions: async () => {
+    try {
+      // 포그라운드 위치 권한 요청
+      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
+
+      if (foregroundStatus !== 'granted') {
+        console.log('[LocationService] 포그라운드 위치 권한이 거부됨');
+        return false;
+      }
+
+      // 백그라운드 위치 권한 요청 (Android만)
+      if (Platform.OS === 'android') {
+        const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
+
+        if (backgroundStatus !== 'granted') {
+          console.log('[LocationService] 백그라운드 위치 권한이 거부됨');
+          return false;
+        }
+      }
+
+      console.log('[LocationService] 위치 권한 획득 성공');
+      return true;
+    } catch (error) {
+      console.error('[LocationService] 위치 권한 요청 오류:', error);
+      return false;
+    }
+  },
+
+  // 백그라운드 위치 추적 시작
+  startBackgroundLocationTracking: async () => {
+    try {
+      // 이미 등록된 태스크가 있는지 확인
+      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING).catch(
+        () => false
+      );
+
+      if (hasStarted) {
+        console.log('[LocationService] 이미 백그라운드 위치 추적 중');
+        return true;
+      }
+
+      // 백그라운드 위치 추적 시작
+      await Location.startLocationUpdatesAsync(LOCATION_TRACKING, {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 300000, // 5분마다
+        distanceInterval: 100, // 100미터마다
+        foregroundService: {
+          notificationTitle: '위치 추적 중',
+          notificationBody: '주변 매장 알림 서비스가 실행 중입니다',
+        },
+        pausesUpdatesAutomatically: false,
+      });
+
+      console.log('[LocationService] 백그라운드 위치 추적 시작됨');
+      return true;
+    } catch (error) {
+      console.error('[LocationService] 백그라운드 위치 추적 시작 오류:', error);
+      return false;
+    }
+  },
+
+  // 백그라운드 위치 추적 중지
+  stopBackgroundLocationTracking: async () => {
+    try {
+      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING).catch(
+        () => false
+      );
+
+      if (hasStarted) {
+        await Location.stopLocationUpdatesAsync(LOCATION_TRACKING);
+        console.log('[LocationService] 백그라운드 위치 추적 중지됨');
+      }
+      return true;
+    } catch (error) {
+      console.error('[LocationService] 백그라운드 위치 추적 중지 오류:', error);
+      return false;
+    }
+  },
+
+  // 네이티브 알람 시작
+  startLocationAlarm: async () => {
+    if (Platform.OS === 'android' && LocationAlarmModule) {
+      try {
+        const result = await LocationAlarmModule.startLocationAlarm();
+        console.log('[LocationService] 위치 알람 시작됨:', result);
+        return result;
+      } catch (error) {
+        console.error('[LocationService] 위치 알람 시작 실패:', error);
+        return false;
+      }
+    }
+    return false;
+  },
+
+  // 네이티브 알람 중지
+  stopLocationAlarm: async () => {
+    if (Platform.OS === 'android' && LocationAlarmModule) {
+      try {
+        const result = await LocationAlarmModule.stopLocationAlarm();
+        console.log('[LocationService] 위치 알람 중지됨:', result);
+        return result;
+      } catch (error) {
+        console.error('[LocationService] 위치 알람 중지 실패:', error);
+        return false;
+      }
+    }
+    return false;
+  },
+  // 위치 서비스 상태 확인 함수
+  checkLocationServicesEnabled: async () => {
+    try {
+      const status = await Location.getProviderStatusAsync();
+      return status.locationServicesEnabled;
+    } catch (error) {
+      console.error('[LocationService] 위치 서비스 상태 확인 오류:', error);
+      return false;
+    }
+  },
+
+  // 위치 서비스 활성화 요청 함수
+  requestLocationServicesEnabled: async () => {
+    try {
+      const isEnabled = await LocationService.checkLocationServicesEnabled();
+
+      if (!isEnabled) {
+        return new Promise(resolve => {
+          Alert.alert(
+            '위치 서비스 꺼짐',
+            '주변 매장 알림을 받으려면 위치 서비스를 켜야 합니다. 위치 설정을 여시겠습니까?',
+            [
+              {
+                text: '아니오',
+                style: 'cancel',
+                onPress: () => resolve(false),
+              },
+              {
+                text: '설정',
+                onPress: () => {
+                  LocationService.openLocationSettings();
+                  resolve(false); // 사용자가 설정으로 이동하므로 false 반환
+                },
+              },
+            ]
+          );
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[LocationService] 위치 서비스 활성화 요청 오류:', error);
+      return false;
+    }
+  },
+
+  // 위치 설정 화면 열기 함수
+  openLocationSettings: () => {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('App-Prefs:Privacy&path=LOCATION');
+    } else {
+      IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.LOCATION_SOURCE_SETTINGS);
+    }
+  },
+
+  // 수정된 백그라운드 위치 추적 시작 함수
+  startBackgroundLocationTracking: async () => {
+    try {
+      // 위치 서비스 활성화 여부 확인 및 요청 (추가된 부분)
+      const locationServicesEnabled = await LocationService.requestLocationServicesEnabled();
+      if (!locationServicesEnabled) {
+        console.log(
+          '[LocationService] 위치 서비스가 비활성화되어 있음, 백그라운드 위치 추적 시작 불가'
+        );
+        return false;
+      }
+
+      // 이미 등록된 태스크가 있는지 확인
+      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING).catch(
+        () => false
+      );
+
+      if (hasStarted) {
+        console.log('[LocationService] 이미 백그라운드 위치 추적 중');
+        return true; // 이미 실행 중이면 true 반환하고 종료
+      }
+
+      // 백그라운드 위치 추적 시작
+      await Location.startLocationUpdatesAsync(LOCATION_TRACKING, {
+        accuracy: Location.Accuracy.Balanced,
+        timeInterval: 300000, // 5분마다
+        distanceInterval: 100, // 100미터마다
+        foregroundService: {
+          notificationTitle: '위치 추적 중',
+          notificationBody: '주변 매장 알림 서비스가 실행 중입니다',
+        },
+        pausesUpdatesAutomatically: false,
+      });
+
+      console.log('[LocationService] 백그라운드 위치 추적 시작됨');
+      return true;
+    } catch (error) {
+      console.error('[LocationService] 백그라운드 위치 추적 시작 오류:', error);
+      return false;
+    }
   },
 };
 
@@ -268,8 +482,19 @@ export default function App() {
   const [pendingShareItem, setPendingShareItem] = useState(null);
   // Zustand 스토어의 토큰 복원 함수
   const restoreAuth = useAuthStore(state => state.restoreAuth);
+  const restoreGifticons = useGifticonListStore(state => state.restoreGifticons);
   // 지오펜싱 서비스 참조
   const geofencingServiceRef = useRef(null);
+
+  // 기프티콘 목록 복원 (앱 초기화 시 리소스 로드)
+  useEffect(() => {
+    const loadAllResources = async () => {
+      await loadResources();
+      await restoreGifticons(); // 기프티콘 데이터 복원
+    };
+
+    loadAllResources();
+  }, []);
 
   // FCM 설정 초기화
   useEffect(() => {
@@ -285,7 +510,6 @@ export default function App() {
         setupBackgroundHandler();
 
         // 알림 클릭 이벤트 처리 - navigationRef가 준비된 후에만 처리
-        // 앱이 완전히 로드된 후에 알림 핸들러 설정
         const handleNavigationReady = () => {
           if (navigationRef.current) {
             handleNotificationOpen(navigationRef.current);
@@ -317,68 +541,7 @@ export default function App() {
     initFCM();
   }, []);
 
-  // 위치 권한 요청 함수
-  const requestLocationPermissions = async () => {
-    try {
-      // 포그라운드 위치 권한 요청
-      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-
-      if (foregroundStatus !== 'granted') {
-        console.log('[App] 포그라운드 위치 권한이 거부됨');
-        return false;
-      }
-
-      // 백그라운드 위치 권한 요청 (Android만)
-      if (Platform.OS === 'android') {
-        const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-
-        if (backgroundStatus !== 'granted') {
-          console.log('[App] 백그라운드 위치 권한이 거부됨');
-          return false;
-        }
-      }
-
-      console.log('[App] 위치 권한 획득 성공');
-      return true;
-    } catch (error) {
-      console.error('[App] 위치 권한 요청 오류:', error);
-      return false;
-    }
-  };
-
-  // 백그라운드 위치 추적 시작
-  const startBackgroundLocationTracking = async () => {
-    try {
-      // 이미 등록된 태스크가 있는지 확인
-      const hasStarted = await Location.hasStartedLocationUpdatesAsync(LOCATION_TRACKING).catch(
-        () => false
-      );
-
-      if (hasStarted) {
-        console.log('[App] 이미 백그라운드 위치 추적 중');
-        return;
-      }
-
-      // 백그라운드 위치 추적 시작
-      await Location.startLocationUpdatesAsync(LOCATION_TRACKING, {
-        accuracy: Location.Accuracy.Balanced,
-        timeInterval: 300000, // 5분마다
-        distanceInterval: 100, // 100미터마다
-        deferredUpdatesInterval: 300000, // 배터리 최적화
-        deferredUpdatesDistance: 100,
-        foregroundService: {
-          notificationTitle: '위치 추적 중',
-          notificationBody: '주변 매장 알림 서비스가 실행 중입니다',
-        },
-        pausesUpdatesAutomatically: false,
-      });
-
-      console.log('[App] 백그라운드 위치 추적 시작됨');
-    } catch (error) {
-      console.error('[App] 백그라운드 위치 추적 시작 오류:', error);
-    }
-  };
-
+  // 매장 데이터 로드 함수
   const fetchInitialStoreData = async () => {
     try {
       console.log('[App] 초기 매장 데이터 로드 시작');
@@ -411,126 +574,228 @@ export default function App() {
       const brandsList = Object.values(uniqueBrands);
       console.log('[App] 추출된 브랜드:', brandsList.map(b => b.brandName).join(', '));
 
-      // 3. 현재 위치 가져오기
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      // 3. 기존 매장 데이터 확인 - 먼저 확인하여 위치 요청 실패해도 사용할 수 있게 함
+      const existingStoresStr = await AsyncStorage.getItem('GEOFENCE_STORE_DATA');
+      let existingStores = null;
 
-      if (!location || !location.coords) {
-        console.log('[App] 위치 정보를 가져올 수 없음');
-        return;
-      }
-
-      const { latitude, longitude } = location.coords;
-      console.log('[App] 현재 위치:', latitude, longitude);
-
-      // 4. 브랜드별 주변 매장 검색
-      const storeResults = [];
-
-      for (const brand of brandsList) {
+      if (existingStoresStr) {
         try {
-          console.log(`[App] ${brand.brandName} 주변 매장 검색 중...`);
-
-          const response = await fetch(
-            `https://dapi.kakao.com/v2/local/search/keyword.json?` +
-              `query=${encodeURIComponent(brand.brandName)}&` +
-              `x=${longitude}&` +
-              `y=${latitude}&` +
-              `radius=500&` +
-              `sort=distance`,
-            {
-              headers: {
-                Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`,
-              },
-            }
+          existingStores = JSON.parse(existingStoresStr);
+          console.log(
+            '[App] 저장된 매장 데이터 확인됨:',
+            existingStores.reduce((sum, brand) => sum + brand.stores.length, 0),
+            '개 매장'
           );
-
-          if (!response.ok) {
-            console.log(`[App] ${brand.brandName} 검색 실패:`, response.status);
-            continue;
-          }
-
-          const data = await response.json();
-          console.log(`[App] ${brand.brandName} 검색 결과: ${data.documents.length}개 매장`);
-
-          if (data.documents.length > 0) {
-            storeResults.push({
-              brandId: brand.brandId,
-              brandName: brand.brandName,
-              stores: data.documents,
-            });
-          }
-        } catch (error) {
-          console.error(`[App] ${brand.brandName} 검색 중 오류:`, error);
+        } catch (e) {
+          console.error('[App] 저장된 매장 데이터 파싱 오류:', e);
         }
       }
 
-      // 5. 검색 결과가 있으면 저장 및 지오펜스 설정
-      if (storeResults.length > 0) {
-        console.log(
-          '[App] 총 매장 데이터:',
-          storeResults.reduce((sum, brand) => sum + brand.stores.length, 0)
-        );
+      // 4. 현재 위치 가져오기 시도
+      let location;
+      let locationSuccess = false;
 
-        // AsyncStorage에 저장
-        await AsyncStorage.setItem('GEOFENCE_STORE_DATA', JSON.stringify(storeResults));
-        console.log('[App] 매장 데이터 저장 완료');
+      try {
+        // 위치 서비스 활성화 확인
+        const providerStatus = await Location.getProviderStatusAsync();
 
-        // 지오펜싱 서비스에 데이터 설정 및 지오펜스 등록
+        if (!providerStatus.locationServicesEnabled) {
+          console.log('[App] 위치 서비스 비활성화 상태');
+          // 위치 서비스가 꺼져 있으면 알림을 표시하고 위치 획득 시도 건너뜀
+          Alert.alert(
+            '위치 서비스 꺼짐',
+            '주변 매장 정보를 가져오려면 위치 서비스를 켜야 합니다. 위치 설정을 열까요?',
+            [
+              {
+                text: '아니오',
+                style: 'cancel',
+                onPress: () => console.log('[App] 위치 서비스 활성화 요청 거부됨'),
+              },
+              {
+                text: '설정',
+                onPress: () => {
+                  if (Platform.OS === 'ios') {
+                    Linking.openURL('App-Prefs:Privacy&path=LOCATION');
+                  } else {
+                    IntentLauncher.startActivityAsync(
+                      IntentLauncher.ActivityAction.LOCATION_SOURCE_SETTINGS
+                    );
+                  }
+                },
+              },
+            ]
+          );
+        } else {
+          // 위치 정보 가져오기 시도
+          location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+            timeOut: 10000, // 10초 타임아웃
+          });
+          locationSuccess = true;
+          console.log('[App] 위치 정보 획득 성공:', location.coords);
+        }
+      } catch (locationError) {
+        console.error('[App] 현재 위치 가져오기 실패:', locationError.message);
+      }
+
+      // 5. 위치 정보 성공/실패에 따른 처리
+      if (locationSuccess && location?.coords) {
+        // 5-1. 위치 정보 획득 성공 - 새로운 매장 데이터 검색
+        const { latitude, longitude } = location.coords;
+        console.log('[App] 사용 위치:', latitude, longitude);
+
+        // 브랜드별 주변 매장 검색
+        const storeResults = [];
+
+        for (const brand of brandsList) {
+          try {
+            console.log(`[App] ${brand.brandName} 주변 매장 검색 중...`);
+
+            const response = await fetch(
+              `https://dapi.kakao.com/v2/local/search/keyword.json?` +
+                `query=${encodeURIComponent(brand.brandName)}&` +
+                `x=${longitude}&` +
+                `y=${latitude}&` +
+                `radius=500&` +
+                `sort=distance`,
+              {
+                headers: {
+                  Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`,
+                },
+              }
+            );
+
+            if (!response.ok) {
+              console.log(`[App] ${brand.brandName} 검색 실패:`, response.status);
+              continue;
+            }
+
+            const data = await response.json();
+            console.log(`[App] ${brand.brandName} 검색 결과: ${data.documents.length}개 매장`);
+
+            if (data.documents.length > 0) {
+              storeResults.push({
+                brandId: brand.brandId,
+                brandName: brand.brandName,
+                stores: data.documents,
+              });
+            }
+          } catch (error) {
+            console.error(`[App] ${brand.brandName} 검색 중 오류:`, error);
+          }
+        }
+
+        // 새 매장 데이터 저장 및 지오펜스 설정
+        if (storeResults.length > 0) {
+          console.log(
+            '[App] 총 매장 데이터:',
+            storeResults.reduce((sum, brand) => sum + brand.stores.length, 0)
+          );
+
+          // AsyncStorage에 저장
+          await AsyncStorage.setItem('GEOFENCE_STORE_DATA', JSON.stringify(storeResults));
+          console.log('[App] 새 매장 데이터 저장 완료');
+
+          // 지오펜싱 서비스에 데이터 설정 및 지오펜스 등록
+          if (geofencingServiceRef.current) {
+            geofencingServiceRef.current.brandStores = storeResults;
+            await geofencingServiceRef.current.setupGeofences(storeResults);
+
+            // 설정 확인
+            const geofences = await Geofencing.getRegisteredGeofences();
+            console.log('[App] 지오펜스 설정 완료:', geofences?.length || 0);
+          }
+        } else {
+          console.log('[App] 주변에 매장 없음');
+
+          // 새 매장 데이터가 없지만 기존 데이터가 있으면 기존 데이터 사용
+          if (existingStores && existingStores.length > 0 && geofencingServiceRef.current) {
+            console.log('[App] 주변 매장이 없어 기존 매장 데이터 유지');
+            geofencingServiceRef.current.brandStores = existingStores;
+            await geofencingServiceRef.current.setupGeofences(existingStores);
+          }
+        }
+      } else if (existingStores && existingStores.length > 0) {
+        // 5-2. 위치 정보 획득 실패했지만 기존 데이터가 있는 경우
+        console.log('[App] 위치 정보 획득 실패, 기존 매장 데이터 사용');
+
         if (geofencingServiceRef.current) {
-          geofencingServiceRef.current.brandStores = storeResults;
-          await geofencingServiceRef.current.setupGeofences(storeResults);
+          geofencingServiceRef.current.brandStores = existingStores;
+          await geofencingServiceRef.current.setupGeofences(existingStores);
 
           // 설정 확인
           const geofences = await Geofencing.getRegisteredGeofences();
-          console.log('[App] 지오펜스 설정 완료:', geofences?.length || 0);
+          console.log('[App] 기존 데이터로 지오펜스 설정 완료:', geofences?.length || 0);
         }
       } else {
-        console.log('[App] 주변에 매장 없음');
+        // 5-3. 위치 정보 획득 실패하고 기존 데이터도 없는 경우
+        console.log('[App] 위치 정보 획득 실패 & 기존 매장 데이터 없음');
+        Alert.alert(
+          '위치 정보 필요',
+          '주변 매장 알림을 받으려면 위치 권한과 위치 서비스가 필요합니다. 설정에서 위치 서비스를 켜고 앱을 다시 실행해주세요.',
+          [{ text: '확인', style: 'default' }]
+        );
       }
     } catch (error) {
       console.error('[App] 초기 매장 데이터 로드 중 오류:', error);
     }
   };
 
-  // 지오펜싱 초기화
+  // 지오펜싱 초기화 함수
   const initializeGeofencing = async () => {
     try {
-      // 지오펜싱 서비스 인스턴스 생성
+      console.log('[App] 지오펜싱 서비스 초기화 시작');
+
+      // 1. 지오펜싱 서비스 인스턴스 생성
       if (!geofencingServiceRef.current) {
         geofencingServiceRef.current = new GeofencingService();
-        console.log('[App] 지오펜싱 서비스 인스턴스 생성');
+        console.log('[App] 지오펜싱 서비스 인스턴스 생성됨');
       }
 
-      // 기존 저장된 기프티콘 데이터 로드
+      // 2. 위치 권한 요청
+      const hasPermission = await LocationService.requestLocationPermissions();
+      if (!hasPermission) {
+        console.log('[App] 위치 권한 획득 실패, 지오펜싱 기능이 제한됩니다');
+        return;
+      }
+
+      // 3. 저장된 기프티콘 데이터 로드
       const storedGifticons = await AsyncStorage.getItem('USER_GIFTICONS');
       if (storedGifticons) {
         try {
           const gifticons = JSON.parse(storedGifticons);
           if (Array.isArray(gifticons) && gifticons.length > 0) {
             geofencingServiceRef.current.updateUserGifticons({ gifticons });
-            console.log('[App] 저장된 기프티콘 로드:', gifticons.length);
+            console.log('[App] 저장된 기프티콘 로드됨:', gifticons.length);
+
+            // 저장된 기프티콘 목록을 앱 재시작 후에도 사용할 수 있도록 AsyncStorage에 유지
+            await AsyncStorage.setItem('USER_GIFTICONS', JSON.stringify(gifticons));
+          } else {
+            console.log('[App] 유효한 기프티콘 데이터가 없습니다');
           }
         } catch (error) {
           console.error('[App] 저장된 기프티콘 파싱 오류:', error);
         }
+      } else {
+        console.log('[App] 저장된 기프티콘 데이터가 없습니다');
       }
 
-      // 위치 권한 요청
-      const hasPermission = await requestLocationPermissions();
-      if (!hasPermission) {
-        console.log('[App] 위치 권한 획득 실패');
-        return;
-      }
-
-      // 지오펜싱 초기화
+      // 4. 지오펜싱 서비스 초기화
       await geofencingServiceRef.current.initGeofencing();
+      console.log('[App] 지오펜싱 서비스 초기화됨');
 
-      // 매장 데이터 로드
+      // 5. 매장 데이터 로드 및 지오펜스 설정
       await fetchInitialStoreData();
 
-      // 백그라운드 위치 추적 시작
-      await startBackgroundLocationTracking();
+      // 6. Expo 위치 추적 시작
+      await LocationService.startBackgroundLocationTracking();
+      console.log('[App] Expo 백그라운드 위치 추적 시작됨');
+
+      // 7. 네이티브 알람 시작 (Not Running 상태에서도 동작하기 위함)
+      if (Platform.OS === 'android' && LocationAlarmModule) {
+        const alarmStarted = await LocationService.startLocationAlarm();
+        console.log('[App] 네이티브 위치 알람 시작 ' + (alarmStarted ? '성공' : '실패'));
+      }
 
       console.log('[App] 지오펜싱 초기화 완료');
     } catch (error) {
@@ -538,6 +803,7 @@ export default function App() {
     }
   };
 
+  // 앱 초기화 시 인증 상태 복원 및 지오펜싱 초기화
   useEffect(() => {
     const init = async () => {
       await restoreAuth(); // Zustand의 토큰 복원(비동기)
@@ -601,6 +867,9 @@ export default function App() {
           console.log('[App] 앱 활성화 상태 - 지오펜싱 초기화');
           geofencingServiceRef.current.initGeofencing();
         }
+
+        // 앱이 돌아왔을 때 매장 데이터 갱신 (선택적)
+        fetchInitialStoreData();
       }
     });
 

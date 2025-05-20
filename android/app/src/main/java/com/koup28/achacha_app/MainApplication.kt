@@ -45,6 +45,7 @@ class MainApplication : Application(), ReactApplication {
             packages.add(BlePackage())
             packages.add(NotificationPackage())
             packages.add(BrightnessPackage())
+            packages.add(LocationAlarmPackage())
             return packages
           }
 

@@ -1,74 +1,39 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-  AppState,
-  StatusBar,
-  Alert,
-} from 'react-native';
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, StatusBar } from 'react-native';
 import KakaoMapView from '../components/map/KakaoMapView';
 import GifticonBottomSheet from '../components/GifticonBottomSheet';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import GeofencingService from '../services/GeofencingService';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { mapGifticonService } from '../services/mapGifticonService';
-import { geoNotificationService } from '../services/geoNotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Geofencing from '@rn-bridge/react-native-geofencing';
+import useGifticonListStore from '../store/gifticonListStore';
 
 const MapScreen = () => {
   const navigation = useNavigation();
   const [selectedBrand, setSelectedBrand] = useState(null);
   const mapRef = useRef(null);
   const geofencingServiceRef = useRef(null);
-  const appState = useRef(AppState.currentState);
-  const [gifticons, setGifticons] = useState([]);
 
-  // 기프티콘 데이터 로드
-  const loadGifticons = async () => {
-    try {
-      const response = await mapGifticonService.getMapGifticons();
-      const gifticonsArray = response.gifticons || [];
-      setGifticons(gifticonsArray);
-
-      // 기프티콘 AsyncStorage에 저장 (백그라운드 처리용)
-      await AsyncStorage.setItem('USER_GIFTICONS', JSON.stringify(gifticonsArray));
-
-      // GeofencingService에 기프티콘 목록 전달 (싱글톤 인스턴스 가져오기)
-      if (!geofencingServiceRef.current) {
-        geofencingServiceRef.current = new GeofencingService();
-      }
-      geofencingServiceRef.current.updateUserGifticons(response);
-
-      return response;
-    } catch (error) {
-      console.error('[MapScreen] 기프티콘 목록 로드 실패:', error);
-      setGifticons([]);
-      return null;
-    }
-  };
+  const {
+    gifticons,
+    isLoading,
+    fetchGifticons,
+    getUniqueBrands,
+    justRemovedGifticonId,
+    clearJustRemovedFlag,
+  } = useGifticonListStore();
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
     // GeofencingService 인스턴스 가져오기 (싱글톤)
     geofencingServiceRef.current = new GeofencingService();
 
-    const initialize = async () => {
-      // 기프티콘 목록 로드
-      await loadGifticons();
-    };
-
-    initialize();
+    // 기프티콘 목록 로드
+    fetchGifticons();
 
     // 30분마다 기프티콘 목록 새로고침
-    const refreshInterval = setInterval(
-      () => {
-        loadGifticons();
-      },
-      30 * 60 * 1000
-    );
+    const refreshInterval = setInterval(fetchGifticons, 30 * 60 * 1000);
 
     // 컴포넌트 언마운트 시 정리
     return () => {
@@ -76,21 +41,32 @@ const MapScreen = () => {
     };
   }, []);
 
-  // 기프티콘 목록에서 브랜드 정보 추출(중복 없이)
-  const getUniqueBrands = () => {
-    const uniqueBrands = gifticons.reduce((acc, gifticon) => {
-      if (!acc[gifticon.brandId]) {
-        acc[gifticon.brandId] = {
-          brandId: gifticon.brandId,
-          brandName: gifticon.brandName,
-        };
+  // 화면이 포커스될 때마다 기프티콘 목록 새로고침
+  useFocusEffect(
+    useCallback(() => {
+      if (justRemovedGifticonId) {
+        // 방금 기프티콘이 로컬에서 제거된 경우, 서버 fetch를 건너뛰고 플래그를 해제합니다.
+        // 이렇게 하면 로컬 변경사항이 즉시 반영된 것처럼 보입니다.
+        console.log(
+          '[MapScreen] Gifticon (ID:',
+          justRemovedGifticonId,
+          ') was recently removed locally. Skipping fetchGifticons and clearing flag.'
+        );
+        clearJustRemovedFlag();
+      } else {
+        // 그 외의 경우 (예: 다른 탭에서 돌아오거나, 앱 초기 로딩 후 포커스 등)에는 서버에서 데이터를 가져옴
+        console.log('[MapScreen] Screen focused. Fetching gifticons.');
+        fetchGifticons();
       }
-      return acc;
-    }, {});
+      moveToCurrentLocation();
 
-    return Object.values(uniqueBrands);
-  };
+      return () => {
+        // 화면이 포커스를 잃을 때 특별히 정리할 작업이 있다면 여기에 추가
+      };
+    }, [fetchGifticons, moveToCurrentLocation, justRemovedGifticonId, clearJustRemovedFlag])
+  );
 
+  // 브랜드 정보 가져오기
   const uniqueBrands = getUniqueBrands();
 
   // uniqueBrands 변경 시 서비스에 전달
@@ -121,7 +97,7 @@ const MapScreen = () => {
       geofencingServiceRef.current.userGifticons.length === 0
     ) {
       console.log('[MapScreen] 기프티콘 목록이 비어있음, 로드 시도');
-      await loadGifticons();
+      await fetchGifticons();
 
       // 로드 후에도 여전히 비어있는지 확인
       if (
@@ -168,7 +144,9 @@ const MapScreen = () => {
   };
 
   // 기프티콘 사용 처리 함수
-  const handleUseGifticon = id => {};
+  const handleUseGifticon = id => {
+    // 기프티콘 사용 로직 (필요시 구현)
+  };
 
   // 브랜드 선택 처리 함수
   const handleSelectBrand = brandId => {
@@ -190,17 +168,6 @@ const MapScreen = () => {
       mapRef.current.moveToCurrentLocation();
     }
   }, []);
-
-  // 화면 포커스 시 현재 위치로 이동
-  useFocusEffect(
-    useCallback(() => {
-      moveToCurrentLocation();
-      return () => {
-        // 화면을 벗어날 때 정리할 작업이 있다면 여기에 추가
-        // console.log('[MapScreen] 화면 포커스 벗어남');
-      };
-    }, [moveToCurrentLocation])
-  );
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -235,6 +202,7 @@ const MapScreen = () => {
         onUseGifticon={handleUseGifticon}
         onSelectBrand={handleSelectBrand}
         selectedBrand={selectedBrand}
+        isLoading={isLoading}
       />
     </SafeAreaView>
   );
