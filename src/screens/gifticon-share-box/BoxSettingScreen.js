@@ -326,27 +326,24 @@ const BoxSettingScreen = () => {
             <Text variant="body1" weight="medium" style={styles.sectionTitle}>
               쉐어박스 초대 코드
             </Text>
-            <View style={[styles.codeContainer, { backgroundColor: '#F0F9FF', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text variant="h3" weight="bold" style={styles.codeText}>
-                  {shareBoxCode}
-                </Text>
-                <TouchableOpacity
-                  style={{ padding: 4, backgroundColor: 'transparent', marginLeft: 4 }}
-                  onPress={handleKakaoShare}
-                >
-                  <Image
-                    source={require('../../assets/images/login_kakaotalk.png')}
-                    style={{ width: 24, height: 24 }}
+            <View style={[styles.codeContainer, { backgroundColor: '#F0F9FF' }]}>
+              <Text variant="h3" weight="bold" style={styles.codeText}>
+                {shareBoxCode}
+              </Text>
+              <View style={{ flexDirection: 'row' }}>
+                <TouchableOpacity style={[styles.confirmButton, { marginRight: 6 ,backgroundColor: '#FFEB00', minWidth: 40}]} onPress={handleKakaoShare}>
+                <Image
+                    source={require('../../assets/images/kakaotalk_sharing_btn_small.png')}
+                    style={{ width: 15, height: 15 }}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
+                  <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
+                    복사
+                  </Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
-                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
-                  복사
-                </Text>
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -499,7 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   codeText: {
-    fontSize: 20,
+    fontSize: 16,
   },
   memberItem: {
     flexDirection: 'row',

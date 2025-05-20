@@ -556,9 +556,9 @@ const BoxListScreen = () => {
   // 기프티콘 클릭 핸들러
   const handleGifticonPress = item => {
     if (item.gifticonType === 'PRODUCT') {
-      navigation.navigate('BoxDetailProduct', { gifticon: item });
+      navigation.navigate('BoxDetailProduct', { gifticon: item, scope: item.scope });
     } else if (item.gifticonType === 'AMOUNT') {
-      navigation.navigate('BoxDetailAmount', { gifticon: item });
+      navigation.navigate('BoxDetailAmount', { gifticon: item, scope: item.scope });
     }
   };
 
