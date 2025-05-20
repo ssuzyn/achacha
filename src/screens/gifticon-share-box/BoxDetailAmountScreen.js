@@ -409,13 +409,33 @@ const BoxDetailAmountScreen = () => {
         refresh: true,
       });
     } else {
-      // 바코드 API 호출
+      // 사용 모드 시작
       try {
+        // 로딩 표시 시작
         setIsLoading(true);
-        await loadBarcodeInfo(); // 기존 함수 사용
+        console.log('[BoxDetailAmountScreen] 사용하기 버튼 클릭 - 바코드 로드 시작', {
+          gifticonId: gifticonData?.gifticonId,
+          type: gifticonData?.gifticonType,
+        });
+
+        // 바코드 상태 초기화
+        setBarcodeImageUrl(null);
+        setBarcodeNumber(null);
+
+        // 바코드 정보 로드 호출
+        await loadBarcodeInfo();
+
+        // 바코드 정보 결과 확인
+        console.log('[BoxDetailAmountScreen] 바코드 로드 상태:', {
+          barcodeImageUrl: barcodeImageUrl ? '있음' : '없음',
+          barcodeNumber: barcodeNumber || '없음',
+        });
+
+        // 사용 모드 활성화
         setIsUsing(true);
-      } catch (e) {
-        Alert.alert('바코드 조회 실패', '바코드 정보를 불러오지 못했습니다.');
+      } catch (error) {
+        console.error('[BoxDetailAmountScreen] 바코드 로드 실패:', error);
+        Alert.alert('바코드 조회 실패', '바코드 정보를 불러오지 못했습니다. 다시 시도해주세요.');
       } finally {
         setIsLoading(false);
       }
@@ -594,7 +614,7 @@ const BoxDetailAmountScreen = () => {
       // 사용완료된 기프티콘인 경우
       navigation.navigate('UseAmountScreen', {
         id: gifticonData.gifticonId,
-        barcodeNumber: barcodeNumber,
+        barcodeNumber: gifticonData.barcodeNumber,
         barcodePath: barcodeImageUrl,
         isUsed: true,
       });
@@ -751,45 +771,93 @@ const BoxDetailAmountScreen = () => {
     }
   }, [gifticonData, scope, usageType]);
 
-  // 사용완료 기프티콘의 바코드 정보 로드 함수
-  const loadUsedGifticonBarcode = async id => {
-    if (!id) return;
+  // 바코드 정보 로드 함수 (사용하기 모드)
+  const loadBarcodeInfo = async () => {
+    if (!gifticonData?.gifticonId) {
+      console.error('[BoxDetailAmountScreen] 바코드 조회 실패: gifticonId가 없음');
+      return;
+    }
 
     setBarcodeLoading(true);
     try {
-      console.log('[BoxDetailAmountScreen] 사용완료 바코드 정보 요청:', id);
-      const response = await gifticonService.getUsedGifticonBarcode(id);
+      const id = gifticonData.gifticonId;
+      console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 요청 시작:', {
+        id: id,
+        scope: scope,
+      });
+
+      // API 호출
+      const response = await gifticonService.getGifticonBarcode(id, scope);
+      console.log('[BoxDetailAmountScreen] 바코드 API 응답 원본:', JSON.stringify(response));
 
       if (response) {
-        console.log('[BoxDetailAmountScreen] 사용완료 바코드 정보 응답 성공:', response);
-        setBarcodeImageUrl(response.barcodePath);
-        setBarcodeNumber(response.gifticonBarcodeNumber);
+        // API 명세에 따라 바코드 경로와 번호 설정
+        // gifticonBarcodeNumber와 barcodePath 필드를 사용함
+        if (response.barcodePath) {
+          console.log('[BoxDetailAmountScreen] 바코드 이미지 경로:', response.barcodePath);
+          setBarcodeImageUrl(response.barcodePath);
+        }
+
+        if (response.gifticonBarcodeNumber) {
+          console.log('[BoxDetailAmountScreen] 바코드 번호 설정:', response.gifticonBarcodeNumber);
+          setBarcodeNumber(response.gifticonBarcodeNumber);
+        } else {
+          console.warn('[BoxDetailAmountScreen] 응답에 바코드 번호 없음:', response);
+        }
+      } else {
+        console.warn('[BoxDetailAmountScreen] 바코드 API 응답이 비어있음');
       }
     } catch (error) {
-      console.error('[BoxDetailAmountScreen] 사용완료 바코드 정보 로드 실패:', error);
-      // 바코드 정보 로드 실패 시 기본값 유지, 별도의 알림 없음
+      console.error('[BoxDetailAmountScreen] 바코드 정보 로드 실패:', error);
+      console.error('[BoxDetailAmountScreen] 에러 응답:', error.response?.data);
+      Alert.alert('바코드 정보 조회 실패', '바코드 정보를 불러오지 못했습니다.');
     } finally {
       setBarcodeLoading(false);
     }
   };
 
-  // 바코드 정보 로드 함수 (사용하기 모드)
-  const loadBarcodeInfo = async () => {
-    if (!gifticonId) return;
+  // 사용완료 기프티콘의 바코드 정보 로드 함수
+  const loadUsedGifticonBarcode = async id => {
+    if (!id) {
+      console.error('[BoxDetailAmountScreen] 사용완료 바코드 조회 실패: id가 없음');
+      return;
+    }
 
     setBarcodeLoading(true);
     try {
-      console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 요청:', gifticonId);
-      const response = await gifticonService.getGifticonBarcode(gifticonId, scope);
+      console.log('[BoxDetailAmountScreen] 사용완료 바코드 정보 요청 시작:', id);
+
+      // API 호출
+      const response = await gifticonService.getUsedGifticonBarcode(id);
+      console.log(
+        '[BoxDetailAmountScreen] 사용완료 바코드 API 응답 원본:',
+        JSON.stringify(response)
+      );
 
       if (response) {
-        console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 응답 성공:', response);
-        setBarcodeImageUrl(response.barcodePath);
-        setBarcodeNumber(response.gifticonBarcodeNumber);
+        // API 명세에 따라 바코드 경로와 번호 설정
+        // gifticonBarcodeNumber와 barcodePath 필드를 사용함
+        if (response.barcodePath) {
+          console.log('[BoxDetailAmountScreen] 사용완료 바코드 이미지 경로:', response.barcodePath);
+          setBarcodeImageUrl(response.barcodePath);
+        }
+
+        if (response.gifticonBarcodeNumber) {
+          console.log(
+            '[BoxDetailAmountScreen] 사용완료 바코드 번호 설정:',
+            response.gifticonBarcodeNumber
+          );
+          setBarcodeNumber(response.gifticonBarcodeNumber);
+        } else {
+          console.warn('[BoxDetailAmountScreen] 사용완료 응답에 바코드 번호 없음:', response);
+        }
+      } else {
+        console.warn('[BoxDetailAmountScreen] 사용완료 바코드 API 응답이 비어있음');
       }
     } catch (error) {
-      console.error('[BoxDetailAmountScreen] 바코드 정보 로드 실패:', error);
-      Alert.alert('바코드 정보 조회 실패', '바코드 정보를 불러오지 못했습니다.');
+      console.error('[BoxDetailAmountScreen] 사용완료 바코드 정보 로드 실패:', error);
+      console.error('[BoxDetailAmountScreen] 사용완료 에러 응답:', error.response?.data);
+      // 바코드 정보 로드 실패 시 기본값 유지, 별도의 알림 없음
     } finally {
       setBarcodeLoading(false);
     }
@@ -879,6 +947,27 @@ const BoxDetailAmountScreen = () => {
     }
   }, [scope, gifticonData?.gifticonId]);
 
+  // 기프티콘 데이터 로드 완료 후 바코드 정보 미리 로드
+  useEffect(() => {
+    // 사용 가능한 기프티콘이고, 바코드 정보가 없을 때만 미리 로드
+    if (
+      gifticonData &&
+      gifticonData.gifticonId &&
+      scope !== 'USED' &&
+      !isUsing &&
+      !barcodeNumber &&
+      !barcodeLoading
+    ) {
+      console.log('[BoxDetailAmountScreen] 바코드 정보 사전 로드 시작');
+      // 지연 시간을 두고 로드 (화면 렌더링 완료 후)
+      const timer = setTimeout(() => {
+        loadBarcodeInfo();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [gifticonData?.gifticonId, scope, isUsing, barcodeNumber, barcodeLoading]);
+
   // 렌더링 분기 직전 로그
   if (isLoading || !gifticonData) {
     // 로딩 중 표시
@@ -958,7 +1047,7 @@ const BoxDetailAmountScreen = () => {
                       />
                       <View style={styles.barcodeNumberContainer}>
                         <Text style={styles.barcodeNumberText}>
-                          {barcodeNumber || '바코드 번호 없음'}
+                          {barcodeNumber || '바코드 번호를 불러오는 중...'}
                         </Text>
                         <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
                           <Icon name="search" type="material" size={24} color="#4A90E2" />
@@ -1020,7 +1109,7 @@ const BoxDetailAmountScreen = () => {
                             resizeMode="contain"
                           />
                           <Text style={styles.usedBarcodeNumberText}>
-                            {barcodeNumber || gifticonData.barcodeNumber || '바코드 정보 없음'}
+                            {barcodeNumber || '바코드 번호를 불러오는 중...'}
                           </Text>
                         </>
                       )}
