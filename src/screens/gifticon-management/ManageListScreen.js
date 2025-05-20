@@ -957,8 +957,8 @@ const ManageListScreen = () => {
       />
     );
 
-    // 만료된 기프티콘은 Swipeable 기능 비활성화
-    if (isExpired) {
+    // 만료된 기프티콘이나 사용완료 탭의 기프티콘은 Swipeable 기능 비활성화
+    if (isExpired || selectedCategory === 'used') {
       return (
         <TouchableOpacity
           key={item.gifticonId}
@@ -974,7 +974,7 @@ const ManageListScreen = () => {
             <View
               style={[
                 styles.gifticonContent,
-                { opacity: 0.7 },
+                { opacity: isExpired ? 0.7 : 1 },
                 isSharedByOther && { borderWidth: 1, borderColor: '#278CCC' },
               ]}
             >
@@ -1005,11 +1005,49 @@ const ManageListScreen = () => {
                     )}
                   </View>
                 )}
+
+                {/* 금액형 기프티콘의 경우 잔액 정보 표시 */}
+                {item.gifticonType === 'AMOUNT' && item.gifticonRemainingAmount && (
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: '#278CCC',
+                      fontFamily: theme.fonts.fontWeight.bold,
+                      marginTop: 3,
+                    }}
+                  >
+                    잔액: {item.gifticonRemainingAmount.toLocaleString()}원
+                  </Text>
+                )}
               </View>
 
-              {/* 만료 태그 */}
-              <View style={[styles.dDayContainer, styles.expiredDDay]}>
-                <Text style={[styles.dDayText, styles.expiredDDayText]}>{daysLeft}</Text>
+              {/* D-day 태그 또는 사용일자 */}
+              <View
+                style={[
+                  styles.dDayContainer,
+                  isExpired
+                    ? styles.expiredDDay
+                    : isUrgent || isDDay
+                      ? styles.urgentDDay
+                      : styles.normalDDay,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.dDayText,
+                    isExpired
+                      ? styles.expiredDDayText
+                      : isUrgent || isDDay
+                        ? styles.urgentDDayText
+                        : styles.normalDDayText,
+                  ]}
+                >
+                  {item.scope === 'USED'
+                    ? formatDate(item.usedAt)
+                    : typeof daysLeft === 'string'
+                      ? daysLeft
+                      : `D-${daysLeft}`}
+                </Text>
               </View>
             </View>
           </Shadow>
