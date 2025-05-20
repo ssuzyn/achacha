@@ -997,16 +997,13 @@ const styles = StyleSheet.create({
   },
   grayScaleImage: {
     opacity: 0.7,
-    // React Native는 기본적으로 grayscale 필터를 지원하지 않기 때문에
-    // 투명도를 낮춰 흑백처럼 보이게 합니다.
-    // 실제 앱에서는 이미지 처리 라이브러리 사용을 고려할 수 있습니다.
   },
   smallerGifticonImage: {
     width: 160,
     height: 160,
     aspectRatio: 1,
-    marginTop: 10,
-    marginBottom: 10,
+    marginTop: 20,
+    marginBottom: 5,
     resizeMode: 'cover',
     borderRadius: 8,
   },
