@@ -1301,16 +1301,34 @@ const DetailAmountScreen = () => {
                           </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          onPress={handleGift}
+                          onPress={
+                            gifticonData.gifticonOriginalAmount ===
+                            gifticonData.gifticonRemainingAmount
+                              ? handleGift
+                              : undefined
+                          }
+                          disabled={
+                            gifticonData.gifticonOriginalAmount !==
+                            gifticonData.gifticonRemainingAmount
+                          }
                           style={{
                             flex: 1,
                             marginLeft: 4,
                             borderRadius: 8,
                             height: 56,
-                            backgroundColor: '#EEEEEE',
+                            backgroundColor:
+                              gifticonData.gifticonOriginalAmount ===
+                              gifticonData.gifticonRemainingAmount
+                                ? '#EEEEEE'
+                                : '#F2F2F2',
                             justifyContent: 'center',
                             alignItems: 'center',
                             flexDirection: 'row',
+                            opacity:
+                              gifticonData.gifticonOriginalAmount ===
+                              gifticonData.gifticonRemainingAmount
+                                ? 1
+                                : 0.5,
                           }}
                         >
                           <Icon name="card-giftcard" type="material" size={22} color="#000000" />
