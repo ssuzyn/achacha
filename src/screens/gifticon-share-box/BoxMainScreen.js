@@ -53,10 +53,12 @@ const MATERIAL_ICONS = {
 
 // 기프티콘 수에 따른 아이콘 선택 함수
 const getShareBoxIcon = count => {
-  if (count <= 10) {
+  if (count >= 1 && count <= 10) {
     return require('../../assets/images/share_box_icon1.png');
-  } else if (count <= 20) {
+  } else if (count >= 11 && count <= 20) {
     return require('../../assets/images/share_box_icon2.png');
+  } else if (count < 1) {
+    return require('../../assets/images/share_box_icon0.png');
   } else {
     return require('../../assets/images/share_box_icon3.png');
   }
@@ -78,7 +80,11 @@ const BoxMainScreen = () => {
   // 무한스크롤용 데이터 로딩
   const loadShareBoxes = async (nextPage = 0) => {
     if (loading || (!hasNextPage && nextPage !== 0)) {
-      console.log('[무한스크롤] 로딩 중이거나 더 이상 데이터가 없습니다:', { loading, hasNextPage, nextPage });
+      console.log('[무한스크롤] 로딩 중이거나 더 이상 데이터가 없습니다:', {
+        loading,
+        hasNextPage,
+        nextPage,
+      });
       return;
     }
     setLoading(true);
