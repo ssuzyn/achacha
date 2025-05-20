@@ -48,7 +48,7 @@ public class LocationAlarmReceiver extends BroadcastReceiver {
     );
     
     // 30분마다 반복 알람 (배터리 최적화 고려하여 시간 조정 가능)
-    long intervalMillis = 30 * 60 * 1000; // 5분
+    long intervalMillis = 30 * 60 * 1000; // 30분
     long triggerAtMillis = System.currentTimeMillis() + intervalMillis;
     
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
