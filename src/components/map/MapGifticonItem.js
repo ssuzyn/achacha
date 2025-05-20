@@ -22,9 +22,11 @@ const MapGifticonItem = ({
   const navigation = useNavigation();
 
   const dday = calculateDday(gifticonExpiryDate);
+  const isExpired = dday === '만료됨'; // 만료 상태 확인
 
   let numericDday = Infinity;
-  if (dday && typeof dday === 'string') {
+  if (!isExpired && dday && typeof dday === 'string') {
+    // 만료가 아닐 때만 numericDday 계산
     if (dday.toUpperCase() === 'D-DAY') {
       numericDday = 0;
     } else if (dday.startsWith('D-')) {
@@ -37,8 +39,6 @@ const MapGifticonItem = ({
       }
     }
   }
-
-  const ddayColor = numericDday <= 7 ? '#EA5455' : '#278CCC';
 
   // 아이템 클릭 핸들러
   const handleItemPress = () => {
@@ -76,7 +76,29 @@ const MapGifticonItem = ({
           <Text style={styles.brand}>
             {brandName.length > 10 ? `${brandName.substring(0, 10)}...` : brandName}
           </Text>
-          <Text style={[styles.dday, { color: ddayColor }]}>{dday}</Text>
+          <View
+            style={[
+              styles.ddayContainer,
+              isExpired
+                ? styles.expiredDDayBackground
+                : numericDday <= 7
+                  ? styles.urgentDDayBackground
+                  : styles.normalDDayBackground,
+            ]}
+          >
+            <Text
+              style={[
+                styles.ddayText,
+                isExpired
+                  ? styles.expiredDDayText
+                  : numericDday <= 7
+                    ? styles.urgentDDayText
+                    : styles.normalDDayText,
+              ]}
+            >
+              {dday}
+            </Text>
+          </View>
         </View>
 
         <Text style={styles.menuName}>
@@ -135,8 +157,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Pretendard-Medium',
   },
-  dday: {
+  ddayText: {
     fontSize: 15,
+    fontFamily: 'Pretendard-SemiBold',
+  },
+  ddayContainer: {
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 5,
+  },
+  urgentDDayBackground: {
+    backgroundColor: 'rgba(234, 84, 85, 0.15)',
+  },
+  normalDDayBackground: {
+    backgroundColor: 'rgba(114, 191, 255, 0.15)',
+  },
+  urgentDDayText: {
+    color: '#EA5455',
+  },
+  normalDDayText: {
+    color: '#72BFFF',
+  },
+  expiredDDayBackground: {
+    backgroundColor: 'rgba(153, 153, 153, 0.15)',
+  },
+  expiredDDayText: {
+    color: '#737373',
     fontFamily: 'Pretendard-SemiBold',
   },
   useButton: {
