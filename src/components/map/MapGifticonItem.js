@@ -74,7 +74,7 @@ const MapGifticonItem = ({
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>
           <Text style={styles.brand}>
-            {brandName.length > 10 ? `${brandName.substring(0, 10)}...` : brandName}
+            {brandName.length > 11 ? `${brandName.substring(0, 11)}...` : brandName}
           </Text>
           <View
             style={[
@@ -102,7 +102,7 @@ const MapGifticonItem = ({
         </View>
 
         <Text style={styles.menuName}>
-          {gifticonName.length > 10 ? `${gifticonName.substring(0, 10)}...` : gifticonName}
+          {gifticonName.length > 16 ? `${gifticonName.substring(0, 10)}...` : gifticonName}
         </Text>
       </View>
 
