@@ -384,25 +384,46 @@ const NotificationScreen = () => {
           referenceEntityType === REFERENCE_TYPES.GIFTICON
         ) {
           console.log('[디버그] 기프티콘 알림 처리 시작');
-          // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
-          const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
-          console.log('[디버그] 기프티콘 상세 조회 결과:', JSON.stringify(gifticonDetail));
 
-          // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
-          if (gifticonDetail.gifticonType === 'AMOUNT') {
-            // 금액형 기프티콘
-            console.log('[디버그] 금액형 기프티콘으로 이동:', referenceEntityId);
-            navigation.navigate('DetailAmount', {
-              gifticonId: referenceEntityId,
-              scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
-            });
-          } else {
-            // 상품형 기프티콘 (기본값)
-            console.log('[디버그] 상품형 기프티콘으로 이동:', referenceEntityId);
-            navigation.navigate('DetailProduct', {
-              gifticonId: referenceEntityId,
-              scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
-            });
+          try {
+            // 기프티콘 상세 정보를 먼저 가져와서 타입 확인
+            const gifticonDetail = await notificationService.getGifticonDetail(referenceEntityId);
+            console.log('[디버그] 기프티콘 상세 조회 결과:', JSON.stringify(gifticonDetail));
+
+            // 기프티콘 상태 확인 (삭제 또는 선물/뿌리기/공유된 경우)
+            if (
+              !gifticonDetail ||
+              gifticonDetail.gifticonStatus === 'DELETED' ||
+              gifticonDetail.gifticonStatus === 'GIFTED' ||
+              gifticonDetail.gifticonStatus === 'SHARED' ||
+              gifticonDetail.gifticonStatus === 'TRANSFERRED'
+            ) {
+              // 삭제되었거나 존재하지 않는 기프티콘인 경우 처리
+              Alert.alert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
+              return;
+            }
+
+            // 기프티콘 타입에 따라 적절한 상세 화면으로 이동
+            if (gifticonDetail.gifticonType === 'AMOUNT') {
+              // 금액형 기프티콘
+              console.log('[디버그] 금액형 기프티콘으로 이동:', referenceEntityId);
+              navigation.navigate('DetailAmount', {
+                gifticonId: referenceEntityId,
+                scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
+              });
+            } else {
+              // 상품형 기프티콘 (기본값)
+              console.log('[디버그] 상품형 기프티콘으로 이동:', referenceEntityId);
+              navigation.navigate('DetailProduct', {
+                gifticonId: referenceEntityId,
+                scope: 'MY_BOX', // 기본값은 MY_BOX로 설정
+              });
+            }
+          } catch (gifticonError) {
+            console.error('[디버그] 기프티콘 상세 조회 오류:', gifticonError);
+            // 기프티콘 조회 실패 시 (존재하지 않는 경우)
+            Alert.alert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
+            return;
           }
         }
         // 쉐어박스 관련 알림 처리
