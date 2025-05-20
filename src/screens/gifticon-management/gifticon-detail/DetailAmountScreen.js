@@ -1004,7 +1004,7 @@ const DetailAmountScreen = () => {
                     <View style={styles.infoRow}>
                       <Text style={styles.infoLabel}>사용일시</Text>
                       <Text style={styles.infoValue}>
-                        {formatDateTime(gifticonData.usedAt)}
+                        {formatDateTime(gifticonData.usageHistoryCreatedAt)}
                       </Text>
                     </View>
 
