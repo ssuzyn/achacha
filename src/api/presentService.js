@@ -1,5 +1,7 @@
 import apiClient from './apiClient';
 import { API_CONFIG } from './config';
+import { GIFTICON_ERRORS } from '../constants/errorCodes';
+import { GIFTICON_ERROR_MESSAGES } from '../constants/errorMessages';
 
 // 선물 템플릿 목록 조회 API
 export const getPresentTemplates = async () => {
@@ -30,6 +32,20 @@ export const presentGifticon = async (gifticonId, presentTemplateId, colorPalett
   return res.data;
 };
 
+export const presentCancelGifticon = async (gifticonId) => {
+  try {
+    const res = await apiClient.delete(API_CONFIG.ENDPOINTS.PRESENT_CANCEL(gifticonId));
+    console.log(res.data); // response body 콘솔 출력
+    return res.data;
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.errorCode === GIFTICON_ERRORS.GIFTICON_002) {
+      console.log(GIFTICON_ERROR_MESSAGES.GIFTICON_002); // 에러 메시지 콘솔 출력
+    } else {
+      console.log(error);
+    }
+    throw error;
+  }
+};
 // 향후 추가될 엔드포인트 예시
 // export const createPresent = async (params) => { ... };
 // export const getPresentDetail = async (presentId) => { ... }; 

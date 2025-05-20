@@ -54,11 +54,17 @@ const ScreenWithHeader = ({ children }) => {
 };
 
 // 헤더 없는 스크린 컴포넌트
-const ScreenWithoutHeader = ({ children }) => {
+const ScreenWithoutHeader = ({ children, screenName }) => {
   const { theme } = useTheme();
 
   return (
-    <View style={[styles.contentContainer, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[
+        styles.contentContainer,
+        { backgroundColor: theme.colors.background },
+        screenName === 'Map' && styles.mapContentContainer,
+      ]}
+    >
       {children}
     </View>
   );
@@ -89,7 +95,7 @@ const createWrappedComponent = (Component, screenName) => {
     // MapScreen, GifticonManageScreen, ShareboxScreen은 헤더 없이 렌더링
     if (screenName === 'Map' || screenName === 'GifticonManage' || screenName === 'Sharebox') {
       return (
-        <ScreenWithoutHeader>
+        <ScreenWithoutHeader screenName={screenName}>
           <Component {...props} />
         </ScreenWithoutHeader>
       );
@@ -302,6 +308,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 12,
     paddingHorizontal: 16,
+  },
+  mapContentContainer: {
+    paddingTop: 0,
+    paddingHorizontal: 0,
   },
   fabContainer: {
     position: 'absolute',

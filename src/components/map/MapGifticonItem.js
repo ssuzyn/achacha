@@ -23,6 +23,23 @@ const MapGifticonItem = ({
 
   const dday = calculateDday(gifticonExpiryDate);
 
+  let numericDday = Infinity;
+  if (dday && typeof dday === 'string') {
+    if (dday.toUpperCase() === 'D-DAY') {
+      numericDday = 0;
+    } else if (dday.startsWith('D-')) {
+      const parts = dday.split('-');
+      if (parts.length === 2) {
+        const dayValue = parseInt(parts[1], 10);
+        if (!isNaN(dayValue)) {
+          numericDday = dayValue;
+        }
+      }
+    }
+  }
+
+  const ddayColor = numericDday <= 7 ? '#EA5455' : '#278CCC';
+
   // 아이템 클릭 핸들러
   const handleItemPress = () => {
     onSelectBrand(brandId);
@@ -59,7 +76,7 @@ const MapGifticonItem = ({
           <Text style={styles.brand}>
             {brandName.length > 10 ? `${brandName.substring(0, 10)}...` : brandName}
           </Text>
-          <Text style={styles.dday}>{dday}</Text>
+          <Text style={[styles.dday, { color: ddayColor }]}>{dday}</Text>
         </View>
 
         <Text style={styles.menuName}>
@@ -120,7 +137,6 @@ const styles = StyleSheet.create({
   },
   dday: {
     fontSize: 15,
-    color: '#278CCC',
     fontFamily: 'Pretendard-SemiBold',
   },
   useButton: {

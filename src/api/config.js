@@ -66,6 +66,7 @@ export const API_CONFIG = {
     PRESENT_TEMPLATE_COLORS: templateId => `/api/presents/templates/${templateId}/colors`,
     PRESENT_TEMPLATE_DETAIL: templateId => `/api/presents/templates/${templateId}`,
     PRESENT_GIFTICON: gifticonId => `/api/gifticons/${gifticonId}/present`,
+    PRESENT_CANCEL: gifticonId => `/api/gifticons/${gifticonId}/present`,
 
     // 알림 설정 관련 엔드포인트
     NOTIFICATION_SETTINGS: '/api/notification-settings', // 알림 설정 조회
