@@ -30,7 +30,7 @@ public interface GifticonDomainService {
 	// 금액형 - 사용한적없는 기프티콘인지 확인
 	boolean isAmountGifticonUsed(Gifticon gifticon);
 
-	// 쉐어박스에 공유중인 기프티콘인지 검증
+	// 쉐어박스에 공유할 수 있는지 검증
 	void validateGifticonSharable(Gifticon gifticon);
 
 	// 해당 쉐어박스에 기프티콘이 올라가있는지 검증

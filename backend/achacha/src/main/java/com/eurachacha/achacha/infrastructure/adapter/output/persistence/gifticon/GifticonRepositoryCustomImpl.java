@@ -86,10 +86,10 @@ public class GifticonRepositoryCustomImpl implements GifticonRepositoryCustom {
 
 		// CASE 표현식으로 사용 시간 결정
 		DateTimeExpression<LocalDateTime> usedAtExpr = Expressions.cases()
-			.when(qOwnerHistory.id.max().isNotNull())
-			.then(qOwnerHistory.createdAt.max())
 			.when(qUsageHistory.id.max().isNotNull())
 			.then(qUsageHistory.createdAt.max())
+			.when(qOwnerHistory.id.max().isNotNull())
+			.then(qOwnerHistory.createdAt.max())
 			.otherwise(Expressions.nullExpression());
 
 		List<Gifticon> content = jpaQueryFactory
