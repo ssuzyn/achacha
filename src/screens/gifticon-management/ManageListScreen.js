@@ -931,11 +931,6 @@ const ManageListScreen = () => {
     return (
       <View style={styles.gifticonList}>
         {filteredGifticons.map(item => renderGifticonItem(item))}
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="small" color="#278CCC" />
-          </View>
-        )}
       </View>
     );
   };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import FastImage from 'react-native-fast-image';
 import { calculateDday } from '../../utils/dateUtils';
@@ -19,7 +19,6 @@ const MapGifticonItem = ({
     brandId,
     gifticonType,
   } = gifticon;
-  const [imageError, setImageError] = useState(false);
   const navigation = useNavigation();
 
   const dday = calculateDday(gifticonExpiryDate);
