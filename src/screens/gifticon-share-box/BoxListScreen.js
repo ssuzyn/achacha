@@ -123,6 +123,13 @@ const BoxListScreen = () => {
   // 새로고침 상태 추가
   const [refreshing, setRefreshing] = useState(false);
 
+  // 사용완료 목록 콘솔 출력
+  useEffect(() => {
+    if (selectedCategory === 'used') {
+      console.log('[사용완료 탭] usedGifticons 리스트:', usedGifticons);
+    }
+  }, [usedGifticons, selectedCategory]);
+
   // 스타일 정의를 여기로 이동
   const styles = StyleSheet.create({
     container: {

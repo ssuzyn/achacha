@@ -145,7 +145,12 @@ const BoxDetailAmountScreen = () => {
           .getUsedGifticonDetail(id)
           .then(data => {
             if (requestId === latestRequestId.current) {
-              setGifticonData(data);
+              setGifticonData(prev => {
+                if (!data.usedAt && prev?.usedAt) {
+                  return { ...data, usedAt: prev.usedAt };
+                }
+                return data;
+              });
               setScope('USED'); // scope 강제 설정
               if (data.usageType) setUsageType(data.usageType);
             }
@@ -174,7 +179,12 @@ const BoxDetailAmountScreen = () => {
                 setScope('USED');
                 if (data.usageType) setUsageType(data.usageType);
               }
-              setGifticonData(data);
+              setGifticonData(prev => {
+                if (!data.usedAt && prev?.usedAt) {
+                  return { ...data, usedAt: prev.usedAt };
+                }
+                return data;
+              });
             }
           })
           .catch(error => {
@@ -190,7 +200,12 @@ const BoxDetailAmountScreen = () => {
                   .getUsedGifticonDetail(id)
                   .then(usedData => {
                     if (requestId === latestRequestId.current) {
-                      setGifticonData(usedData);
+                      setGifticonData(prev => {
+                        if (!usedData.usedAt && prev?.usedAt) {
+                          return { ...usedData, usedAt: prev.usedAt };
+                        }
+                        return usedData;
+                      });
                       setScope('USED');
                       if (usedData.usageType) setUsageType(usedData.usageType);
                     }
@@ -225,6 +240,9 @@ const BoxDetailAmountScreen = () => {
 
   useEffect(() => {
     console.log('[DEBUG] gifticonData 변경:', gifticonData);
+    if (gifticonData) {
+      console.log('[DEBUG] gifticonData.usedAt:', gifticonData.usedAt);
+    }
   }, [gifticonData]);
 
   useEffect(() => {
@@ -290,7 +308,12 @@ const BoxDetailAmountScreen = () => {
         usageType: data?.usageType,
       });
 
-      setGifticonData(data);
+      setGifticonData(prev => {
+        if (!data.usedAt && prev?.usedAt) {
+          return { ...data, usedAt: prev.usedAt };
+        }
+        return data;
+      });
       if (data && data.isSharer !== undefined) {
         console.log('[BoxDetailAmountScreen] isSharer 존재:', data.isSharer);
       }
@@ -313,8 +336,12 @@ const BoxDetailAmountScreen = () => {
     return `${yyyy}.${mm}.${dd}`;
   };
 
+  // usedAt 보정 함수
+  const getUsedAt = data => (data?.usedAt || data?.usageHistoryCreatedAt || '');
+
   // 날짜 포맷 함수 (YYYY.MM.DD HH:MM)
   const formatDateTime = dateString => {
+    console.log('[DEBUG] formatDateTime 호출:', dateString);
     const date = new Date(dateString);
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -945,20 +972,21 @@ const BoxDetailAmountScreen = () => {
                   </View>
                 )}
 
-                {/* 사용완료된 경우 사용일시 표시 */}
                 {scope === 'USED' && (
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>사용일시</Text>
-                    <Text style={styles.infoValue}>{formatDateTime(gifticonData.usedAt)}</Text>
-                  </View>
-                )}
-
-                {/* 사용완료된 경우 사용자 정보 표시 추가 */}
-                {scope === 'USED' && gifticonData.usedBy && (
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>사용자</Text>
-                    <Text style={styles.infoValue}>{gifticonData.usedBy}</Text>
-                  </View>
+                  <>
+                    <View style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>사용일시</Text>
+                      <Text style={styles.infoValue}>
+                        {formatDateTime(getUsedAt(gifticonData))}
+                      </Text>
+                    </View>
+                    {gifticonData.usedBy && (
+                      <View style={styles.infoRow}>
+                        <Text style={styles.infoLabel}>사용자</Text>
+                        <Text style={styles.infoValue}>{gifticonData.usedBy}</Text>
+                      </View>
+                    )}
+                  </>
                 )}
 
                 <View style={styles.divider} />
