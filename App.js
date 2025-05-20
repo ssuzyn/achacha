@@ -53,43 +53,73 @@ TaskManager.defineTask(LOCATION_TRACKING, async ({ data, error }) => {
     const { locations } = data;
     const location = locations[0];
     if (location) {
-      console.log('[BackgroundLocationTask] 위치 업데이트:', location);
+      console.log('[BackgroundLocationTask] 위치 업데이트:', location.coords);
 
       try {
         // AsyncStorage에서 기프티콘 불러오기
         const gifticonsStr = await AsyncStorage.getItem('USER_GIFTICONS');
+        const storeDataStr = await AsyncStorage.getItem('GEOFENCE_STORE_DATA');
 
         if (!gifticonsStr) {
-          console.log('[AsyncStorage] 백그라운드에서 읽은 기프티콘: null');
+          console.log('[BackgroundLocationTask] 기프티콘 데이터 없음');
+          return;
+        }
+        if (!storeDataStr) {
+          console.log('[BackgroundLocationTask] 매장 데이터 없음');
           return;
         }
 
         let gifticons;
+        let storeData;
         try {
           gifticons = JSON.parse(gifticonsStr);
+          storeData = JSON.parse(storeDataStr);
         } catch (parseError) {
-          console.error('[AsyncStorage] JSON 파싱 오류:', parseError);
+          console.error('[BackgroundLocationTask] 데이터 파싱 오류:', parseError);
           return;
         }
 
-        if (!Array.isArray(gifticons)) {
-          console.error('[AsyncStorage] 기프티콘 데이터가 배열이 아님');
+        if (!Array.isArray(gifticons) || gifticons.length === 0) {
+          console.error('[BackgroundLocationTask] 유효한 기프티콘 데이터가 아님');
+          return;
+        }
+        if (!Array.isArray(storeData) || storeData.length === 0) {
+          console.error('[BackgroundLocationTask] 유효한 매장 데이터가 아님');
           return;
         }
 
-        // GeofencingService 인스턴스 생성 및 데이터 주입
+        // GeofencingService 인스턴스 생성
         const geofencingService = new GeofencingService();
-        geofencingService.userGifticons = gifticons;
 
-        // 지오펜싱 초기화 후 위치 기반 체크
+        // 데이터 주입
+        // GeofencingService의 updateUserGifticons는 { gifticons: [] } 형태를 기대하므로 직접 할당하거나 해당 형식으로 전달
+        geofencingService.userGifticons = gifticons;
+        geofencingService.brandStores = storeData;
+
+        console.log('[BackgroundLocationTask] GeofencingService에 데이터 주입 완료:', {
+          numGifticons: gifticons.length,
+          numBrandStores: storeData.length,
+        });
+
+        // 지오펜싱 서비스 초기화 (권한 확인 등)
+        // 백그라운드에서는 UI를 통한 권한 요청이 불가능하므로, 권한은 이미 부여된 상태여야 합니다.
+        // initGeofencing은 내부적으로 initialized 플래그를 확인하므로 여러 번 호출해도 안전합니다.
         if (!geofencingService.initialized) {
-          await geofencingService.initGeofencing();
+          await geofencingService.initGeofencing(); // 리스너 설정 등을 포함할 수 있음
         }
 
-        // 현재 위치 기반으로 지오펜스 체크
-        await geofencingService.checkGeofences(location);
-      } catch (error) {
-        console.error('[BackgroundLocationTask] 처리 중 오류:', error);
+        if (geofencingService.initialized) {
+          // 현재 위치 기반으로 지오펜스 체크
+          console.log('[BackgroundLocationTask] geofencingService.checkGeofences 호출');
+          await geofencingService.checkGeofences(location);
+        } else {
+          console.log(
+            '[BackgroundLocationTask] GeofencingService 초기화 실패, checkGeofences 건너뜀'
+          );
+        }
+      } catch (e) {
+        // try-catch 블록의 변수명을 error에서 e로 변경하여 외부 스코프의 error와 충돌 방지
+        console.error('[BackgroundLocationTask] 처리 중 오류:', e);
       }
     }
   }
