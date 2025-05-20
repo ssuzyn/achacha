@@ -588,7 +588,7 @@ const BoxDetailAmountScreen = () => {
                       scope === 'USED' && styles.grayScaleImage,
                       scope === 'USED' && usageType === 'SELF_USE' && styles.smallerGifticonImage,
                     ]}
-                    resizeMode="cover"
+                    resizeMode="contain"
                   />
 
                   {/* 상단 액션 아이콘 */}
@@ -1004,8 +1004,9 @@ const styles = StyleSheet.create({
   gifticonImage: {
     width: 200,
     height: 200,
+    aspectRatio: 1,
     borderRadius: 8,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
     marginBottom: 20,
   },
   grayScaleImage: {
@@ -1014,9 +1015,10 @@ const styles = StyleSheet.create({
   smallerGifticonImage: {
     width: 160,
     height: 160,
+    aspectRatio: 1,
     marginBottom: 5,
     marginTop: 20,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   actionIconsContainer: {
     position: 'absolute',

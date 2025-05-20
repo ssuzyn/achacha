@@ -13,9 +13,6 @@ import {
   // 현재 width는 사용하지 않지만 향후 확장성을 위해 import 유지
   Dimensions,
   Alert,
-  Button,
-  Modal,
-  Linking,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -24,7 +21,13 @@ import { Text } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import NavigationService from '../../navigation/NavigationService';
-import { getPresentTemplates, getPresentTemplateColors, getPresentTemplateDetail, presentGifticon,presentCancelGifticon } from '../../api/presentService';
+import {
+  getPresentTemplates,
+  getPresentTemplateColors,
+  getPresentTemplateDetail,
+  presentGifticon,
+  presentCancelGifticon,
+} from '../../api/presentService';
 import { ERROR_MESSAGES } from '../../constants/errorMessages';
 import KakaoShareLink from 'react-native-kakao-share-link';
 import AlertDialog from '../../components/ui/AlertDialog';
@@ -47,7 +50,7 @@ const { width } = Dimensions.get('window');
 const PresentScreen = () => {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  // eslint-disable-next-line no-unused-vars
+
   const navigation = useNavigation(); // 네비게이션 객체는 handleGift 함수 내 사용
   const route = useRoute();
   const { hideTabBar } = useTabBar();
@@ -74,7 +77,7 @@ const PresentScreen = () => {
   const [message, setMessage] = useState('');
 
   // 공유 완료 상태 추적
-  const [isShared, setIsShared] = useState(false);
+  const [, setIsShared] = useState(false);
 
   // AlertDialog 노출 상태
   const [presentDialogVisible, setPresentDialogVisible] = useState(false);
@@ -224,9 +227,7 @@ const PresentScreen = () => {
     if (templateDetail) {
       if (templateDetail.presentTemplateCategory === 'GENERAL' && templateDetail.colorCards) {
         // GENERAL 템플릿: colorPaletteId에 맞는 cardImagePath
-        const card = templateDetail.colorCards.find(
-          v => v.colorPaletteId === selectedColorVariant
-        );
+        const card = templateDetail.colorCards.find(v => v.colorPaletteId === selectedColorVariant);
         if (card) return { uri: card.cardImagePath };
         // fallback: 첫 번째 카드
         if (templateDetail.colorCards.length > 0) {
@@ -244,10 +245,17 @@ const PresentScreen = () => {
   // 렌더링 템플릿 썸네일 아이템
   const renderThumbnailItem = ({ item }) => (
     <TouchableOpacity
-      style={[styles.thumbnailItem, selectedTemplateId === item.presentTemplateId && styles.selectedThumbnailItem]}
+      style={[
+        styles.thumbnailItem,
+        selectedTemplateId === item.presentTemplateId && styles.selectedThumbnailItem,
+      ]}
       onPress={() => handleSelectTemplate(item.presentTemplateId)}
     >
-      <Image source={{ uri: item.thumbnailPath }} style={styles.thumbnailImage} resizeMode="contain" />
+      <Image
+        source={{ uri: item.thumbnailPath }}
+        style={styles.thumbnailImage}
+        resizeMode="contain"
+      />
     </TouchableOpacity>
   );
 
@@ -537,21 +545,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   gifticonImageContainer: {
-    width: 100,
-    height: 100,
-    alignItems: 'center',
+    width: '80%',
+    height: 120,
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#72BFFF',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 1,
-    marginBottom: 10,
+    alignItems: 'center',
+    marginBottom: 12,
+    aspectRatio: 1,
   },
   gifticonImage: {
-    width: 120,
-    height: 70,
-    resizeMode: 'contain',
+    width: '100%',
+    height: '100%',
+    aspectRatio: 1,
   },
   galleryButton: {
     width: '80%',

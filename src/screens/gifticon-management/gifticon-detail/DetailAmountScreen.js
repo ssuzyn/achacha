@@ -809,7 +809,7 @@ const DetailAmountScreen = () => {
                           gifticonData.usageType === 'SELF_USE' &&
                           styles.smallerGifticonImage,
                       ]}
-                      resizeMode="cover"
+                      resizeMode="contain"
                     />
                   </TouchableOpacity>
 
@@ -1508,8 +1508,9 @@ const styles = StyleSheet.create({
   gifticonImage: {
     width: 200,
     height: 200,
+    aspectRatio: 1,
     borderRadius: 8,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
     marginBottom: 20,
   },
   infoContainer: {
@@ -1625,9 +1626,10 @@ const styles = StyleSheet.create({
   smallerGifticonImage: {
     width: 160,
     height: 160,
+    aspectRatio: 1,
     marginBottom: 5,
     marginTop: 20,
-    resizeMode: 'cover',
+    resizeMode: 'contain',
   },
   usedOverlay: {
     position: 'absolute',
