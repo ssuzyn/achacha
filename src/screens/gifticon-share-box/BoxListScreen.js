@@ -1142,7 +1142,7 @@ const BoxListScreen = () => {
             const res = await fetchUsedGifticons({
               shareBoxId,
               type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
-              sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+              sort: 'USED_DESC',
               page: undefined,
               size: 20,
             });
@@ -1202,7 +1202,7 @@ const BoxListScreen = () => {
       fetchUsedGifticons({
         shareBoxId,
         type: selectedFilter === 'all' ? undefined : selectedFilter.toUpperCase(),
-        sort: sortBy.used === 'recent' ? 'CREATED_DESC' : 'EXPIRY_ASC',
+        sort: 'USED_DESC',
         page: nextPageNum,
         size: 20,
       }).then(res => {
