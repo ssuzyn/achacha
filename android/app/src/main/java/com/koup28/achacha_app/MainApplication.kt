@@ -43,6 +43,7 @@ class MainApplication : Application(), ReactApplication {
             packages.add(WearSyncPackage())
             packages.add(BlePackage())
             packages.add(NotificationPackage())
+            packages.add(new LocationAlarmPackage());
             return packages
           }
 
