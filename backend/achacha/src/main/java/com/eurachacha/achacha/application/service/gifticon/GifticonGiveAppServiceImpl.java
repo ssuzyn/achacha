@@ -1,6 +1,7 @@
 package com.eurachacha.achacha.application.service.gifticon;
 
 import java.security.SecureRandom;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -104,6 +105,9 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		// 기프티콘 소유권 업데이트
 		findGifticon.updateUser(receiverUser);
 
+		// 기프티콘 생성 시간 업데이트 (수신자 입장으로는 받은 시간이 생성시간이기 때문)
+		findGifticon.updateCreatedAt(LocalDateTime.now());
+
 		GifticonOwnerHistory newGifticonOwnerHistory = GifticonOwnerHistory.builder()
 			.gifticon(findGifticon)
 			.fromUser(loggedInUser) // 유저 로직 추가 시 변경 필요
@@ -195,13 +199,13 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		gifticon.cancelUse();
 
 		// 금액형 잔액 되돌리기
-		if(gifticon.getType() == GifticonType.AMOUNT) {
+		if (gifticon.getType() == GifticonType.AMOUNT) {
 			gifticon.updateRemainingAmount(gifticon.getOriginalAmount());
 		}
-		
+
 		// 기프티콘 소유자 변경 내역 삭제
 		gifticonOwnerHistoryRepository.deleteByGifticonIdAndTransferType(gifticonId, TransferType.PRESENT);
-		
+
 		// 선물 카드 삭제
 		presentCardRepository.deleteByGifticonId(gifticonId);
 	}
