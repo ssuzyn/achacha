@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
     width: '90%',
     marginTop: 5, // 바코드 상단 여백 추가
     marginBottom: 10,
-    padding: 10,
+    padding: 5,
     borderRadius: 8,
   },
   usedBarcodeImage: {
