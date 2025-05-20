@@ -29,8 +29,6 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
       }
     }
 
-    const ddayColor = numericDday <= 7 ? '#EA5455' : '#278CCC';
-
     return (
       <TouchableOpacity style={styles.gifticonItem} onPress={() => onSelectGifticon(item)}>
         <View style={styles.contentContainer}>
@@ -45,8 +43,20 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
               </Text>
             </View>
           </View>
-          <View style={styles.ddayContainer}>
-            <Text style={[styles.ddayText, { color: ddayColor }]}>{dday}</Text>
+          <View
+            style={[
+              styles.ddayContainer,
+              numericDday <= 7 ? styles.urgentDDayBackground : styles.normalDDayBackground,
+            ]}
+          >
+            <Text
+              style={[
+                styles.ddayText,
+                numericDday <= 7 ? styles.urgentDDayText : styles.normalDDayText,
+              ]}
+            >
+              {dday}
+            </Text>
           </View>
         </View>
       </TouchableOpacity>
@@ -136,9 +146,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   ddayText: {
-    fontSize: 20,
+    fontSize: 17,
     fontFamily: 'Pretendard-Bold',
-    color: '#278CCC',
+  },
+  urgentDDayBackground: {
+    backgroundColor: 'rgba(234, 84, 85, 0.15)',
+  },
+  normalDDayBackground: {
+    backgroundColor: 'rgba(114, 191, 255, 0.15)',
+  },
+  urgentDDayText: {
+    color: '#EA5455',
+  },
+  normalDDayText: {
+    color: '#72BFFF',
   },
   listHeader: {
     flexDirection: 'row',
