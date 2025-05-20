@@ -326,13 +326,13 @@ const BoxSettingScreen = () => {
             <Text variant="body1" weight="medium" style={styles.sectionTitle}>
               쉐어박스 초대 코드
             </Text>
-            <View style={[styles.codeContainer, { backgroundColor: '#F0F9FF' }]}>
-              <Text variant="h3" weight="bold" style={styles.codeText}>
-                {shareBoxCode}
-              </Text>
+            <View style={[styles.codeContainer, { backgroundColor: '#F0F9FF', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text variant="h3" weight="bold" style={styles.codeText}>
+                  {shareBoxCode}
+                </Text>
                 <TouchableOpacity
-                  style={[styles.confirmButton, { padding: 4, backgroundColor: 'transparent', marginRight: 2 }]}
+                  style={{ padding: 4, backgroundColor: 'transparent', marginLeft: 4 }}
                   onPress={handleKakaoShare}
                 >
                   <Image
@@ -341,12 +341,12 @@ const BoxSettingScreen = () => {
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
-                  <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
-                    복사
-                  </Text>
-                </TouchableOpacity>
               </View>
+              <TouchableOpacity style={styles.confirmButton} onPress={copyInviteCode}>
+                <Text variant="body2" weight="medium" style={styles.confirmButtonText}>
+                  복사
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
