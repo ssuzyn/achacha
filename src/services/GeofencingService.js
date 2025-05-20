@@ -2,6 +2,7 @@ import { Platform, Alert, Linking, AppState } from 'react-native';
 import Geofencing from '@rn-bridge/react-native-geofencing';
 import { geoNotificationService } from './geoNotificationService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 
 // 싱글톤 인스턴스를 저장할 변수
 let instance = null;
@@ -100,6 +101,69 @@ class GeofencingService {
     }
   }
 
+  // 위치 서비스 상태 확인 메서드
+  async checkLocationServicesEnabled() {
+    try {
+      if (Platform.OS === 'ios') {
+        // iOS에서는 권한 상태에 위치 서비스 활성화 여부가 포함됨
+        const authStatus = await Geofencing.getLocationAuthorizationStatus();
+        return authStatus !== 'Disabled';
+      } else {
+        // Android에서는 위치 서비스 상태 직접 확인
+        const { locationServicesEnabled } = await Location.getProviderStatusAsync();
+        console.log(
+          `[GeofencingService] 위치 서비스 상태: ${locationServicesEnabled ? '활성화' : '비활성화'}`
+        );
+        return locationServicesEnabled;
+      }
+    } catch (error) {
+      console.error('[GeofencingService] 위치 서비스 상태 확인 오류:', error);
+      return false;
+    }
+  }
+
+  // 위치 서비스 활성화 요청 메서드
+  async requestLocationServicesEnabled() {
+    const isEnabled = await this.checkLocationServicesEnabled();
+
+    if (!isEnabled) {
+      return new Promise(resolve => {
+        Alert.alert(
+          '위치 서비스 꺼짐',
+          '주변 매장 알림을 받으려면 위치 서비스를 켜야 합니다. 위치 설정을 여시겠습니까?',
+          [
+            {
+              text: '아니오',
+              style: 'cancel',
+              onPress: () => resolve(false),
+            },
+            {
+              text: '설정',
+              onPress: () => {
+                this.openLocationSettings();
+                resolve(false); // 사용자가 설정으로 이동하므로 false 반환
+              },
+            },
+          ]
+        );
+      });
+    }
+
+    return true;
+  }
+
+  // 위치 설정 화면 열기
+  openLocationSettings() {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('App-Prefs:Privacy&path=LOCATION');
+    } else {
+      // 안드로이드에서는 위치 설정 화면 인텐트 실행
+      Linking.openSettings();
+      // 또는 더 구체적으로:
+      // Linking.sendIntent('android.settings.LOCATION_SOURCE_SETTINGS');
+    }
+  }
+
   // 지오펜싱 초기화
   async initGeofencing() {
     if (this.initializing || this.initialized) {
@@ -113,6 +177,14 @@ class GeofencingService {
     console.log('[GeofencingService] 지오펜싱 초기화 시작');
 
     try {
+      // 위치 서비스 활성화 여부 확인 및 요청 
+      const locationServicesEnabled = await this.requestLocationServicesEnabled();
+      if (!locationServicesEnabled) {
+        console.log('[GeofencingService] 위치 서비스가 비활성화되어 있음, 초기화 종료');
+        this.initializing = false;
+        return;
+      }
+
       // 백그라운드 위치 권한 확인
       const hasPermission = await this.checkBackgroundLocationPermission();
       if (!hasPermission) {
@@ -296,6 +368,13 @@ class GeofencingService {
 
   // 백그라운드에서 지오펜싱 체크
   async checkGeofences(location) {
+    // 위치 서비스가 활성화되어 있는지 확인 (추가된 부분)
+    const locationServicesEnabled = await this.checkLocationServicesEnabled();
+    if (!locationServicesEnabled) {
+      console.log('[GeofencingService] 위치 서비스가 비활성화되어 있어 지오펜스 체크 불가');
+      return;
+    }
+
     // 앱이 포그라운드에 있고 지오펜싱이 이미 작동 중이면 수동 체크 건너뜀
     if (this.appState === 'active' && this.initialized) {
       console.log('[GeofencingService] 앱이 포그라운드에 있어 수동 체크 건너뜀');
@@ -411,6 +490,16 @@ class GeofencingService {
 
   // 지오펜스 설정
   async setupGeofences(brandResults, selectedBrand) {
+    // 위치 서비스가 활성화되어 있는지 확인 (추가된 부분)
+    const locationServicesEnabled = await this.checkLocationServicesEnabled();
+    if (!locationServicesEnabled) {
+      const enabled = await this.requestLocationServicesEnabled();
+      if (!enabled) {
+        console.log('[GeofencingService] 위치 서비스가 비활성화되어 있어 지오펜스 설정 불가');
+        return [];
+      }
+    }
+
     console.log(
       `[GeofencingService] setupGeofences 호출됨: ${brandResults ? brandResults.length : 0}개 브랜드, 선택된 브랜드: ${selectedBrand || '없음'}`
     );
