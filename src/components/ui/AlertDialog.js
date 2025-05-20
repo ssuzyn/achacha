@@ -104,12 +104,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 12,
+    fontFamily: 'Pretendard-Bold',
   },
   message: {
-    fontSize: 14,
+    fontSize: 15,
     marginBottom: 20,
+    fontFamily: 'Pretendard-Regular',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -135,9 +136,11 @@ const styles = StyleSheet.create({
   },
   cancelText: {
     fontWeight: '500',
+    fontFamily: 'Pretendard-Medium',
   },
   confirmText: {
     fontWeight: '500',
+    fontFamily: 'Pretendard-Medium',
   },
 });
 

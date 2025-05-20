@@ -39,8 +39,10 @@ const BoxDetailProductScreen = () => {
   // 기프티콘 ID 관리
   const [gifticonId, setGifticonId] = useState(null);
   // 사용 유형 관리 (사용완료 경우에만)
+  // eslint-disable-next-line no-unused-vars
   const [usageType, setUsageType] = useState(null);
   // 사용일시 관리 (사용완료 경우에만)
+  // eslint-disable-next-line no-unused-vars
   const [usedAt, setUsedAt] = useState(null);
   // 기프티콘 데이터 상태
   const [gifticonData, setGifticonData] = useState(null);
@@ -627,7 +629,11 @@ const BoxDetailProductScreen = () => {
                       marginBottom: 10,
                     }}
                   >
-                    <Text variant="body1" weight="semibold" style={{ color: '#FFFFFF' }}>
+                    <Text
+                      variant="body1"
+                      weight="semibold"
+                      style={{ color: '#FFFFFF', fontFamily: 'Pretendard-Regular' }}
+                    >
                       사용완료
                     </Text>
                   </TouchableOpacity>
@@ -643,7 +649,11 @@ const BoxDetailProductScreen = () => {
                       flexDirection: 'row',
                     }}
                   >
-                    <Text variant="body1" weight="semibold" style={{ color: '#278CCC' }}>
+                    <Text
+                      variant="body1"
+                      weight="semibold"
+                      style={{ color: '#278CCC', fontFamily: 'Pretendard-Regular' }}
+                    >
                       취소
                     </Text>
                   </TouchableOpacity>
@@ -662,7 +672,10 @@ const BoxDetailProductScreen = () => {
                     flexDirection: 'row',
                   }}
                 >
-                  <Text variant="body1" weight="semibold" style={{ color: '#FFFFFF' }}>
+                  <Text
+                    variant="body1"
+                    style={{ color: '#FFFFFF', fontFamily: 'Pretendard-Regular' }}
+                  >
                     {calculateDaysLeft(gifticonData.gifticonExpiryDate) === '만료됨'
                       ? '사용완료'
                       : '사용하기'}

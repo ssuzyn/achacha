@@ -350,7 +350,7 @@ const BoxDetailAmountScreen = () => {
   };
 
   // usedAt 보정 함수
-  const getUsedAt = data => (data?.usedAt || data?.usageHistoryCreatedAt || '');
+  const getUsedAt = data => data?.usedAt || data?.usageHistoryCreatedAt || '';
 
   // 날짜 포맷 함수 (YYYY.MM.DD HH:MM)
   const formatDateTime = dateString => {
@@ -1940,6 +1940,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
     textAlign: 'center',
+    fontFamily: 'Pretendard-Regular',
   },
 });
 
