@@ -1248,17 +1248,31 @@ const ManageListScreen = () => {
 
   // 기프티콘 클릭 시 상세 페이지로 이동하는 함수
   const handleGifticonPress = item => {
+    console.log(
+      '기프티콘 아이템 클릭:',
+      item.gifticonId,
+      '스코프:',
+      item.scope,
+      '타입:',
+      item.gifticonType
+    );
+
     // 내가 공유한 기프티콘인지 확인
     const isSharer = item.scope === 'SHARE_BOX' && item.userId === currentUserId;
 
     // 기프티콘 ID 설정 - 사용완료는 접두사 없이 그대로 사용
     const gifticonId = item.gifticonId;
 
+    // 반드시 scope 확인 - 선택된 카테고리가 'used'면 scope를 'USED'로 강제 설정
+    const definedScope = selectedCategory === 'used' ? 'USED' : item.scope;
+
+    console.log('이동할 상세 화면 정보 - ID:', gifticonId, 'scope:', definedScope);
+
     // 기프티콘 유형에 따라 다른 상세 페이지로 이동
     if (item.gifticonType === 'PRODUCT') {
       navigation.navigate('DetailProduct', {
         gifticonId: gifticonId,
-        scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
+        scope: definedScope, // 강제로 설정된 scope 사용
         usageType: item.usageType, // USED 일 경우에만 사용됨
         usedAt: item.usedAt, // USED 일 경우에만 사용됨
         isSharer: isSharer, // 내가 공유한 기프티콘인지 여부
@@ -1266,7 +1280,7 @@ const ManageListScreen = () => {
     } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('DetailAmount', {
         gifticonId: gifticonId,
-        scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
+        scope: definedScope, // 강제로 설정된 scope 사용
         usageType: item.usageType, // USED 일 경우에만 사용됨
         usedAt: item.usedAt, // USED 일 경우에만 사용됨
         isSharer: isSharer, // 내가 공유한 기프티콘인지 여부

@@ -161,12 +161,22 @@ const DetailAmountScreen = () => {
 
   // 기프티콘 데이터 로드 함수
   const loadGifticonData = async id => {
+    console.log('[DetailAmountScreen] 기프티콘 데이터 로드 시작 - ID:', id, 'scope:', scope);
     setIsLoading(true);
     try {
-      // API 호출로 기프티콘 상세 정보 가져오기
-      const response = await gifticonService.getGifticonDetail(id, scope);
-      const responseData = response;
+      let responseData;
 
+      // 사용완료 기프티콘인 경우 getUsedGifticonDetail API 사용
+      if (scope === 'USED') {
+        console.log('[DetailAmountScreen] 사용완료 기프티콘 API 호출');
+        responseData = await gifticonService.getUsedGifticonDetail(id);
+      } else {
+        // 사용가능 기프티콘인 경우 getGifticonDetail API 사용
+        console.log('[DetailAmountScreen] 사용가능 기프티콘 API 호출');
+        responseData = await gifticonService.getGifticonDetail(id, scope);
+      }
+
+      console.log('[DetailAmountScreen] 기프티콘 데이터 로드 성공:', responseData);
       setGifticonData(responseData);
       setIsSharer(responseData.isSharer);
 
@@ -190,25 +200,40 @@ const DetailAmountScreen = () => {
       console.error('[DetailAmountScreen] 기프티콘 데이터 로드 실패:', error);
       setIsLoading(false);
 
-      // 에러 처리
+      // 에러 처리 - 404 에러이고 사용완료된 기프티콘인 경우 재시도
+      if (
+        error.response &&
+        error.response.status === 404 &&
+        error.response.data?.errorCode === 'GIFTICON_004' &&
+        scope !== 'USED'
+      ) {
+        console.log('[DetailAmountScreen] 사용완료된 기프티콘으로 재시도');
+        // scope를 USED로 변경하고 다시 시도
+        setScope('USED');
+
+        // 약간 지연 후 다시 시도
+        setTimeout(() => {
+          loadGifticonData(id);
+        }, 300);
+        return;
+      }
+
+      // 기타 오류 처리
+      let errorMessage = '기프티콘을 불러오는 중 오류가 발생했습니다.';
       if (error.response) {
         const status = error.response.status;
         const errorData = error.response.data;
 
         if (status === 403) {
-          Alert.alert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
+          errorMessage = '해당 기프티콘에 접근할 수 없습니다.';
         } else if (status === 404) {
-          Alert.alert('기프티콘 없음', '기프티콘을 찾을 수 없습니다.');
-        } else {
-          Alert.alert(
-            '오류',
-            `기프티콘을 불러오는 중 오류가 발생했습니다. ${errorData?.message || ''}`
-          );
+          errorMessage = '기프티콘을 찾을 수 없습니다.';
+        } else if (errorData?.message) {
+          errorMessage = errorData.message;
         }
-
-        // 오류 발생 시 이전 화면으로 돌아가기
-        navigation.goBack();
       }
+
+      Alert.alert('오류', errorMessage, [{ text: '확인', onPress: () => navigation.goBack() }]);
     }
   };
 

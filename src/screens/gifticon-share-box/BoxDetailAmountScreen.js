@@ -9,7 +9,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Share,
   Modal,
   TextInput,
   Alert,
@@ -43,7 +42,7 @@ const BoxDetailAmountScreen = () => {
   // 사용 유형 관리 (사용완료 경우에만)
   const [usageType, setUsageType] = useState(null);
   // 사용일시 관리 (사용완료 경우에만)
-  const [usedAt, setUsedAt] = useState(null);
+  // const [usedAt, setUsedAt] = useState(null);
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
   // 로딩 상태
@@ -60,7 +59,8 @@ const BoxDetailAmountScreen = () => {
   // 바코드 관리
   const [barcodeImageUrl, setBarcodeImageUrl] = useState(null);
   const [barcodeNumber, setBarcodeNumber] = useState(null);
-  const [isSharer, setIsSharer] = useState(false);
+  // 공유자 여부 확인 - 사용시 주석 해제
+  // const [isSharer, setIsSharer] = useState(false);
 
   const latestRequestId = useRef(0);
 
@@ -89,11 +89,11 @@ const BoxDetailAmountScreen = () => {
         setUsageType(route.params.usageType);
       }
       if (route.params.usedAt) {
-        setUsedAt(route.params.usedAt);
+        // setUsedAt(route.params.usedAt);
       }
       // 공유박스에서 내가 공유한 것인지 확인
       if (route.params.isSharer) {
-        setIsSharer(route.params.isSharer);
+        // setIsSharer(route.params.isSharer);
       }
       // refresh 플래그가 true이면 데이터 다시 로드
       if (route.params.refresh && gifticonId) {
@@ -162,17 +162,57 @@ const BoxDetailAmountScreen = () => {
 
   // 기프티콘 데이터 로드 함수
   const loadGifticonData = async id => {
-    console.log('[BoxDetailAmountScreen] loadGifticonData 시작, id:', id);
+    console.log('[BoxDetailAmountScreen] loadGifticonData 시작, id:', id, 'scope:', scope);
     setIsLoading(true);
     try {
-      // 실제 API 호출
-      const data = await gifticonService.getGifticonDetail(id, scope);
-      console.log('[BoxDetailAmountScreen] API 응답 데이터:', data);
+      // 사용 범위에 따라 API 호출 분기
+      let data;
+
+      if (scope === 'USED') {
+        // 사용완료 기프티콘 조회 API 호출
+        console.log('[BoxDetailAmountScreen] 사용완료 기프티콘 API 호출:', id);
+        data = await gifticonService.getUsedGifticonDetail(id);
+        console.log('[BoxDetailAmountScreen] 사용완료 기프티콘 데이터 로드 성공:', data);
+      } else {
+        // 사용 가능 기프티콘 조회 API 호출
+        console.log('[BoxDetailAmountScreen] 사용가능 기프티콘 API 호출:', id, scope);
+        data = await gifticonService.getGifticonDetail(id, scope);
+        console.log('[BoxDetailAmountScreen] 사용가능 기프티콘 데이터 로드 성공:', data);
+      }
+
       setGifticonData(data);
-      setIsSharer(data.isSharer);
+      // setIsSharer(data.isSharer);
     } catch (error) {
       console.error('[BoxDetailAmountScreen] 데이터 로드 실패:', error);
+
+      // 오류 로그 구체화
+      if (error.response) {
+        console.error('API 오류 응답:', error.response.status, error.response.data);
+
+        // 사용완료된 기프티콘을 사용가능으로 조회할 때의 오류 처리
+        if (
+          error.response.status === 404 &&
+          error.response.data?.errorCode === 'GIFTICON_004' &&
+          scope !== 'USED'
+        ) {
+          console.log('[BoxDetailAmountScreen] 사용완료된 기프티콘으로 재시도');
+          // scope를 USED로 변경하고 다시 시도
+          setScope('USED');
+
+          // 약간 지연 후 다시 시도
+          setTimeout(() => {
+            loadGifticonData(id);
+          }, 300);
+          return;
+        }
+      }
+
       setGifticonData(null);
+
+      // 오류 발생 시 이전 화면으로
+      Alert.alert('오류 발생', '기프티콘 정보를 불러올 수 없습니다.', [
+        { text: '확인', onPress: () => navigation.goBack() },
+      ]);
     } finally {
       setIsLoading(false);
     }
@@ -453,20 +493,7 @@ const BoxDetailAmountScreen = () => {
     }
   };
 
-  // 공유하기 기능
-  const handleShare = async () => {
-    try {
-      // 실제 API 호출
-      await api.shareGifticon(selectedShareBoxId, gifticonId);
-
-      Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.');
-    } catch (error) {
-      const errorCode = error?.response?.data?.code;
-      const errorMessage = ERROR_MESSAGES[errorCode] || ERROR_MESSAGES.default;
-
-      Alert.alert('공유 실패', errorMessage);
-    }
-  };
+  // 공유하기 기능 (쉐어박스에서는 사용되지 않음)  const handleShareToAnotherBox = async () => {    try {      // 실제 API 호출은 선택된 shareBoxId가 있어야 함      if (!gifticonData.shareBoxId) {        Alert.alert('오류', '쉐어박스 정보가 없습니다.');        return;      }            Alert.alert('안내', '이미 쉐어박스에 공유된 기프티콘입니다.');    } catch (error) {      Alert.alert('오류', '작업을 수행할 수 없습니다.');    }  };
 
   // 선물하기 기능
   const handleGift = () => {
@@ -786,9 +813,13 @@ const BoxDetailAmountScreen = () => {
                   {scope === 'MY_BOX' && !isExpired && (
                     // 마이박스이고 만료되지 않은 경우만 공유하기/선물하기 버튼 표시
                     <View style={styles.buttonRow}>
-                      <TouchableOpacity onPress={handleShare} style={styles.shareButton}>
-                        <Icon name="inventory-2" type="material" size={22} color="#000000" />
-                        <Text style={styles.shareButtonText}>공유하기</Text>
+                      <TouchableOpacity
+                        onPress={handleShareToAnotherBox}
+                        style={styles.shareButton}
+                      >
+                        {' '}
+                        <Icon name="inventory-2" type="material" size={22} color="#000000" />{' '}
+                        <Text style={styles.shareButtonText}>공유하기</Text>{' '}
                       </TouchableOpacity>
                       <TouchableOpacity onPress={handleGift} style={styles.giftButton}>
                         <Icon name="card-giftcard" type="material" size={22} color="#000000" />
