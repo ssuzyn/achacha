@@ -29,12 +29,13 @@ class GeofencingService {
 
     // 포그라운드/백그라운드 설정
     this.foregroundCooldown = 30 * 60 * 1000; // 30분
+    // this.foregroundCooldown = 1 * 60 * 1000; //테스트
     this.backgroundCooldown = 2 * 60 * 60 * 1000; // 2시간
 
     // 앱 상태 변경 리스너 등록
     this._appStateSubscription = AppState.addEventListener('change', this._handleAppStateChange);
 
-    console.log(`[GeofencingService] 인스턴스 생성됨. 초기 앱 상태: ${this.appState}`);
+    // console.log(`[GeofencingService] 인스턴스 생성됨. 초기 앱 상태: ${this.appState}`);
   }
 
   // 앱 상태 변경 핸들러
@@ -94,9 +95,9 @@ class GeofencingService {
   updateUserGifticons(gifticons) {
     if (gifticons && gifticons.gifticons && Array.isArray(gifticons.gifticons)) {
       this.userGifticons = gifticons.gifticons;
-      console.log(`[GeofencingService] 기프티콘 목록 업데이트됨: ${this.userGifticons.length}개`);
+      // console.log(`[GeofencingService] 기프티콘 목록 업데이트됨: ${this.userGifticons.length}개`);
     } else {
-      console.error('[GeofencingService] updateUserGifticons - 유효하지 않은 기프티콘 목록 구조.');
+      // console.error('[GeofencingService] updateUserGifticons - 유효하지 않은 기프티콘 목록 구조.');
       this.userGifticons = [];
     }
   }
@@ -111,9 +112,9 @@ class GeofencingService {
       } else {
         // Android에서는 위치 서비스 상태 직접 확인
         const { locationServicesEnabled } = await Location.getProviderStatusAsync();
-        console.log(
-          `[GeofencingService] 위치 서비스 상태: ${locationServicesEnabled ? '활성화' : '비활성화'}`
-        );
+        // console.log(
+        //   `[GeofencingService] 위치 서비스 상태: ${locationServicesEnabled ? '활성화' : '비활성화'}`
+        // );
         return locationServicesEnabled;
       }
     } catch (error) {
@@ -177,7 +178,7 @@ class GeofencingService {
     console.log('[GeofencingService] 지오펜싱 초기화 시작');
 
     try {
-      // 위치 서비스 활성화 여부 확인 및 요청 
+      // 위치 서비스 활성화 여부 확인 및 요청
       const locationServicesEnabled = await this.requestLocationServicesEnabled();
       if (!locationServicesEnabled) {
         console.log('[GeofencingService] 위치 서비스가 비활성화되어 있음, 초기화 종료');
@@ -671,6 +672,20 @@ class GeofencingService {
     } catch (error) {
       console.error('[GeofencingService] setupGeofences - 설정 중 오류:', error);
       return [];
+    }
+  }
+
+  // 알림 쿨다운 초기화
+  async resetNotificationCooldowns() {
+    try {
+      console.log('[GeofencingService] 알림 쿨다운 초기화 시작');
+      // AsyncStorage에서 RECENT_NOTIFICATIONS 항목 제거
+      await AsyncStorage.removeItem('RECENT_NOTIFICATIONS');
+      // 세션 내 알림 기록 초기화
+      this.notifiedBrandIdsThisSession.clear();
+      console.log('[GeofencingService] 알림 쿨다운 초기화 완료');
+    } catch (error) {
+      console.error('[GeofencingService] 알림 쿨다운 초기화 중 오류 발생:', error);
     }
   }
 
