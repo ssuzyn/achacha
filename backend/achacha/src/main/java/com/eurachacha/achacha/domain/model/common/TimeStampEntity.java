@@ -17,7 +17,7 @@ import lombok.Getter;
 public abstract class TimeStampEntity {
 
 	@CreatedDate
-	@Column(name = "created_at", updatable = false)
+	@Column(name = "created_at")
 	protected LocalDateTime createdAt;
 
 	@LastModifiedDate
