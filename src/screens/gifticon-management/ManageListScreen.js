@@ -1251,24 +1251,35 @@ const ManageListScreen = () => {
     // 내가 공유한 기프티콘인지 확인
     const isSharer = item.scope === 'SHARE_BOX' && item.userId === currentUserId;
 
-    // 기프티콘 ID 설정 - 사용완료는 접두사 없이 그대로 사용
+    // 기프티콘 ID 설정
     const gifticonId = item.gifticonId;
+
+    // 사용완료 상태 명확하게 확인 - usageType이 있으면 무조건 사용완료로 취급
+    const isUsed = item.scope === 'USED' || item.usageType;
+
+    console.log('[ManageListScreen] 기프티콘 상세 이동:', {
+      id: gifticonId,
+      type: item.gifticonType,
+      scope: item.scope,
+      isUsed: isUsed,
+      usageType: item.usageType,
+    });
 
     // 기프티콘 유형에 따라 다른 상세 페이지로 이동
     if (item.gifticonType === 'PRODUCT') {
       navigation.navigate('DetailProduct', {
         gifticonId: gifticonId,
-        scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
-        usageType: item.usageType, // USED 일 경우에만 사용됨
-        usedAt: item.usedAt, // USED 일 경우에만 사용됨
+        scope: isUsed ? 'USED' : item.scope, // MY_BOX, SHARE_BOX 또는 USED - 명확하게 설정
+        usageType: item.usageType, // usageType 있으면 무조건 전달
+        usedAt: item.usedAt,
         isSharer: isSharer, // 내가 공유한 기프티콘인지 여부
       });
     } else if (item.gifticonType === 'AMOUNT') {
       navigation.navigate('DetailAmount', {
         gifticonId: gifticonId,
-        scope: item.scope, // MY_BOX, SHARE_BOX 또는 USED
-        usageType: item.usageType, // USED 일 경우에만 사용됨
-        usedAt: item.usedAt, // USED 일 경우에만 사용됨
+        scope: isUsed ? 'USED' : item.scope, // MY_BOX, SHARE_BOX 또는 USED - 명확하게 설정
+        usageType: item.usageType, // usageType 있으면 무조건 전달
+        usedAt: item.usedAt,
         isSharer: isSharer, // 내가 공유한 기프티콘인지 여부
       });
     }

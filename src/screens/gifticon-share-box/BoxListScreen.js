@@ -5,7 +5,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   Image,
   TouchableOpacity,
   StatusBar,
@@ -21,7 +20,7 @@ import CategoryTabs from '../../components/common/CategoryTabs';
 import TabFilter from '../../components/common/TabFilter';
 import { useTheme } from '../../hooks/useTheme';
 import { Shadow } from 'react-native-shadow-2';
-import { Swipeable, RectButton } from 'react-native-gesture-handler';
+import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {

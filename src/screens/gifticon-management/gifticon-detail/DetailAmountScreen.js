@@ -20,7 +20,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
-import NavigationService from '../../../navigation/NavigationService';
 import AlertDialog from '../../../components/ui/AlertDialog';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
@@ -119,7 +118,10 @@ const DetailAmountScreen = () => {
         refresh,
       } = route.params;
 
-      console.log('[DetailAmountScreen] 라우트 파라미터 변경:', route.params);
+      console.log(
+        '[DetailAmountScreen] 라우트 파라미터 확인:',
+        JSON.stringify(route.params, null, 2)
+      );
 
       if (newScope) {
         setScope(newScope);
@@ -164,17 +166,55 @@ const DetailAmountScreen = () => {
     setIsLoading(true);
     try {
       // API 호출로 기프티콘 상세 정보 가져오기
-      const response = await gifticonService.getGifticonDetail(id, scope);
-      const responseData = response;
+      let responseData;
+
+      console.log(
+        `[DetailAmountScreen] 기프티콘 로딩 시작 - ID: ${id}, 현재 scope: ${scope}, usageType: ${route.params?.usageType}`
+      );
+
+      // usageType이 있거나 scope가 USED인 경우 무조건 사용완료 API 호출
+      if (route.params?.usageType || scope === 'USED') {
+        // 사용완료 API 호출 - 로그 명확하게 표시
+        const reason = route.params?.usageType
+          ? `usageType: ${route.params.usageType}`
+          : `scope: ${scope}`;
+        console.log(
+          `[DetailAmountScreen] 사용완료 기프티콘 API 호출(${reason}) - /api/used-gifticons/${id}`
+        );
+        responseData = await gifticonService.getUsedGifticonDetail(id);
+        console.log(
+          '[DetailAmountScreen] 사용완료 기프티콘 응답 받음:',
+          responseData ? 'Success' : 'No Data'
+        );
+      } else {
+        // 사용가능 기프티콘(MY_BOX, SHARE_BOX)은 available API 호출
+        console.log(
+          `[DetailAmountScreen] 사용가능 기프티콘 API 호출 - /api/available-gifticons/${id} (scope: ${scope})`
+        );
+        responseData = await gifticonService.getGifticonDetail(id, scope);
+        console.log(
+          '[DetailAmountScreen] 사용가능 기프티콘 응답 받음:',
+          responseData ? 'Success' : 'No Data'
+        );
+      }
+
+      console.log('[DetailAmountScreen] 기프티콘 데이터 세팅:', {
+        id: responseData?.gifticonId,
+        type: responseData?.gifticonType,
+        scope: scope,
+        usageType: responseData?.usageType,
+      });
 
       setGifticonData(responseData);
       setIsSharer(responseData.isSharer);
 
       // 사용완료 기프티콘인 경우 바코드 정보도 함께 로드
-      if (scope === 'USED' && responseData.usageType === 'SELF_USE') {
+      if ((scope === 'USED' || route.params?.usageType) && responseData.usageType === 'SELF_USE') {
         try {
+          console.log(`[DetailAmountScreen] 사용완료 바코드 정보 로드 시작 - ID: ${id}`);
           const barcodeResponse = await gifticonService.getUsedGifticonBarcode(id);
           if (barcodeResponse) {
+            console.log('[DetailAmountScreen] 바코드 정보 로드 성공');
             setBarcodeInfo({
               barcodeNumber: barcodeResponse.gifticonBarcodeNumber,
               barcodePath: barcodeResponse.barcodePath,
@@ -188,6 +228,8 @@ const DetailAmountScreen = () => {
       setIsLoading(false);
     } catch (error) {
       console.error('[DetailAmountScreen] 기프티콘 데이터 로드 실패:', error);
+      console.error('[DetailAmountScreen] 에러 응답:', error.response?.data);
+      console.error('[DetailAmountScreen] 에러 상태 코드:', error.response?.status);
       setIsLoading(false);
 
       // 에러 처리
@@ -309,14 +351,6 @@ const DetailAmountScreen = () => {
   // 입력된 텍스트에서 콤마를 제거하고 숫자만 추출하는 함수
   const extractNumber = text => {
     return text.replace(/,/g, '');
-  };
-
-  // 입력된 금액을 포맷팅하는 함수 (천 단위 콤마 추가)
-  const formatInputAmount = text => {
-    if (!text) return '';
-    const onlyNums = text.replace(/[^0-9]/g, '');
-    if (onlyNums === '') return '';
-    return parseInt(onlyNums, 10).toLocaleString();
   };
 
   // 쉐어박스 목록 불러오기
@@ -499,13 +533,39 @@ const DetailAmountScreen = () => {
 
       console.error('기프티콘 사용 오류:', error);
 
-      // 에러 메시지 처리
-      if (error.response) {
-        const errorMessage =
-          error.response.data?.message || '기프티콘 사용 중 오류가 발생했습니다.';
-        Alert.alert('오류', errorMessage);
+      // 에러 메시지에서 "잔액 부족" 또는 관련 문구 확인
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || '';
+      const errorCode = errorData?.errorCode || errorData?.code || '';
+
+      // 에러 메시지나 코드에 잔액 관련 문구가 있거나, 사용 금액이 잔액과 동일한 경우
+      if (
+        errorMessage.includes('잔액') ||
+        errorMessage.includes('금액') ||
+        errorCode.includes('AMOUNT') ||
+        numericAmount === gifticonData.gifticonRemainingAmount
+      ) {
+        // 잔액 부족 에러인 경우 사용완료 처리
+        Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // ManageListScreen으로 이동
+              navigation.reset({
+                index: 0,
+                routes: [
+                  {
+                    name: 'Main',
+                    params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                  },
+                ],
+              });
+            },
+          },
+        ]);
       } else {
-        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+        // 일반 에러 메시지 처리
+        Alert.alert('오류', errorMessage || '기프티콘 사용 중 오류가 발생했습니다.');
       }
     }
   };

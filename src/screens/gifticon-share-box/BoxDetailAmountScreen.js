@@ -9,7 +9,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Share,
   Modal,
   TextInput,
   Alert,
@@ -36,14 +35,10 @@ const BoxDetailAmountScreen = () => {
   const { showTabBar } = useTabBar();
   const myUserId = useAuthStore(state => state.userId);
 
-  // scope 상태 관리
+  // 카테고리, 경로, 공유 상태 등 기본 정보 상태 관리
   const [scope, setScope] = useState('SHARE_BOX'); // 'SHARE_BOX' 또는 'USED'
-  // 기프티콘 ID 관리
   const [gifticonId, setGifticonId] = useState(null);
-  // 사용 유형 관리 (사용완료 경우에만)
   const [usageType, setUsageType] = useState(null);
-  // 사용일시 관리 (사용완료 경우에만)
-  const [usedAt, setUsedAt] = useState(null);
   // 사용 상태 관리
   const [isUsing, setIsUsing] = useState(false);
   // 로딩 상태
@@ -60,7 +55,7 @@ const BoxDetailAmountScreen = () => {
   // 바코드 관리
   const [barcodeImageUrl, setBarcodeImageUrl] = useState(null);
   const [barcodeNumber, setBarcodeNumber] = useState(null);
-  const [isSharer, setIsSharer] = useState(false);
+  const [barcodeLoading, setBarcodeLoading] = useState(false);
 
   const latestRequestId = useRef(0);
 
@@ -88,13 +83,7 @@ const BoxDetailAmountScreen = () => {
       if (route.params.usageType) {
         setUsageType(route.params.usageType);
       }
-      if (route.params.usedAt) {
-        setUsedAt(route.params.usedAt);
-      }
-      // 공유박스에서 내가 공유한 것인지 확인
-      if (route.params.isSharer) {
-        setIsSharer(route.params.isSharer);
-      }
+
       // refresh 플래그가 true이면 데이터 다시 로드
       if (route.params.refresh && gifticonId) {
         loadGifticonData(gifticonId);
@@ -120,30 +109,117 @@ const BoxDetailAmountScreen = () => {
     if (route.params?.gifticon) {
       setGifticonData(route.params.gifticon);
       setIsLoading(false);
+
+      // 기프티콘이 사용완료된 경우 scope 값을 'USED'로 변경
+      if (
+        route.params.gifticon.usageType ||
+        route.params.scope === 'USED' ||
+        route.params.gifticon.status === 'USED'
+      ) {
+        setScope('USED');
+      }
     }
+
     // 2. gifticonId가 있으면 추가 API로 최신 정보 조회
     const id = route.params?.gifticonId || route.params?.gifticon?.gifticonId;
     const scopeParam = route.params?.scope || 'SHARE_BOX';
+    const usageTypeParam = route.params?.usageType;
+
     if (id) {
       const requestId = ++latestRequestId.current;
       setIsLoading(true);
-      gifticonService
-        .getGifticonDetail(id, scopeParam)
-        .then(data => {
-          if (requestId === latestRequestId.current) {
-            setGifticonData(data);
-          }
-        })
-        .catch(e => {
-          if (requestId === latestRequestId.current) {
-            setGifticonData(null);
-          }
-        })
-        .finally(() => {
-          if (requestId === latestRequestId.current) {
-            setIsLoading(false);
-          }
-        });
+
+      // 사용완료 여부 확인 - scope가 USED이거나 usageType이 있는 경우 사용완료로 간주
+      const isUsed =
+        scopeParam === 'USED' ||
+        usageTypeParam ||
+        route.params?.gifticon?.status === 'USED' ||
+        route.params?.gifticon?.usageType;
+
+      if (isUsed) {
+        // 사용완료 API 호출
+        console.log(
+          `[BoxDetailAmountScreen] 사용완료 API 호출 - id: ${id}, scope: ${scopeParam}, usageType: ${usageTypeParam}`
+        );
+        gifticonService
+          .getUsedGifticonDetail(id)
+          .then(data => {
+            if (requestId === latestRequestId.current) {
+              setGifticonData(data);
+              setScope('USED'); // scope 강제 설정
+              if (data.usageType) setUsageType(data.usageType);
+            }
+          })
+          .catch(error => {
+            console.error('[BoxDetailAmountScreen] 사용완료 API 오류:', error);
+            if (requestId === latestRequestId.current) {
+              // 오류 발생 시에도 USED로 설정하고 사용가능 API 재시도 하지 않음
+              setGifticonData(null);
+            }
+          })
+          .finally(() => {
+            if (requestId === latestRequestId.current) {
+              setIsLoading(false);
+            }
+          });
+      } else {
+        // 사용가능 API 호출
+        console.log(`[BoxDetailAmountScreen] 사용가능 API 호출 - id: ${id}, scope: ${scopeParam}`);
+        gifticonService
+          .getGifticonDetail(id, scopeParam)
+          .then(data => {
+            if (requestId === latestRequestId.current) {
+              // 사용가능 API 호출 결과로 사용완료 정보가 있으면 scope 업데이트
+              if (data.status === 'USED' || data.usageType) {
+                setScope('USED');
+                if (data.usageType) setUsageType(data.usageType);
+              }
+              setGifticonData(data);
+            }
+          })
+          .catch(error => {
+            console.error('[BoxDetailAmountScreen] 사용가능 API 오류:', error);
+            if (requestId === latestRequestId.current) {
+              // 에러 코드가 404이고 GIFTICON_004(이미 사용된 기프티콘)인 경우 사용완료 API 재시도
+              if (
+                error.response?.status === 404 &&
+                error.response?.data?.errorCode === 'GIFTICON_004'
+              ) {
+                console.log('[BoxDetailAmountScreen] 이미 사용된 기프티콘, 사용완료 API로 재시도');
+                gifticonService
+                  .getUsedGifticonDetail(id)
+                  .then(usedData => {
+                    if (requestId === latestRequestId.current) {
+                      setGifticonData(usedData);
+                      setScope('USED');
+                      if (usedData.usageType) setUsageType(usedData.usageType);
+                    }
+                  })
+                  .catch(usedError => {
+                    console.error('[BoxDetailAmountScreen] 사용완료 API 재시도 오류:', usedError);
+                    if (requestId === latestRequestId.current) {
+                      setGifticonData(null);
+                    }
+                  })
+                  .finally(() => {
+                    if (requestId === latestRequestId.current) {
+                      setIsLoading(false);
+                    }
+                  });
+              } else {
+                setGifticonData(null);
+                setIsLoading(false);
+              }
+            }
+          })
+          .finally(() => {
+            // finally 블록은 재시도 호출이 있는 경우에는 실행하지 않도록 수정
+            // error 변수가 없으므로 제거
+            if (requestId === latestRequestId.current) {
+              setIsLoading(false);
+            }
+          });
+      }
     }
   }, [route.params]);
 
@@ -162,16 +238,66 @@ const BoxDetailAmountScreen = () => {
 
   // 기프티콘 데이터 로드 함수
   const loadGifticonData = async id => {
-    console.log('[BoxDetailAmountScreen] loadGifticonData 시작, id:', id);
+    console.log(
+      '[BoxDetailAmountScreen] loadGifticonData 시작, id:',
+      id,
+      'scope:',
+      scope,
+      'usageType:',
+      route.params?.usageType
+    );
     setIsLoading(true);
     try {
-      // 실제 API 호출
-      const data = await gifticonService.getGifticonDetail(id, scope);
-      console.log('[BoxDetailAmountScreen] API 응답 데이터:', data);
+      // 현재 state보다 route.params 값을 우선적으로 확인 (최신 정보 반영)
+      const currentScope = route.params?.scope || scope;
+      const currentUsageType = route.params?.usageType || usageType;
+
+      // 사용완료 판단 조건 개선:
+      // 1. usageType이 있거나
+      // 2. scope가 USED이거나
+      // 3. route.params에서 전달된 gifticon.status가 USED인 경우
+      const isUsedGifticon =
+        currentUsageType ||
+        currentScope === 'USED' ||
+        route.params?.gifticon?.status === 'USED' ||
+        route.params?.gifticon?.usageType;
+
+      let data;
+
+      if (isUsedGifticon) {
+        // 사용완료 API 호출
+        const reason = currentUsageType
+          ? `usageType: ${currentUsageType}`
+          : `scope: ${currentScope}`;
+        console.log(
+          `[BoxDetailAmountScreen] 사용완료 API 호출(${reason}) - /api/used-gifticons/${id}`
+        );
+        data = await gifticonService.getUsedGifticonDetail(id);
+        // scope 상태 업데이트
+        setScope('USED');
+      } else {
+        // 사용가능 기프티콘 API 호출
+        console.log(
+          `[BoxDetailAmountScreen] 사용가능 API 호출 - /api/available-gifticons/${id} (scope: ${scope})`
+        );
+        data = await gifticonService.getGifticonDetail(id, scope);
+      }
+
+      console.log('[BoxDetailAmountScreen] API 응답 데이터:', data ? 'Success' : 'No Data', {
+        id: data?.gifticonId,
+        type: data?.gifticonType,
+        scope: scope,
+        usageType: data?.usageType,
+      });
+
       setGifticonData(data);
-      setIsSharer(data.isSharer);
+      if (data && data.isSharer !== undefined) {
+        console.log('[BoxDetailAmountScreen] isSharer 존재:', data.isSharer);
+      }
     } catch (error) {
       console.error('[BoxDetailAmountScreen] 데이터 로드 실패:', error);
+      console.error('[BoxDetailAmountScreen] 에러 응답:', error.response?.data);
+      console.error('[BoxDetailAmountScreen] 에러 상태 코드:', error.response?.status);
       setGifticonData(null);
     } finally {
       setIsLoading(false);
@@ -246,9 +372,7 @@ const BoxDetailAmountScreen = () => {
       // 바코드 API 호출
       try {
         setIsLoading(true);
-        const res = await gifticonService.getAvailableGifticonBarcode(gifticonData.gifticonId);
-        setBarcodeImageUrl(res.barcodePath);
-        setBarcodeNumber(res.gifticonBarcodeNumber);
+        await loadBarcodeInfo(); // 기존 함수 사용
         setIsUsing(true);
       } catch (e) {
         Alert.alert('바코드 조회 실패', '바코드 정보를 불러오지 못했습니다.');
@@ -334,13 +458,36 @@ const BoxDetailAmountScreen = () => {
 
       console.error('기프티콘 사용 오류:', error);
 
-      // 에러 메시지 처리
-      if (error.response) {
-        const errorMessage =
-          error.response.data?.message || '기프티콘 사용 중 오류가 발생했습니다.';
-        Alert.alert('오류', errorMessage);
+      // 에러 메시지에서 "잔액 부족" 또는 관련 문구 확인
+      const errorData = error.response?.data;
+      const errorMessage = errorData?.message || '';
+      const errorCode = errorData?.errorCode || errorData?.code || '';
+
+      // 에러 메시지나 코드에 잔액 관련 문구가 있거나, 사용 금액이 잔액과 동일한 경우
+      if (
+        errorMessage.includes('잔액') ||
+        errorMessage.includes('금액') ||
+        errorCode.includes('AMOUNT') ||
+        Number(amount) === gifticonData.gifticonRemainingAmount
+      ) {
+        // 잔액 부족 에러인 경우 사용완료 처리
+        Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              // BoxListScreen으로 이동하면서 사용완료 탭으로 설정
+              navigation.navigate('BoxList', {
+                shareBoxId: gifticonData.shareBoxId,
+                shareBoxName: gifticonData.shareBoxName,
+                initialTab: 'used', // 사용완료 탭으로 이동
+                refresh: true,
+              });
+            },
+          },
+        ]);
       } else {
-        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+        // 일반 에러 메시지 처리
+        Alert.alert('오류', errorMessage || '기프티콘 사용 중 오류가 발생했습니다.');
       }
     }
   };
@@ -377,10 +524,21 @@ const BoxDetailAmountScreen = () => {
 
   // 돋보기 기능 - 확대 화면으로 이동
   const handleMagnify = () => {
-    navigation.navigate('UseAmountScreen', {
-      id: gifticonData.gifticonId,
-      barcodeNumber: gifticonData.barcodeNumber,
-    });
+    if (scope === 'USED' && gifticonData.usageType === 'SELF_USE') {
+      // 사용완료된 기프티콘인 경우
+      navigation.navigate('UseAmountScreen', {
+        id: gifticonData.gifticonId,
+        barcodeNumber: barcodeNumber,
+        barcodePath: barcodeImageUrl,
+        isUsed: true,
+      });
+    } else {
+      // 일반 사용모드인 경우
+      navigation.navigate('UseAmountScreen', {
+        id: gifticonData.gifticonId,
+        barcodeNumber: barcodeNumber,
+      });
+    }
   };
 
   // 사용내역 기능
@@ -456,8 +614,14 @@ const BoxDetailAmountScreen = () => {
   // 공유하기 기능
   const handleShare = async () => {
     try {
+      // 선택된 쉐어박스 확인
+      if (!gifticonData || !gifticonData.shareBoxId) {
+        Alert.alert('오류', '쉐어박스 정보를 찾을 수 없습니다.');
+        return;
+      }
+
       // 실제 API 호출
-      await api.shareGifticon(selectedShareBoxId, gifticonId);
+      await gifticonService.shareGifticon(gifticonId, gifticonData.shareBoxId);
 
       Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.');
     } catch (error) {
@@ -503,6 +667,71 @@ const BoxDetailAmountScreen = () => {
         return require('../../assets/images/dummy_starbuckscard.png');
       })()
     : require('../../assets/images/dummy_starbuckscard.png');
+
+  // 기프티콘 ID가 변경되거나, scope가 변경될 때 데이터 로드
+  // (refresh 파라미터 없이도 기본적인 데이터 로딩은 수행)
+  useEffect(() => {
+    if (gifticonId) {
+      loadGifticonData(gifticonId);
+    }
+  }, [gifticonId, scope]); // scope 변경 시에도 데이터 리로드
+
+  // 사용완료 기프티콘의 바코드 정보 로드
+  useEffect(() => {
+    // 사용완료된 기프티콘이고, SELF_USE 타입이면서 바코드 정보가 없을 때만 바코드 정보 로드
+    if (
+      gifticonData &&
+      scope === 'USED' &&
+      gifticonData.usageType === 'SELF_USE' &&
+      !barcodeImageUrl
+    ) {
+      loadUsedGifticonBarcode(gifticonData.gifticonId);
+    }
+  }, [gifticonData, scope]);
+
+  // 사용완료 기프티콘의 바코드 정보 로드 함수
+  const loadUsedGifticonBarcode = async id => {
+    if (!id) return;
+
+    setBarcodeLoading(true);
+    try {
+      console.log('[BoxDetailAmountScreen] 사용완료 바코드 정보 요청:', id);
+      const response = await gifticonService.getUsedGifticonBarcode(id);
+
+      if (response) {
+        console.log('[BoxDetailAmountScreen] 사용완료 바코드 정보 응답 성공');
+        setBarcodeImageUrl(response.barcodePath);
+        setBarcodeNumber(response.gifticonBarcodeNumber);
+      }
+    } catch (error) {
+      console.error('[BoxDetailAmountScreen] 사용완료 바코드 정보 로드 실패:', error);
+      // 바코드 정보 로드 실패 시 기본값 유지, 별도의 알림 없음
+    } finally {
+      setBarcodeLoading(false);
+    }
+  };
+
+  // 바코드 정보 로드 함수 (사용하기 모드)
+  const loadBarcodeInfo = async () => {
+    if (!gifticonId) return;
+
+    setBarcodeLoading(true);
+    try {
+      console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 요청:', gifticonId);
+      const response = await gifticonService.getAvailableGifticonBarcode(gifticonId);
+
+      if (response) {
+        console.log('[BoxDetailAmountScreen] 사용가능 바코드 정보 응답 성공');
+        setBarcodeImageUrl(response.barcodePath);
+        setBarcodeNumber(response.gifticonBarcodeNumber);
+      }
+    } catch (error) {
+      console.error('[BoxDetailAmountScreen] 바코드 정보 로드 실패:', error);
+      Alert.alert('바코드 정보 조회 실패', '바코드 정보를 불러오지 못했습니다.');
+    } finally {
+      setBarcodeLoading(false);
+    }
+  };
 
   // 렌더링 분기 직전 로그
   if (isLoading || !gifticonData) {
@@ -566,17 +795,25 @@ const BoxDetailAmountScreen = () => {
             <View style={styles.gifticonCard}>
               {isUsing ? (
                 <View style={styles.barcodeContainer}>
-                  <Image
-                    source={{ uri: barcodeImageUrl }}
-                    style={styles.barcodeImage}
-                    resizeMode="contain"
-                  />
-                  <View style={styles.barcodeNumberContainer}>
-                    <Text style={styles.barcodeNumberText}>{barcodeNumber}</Text>
-                    <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
-                      <Icon name="search" type="material" size={24} color="#4A90E2" />
-                    </TouchableOpacity>
-                  </View>
+                  {barcodeLoading ? (
+                    <View style={styles.barcodeLoadingContainer}>
+                      <Text style={styles.barcodeLoadingText}>바코드 불러오는 중...</Text>
+                    </View>
+                  ) : (
+                    <>
+                      <Image
+                        source={{ uri: barcodeImageUrl }}
+                        style={styles.barcodeImage}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.barcodeNumberContainer}>
+                        <Text style={styles.barcodeNumberText}>{barcodeNumber}</Text>
+                        <TouchableOpacity style={styles.magnifyButton} onPress={handleMagnify}>
+                          <Icon name="search" type="material" size={24} color="#4A90E2" />
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
                 </View>
               ) : (
                 // 기프티콘 이미지 표시 (사용완료면 흑백 처리)
@@ -609,19 +846,24 @@ const BoxDetailAmountScreen = () => {
                   {/* SELF_USE 유형의 사용완료 기프티콘인 경우만 바코드 표시 */}
                   {scope === 'USED' && usageType === 'SELF_USE' && (
                     <View style={styles.usedBarcodeContainer}>
-                      <Image
-                        source={{
-                          uri: getImageUrl(
-                            gifticonData.barcodeImageUrl ||
-                              require('../../assets/images/barcode.png')
-                          ),
-                        }}
-                        style={styles.usedBarcodeImage}
-                        resizeMode="contain"
-                      />
-                      <Text style={styles.usedBarcodeNumberText}>
-                        {gifticonData.barcodeNumber || '8013-7621-1234-5678'}
-                      </Text>
+                      {barcodeLoading ? (
+                        <Text style={styles.barcodeLoadingText}>바코드 불러오는 중...</Text>
+                      ) : (
+                        <>
+                          <Image
+                            source={
+                              barcodeImageUrl
+                                ? { uri: barcodeImageUrl }
+                                : require('../../assets/images/barcode.png')
+                            }
+                            style={styles.usedBarcodeImage}
+                            resizeMode="contain"
+                          />
+                          <Text style={styles.usedBarcodeNumberText}>
+                            {barcodeNumber || '바코드 정보 없음'}
+                          </Text>
+                        </>
+                      )}
                     </View>
                   )}
 
@@ -1424,6 +1666,21 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
     marginTop: 5,
+  },
+  barcodeLoadingContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  barcodeLoadingText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 
