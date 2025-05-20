@@ -265,7 +265,7 @@ const BoxSettingScreen = () => {
           {/* 쉐어박스 이름 */}
           <View style={styles.section}>
             <Text variant="body1" weight="medium" style={styles.sectionLabel}>
-              쉐어박스 이름
+              이름
             </Text>
             <View style={styles.inputContainer}>
               <TextInput
@@ -297,7 +297,7 @@ const BoxSettingScreen = () => {
             </View>
             {userId !== shareBoxUserId && (
               <Text variant="caption" style={{ color: '#B0B0B0', marginTop: 4 }}>
-                방장만 쉐어박스 이름을 변경할 수 있습니다.
+                방장만 이름을 변경할 수 있습니다.
               </Text>
             )}
           </View>
@@ -324,7 +324,7 @@ const BoxSettingScreen = () => {
           {/* 쉐어박스 초대 코드 */}
           <View style={styles.section}>
             <Text variant="body1" weight="medium" style={styles.sectionTitle}>
-              쉐어박스 초대 코드
+              초대 코드
             </Text>
             <View style={[styles.codeContainer, { backgroundColor: '#F0F9FF' }]}>
               <Text variant="h3" weight="bold" style={styles.codeText}>
@@ -368,7 +368,7 @@ const BoxSettingScreen = () => {
           {/* 쉐어박스 나가기 버튼 */}
           <TouchableOpacity style={styles.leaveButton} onPress={handleLeavePress}>
             <Text variant="body1" weight="semibold" style={styles.leaveButtonText}>
-              쉐어박스 나가기
+              나가기
             </Text>
           </TouchableOpacity>
         </View>
