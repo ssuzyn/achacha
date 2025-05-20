@@ -1623,7 +1623,7 @@ const styles = StyleSheet.create({
   usedText: {
     color: 'white',
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: 'Pretendard-Bold',
     textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,

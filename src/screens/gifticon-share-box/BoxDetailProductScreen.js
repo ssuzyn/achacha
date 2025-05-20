@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 // 쉐어박스 상세 상품형 스크린
 
 import React, { useState, useEffect } from 'react';
@@ -26,7 +27,6 @@ import { cancelShareGifticon } from '../../api/shareBoxService';
 import gifticonService from '../../api/gifticonService';
 
 const BoxDetailProductScreen = () => {
-  console.log('🔥 BoxDetailProductScreen 진입!');
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const navigation = useNavigation();
@@ -988,6 +988,7 @@ const styles = StyleSheet.create({
   usedText: {
     color: 'white',
     fontSize: 28,
+    fontFamily: 'Pretendard-Bold',
     textAlign: 'center',
     paddingHorizontal: 20,
     paddingVertical: 10,

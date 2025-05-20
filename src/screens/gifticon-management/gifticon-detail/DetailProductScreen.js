@@ -1088,7 +1088,7 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     aspectRatio: 1,
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     marginBottom: 20,
   },
   // 바코드 관련 스타일

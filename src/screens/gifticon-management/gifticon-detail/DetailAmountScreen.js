@@ -488,12 +488,13 @@ const DetailAmountScreen = () => {
       setIsLoading(false);
       setAmount('');
 
-      // API 응답에서 남은 잔액 확인 (API 응답 형식에 따라 조정 필요)
-      // 만약 API 응답에 잔액 정보가 포함되어 있지 않다면 기존 로직 유지
+      // API 응답에서 남은 잔액 확인
       const remainingAmount =
         response.gifticonRemainingAmount !== undefined
           ? response.gifticonRemainingAmount
-          : gifticonData.gifticonRemainingAmount - Number(amount);
+          : gifticonData.gifticonRemainingAmount - numericAmount;
+
+      console.log('[DetailAmountScreen] 사용 후 남은 잔액:', remainingAmount);
 
       // 잔액이 0원이면 사용완료 처리
       if (remainingAmount === 0) {
@@ -502,7 +503,7 @@ const DetailAmountScreen = () => {
           {
             text: '확인',
             onPress: () => {
-              // ManageListScreen으로 이동
+              // ManageListScreen으로 이동하면서 사용완료 탭으로 설정
               navigation.reset({
                 index: 0,
                 routes: [
@@ -520,7 +521,7 @@ const DetailAmountScreen = () => {
         navigation.navigate('DetailAmountHistoryScreen', {
           id: gifticonId,
           gifticonId: gifticonId,
-          usedAmount: amount,
+          usedAmount: numericAmount, // 콤마가 제거된 숫자값 전달
           brandName: gifticonData.brandName,
           gifticonName: gifticonData.gifticonName,
           scope: scope,
@@ -538,19 +539,26 @@ const DetailAmountScreen = () => {
       const errorMessage = errorData?.message || '';
       const errorCode = errorData?.errorCode || errorData?.code || '';
 
+      console.log('[DetailAmountScreen] 에러 데이터:', {
+        message: errorMessage,
+        code: errorCode,
+        amount: numericAmount,
+        remainingAmount: gifticonData.gifticonRemainingAmount,
+      });
+
       // 에러 메시지나 코드에 잔액 관련 문구가 있거나, 사용 금액이 잔액과 동일한 경우
       if (
         errorMessage.includes('잔액') ||
         errorMessage.includes('금액') ||
         errorCode.includes('AMOUNT') ||
-        numericAmount === gifticonData.gifticonRemainingAmount
+        numericAmount >= gifticonData.gifticonRemainingAmount // >= 로 변경하여 완화된 조건 적용
       ) {
         // 잔액 부족 에러인 경우 사용완료 처리
         Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
           {
             text: '확인',
             onPress: () => {
-              // ManageListScreen으로 이동
+              // ManageListScreen으로 이동하면서 사용완료 탭으로 설정
               navigation.reset({
                 index: 0,
                 routes: [
@@ -1570,7 +1578,7 @@ const styles = StyleSheet.create({
     height: 200,
     aspectRatio: 1,
     borderRadius: 8,
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     marginBottom: 20,
   },
   infoContainer: {
@@ -1790,7 +1798,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   transactionSection: {
-    marginTop: 5,
+    marginTop: 16,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 16,
