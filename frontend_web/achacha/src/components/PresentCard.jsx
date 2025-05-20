@@ -281,7 +281,7 @@ function PresentCard({ presentCard }) {
       }
       
       let activeParticles = 0;
-      confettiItemsRef.current.forEach((item, index) => {
+      confettiItemsRef.current.forEach((item) => {
         if (item.y > canvasHeight + item.height * 2 && item.vy > 0) { // 화면 아래로 사라진 입자는 건너뛰기 (배열에서 제거는 복잡하므로)
              if (!runConfetti) { // 중지 명령 후 화면 밖으로 나간 입자는 그냥 두어 자연스럽게 사라지도록
                 // confettiItemsRef.current.splice(index, 1); // runConfetti false면 더이상 추가 안되므로 그냥두면 됨.
@@ -941,7 +941,7 @@ function PresentCard({ presentCard }) {
               </button>
             </div>
 
-            {/* 유효기간 정보 - 검정색 배경(40% 불투명도)과 시계 아이콘 */}
+            {/* 유효기간 정보 - 검정색 배경(40% 불투명도)과 시계 아이콘
             {expiryDateTime && (
               <div style={{
                 display: 'flex',
@@ -980,7 +980,7 @@ function PresentCard({ presentCard }) {
                   fontWeight: '400'
                 }}>{expiryDateTime}</span>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

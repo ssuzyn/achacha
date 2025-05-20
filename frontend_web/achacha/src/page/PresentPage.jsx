@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom'; // react-router-dom이 설치되어 있어야 합니다.
 import { getPresentCardByCode } from '../api/PresentApi';
 import PresentCard from '../components/PresentCard';
+import TimeOverCard from '../components/TimeOverCard';
 
 function PresentPage() {
   const { presentCardCode } = useParams(); // URL에서 presentCardCode 추출
   const [presentCardData, setPresentCardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     if (presentCardCode) {
@@ -41,21 +43,30 @@ function PresentPage() {
           
           setPresentCardData(data);
           setError(null);
+          setIsExpired(false);
         } catch (err) {
           console.error('PresentPage: 선물 카드 데이터 요청 실패:', err);
           
-          // 사용자 친화적인 오류 메시지
-          let errorMessage = '선물 카드를 불러오는 데 실패했습니다.';
-          
-          if (err.message.includes('HTML')) {
-            errorMessage = 'API 서버 구성 오류: HTML 응답이 반환되었습니다. 관리자에게 문의하세요.';
-          } else if (err.message.includes('Network Error')) {
-            errorMessage = '네트워크 오류: 서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.';
-          } else if (err.response?.status === 404) {
-            errorMessage = '선물 카드를 찾을 수 없습니다. 링크가 만료되었거나 유효하지 않습니다.';
+          // 만료된 선물 카드 처리 (PRESENT_005 에러코드)
+          if (err.response?.data?.errorCode === 'PRESENT_005') {
+            console.log('PresentPage: 선물 카드가 만료되었습니다.');
+            setIsExpired(true);
+            setError(null);
+          } else {
+            // 그 외 다른 오류 처리
+            let errorMessage = '선물 카드를 불러오는 데 실패했습니다.';
+            
+            if (err.message.includes('HTML')) {
+              errorMessage = 'API 서버 구성 오류: HTML 응답이 반환되었습니다. 관리자에게 문의하세요.';
+            } else if (err.message.includes('Network Error')) {
+              errorMessage = '네트워크 오류: 서버에 연결할 수 없습니다. 인터넷 연결을 확인하세요.';
+            } else if (err.response?.status === 404) {
+              errorMessage = '선물 카드를 찾을 수 없습니다. 링크가 만료되었거나 유효하지 않습니다.';
+            }
+            
+            setError(errorMessage);
+            setIsExpired(false);
           }
-          
-          setError(errorMessage);
           setPresentCardData(null);
         }
         setLoading(false);
@@ -71,6 +82,11 @@ function PresentPage() {
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen text-xl">로딩 중...</div>;
+  }
+
+  // 카드가 만료된 경우 TimeOverCard 컴포넌트를 보여줌
+  if (isExpired) {
+    return <TimeOverCard />;
   }
 
   if (error) {

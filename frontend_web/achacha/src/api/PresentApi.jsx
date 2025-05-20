@@ -50,6 +50,13 @@ export const getPresentCardByCode = async (presentCardCode) => {
         throw new Error('API가 HTML을 반환했습니다. 서버 설정을 확인하세요.');
       }
       
+      // 선물 카드 만료 에러 (PRESENT_005) 감지 및 처리
+      if (error.response.data && error.response.data.errorCode === 'PRESENT_005') {
+        console.log('선물 카드가 만료되었습니다 (PRESENT_005)');
+        // 에러 객체에 response 데이터를 그대로 포함시켜 상위 컴포넌트에서 처리할 수 있도록 함
+        throw error;
+      }
+      
       throw new Error(error.response.data.message || '선물카드를 불러오는데 실패했습니다.');
     } else if (error.request) {
       // 요청은 보냈지만 응답이 없는 경우
