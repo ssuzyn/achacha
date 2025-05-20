@@ -67,10 +67,10 @@ export const handleNotificationPress = async notification => {
     else if (referenceEntityType.toLowerCase() === 'sharebox') {
       const shareBoxId = referenceEntityId;
 
-      // 쉐어박스 삭제 알림은 쉐어박스 목록 화면으로 이동
+      // 쉐어박스 삭제 알림은 홈 화면으로 이동
       if (notificationType === 'SHAREBOX_DELETED') {
-        console.log('[NotificationHandler] 쉐어박스 삭제 알림: 쉐어박스 목록 화면으로 이동');
-        NavigationService.navigate('BoxListScreen');
+        console.log('[NotificationHandler] 쉐어박스 삭제 알림: 홈 화면으로 이동');
+        NavigationService.navigate('Main', { screen: 'Home' });
         return;
       }
 
