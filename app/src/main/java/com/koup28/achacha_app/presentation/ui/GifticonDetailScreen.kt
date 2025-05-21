@@ -175,7 +175,7 @@ fun GifticonDetailScreen(
                         Chip(
                             onClick = { onShareClick(currentGifticon.gifticonId) },
                             modifier = Modifier.weight(1f),
-                            label = { Text("나눔", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
+                            label = { Text("뿌리기", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
                             colors = ChipDefaults.chipColors(
                                 backgroundColor = Color(0xFFAECBFA),
                                 contentColor = Color.Black

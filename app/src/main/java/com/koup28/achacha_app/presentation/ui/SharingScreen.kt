@@ -112,7 +112,7 @@ fun SharingScreen(
                         )
                         Log.d("BLE_SCAN", "나눔 API 응답: ${response.code()} / 성공여부: ${response.isSuccessful}")
                         if (response.isSuccessful) {
-                            resultText = "나눔 성공!"
+                            resultText = "뿌리기 성공!"
                         } else {
                             val errorBody = response.errorBody()?.string()
                             val errorMsg = parseGiveAwayError(errorBody)
@@ -121,7 +121,7 @@ fun SharingScreen(
                         }
                     } catch (e: Exception) {
                         Log.e("BLE_SCAN", "나눔 API 호출 실패: ${e.localizedMessage}")
-                        resultText = "나눔 실패: ${e.localizedMessage}"
+                        resultText = "뿌리기 실패: ${e.localizedMessage}"
                     }
                 } else {
                     Log.d("BLE_SCAN", "주변 사용자를 찾지 못함 (serviceUuids: $SERVICE_UUID)")
@@ -151,7 +151,7 @@ fun SharingScreen(
         // Vignette는 레이더 애니메이션과 함께 사용할 경우 화면 가장자리가 어두워져 방해가 될 수 있으므로 일단 제거 고려
         // vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) }
     ) {
-        if (resultText == "나눔 성공!") {
+        if (resultText == "뿌리기 성공!") {
             GiveAwaySuccessScreen(onBackClick = onBackClick)
         } else {
             Column(
