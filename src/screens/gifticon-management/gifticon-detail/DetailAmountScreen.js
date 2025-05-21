@@ -11,16 +11,15 @@ import {
   StatusBar,
   Modal,
   TextInput,
-  Alert,
   FlatList,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../../../components/ui';
+import AlertDialog from '../../../components/ui/AlertDialog';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
-import AlertDialog from '../../../components/ui/AlertDialog';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
 import { fetchShareBoxes, shareGifticonToShareBox } from '../../../api/shareBoxService';
@@ -87,6 +86,12 @@ const DetailAmountScreen = () => {
   const [isImageViewVisible, setImageViewVisible] = useState(false);
   // 쉐어박스 목록 상태
   const [shareBoxes, setShareBoxes] = useState([]);
+
+  // AlertDialog 상태 변수들
+  const [customAlertVisible, setCustomAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmCallback, setAlertConfirmCallback] = useState(() => {});
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -238,18 +243,29 @@ const DetailAmountScreen = () => {
         const errorData = error.response.data;
 
         if (status === 403) {
-          Alert.alert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
+          setAlertTitle('접근 권한 없음');
+          setAlertMessage('해당 기프티콘에 접근할 수 없습니다.');
+          setAlertConfirmCallback(() => () => {
+            navigation.goBack();
+          });
+          setCustomAlertVisible(true);
         } else if (status === 404) {
-          Alert.alert('기프티콘 없음', '기프티콘을 찾을 수 없습니다.');
+          setAlertTitle('기프티콘 없음');
+          setAlertMessage('기프티콘을 찾을 수 없습니다.');
+          setAlertConfirmCallback(() => () => {
+            navigation.goBack();
+          });
+          setCustomAlertVisible(true);
         } else {
-          Alert.alert(
-            '오류',
+          setAlertTitle('오류');
+          setAlertMessage(
             `기프티콘을 불러오는 중 오류가 발생했습니다. ${errorData?.message || ''}`
           );
+          setAlertConfirmCallback(() => () => {
+            navigation.goBack();
+          });
+          setCustomAlertVisible(true);
         }
-
-        // 오류 발생 시 이전 화면으로 돌아가기
-        navigation.goBack();
       }
     }
   };
@@ -294,7 +310,10 @@ const DetailAmountScreen = () => {
         errorMessage = error.message;
       }
 
-      Alert.alert('알림', errorMessage);
+      setAlertTitle('알림');
+      setAlertMessage(errorMessage);
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     } finally {
       setBarcodeLoading(false);
     }
@@ -359,7 +378,10 @@ const DetailAmountScreen = () => {
       const res = await fetchShareBoxes({ size: 20 });
       setShareBoxes(res.shareBoxes || []);
     } catch (e) {
-      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+      setAlertTitle('에러');
+      setAlertMessage('쉐어박스 목록을 불러오지 못했습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -383,22 +405,27 @@ const DetailAmountScreen = () => {
   const handleShareConfirm = async () => {
     // 공유 위치 선택 확인
     if (shareBoxType === 'SHARE_BOX' && !selectedShareBoxId) {
-      Alert.alert('알림', '공유할 쉐어박스를 선택해주세요.');
+      setAlertTitle('알림');
+      setAlertMessage('공유할 쉐어박스를 선택해주세요.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
       return;
     }
 
     try {
       await shareGifticonToShareBox(selectedShareBoxId, gifticonId);
-      Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            setShareModalVisible(false);
-          },
-        },
-      ]);
+
+      setAlertTitle('성공');
+      setAlertMessage('기프티콘이 성공적으로 공유되었습니다.');
+      setAlertConfirmCallback(() => () => {
+        setShareModalVisible(false);
+      });
+      setCustomAlertVisible(true);
     } catch (e) {
-      Alert.alert('에러', '기프티콘 공유에 실패했습니다.');
+      setAlertTitle('에러');
+      setAlertMessage('기프티콘 공유에 실패했습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -414,24 +441,22 @@ const DetailAmountScreen = () => {
 
     if (isExpired) {
       // 만료된 경우 바로 사용완료 처리 (모달 표시 후 이동)
-      Alert.alert('사용 완료', '만료된 기프티콘은 자동으로 사용완료 처리됩니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-            // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-            navigation.reset({
-              index: 0,
-              routes: [
-                {
-                  name: 'Main',
-                  params: { screen: 'TabGifticonManage', initialTab: 'used' },
-                },
-              ],
-            });
-          },
-        },
-      ]);
+      setAlertTitle('사용 완료');
+      setAlertMessage('만료된 기프티콘은 자동으로 사용완료 처리됩니다.');
+      setAlertConfirmCallback(() => () => {
+        // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+        // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: 'Main',
+              params: { screen: 'TabGifticonManage', initialTab: 'used' },
+            },
+          ],
+        });
+      });
+      setCustomAlertVisible(true);
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
       setIsUsing(true);
@@ -531,13 +556,19 @@ const DetailAmountScreen = () => {
 
     // 금액 입력 값 검증
     if (!amount || isNaN(numericAmount) || numericAmount <= 0) {
-      Alert.alert('알림', '유효한 금액을 입력해주세요.');
+      setAlertTitle('알림');
+      setAlertMessage('유효한 금액을 입력해주세요.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
       return;
     }
 
     // 입력한 금액이 잔액보다 크면 오류 (이미 입력 시 제한되지만 추가 검증)
     if (numericAmount > gifticonData.gifticonRemainingAmount) {
-      Alert.alert('알림', '잔액보다 큰 금액을 사용할 수 없습니다.');
+      setAlertTitle('알림');
+      setAlertMessage('잔액보다 큰 금액을 사용할 수 없습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
       return;
     }
 
@@ -566,23 +597,21 @@ const DetailAmountScreen = () => {
       // 잔액이 0원이면 사용완료 처리
       if (remainingAmount === 0) {
         // 사용 완료 모달 표시
-        Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // ManageListScreen으로 이동하면서 사용완료 탭으로 설정
-              navigation.reset({
-                index: 0,
-                routes: [
-                  {
-                    name: 'Main',
-                    params: { screen: 'TabGifticonManage', initialTab: 'used' },
-                  },
-                ],
-              });
-            },
-          },
-        ]);
+        setAlertTitle('사용 완료');
+        setAlertMessage('잔액이 모두 소진되어 사용완료 처리되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // ManageListScreen으로 이동하면서 사용완료 탭으로 설정
+          navigation.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'Main',
+                params: { screen: 'TabGifticonManage', initialTab: 'used' },
+              },
+            ],
+          });
+        });
+        setCustomAlertVisible(true);
       } else {
         // 일반 사용인 경우 - 사용내역 화면으로 이동
         navigation.navigate('DetailAmountHistoryScreen', {
@@ -621,26 +650,27 @@ const DetailAmountScreen = () => {
         numericAmount >= gifticonData.gifticonRemainingAmount // >= 로 변경하여 완화된 조건 적용
       ) {
         // 잔액 부족 에러인 경우 사용완료 처리
-        Alert.alert('사용 완료', '잔액이 모두 소진되어 사용완료 처리되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // ManageListScreen으로 이동하면서 사용완료 탭으로 설정
-              navigation.reset({
-                index: 0,
-                routes: [
-                  {
-                    name: 'Main',
-                    params: { screen: 'TabGifticonManage', initialTab: 'used' },
-                  },
-                ],
-              });
-            },
-          },
-        ]);
+        setAlertTitle('사용 완료');
+        setAlertMessage('잔액이 모두 소진되어 사용완료 처리되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // ManageListScreen으로 이동하면서 사용완료 탭으로 설정
+          navigation.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'Main',
+                params: { screen: 'TabGifticonManage', initialTab: 'used' },
+              },
+            ],
+          });
+        });
+        setCustomAlertVisible(true);
       } else {
         // 일반 에러 메시지 처리
-        Alert.alert('오류', errorMessage || '기프티콘 사용 중 오류가 발생했습니다.');
+        setAlertTitle('오류');
+        setAlertMessage(errorMessage || '기프티콘 사용 중 오류가 발생했습니다.');
+        setAlertConfirmCallback(() => () => {});
+        setCustomAlertVisible(true);
       }
     }
   };
@@ -709,7 +739,10 @@ const DetailAmountScreen = () => {
       });
     } else {
       // 선물/뿌리기로 사용완료된 경우 알림
-      Alert.alert('알림', '선물/뿌리기로 사용된 기프티콘은 바코드를 확인할 수 없습니다.');
+      setAlertTitle('알림');
+      setAlertMessage('선물/뿌리기로 사용된 기프티콘은 바코드를 확인할 수 없습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -742,7 +775,10 @@ const DetailAmountScreen = () => {
       if (alertType === 'delete') {
         // 자신 소유의 기프티콘만 삭제 가능 (쉐어박스에 공유되지 않은 것만)
         if (scope !== 'MY_BOX') {
-          Alert.alert('알림', '마이박스의 기프티콘만 삭제할 수 있습니다.');
+          setAlertTitle('알림');
+          setAlertMessage('마이박스의 기프티콘만 삭제할 수 있습니다.');
+          setAlertConfirmCallback(() => () => {});
+          setCustomAlertVisible(true);
           return;
         }
 
@@ -751,22 +787,20 @@ const DetailAmountScreen = () => {
         console.log('[DetailAmountScreen] 기프티콘 삭제 성공:', gifticonId);
 
         // 성공 메시지
-        Alert.alert('성공', '기프티콘이 성공적으로 삭제되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // 리스트 화면으로 이동
-              navigation.goBack();
-            },
-          },
-        ]);
+        setAlertTitle('성공');
+        setAlertMessage('기프티콘이 성공적으로 삭제되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // 리스트 화면으로 이동
+          navigation.goBack();
+        });
+        setCustomAlertVisible(true);
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
         if (!gifticonData.shareBoxId) {
-          Alert.alert(
-            '오류',
-            '쉐어박스 정보를 찾을 수 없습니다. 데이터 동기화 후 다시 시도해주세요.'
-          );
+          setAlertTitle('오류');
+          setAlertMessage('쉐어박스 정보를 찾을 수 없습니다. 데이터 동기화 후 다시 시도해주세요.');
+          setAlertConfirmCallback(() => () => {});
+          setCustomAlertVisible(true);
           return;
         }
 
@@ -774,15 +808,13 @@ const DetailAmountScreen = () => {
         console.log('[DetailAmountScreen] 기프티콘 공유 취소 성공:', gifticonId);
 
         // 성공 메시지
-        Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // 리스트 화면으로 이동
-              navigation.goBack();
-            },
-          },
-        ]);
+        setAlertTitle('성공');
+        setAlertMessage('기프티콘 공유가 취소되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // 리스트 화면으로 이동
+          navigation.goBack();
+        });
+        setCustomAlertVisible(true);
       }
     } catch (error) {
       console.error(
@@ -817,7 +849,10 @@ const DetailAmountScreen = () => {
         }
       }
 
-      Alert.alert('오류', errorMessage);
+      setAlertTitle('오류');
+      setAlertMessage(errorMessage);
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -1528,6 +1563,21 @@ const DetailAmountScreen = () => {
         onConfirm={handleConfirm}
         onCancel={handleCancelDialog}
         type="warning"
+      />
+
+      {/* 커스텀 알림 다이얼로그 */}
+      <AlertDialog
+        isVisible={customAlertVisible}
+        onBackdropPress={() => setCustomAlertVisible(false)}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={() => {
+          setCustomAlertVisible(false);
+          if (alertConfirmCallback) alertConfirmCallback();
+        }}
+        hideCancel={true}
+        type="info"
       />
 
       {/* 공유 모달 */}

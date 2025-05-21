@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   StatusBar,
   Modal,
-  Alert,
   FlatList,
   ActivityIndicator,
 } from 'react-native';
@@ -79,15 +78,17 @@ const DetailProductScreen = () => {
   const [selectedShareBoxId, setSelectedShareBoxId] = useState(null);
   // 쉐어박스 목록
   const [shareBoxes, setShareBoxes] = useState([]);
-  // // 쉐어박스 로딩 상태
-  // const [isShareBoxLoading, setIsShareBoxLoading] = useState(false);
-  // // 쉐어박스 에러 상태
-  // const [shareBoxError, setShareBoxError] = useState(null);
   // 이미지 확대 보기 상태
   const [isImageViewVisible, setImageViewVisible] = useState(false);
   // 바코드 정보 상태 추가
   const [barcodeInfo, setBarcodeInfo] = useState(null);
   const [barcodeLoading, setBarcodeLoading] = useState(false);
+
+  // AlertDialog 상태 변수들
+  const [customAlertVisible, setCustomAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmCallback, setAlertConfirmCallback] = useState(() => {});
 
   // 바텀탭 표시 - 화면이 포커스될 때마다 표시 보장
   useEffect(() => {
@@ -134,7 +135,10 @@ const DetailProductScreen = () => {
       const res = await fetchShareBoxes({ size: 20 });
       setShareBoxes(res.shareBoxes || []);
     } catch (e) {
-      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+      setAlertTitle('에러');
+      setAlertMessage('쉐어박스 목록을 불러오지 못했습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -182,7 +186,10 @@ const DetailProductScreen = () => {
     } catch (error) {
       setIsLoading(false);
       // 에러 처리 로직 추가 (예: 에러 상태 설정, 토스트 메시지 등)
-      Alert.alert('오류', '기프티콘 정보를 불러오는데 실패했습니다.');
+      setAlertTitle('오류');
+      setAlertMessage('기프티콘 정보를 불러오는데 실패했습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -239,22 +246,26 @@ const DetailProductScreen = () => {
   const handleShareConfirm = async () => {
     // 공유 위치 선택 확인
     if (shareBoxType === 'SHARE_BOX' && !selectedShareBoxId) {
-      Alert.alert('알림', '공유할 쉐어박스를 선택해주세요.');
+      setAlertTitle('알림');
+      setAlertMessage('공유할 쉐어박스를 선택해주세요.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
       return;
     }
 
     try {
       await shareGifticonToShareBox(selectedShareBoxId, gifticonId);
-      Alert.alert('성공', '기프티콘이 성공적으로 공유되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            setShareModalVisible(false);
-          },
-        },
-      ]);
+      setAlertTitle('성공');
+      setAlertMessage('기프티콘이 성공적으로 공유되었습니다.');
+      setAlertConfirmCallback(() => () => {
+        setShareModalVisible(false);
+      });
+      setCustomAlertVisible(true);
     } catch (e) {
-      Alert.alert('에러', '기프티콘 공유에 실패했습니다.');
+      setAlertTitle('에러');
+      setAlertMessage('기프티콘 공유에 실패했습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -290,7 +301,10 @@ const DetailProductScreen = () => {
         errorMessage = '선물/뿌리기로 사용된 기프티콘은 바코드 정보를 확인할 수 없습니다.';
       }
 
-      Alert.alert('알림', errorMessage);
+      setAlertTitle('알림');
+      setAlertMessage(errorMessage);
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     } finally {
       setBarcodeLoading(false);
     }
@@ -308,31 +322,32 @@ const DetailProductScreen = () => {
         await gifticonService.useProductGifticon(gifticonId);
 
         // 성공 메시지 표시
-        Alert.alert('성공', '기프티콘이 사용완료 처리되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-              // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-              navigation.reset({
-                index: 0,
-                routes: [
-                  {
-                    name: 'Main',
-                    params: { screen: 'TabGifticonManage', initialTab: 'used' },
-                  },
-                ],
-              });
-            },
-          },
-        ]);
+        setAlertTitle('성공');
+        setAlertMessage('기프티콘이 사용완료 처리되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+          // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+          navigation.reset({
+            index: 0,
+            routes: [
+              {
+                name: 'Main',
+                params: { screen: 'TabGifticonManage', initialTab: 'used' },
+              },
+            ],
+          });
+        });
+        setCustomAlertVisible(true);
       } catch (error) {
         // 오류 처리
         let errorMessage = '기프티콘 사용완료 처리 중 오류가 발생했습니다.';
         if (error.response && error.response.data && error.response.data.message) {
           errorMessage = error.response.data.message;
         }
-        Alert.alert('오류', errorMessage);
+        setAlertTitle('오류');
+        setAlertMessage(errorMessage);
+        setAlertConfirmCallback(() => () => {});
+        setCustomAlertVisible(true);
       }
     } else {
       // 만료되지 않은 경우 사용 모드로 전환
@@ -379,7 +394,10 @@ const DetailProductScreen = () => {
       });
     } else {
       // 선물/뿌리기로 사용완료된 경우 알림
-      Alert.alert('알림', '선물/뿌리기로 사용된 기프티콘은 바코드를 확인할 수 없습니다.');
+      setAlertTitle('알림');
+      setAlertMessage('선물/뿌리기로 사용된 기프티콘은 바코드를 확인할 수 없습니다.');
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -412,7 +430,10 @@ const DetailProductScreen = () => {
       if (alertType === 'delete') {
         // 자신 소유의 기프티콘만 삭제 가능 (쉐어박스에 공유되지 않은 것만)
         if (scope !== 'MY_BOX') {
-          Alert.alert('알림', '마이박스의 기프티콘만 삭제할 수 있습니다.');
+          setAlertTitle('알림');
+          setAlertMessage('마이박스의 기프티콘만 삭제할 수 있습니다.');
+          setAlertConfirmCallback(() => () => {});
+          setCustomAlertVisible(true);
           return;
         }
 
@@ -420,22 +441,20 @@ const DetailProductScreen = () => {
         await gifticonService.deleteGifticon(gifticonId);
 
         // 성공 메시지
-        Alert.alert('성공', '기프티콘이 성공적으로 삭제되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // 리스트 화면으로 이동
-              navigation.goBack();
-            },
-          },
-        ]);
+        setAlertTitle('성공');
+        setAlertMessage('기프티콘이 성공적으로 삭제되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // 리스트 화면으로 이동
+          navigation.goBack();
+        });
+        setCustomAlertVisible(true);
       } else if (alertType === 'cancelShare') {
         // 공유 취소 처리 API 호출
         if (!gifticonData.shareBoxId) {
-          Alert.alert(
-            '오류',
-            '쉐어박스 정보를 찾을 수 없습니다. 데이터 동기화 후 다시 시도해주세요.'
-          );
+          setAlertTitle('오류');
+          setAlertMessage('쉐어박스 정보를 찾을 수 없습니다. 데이터 동기화 후 다시 시도해주세요.');
+          setAlertConfirmCallback(() => () => {});
+          setCustomAlertVisible(true);
           return;
         }
 
@@ -443,15 +462,13 @@ const DetailProductScreen = () => {
         console.log('[DetailProductScreen] 기프티콘 공유 취소 성공:', gifticonId);
 
         // 성공 메시지
-        Alert.alert('성공', '기프티콘 공유가 취소되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // 리스트 화면으로 이동
-              navigation.goBack();
-            },
-          },
-        ]);
+        setAlertTitle('성공');
+        setAlertMessage('기프티콘 공유가 취소되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // 리스트 화면으로 이동
+          navigation.goBack();
+        });
+        setCustomAlertVisible(true);
       }
     } catch (error) {
       // 에러 메시지 처리
@@ -481,7 +498,10 @@ const DetailProductScreen = () => {
         }
       }
 
-      Alert.alert('오류', errorMessage);
+      setAlertTitle('오류');
+      setAlertMessage(errorMessage);
+      setAlertConfirmCallback(() => () => {});
+      setCustomAlertVisible(true);
     }
   };
 
@@ -1027,6 +1047,21 @@ const DetailProductScreen = () => {
         onConfirm={handleConfirm}
         onCancel={handleCancelDialog}
         type="warning"
+      />
+
+      {/* 커스텀 알림 다이얼로그 */}
+      <AlertDialog
+        isVisible={customAlertVisible}
+        onBackdropPress={() => setCustomAlertVisible(false)}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={() => {
+          setCustomAlertVisible(false);
+          if (alertConfirmCallback) alertConfirmCallback();
+        }}
+        hideCancel={true}
+        type="info"
       />
     </View>
   );
