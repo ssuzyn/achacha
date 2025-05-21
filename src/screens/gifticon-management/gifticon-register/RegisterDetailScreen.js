@@ -40,6 +40,10 @@ const RegisterDetailScreen = () => {
 
   // Zustand 스토어에서 바코드 관련 기능 불러오기
   const setCurrentBarcodeInfo = useGifticonStore(state => state.setCurrentBarcodeInfo);
+  // 크롭 데이터 관련 기능 추가
+  const cropData = useGifticonStore(state => state.registerForm.cropData);
+  const updateRegisterFormCropData = useGifticonStore(state => state.updateRegisterFormCropData);
+  const updateRegisterFormImage = useGifticonStore(state => state.updateRegisterFormImage);
 
   // 상태 선언
   const [brandSearchText, setBrandSearchText] = useState(''); // 브랜드 검색 텍스트
@@ -73,28 +77,10 @@ const RegisterDetailScreen = () => {
   // 날짜 텍스트 입력 상태 추가
   const [dateInputText, setDateInputText] = useState('');
 
-  // 쉐어박스 목록 불러오기
-  const loadShareBoxes = async () => {
-    try {
-      setIsLoadingShareBoxes(true);
-      const res = await fetchShareBoxes({ size: 20 });
-      setShareBoxes(res.shareBoxes || []);
-    } catch (e) {
-      console.error('쉐어박스 목록 불러오기 실패:', e);
-      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
-    } finally {
-      setIsLoadingShareBoxes(false);
-    }
-  };
-
-  // 컴포넌트 마운트 시 쉐어박스 목록 불러오기
-  useEffect(() => {
-    loadShareBoxes();
-  }, []);
-
   // ref 관련 설정
   const processingRef = useRef(false);
-
+  // 등록 진행 중인지 표시하는 ref 추가
+  const isRegistering = useRef(false);
   // 화면 데이터 상태 관리
   const [barcode, setBarcode] = useState('');
 
@@ -122,194 +108,235 @@ const RegisterDetailScreen = () => {
 
   // 초기 화면 로드시 이미지가 있는지 확인
   useEffect(() => {
-    if (route.params?.selectedImage) {
-      try {
-        const imageUri = route.params.selectedImage.uri;
-        console.log('[상세 화면] 편집된 이미지 로드:', imageUri);
-        if (imageUri) {
-          setCurrentImageUri(imageUri);
+    // 스토어에 저장된 이미지와 크롭 데이터 불러오기
+    const registerFormData = useGifticonStore.getState().registerForm;
 
-          // 원본 이미지 URI 처리
-          if (route.params?.originalImage && route.params.originalImage.uri) {
-            console.log('[상세 화면] 원본 이미지 로드:', route.params.originalImage.uri);
-            setOriginalImageUri(route.params.originalImage.uri);
+    // ✅ 이미 초기화된 데이터가 있는지 확인하는 플래그
+    const hasExistingData = registerFormData.initialized;
+
+    if (registerFormData.imageUri) {
+      setCurrentImageUri(registerFormData.imageUri);
+
+      // 원본 이미지 설정
+      if (registerFormData.originalImageUri) {
+        setOriginalImageUri(registerFormData.originalImageUri);
+      } else {
+        setOriginalImageUri(registerFormData.imageUri);
+      }
+
+      console.log('스토어에서 이미지 로드:', registerFormData.imageUri);
+      console.log('스토어에서 크롭 데이터 로드:', registerFormData.cropData);
+    }
+
+    // 처음 진입했을 때만 route.params로부터 초기화
+    if (!hasExistingData) {
+      if (route.params?.selectedImage) {
+        try {
+          const imageUri = route.params.selectedImage.uri;
+          console.log('[상세 화면] 편집된 이미지 로드:', imageUri);
+          if (imageUri) {
+            setCurrentImageUri(imageUri);
+
+            // 원본 이미지 URI 처리
+            if (route.params?.originalImage && route.params.originalImage.uri) {
+              console.log('[상세 화면] 원본 이미지 로드:', route.params.originalImage.uri);
+              setOriginalImageUri(route.params.originalImage.uri);
+            } else {
+              // 원본 이미지가 없는 경우 현재 이미지를 원본으로 설정
+              setOriginalImageUri(imageUri);
+            }
+
+            // route.params에 cropData가 있으면 저장
+            if (route.params?.cropData) {
+              console.log('[상세 화면] 크롭 데이터 로드:', route.params.cropData);
+              updateRegisterFormCropData(route.params.cropData);
+            }
+
+            // Zustand 스토어에 이미지 상태 저장
+            updateRegisterFormImage(
+              imageUri,
+              route.params?.originalImage?.uri || imageUri,
+              route.params?.cropData
+            );
           } else {
-            // 원본 이미지가 없는 경우 현재 이미지를 원본으로 설정
-            setOriginalImageUri(imageUri);
+            console.warn('[상세 화면] 유효하지 않은 이미지 URI');
           }
-        } else {
-          console.warn('[상세 화면] 유효하지 않은 이미지 URI');
+        } catch (error) {
+          console.error('[상세 화면] 이미지 로드 중 오류:', error);
         }
-      } catch (error) {
-        console.error('[상세 화면] 이미지 로드 중 오류:', error);
-      }
-    }
-
-    // 바코드 정보 가져오기 (메인 화면에서 전달받은 정보) - 최초 한 번만 설정
-    if (route.params?.barcodeValue && !barcode) {
-      console.log('[상세 화면] 이전 화면에서 전달받은 바코드:', route.params.barcodeValue);
-
-      // 바코드 정보 설정
-      setBarcode(route.params.barcodeValue);
-      setBarcodeNumber(route.params.barcodeValue);
-
-      if (route.params?.barcodeFormat) {
-        setBarcodeFormat(route.params.barcodeFormat);
       }
 
-      // 바코드 이미지 정보 설정
-      if (route.params?.barcodeImageUri) {
-        console.log(
-          '[상세 화면] 이전 화면에서 전달받은 바코드 이미지:',
-          route.params.barcodeImageUri
-        );
-        // 바코드 이미지 URI 설정
-        setBarcodeImageUri(route.params.barcodeImageUri);
+      // 바코드 정보 가져오기 (메인 화면에서 전달받은 정보) - 최초 한 번만 설정
+      if (route.params?.barcodeValue && !barcode) {
+        console.log('[상세 화면] 이전 화면에서 전달받은 바코드:', route.params.barcodeValue);
+
+        // 바코드 정보 설정
+        setBarcode(route.params.barcodeValue);
+        setBarcodeNumber(route.params.barcodeValue);
+
+        if (route.params?.barcodeFormat) {
+          setBarcodeFormat(route.params.barcodeFormat);
+        }
+
+        // 바코드 이미지 정보 설정
+        if (route.params?.barcodeImageUri) {
+          console.log(
+            '[상세 화면] 이전 화면에서 전달받은 바코드 이미지:',
+            route.params.barcodeImageUri
+          );
+          // 바코드 이미지 URI 설정
+          setBarcodeImageUri(route.params.barcodeImageUri);
+        }
       }
-    }
 
-    // OCR 학습 데이터 ID 처리
-    if (route.params?.ocrTrainingDataId) {
-      console.log('[상세 화면] OCR 학습 데이터 ID 설정:', route.params.ocrTrainingDataId);
-      setOcrTrainingDataId(route.params.ocrTrainingDataId);
-    }
+      // OCR 학습 데이터 ID 처리
+      if (route.params?.ocrTrainingDataId) {
+        console.log('[상세 화면] OCR 학습 데이터 ID 설정:', route.params.ocrTrainingDataId);
+        setOcrTrainingDataId(route.params.ocrTrainingDataId);
+      }
 
-    // 메타데이터를 통해 기프티콘 정보 설정
-    if (route.params?.gifticonMetadata) {
-      console.log('[상세 화면] 메타데이터 정보 설정:', route.params.gifticonMetadata);
+      // 메타데이터를 통해 기프티콘 정보 설정
+      if (route.params?.gifticonMetadata) {
+        console.log('[상세 화면] 메타데이터 정보 설정:', route.params.gifticonMetadata);
 
-      const metadata = route.params.gifticonMetadata;
+        const metadata = route.params.gifticonMetadata;
 
-      // 브랜드 정보 처리
-      if (metadata.brandName) {
-        console.log('[상세 화면] 브랜드명 설정:', metadata.brandName);
-        setBrandSearchText(metadata.brandName);
+        // 브랜드 정보 처리
+        if (metadata.brandName) {
+          console.log('[상세 화면] 브랜드명 설정:', metadata.brandName);
+          setBrandSearchText(metadata.brandName);
 
-        // 브랜드 검색 및 선택 자동화 시도
-        (async () => {
-          try {
-            const brandService = require('../../../api/brandService').default;
-            const brandResults = await brandService.searchBrands(metadata.brandName);
-            if (brandResults && brandResults.length > 0) {
-              // 가장 일치하는 첫 번째 브랜드 선택
-              console.log('[상세 화면] 브랜드 자동 선택:', brandResults[0]);
-              setSelectedBrand(brandResults[0]);
-              setBrandList(brandResults);
+          // 브랜드 검색 및 선택 자동화 시도
+          (async () => {
+            try {
+              const brandService = require('../../../api/brandService').default;
+              const brandResults = await brandService.searchBrands(metadata.brandName);
+              if (brandResults && brandResults.length > 0) {
+                // 가장 일치하는 첫 번째 브랜드 선택
+                console.log('[상세 화면] 브랜드 자동 선택:', brandResults[0]);
+                setSelectedBrand(brandResults[0]);
+                setBrandList(brandResults);
+              }
+            } catch (err) {
+              console.error('[상세 화면] 브랜드 자동 검색 실패:', err);
             }
-          } catch (err) {
-            console.error('[상세 화면] 브랜드 자동 검색 실패:', err);
-          }
-        })();
-      }
+          })();
+        }
 
-      // 상품명 설정
-      if (metadata.gifticonName) {
-        console.log('[상세 화면] 상품명 설정:', metadata.gifticonName);
-        setProductName(metadata.gifticonName);
-      }
+        // 상품명 설정
+        if (metadata.gifticonName) {
+          console.log('[상세 화면] 상품명 설정:', metadata.gifticonName);
+          setProductName(metadata.gifticonName);
+        }
 
-      // 바코드 번호 설정 (barcodeValue가 없는 경우)
-      if (metadata.gifticonBarcodeNumber && !route.params?.barcodeValue) {
-        console.log('[상세 화면] 바코드 번호 설정:', metadata.gifticonBarcodeNumber);
-        setBarcode(metadata.gifticonBarcodeNumber);
-        setBarcodeNumber(metadata.gifticonBarcodeNumber);
-      }
+        // 바코드 번호 설정 (barcodeValue가 없는 경우)
+        if (metadata.gifticonBarcodeNumber && !route.params?.barcodeValue) {
+          console.log('[상세 화면] 바코드 번호 설정:', metadata.gifticonBarcodeNumber);
+          setBarcode(metadata.gifticonBarcodeNumber);
+          setBarcodeNumber(metadata.gifticonBarcodeNumber);
+        }
 
-      // 유효기간 설정
-      if (metadata.gifticonExpiryDate) {
-        console.log('[상세 화면] 유효기간 설정:', metadata.gifticonExpiryDate);
-        setExpiryDate(new Date(metadata.gifticonExpiryDate));
-      }
+        // 유효기간 설정
+        if (metadata.gifticonExpiryDate) {
+          console.log('[상세 화면] 유효기간 설정:', metadata.gifticonExpiryDate);
+          setExpiryDate(new Date(metadata.gifticonExpiryDate));
+        }
 
-      // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
-      if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
-        console.log('[상세 화면] 금액 설정:', metadata.gifticonOriginalAmount);
-        setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
-      }
-    } else {
-      // 개별 메타데이터 정보 처리 (역호환성 용)
-      if (route.params?.brandName) {
-        console.log('[상세 화면] 브랜드명 설정 (개별):', route.params.brandName);
-        setBrandSearchText(route.params.brandName);
+        // 금액형 기프티콘인 경우 금액 설정 (콤마 포맷팅 적용)
+        if (metadata.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+          console.log('[상세 화면] 금액 설정:', metadata.gifticonOriginalAmount);
+          setAmount(formatAmount(metadata.gifticonOriginalAmount.toString()));
+        }
+      } else {
+        // 개별 메타데이터 정보 처리 (역호환성 용)
+        if (route.params?.brandName) {
+          console.log('[상세 화면] 브랜드명 설정 (개별):', route.params.brandName);
+          setBrandSearchText(route.params.brandName);
 
-        // 브랜드 검색 및 선택 자동화 시도
-        (async () => {
-          try {
-            const brandService = require('../../../api/brandService').default;
-            const brandResults = await brandService.searchBrands(route.params.brandName);
-            if (brandResults && brandResults.length > 0) {
-              console.log('[상세 화면] 브랜드 자동 선택 (개별):', brandResults[0]);
-              setSelectedBrand(brandResults[0]);
-              setBrandList(brandResults);
+          // 브랜드 검색 및 선택 자동화 시도
+          (async () => {
+            try {
+              const brandService = require('../../../api/brandService').default;
+              const brandResults = await brandService.searchBrands(route.params.brandName);
+              if (brandResults && brandResults.length > 0) {
+                console.log('[상세 화면] 브랜드 자동 선택 (개별):', brandResults[0]);
+                setSelectedBrand(brandResults[0]);
+                setBrandList(brandResults);
+              }
+            } catch (err) {
+              console.error('[상세 화면] 브랜드 자동 검색 실패 (개별):', err);
             }
-          } catch (err) {
-            console.error('[상세 화면] 브랜드 자동 검색 실패 (개별):', err);
-          }
-        })();
+          })();
+        }
+
+        if (route.params?.gifticonName) {
+          console.log('[상세 화면] 상품명 설정 (개별):', route.params.gifticonName);
+          setProductName(route.params.gifticonName);
+        }
+
+        if (route.params?.gifticonBarcodeNumber && !barcode) {
+          console.log('[상세 화면] 바코드 번호 설정 (개별):', route.params.gifticonBarcodeNumber);
+          setBarcode(route.params.gifticonBarcodeNumber);
+          setBarcodeNumber(route.params.gifticonBarcodeNumber);
+        }
+
+        if (route.params?.gifticonExpiryDate) {
+          console.log('[상세 화면] 유효기간 설정 (개별):', route.params.gifticonExpiryDate);
+          setExpiryDate(new Date(route.params.gifticonExpiryDate));
+        }
+
+        if (route.params?.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
+          console.log('[상세 화면] 금액 설정 (개별):', route.params.gifticonOriginalAmount);
+          setAmount(formatAmount(route.params.gifticonOriginalAmount.toString()));
+        }
       }
 
-      if (route.params?.gifticonName) {
-        console.log('[상세 화면] 상품명 설정 (개별):', route.params.gifticonName);
-        setProductName(route.params.gifticonName);
+      // 기프티콘 타입 및 등록 위치 정보 가져오기
+      if (route.params?.gifticonType) {
+        setGifticonType(route.params.gifticonType);
+        setTypeLocked(true);
       }
 
-      if (route.params?.gifticonBarcodeNumber && !barcode) {
-        console.log('[상세 화면] 바코드 번호 설정 (개별):', route.params.gifticonBarcodeNumber);
-        setBarcode(route.params.gifticonBarcodeNumber);
-        setBarcodeNumber(route.params.gifticonBarcodeNumber);
+      if (route.params?.boxType) {
+        setBoxType(route.params.boxType);
       }
 
+      if (route.params?.shareBoxId) {
+        setShareBoxId(route.params.shareBoxId);
+      }
+
+      // 타입과 위치가 선택되어 있지 않으면 모달 자동 표시
+      if (!route.params?.gifticonType) {
+        // 약간의 딜레이 후 모달 표시 (화면 전환 애니메이션이 끝난 후)
+        setTimeout(() => {
+          setBoxModalVisible(true);
+        }, 300);
+      }
+
+      // 유효기간이 설정되면 dateInputText도 함께 업데이트
       if (route.params?.gifticonExpiryDate) {
         console.log('[상세 화면] 유효기간 설정 (개별):', route.params.gifticonExpiryDate);
-        setExpiryDate(new Date(route.params.gifticonExpiryDate));
+        const expiryDate = new Date(route.params.gifticonExpiryDate);
+        setExpiryDate(expiryDate);
+
+        // dateInputText 업데이트
+        const year = expiryDate.getFullYear();
+        const month = String(expiryDate.getMonth() + 1).padStart(2, '0');
+        const day = String(expiryDate.getDate()).padStart(2, '0');
+        setDateInputText(`${year}.${month}.${day}`);
       }
 
-      if (route.params?.gifticonOriginalAmount && gifticonType === 'AMOUNT') {
-        console.log('[상세 화면] 금액 설정 (개별):', route.params.gifticonOriginalAmount);
-        setAmount(formatAmount(route.params.gifticonOriginalAmount.toString()));
-      }
-    }
-
-    // 기프티콘 타입 및 등록 위치 정보 가져오기
-    if (route.params?.gifticonType) {
-      setGifticonType(route.params.gifticonType);
-      setTypeLocked(true);
-    }
-
-    if (route.params?.boxType) {
-      setBoxType(route.params.boxType);
-    }
-
-    if (route.params?.shareBoxId) {
-      setShareBoxId(route.params.shareBoxId);
-    }
-
-    // 타입과 위치가 선택되어 있지 않으면 모달 자동 표시
-    if (!route.params?.gifticonType) {
-      // 약간의 딜레이 후 모달 표시 (화면 전환 애니메이션이 끝난 후)
-      setTimeout(() => {
-        setBoxModalVisible(true);
-      }, 300);
-    }
-
-    // 유효기간이 설정되면 dateInputText도 함께 업데이트
-    if (route.params?.gifticonExpiryDate) {
-      console.log('[상세 화면] 유효기간 설정 (개별):', route.params.gifticonExpiryDate);
-      const expiryDate = new Date(route.params.gifticonExpiryDate);
-      setExpiryDate(expiryDate);
-
-      // dateInputText 업데이트
-      const year = expiryDate.getFullYear();
-      const month = String(expiryDate.getMonth() + 1).padStart(2, '0');
-      const day = String(expiryDate.getDate()).padStart(2, '0');
-      setDateInputText(`${year}.${month}.${day}`);
+      // 초기화 완료 표시
+      const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+      updateRegisterFormField('initialized', true);
+      console.log('[상세 화면] 초기화 완료 플래그 설정');
     }
 
     // 컴포넌트 언마운트 시 메모리 정리
     return () => {
       // 임시 이미지 파일이 있다면 여기서 정리할 수 있음
     };
-  }, [route.params, gifticonType, barcode]);
+  }, [route.params, gifticonType]);
 
   // 메타데이터에서 유효기간 설정 시 dateInputText 업데이트를 위한 useEffect 추가
   useEffect(() => {
@@ -330,7 +357,37 @@ const RegisterDetailScreen = () => {
 
   // 뒤로가기 처리
   const handleGoBack = () => {
-    navigation.goBack();
+    // 이미지가 등록되었거나 정보가 입력된 경우에만 확인 대화상자 표시
+    if (currentImageUri || productName || brandSearchText || dateInputText || barcode) {
+      Alert.alert(
+        '등록 취소',
+        '기프티콘 등록을 취소하시겠습니까? 입력한 정보는 저장되지 않습니다.',
+        [
+          {
+            text: '취소',
+            style: 'cancel',
+            onPress: () => {
+              // 취소 시 스토어의 initialized 상태 유지
+              const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+              updateRegisterFormField('initialized', true);
+            },
+          },
+          {
+            text: '확인',
+            onPress: () => {
+              // 등록 취소 시 스토어 상태 초기화
+              const resetRegisterForm = useGifticonStore.getState().resetRegisterForm;
+              resetRegisterForm();
+              navigation.goBack();
+            },
+          },
+        ],
+        { cancelable: false }
+      );
+    } else {
+      // 아무 정보도 입력되지 않았으면 바로 뒤로가기
+      navigation.goBack();
+    }
   };
 
   // 날짜 선택기 표시
@@ -348,7 +405,13 @@ const RegisterDetailScreen = () => {
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
-      setDateInputText(`${year}.${month}.${day}`);
+      const formattedDate = `${year}.${month}.${day}`;
+      setDateInputText(formattedDate);
+
+      // ✅ 스토어에도 날짜 정보 저장
+      const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+      updateRegisterFormField('expiryDate', selectedDate);
+      updateRegisterFormField('dateInputText', formattedDate);
     }
   };
 
@@ -388,6 +451,10 @@ const RegisterDetailScreen = () => {
     // 입력된 텍스트 저장
     setDateInputText(formattedText);
 
+    // ✅ 스토어에 dateInputText 저장
+    const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+    updateRegisterFormField('dateInputText', formattedText);
+
     // 완전한 날짜 포맷이 아니면 Date 객체 업데이트하지 않음
     const parts = formattedText.split('.');
     if (parts.length !== 3) return;
@@ -406,6 +473,9 @@ const RegisterDetailScreen = () => {
       // 유효한 날짜인지 확인
       if (!isNaN(newDate.getTime())) {
         setExpiryDate(newDate);
+
+        // ✅ 스토어에 expiryDate 저장
+        updateRegisterFormField('expiryDate', newDate);
       }
     }
   };
@@ -932,7 +1002,12 @@ const RegisterDetailScreen = () => {
   // 금액 입력 핸들러
   const handleAmountChange = text => {
     // 포맷팅된 금액 설정
-    setAmount(formatAmount(text));
+    const formattedAmount = formatAmount(text);
+    setAmount(formattedAmount);
+
+    // ✅ 스토어에 금액 정보 저장
+    const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+    updateRegisterFormField('amount', formattedAmount);
   };
 
   // 기프티콘 등록 처리
@@ -969,6 +1044,9 @@ const RegisterDetailScreen = () => {
     }
 
     try {
+      // 등록 시작 시 플래그 설정
+      isRegistering.current = true;
+
       // 로딩 상태 활성화
       setIsLoading(true);
 
@@ -1031,6 +1109,10 @@ const RegisterDetailScreen = () => {
         {
           text: '확인',
           onPress: () => {
+            // ✅ 등록 성공 시에만 상태 초기화
+            const resetRegisterForm = useGifticonStore.getState().resetRegisterForm;
+            resetRegisterForm();
+
             // 기프티콘 타입에 따라 다른 상세 화면으로 이동
             const targetScreen =
               gifticonType === 'PRODUCT' ? 'DetailProductScreen' : 'DetailAmountScreen';
@@ -1061,6 +1143,9 @@ const RegisterDetailScreen = () => {
     } catch (error) {
       console.error('기프티콘 등록 실패:', error);
 
+      // 등록 실패 시 플래그 해제
+      isRegistering.current = false;
+
       // 에러 코드에 따라 적절한 메시지 표시
       let errorMessage = '기프티콘 등록 중 오류가 발생했습니다.';
 
@@ -1071,6 +1156,10 @@ const RegisterDetailScreen = () => {
           errorMessage = '금액형 기프티콘은 금액을 입력해야 합니다.';
         } else if (errorCode === 'GIFTICON_007') {
           errorMessage = '이미 등록된 바코드 번호입니다.';
+
+          // ✅ 바코드 중복 에러 발생 시 기존 등록 폼 상태 유지 명시
+          const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+          updateRegisterFormField('initialized', true);
         } else if (errorCode === 'FILE_001' || errorCode === 'FILE_002') {
           errorMessage = '파일 업로드 중 문제가 발생했습니다.';
         } else if (message) {
@@ -1078,6 +1167,7 @@ const RegisterDetailScreen = () => {
         }
       }
 
+      // ✅ 등록 실패 시에는 상태를 초기화하지 않고 에러 메시지만 표시
       Alert.alert('오류', errorMessage);
     } finally {
       setIsLoading(false);
@@ -1113,8 +1203,8 @@ const RegisterDetailScreen = () => {
       // 원본 이미지가 있으면 원본을 사용하여 매번 새롭게 편집
       const sourceUri = originalImageUri || imageUri;
 
-      // ImagePicker 라이브러리의 openCropper 사용
-      ImagePicker.openCropper({
+      // 크롭 설정 객체 생성
+      const cropperOptions = {
         path: sourceUri,
         width: 300,
         height: 300,
@@ -1131,10 +1221,47 @@ const RegisterDetailScreen = () => {
         freeStyleCropEnabled: true,
         // 회전 활성화
         enableRotationGesture: true,
-      })
+      };
+
+      // 이전에 저장된 크롭 데이터가 있으면 초기 크롭 영역 설정
+      if (cropData) {
+        console.log('저장된 크롭 데이터 적용:', cropData);
+        // cropData 속성을 cropperOptions에 추가
+        Object.assign(cropperOptions, {
+          cropperInitialCropBoxX: cropData.x,
+          cropperInitialCropBoxY: cropData.y,
+          cropperInitialCropBoxWidth: cropData.width,
+          cropperInitialCropBoxHeight: cropData.height,
+          // 회전 각도가 있으면 적용
+          cropperRotation: cropData.rotation || 0,
+        });
+      }
+
+      // ImagePicker 라이브러리의 openCropper 사용
+      ImagePicker.openCropper(cropperOptions)
         .then(image => {
-          // 편집된 이미지 저장
+          console.log('크롭 결과:', image);
+
+          // 편집된 이미지 URI 저장
           setCurrentImageUri(image.path);
+
+          // 크롭 영역 정보 추출 및 저장
+          const newCropData = {
+            x: image.cropRect?.x || 0,
+            y: image.cropRect?.y || 0,
+            width: image.cropRect?.width || image.width,
+            height: image.cropRect?.height || image.height,
+            rotation: image.cropRect?.rotation || 0,
+          };
+
+          console.log('새 크롭 데이터 저장:', newCropData);
+
+          // Zustand 스토어에 크롭 데이터 저장
+          updateRegisterFormCropData(newCropData);
+
+          // 이미지 URI와 크롭 데이터를 함께 저장 (옵션)
+          updateRegisterFormImage(image.path, originalImageUri, newCropData);
+
           processingRef.current = false;
         })
         .catch(error => {
@@ -1142,6 +1269,7 @@ const RegisterDetailScreen = () => {
 
           // 사용자가 취소한 경우는 무시
           if (error.code !== 'E_PICKER_CANCELLED') {
+            console.error('크롭 오류:', error);
             Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
           }
         });
@@ -1227,6 +1355,12 @@ const RegisterDetailScreen = () => {
     console.log('브랜드 선택:', item);
     setSelectedBrand(item);
     setBrandSearchText(item.brandName);
+
+    // ✅ 스토어에 브랜드 정보 저장
+    const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+    updateRegisterFormField('selectedBrand', item);
+    updateRegisterFormField('brandSearchText', item.brandName);
+
     // 즉시 목록 닫기
     setShowBrandList(false);
   }, []);
@@ -1249,6 +1383,40 @@ const RegisterDetailScreen = () => {
 
       // 이미지 캐시 정리 로직 (옵션)
     };
+  }, []);
+
+  // 화면을 떠날 때 상태 초기화 처리
+  useEffect(() => {
+    // 등록 화면에서 다른 화면으로 이동할 때 상태 초기화
+    const unsubscribe = navigation.addListener('blur', () => {
+      // 등록 중인 경우에는 blur 이벤트에서 상태 초기화하지 않음
+      if (!isRegistering.current) {
+        console.log('[기프티콘 등록] 화면을 떠나 상태 초기화');
+        const resetRegisterForm = useGifticonStore.getState().resetRegisterForm;
+        resetRegisterForm();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
+  // 쉐어박스 목록 불러오기
+  const loadShareBoxes = async () => {
+    try {
+      setIsLoadingShareBoxes(true);
+      const res = await fetchShareBoxes({ size: 20 });
+      setShareBoxes(res.shareBoxes || []);
+    } catch (e) {
+      console.error('쉐어박스 목록 불러오기 실패:', e);
+      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+    } finally {
+      setIsLoadingShareBoxes(false);
+    }
+  };
+
+  // 컴포넌트 마운트 시 쉐어박스 목록 불러오기
+  useEffect(() => {
+    loadShareBoxes();
   }, []);
 
   return (
@@ -1386,6 +1554,11 @@ const RegisterDetailScreen = () => {
                   setBarcodeNumber(text);
                   // Zustand 스토어에 바코드 정보 저장 - 바코드 번호가 변경되어도 스토어에 반영
                   setCurrentBarcodeInfo(text, barcodeFormat, null, barcodeImageUri);
+
+                  // ✅ 바코드 번호만 업데이트하고 다른 상태는 유지
+                  const updateRegisterFormField =
+                    useGifticonStore.getState().updateRegisterFormField;
+                  updateRegisterFormField('barcodeNumber', text);
                 }}
                 placeholder="바코드 번호를 입력해주세요."
                 keyboardType="numeric"
@@ -1467,7 +1640,14 @@ const RegisterDetailScreen = () => {
 
               <InputLine
                 value={productName}
-                onChangeText={setProductName}
+                onChangeText={text => {
+                  setProductName(text);
+
+                  // ✅ 스토어에 상품명 저장
+                  const updateRegisterFormField =
+                    useGifticonStore.getState().updateRegisterFormField;
+                  updateRegisterFormField('productName', text);
+                }}
                 placeholder="상품명을 입력해주세요."
                 containerStyle={styles.inputContainer}
                 rightIcon={
@@ -1512,7 +1692,14 @@ const RegisterDetailScreen = () => {
                   </Text>
                   <InputLine
                     value={amount}
-                    onChangeText={handleAmountChange}
+                    onChangeText={text => {
+                      handleAmountChange(text);
+
+                      // ✅ 스토어에 금액 저장
+                      const updateRegisterFormField =
+                        useGifticonStore.getState().updateRegisterFormField;
+                      updateRegisterFormField('amount', text);
+                    }}
                     placeholder="금액을 입력해주세요."
                     keyboardType="numeric"
                     containerStyle={styles.inputContainer}
@@ -1836,6 +2023,10 @@ const RegisterDetailScreen = () => {
                 setBarcode(text);
                 setBarcodeNumber(text);
                 setCurrentBarcodeInfo(text, barcodeFormat, null, barcodeImageUri);
+
+                // ✅ 바코드 번호만 업데이트하고 다른 상태는 유지
+                const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
+                updateRegisterFormField('barcodeNumber', text);
               }}
               keyboardType="numeric"
               selectionColor="#A7DAF9"
