@@ -3,6 +3,7 @@ package com.eurachacha.achacha.application.service.notification;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +12,7 @@ import com.eurachacha.achacha.application.port.input.notification.dto.response.N
 import com.eurachacha.achacha.application.port.output.auth.SecurityServicePort;
 import com.eurachacha.achacha.application.port.output.notification.NotificationSettingRepository;
 import com.eurachacha.achacha.application.port.output.notification.NotificationTypeRepository;
+import com.eurachacha.achacha.application.service.notification.event.NotificationSettingUpdatedEvent;
 import com.eurachacha.achacha.domain.model.notification.NotificationSetting;
 import com.eurachacha.achacha.domain.model.notification.NotificationType;
 import com.eurachacha.achacha.domain.model.notification.enums.ExpirationCycle;
@@ -31,6 +33,7 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 	private final NotificationTypeRepository notificationTypeRepository;
 	private final NotificationSettingDomainService notificationSettingDomainService;
 	private final SecurityServicePort securityServicePort;
+	private final ApplicationEventPublisher applicationEventPublisher;
 
 	@Override
 	public List<NotificationSettingDto> getUserNotificationSettings() {
@@ -68,6 +71,12 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 			.findByUserIdAndNotificationTypeId(userId, notificationType.getId());
 
 		setting.updateIsEnabled(isEnabled);
+
+		// 유효기간 알림이고 활성화된 경우에만 이벤트 발행
+		if (typeCode == NotificationTypeCode.EXPIRY_DATE && isEnabled) {
+			applicationEventPublisher.publishEvent(
+				new NotificationSettingUpdatedEvent(userId, typeCode, isEnabled));
+		}
 	}
 
 	@Override
@@ -90,5 +99,9 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 		}
 
 		setting.updateExpirationCycle(expirationCycle);
+
+		// 알림이 활성화되어 있으므로 이벤트 발행
+		applicationEventPublisher.publishEvent(
+			new NotificationSettingUpdatedEvent(userId, NotificationTypeCode.EXPIRY_DATE, true));
 	}
 }
