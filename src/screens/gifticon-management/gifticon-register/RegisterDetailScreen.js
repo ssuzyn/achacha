@@ -839,7 +839,7 @@ const RegisterDetailScreen = () => {
             : '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.';
 
         // 에러 발생 시 사용자에게 알림
-        Alert.alert('정보 조회 실패', errorMessage, [{ text: '확인' }]);
+        showAlert('정보 조회 실패', errorMessage);
       } finally {
         setIsLoading(false);
         setIsOcrLoading(false); // OCR 로딩 모달 숨김
@@ -848,7 +848,7 @@ const RegisterDetailScreen = () => {
       // 사용자가 취소한 경우 무시
       if (error.code !== 'E_PICKER_CANCELLED') {
         console.error('[갤러리 이미지 선택] 오류:', error);
-        Alert.alert('오류', '이미지 선택 중 문제가 발생했습니다.');
+        showAlert('오류', '이미지 선택 중 문제가 발생했습니다.');
       }
     }
   }, [processImageForBarcode, gifticonType, barcode, formatAmount]);
@@ -857,7 +857,7 @@ const RegisterDetailScreen = () => {
   const handleTakePhoto = useCallback(async () => {
     const hasPermission = await requestCameraPermission();
     if (!hasPermission) {
-      Alert.alert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
+      showAlert('권한 없음', '카메라를 사용하기 위해 권한이 필요합니다.');
       return;
     }
 
@@ -959,7 +959,7 @@ const RegisterDetailScreen = () => {
             : '기프티콘 정보를 자동으로 인식하지 못했습니다. 정보를 직접 입력해주세요.';
 
         // 에러 발생 시 사용자에게 알림
-        Alert.alert('정보 조회 실패', errorMessage, [{ text: '확인' }]);
+        showAlert('정보 조회 실패', errorMessage);
       } finally {
         setIsLoading(false);
         setIsOcrLoading(false); // OCR 로딩 모달 숨김
@@ -968,7 +968,7 @@ const RegisterDetailScreen = () => {
       // 사용자가 취소한 경우 무시
       if (error.code !== 'E_PICKER_CANCELLED') {
         console.error('[이미지 선택] 오류:', error);
-        Alert.alert('오류', '카메라 사용 중 문제가 발생했습니다.');
+        showAlert('오류', '카메라 사용 중 문제가 발생했습니다.');
       }
     }
   }, [processImageForBarcode, requestCameraPermission, gifticonType, barcode, formatAmount]);
@@ -1221,13 +1221,13 @@ const RegisterDetailScreen = () => {
           // 사용자가 취소한 경우는 무시
           if (error.code !== 'E_PICKER_CANCELLED') {
             console.error('크롭 오류:', error);
-            Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다.');
+            showAlert('오류', '이미지 편집 중 문제가 발생했습니다.');
           }
         });
     } catch (error) {
       console.error('이미지 편집 오류:', error);
       processingRef.current = false;
-      Alert.alert('오류', '이미지 편집 중 문제가 발생했습니다. 다시 시도해주세요.');
+      showAlert('오류', '이미지 편집 중 문제가 발생했습니다. 다시 시도해주세요.');
     }
   };
 
@@ -1463,7 +1463,7 @@ const RegisterDetailScreen = () => {
                 if (!isTypeLocked) {
                   showBoxModal();
                 } else {
-                  Alert.alert('알림', '기프티콘 유형은 최초 등록 후 변경할 수 없습니다.');
+                  showAlert('알림', '기프티콘 유형은 최초 등록 후 변경할 수 없습니다.');
                 }
               }}
             >
@@ -2029,6 +2029,7 @@ const RegisterDetailScreen = () => {
         confirmText="확인"
         onConfirm={closeAlert}
         hideCancel={true}
+        type="info"
       />
     </View>
   );
