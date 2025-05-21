@@ -27,15 +27,25 @@ public class BleAppServiceImpl implements BleAppService {
 	@Override
 	@Transactional
 	public BleTokenResponseDto generateBleToken(String value) {
+		log.info("BLE 토큰 생성 요청 시작 - 이전 토큰 값: {}", value);
 
 		// 로그인 된 유저
 		User loggedInUser = securityServicePort.getLoggedInUser();
 		Integer userId = loggedInUser.getId();
+		log.info("BLE 토큰 요청 유저 ID: {}", userId);
 
-		bleTokenRepository.deleteByUserIdAndValue(userId, value);
+		// 이전 토큰이 있다면 삭제
+		if (value != null && !value.isEmpty()) {
+			log.info("이전 BLE 토큰 삭제 시도 - 유저 ID: {}, 토큰 값: {}", userId, value);
+			bleTokenRepository.deleteByUserIdAndValue(userId, value);
+			log.info("이전 BLE 토큰 삭제 완료");
+		} else {
+			log.info("이전 BLE 토큰 없음 - 새 토큰만 생성");
+		}
 
 		// 토큰 생성
 		String newTokenValue = generateToken();
+		log.info("새 BLE 토큰 생성 완료: {}", newTokenValue);
 
 		// 새 토큰 저장
 		BleToken bleToken = BleToken.builder()
@@ -43,7 +53,8 @@ public class BleAppServiceImpl implements BleAppService {
 			.value(newTokenValue)
 			.build();
 
-		bleTokenRepository.save(bleToken);
+		BleToken savedToken = bleTokenRepository.save(bleToken);
+		log.info("BLE 토큰 저장 완료 - ID: {}, 값: {}", savedToken.getId(), savedToken.getValue());
 
 		return BleTokenResponseDto.builder()
 			.bleToken(newTokenValue)
@@ -56,18 +67,27 @@ public class BleAppServiceImpl implements BleAppService {
 		boolean isDuplicate;
 		int attempts = 0;
 
+		log.info("BLE 토큰 생성 시작");
 		do {
 			// 최대 시도 횟수 초과 시 로그 기록
-			if (attempts++ > 3) {
-				log.warn("{}번 째 토큰 생성 시도", attempts);
+			if (attempts > 0) {
+				log.warn("{}번 째 BLE 토큰 생성 시도 - 이전 시도 중복 발생", attempts + 1);
 			}
 
 			// 새 토큰 생성
 			newTokenValue = bleTokenDomainService.generateToken();
+			log.debug("생성된 토큰 후보: {}", newTokenValue);
 
 			// 중복 검사
 			isDuplicate = bleTokenRepository.existsByValue(newTokenValue);
+			if (isDuplicate) {
+				log.warn("생성된 BLE 토큰 중복 발견: {}", newTokenValue);
+			}
+
+			attempts++;
 		} while (isDuplicate);
+
+		log.info("최종 BLE 토큰 생성 완료 - 시도 횟수: {}", attempts);
 		return newTokenValue;
 	}
 }
