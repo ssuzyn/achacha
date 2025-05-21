@@ -24,7 +24,7 @@ const KakaoMapView = forwardRef(
     useEffect(() => {
       if (!geofencingServiceInstance && uniqueBrands) {
         geofencingServiceInstance = new GeofencingService(uniqueBrands);
-        console.log('GeofencingService 인스턴스 생성 (싱글톤)');
+        // console.log('GeofencingService 인스턴스 생성 (싱글톤)');
       }
     }, [uniqueBrands]);
 
@@ -77,7 +77,7 @@ const KakaoMapView = forwardRef(
 
         if (data.type === 'mapLoaded' && data.success) {
           setMapLoaded(true);
-          console.log('맵 로드됨, 위치 정보:', location ? '있음' : '없음');
+          // console.log('맵 로드됨, 위치 정보:', location ? '있음' : '없음');
 
           setTimeout(() => {
             if (location) {
@@ -105,7 +105,7 @@ const KakaoMapView = forwardRef(
 
         // 지도 이동 완료 이벤트 처리
         if (data.type === 'mapMoved') {
-          console.log('[KakaoMapView] 지도 이동 완료. 새 중심:', data.latitude, data.longitude);
+          // console.log('[KakaoMapView] 지도 이동 완료. 새 중심:', data.latitude, data.longitude);
           if (uniqueBrands && uniqueBrands.length > 0) {
             const movedCenter = { latitude: data.latitude, longitude: data.longitude };
             debouncedSearchNearbyStores(movedCenter);
@@ -120,7 +120,7 @@ const KakaoMapView = forwardRef(
     // 위치 정보가 변경될 때마다 지도 업데이트
     useEffect(() => {
       if (location && mapLoaded && webViewRef.current) {
-        console.log('위치 정보 변경됨, 맵 업데이트 시도');
+        // console.log('위치 정보 변경됨, 맵 업데이트 시도');
         moveToCurrentLocation();
       }
     }, [location, mapLoaded]);
@@ -196,34 +196,33 @@ const KakaoMapView = forwardRef(
       if (searchTimerRef.current) {
         clearTimeout(searchTimerRef.current);
       }
-
-      console.log('디바운스 타이머 설정: 1초 후 검색 예정, 중심:', centerCoords);
+      // console.log('디바운스 타이머 설정: 1초 후 검색 예정, 중심:', centerCoords);
       searchTimerRef.current = setTimeout(() => {
-        console.log('디바운스 타이머 만료: 검색 실행, 중심:', centerCoords);
+        // console.log('디바운스 타이머 만료: 검색 실행, 중심:', centerCoords);
         searchNearbyStores(centerCoords);
       }, 1000); // 1초 디바운스
     };
 
     // 주변 매장 검색 및 지오펜스 설정 함수
     const searchNearbyStores = async searchCenter => {
-      console.log(
-        '[KakaoMapView] 매장 검색 요청, 브랜드:',
-        uniqueBrands.map(b => b.brandName).join(', '),
-        '중심:',
-        searchCenter
-      );
+      // console.log(
+      //   '[KakaoMapView] 매장 검색 요청, 브랜드:',
+      //   uniqueBrands.map(b => b.brandName).join(', '),
+      //   '중심:',
+      //   searchCenter
+      // );
       if (!searchCenter || !uniqueBrands || uniqueBrands.length === 0) {
-        console.log('조건 미충족으로 리턴 (searchCenter 또는 uniqueBrands 없음)');
+        // console.log('조건 미충족으로 리턴 (searchCenter 또는 uniqueBrands 없음)');
         return;
       }
 
       const { latitude, longitude } = searchCenter;
-      console.log(`검색 위치: ${latitude}, ${longitude}`);
+      // console.log(`검색 위치: ${latitude}, ${longitude}`);
 
       try {
         // 각 브랜드별 매장 검색
         const searchPromises = uniqueBrands.map(async brand => {
-          console.log(`브랜드 검색 중: ${brand.brandName}`);
+          // console.log(`브랜드 검색 중: ${brand.brandName}`);
           const response = await fetch(
             `https://dapi.kakao.com/v2/local/search/keyword.json?` +
               `query=${encodeURIComponent(brand.brandName)}&` +
@@ -244,7 +243,7 @@ const KakaoMapView = forwardRef(
           }
 
           const data = await response.json();
-          console.log(`${brand.brandName} 검색 결과: ${data.documents.length}개 매장 찾음`);
+          // console.log(`${brand.brandName} 검색 결과: ${data.documents.length}개 매장 찾음`);
 
           return {
             brandId: brand.brandId,
@@ -254,10 +253,10 @@ const KakaoMapView = forwardRef(
         });
 
         const results = await Promise.all(searchPromises);
-        console.log(
-          '총 매장 수:',
-          results.reduce((sum, brand) => sum + brand.stores.length, 0)
-        );
+        // console.log(
+        //   '총 매장 수:',
+        //   results.reduce((sum, brand) => sum + brand.stores.length, 0)
+        // );
 
         // 전체 매장 데이터 저장 및 지도에 표시 (selectedBrand 함께 전달)
         window.allStoreData = results;
@@ -265,7 +264,7 @@ const KakaoMapView = forwardRef(
 
         // 중요: 여기에서 부모 컴포넌트에 결과 전달 추가
         if (typeof onStoresFound === 'function') {
-          console.log('[KakaoMapView] 부모 컴포넌트(MapScreen)에 매장 데이터 전달');
+          // console.log('[KakaoMapView] 부모 컴포넌트(MapScreen)에 매장 데이터 전달');
           onStoresFound(results);
         } else {
           console.error('[KakaoMapView] onStoresFound 함수가 정의되지 않음');
@@ -293,7 +292,7 @@ const KakaoMapView = forwardRef(
           debouncedSearchNearbyStores(currentCoords); // 현재 위치 좌표 전달
           setPrevLocation({ latitude, longitude });
         } else {
-          console.log('작은 위치 변경 무시: 100m 이내 이동');
+          // console.log('작은 위치 변경 무시: 100m 이내 이동');
         }
       }
     }, [location, mapLoaded, uniqueBrands]);
