@@ -8,13 +8,14 @@ import {
   Image,
   StatusBar,
   TouchableOpacity,
+  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Orientation from 'react-native-orientation-locker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, AlertDialog } from '../../../components/ui';
+import { Text } from '../../../components/ui';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
 import BrightnessControl from '../../../utils/BrightnessControl';
@@ -26,28 +27,6 @@ const UseProductScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [barcodeData, setBarcodeData] = useState(null);
-
-  // AlertDialog 관련 상태 추가
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
-  const [alertCallback, setAlertCallback] = useState(null);
-
-  // AlertDialog를 표시하는 함수
-  const showAlert = (title, message, callback = null) => {
-    setAlertTitle(title);
-    setAlertMessage(message);
-    setAlertCallback(() => callback);
-    setAlertVisible(true);
-  };
-
-  // AlertDialog 닫기 함수
-  const closeAlert = () => {
-    setAlertVisible(false);
-    if (alertCallback) {
-      alertCallback();
-    }
-  };
 
   // route.params에서 정보 가져오기
   const { id, gifticonId, barcodeNumber, brandName, gifticonName } = route.params || {};
@@ -105,9 +84,19 @@ const UseProductScreen = () => {
         if (err.response) {
           const errorMessage = err.response.data?.message || '바코드 로드 중 오류가 발생했습니다.';
 
-          showAlert('오류', errorMessage, () => navigation.goBack());
+          Alert.alert('오류', errorMessage, [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
         } else {
-          showAlert('오류', '네트워크 연결을 확인해주세요.', () => navigation.goBack());
+          Alert.alert('오류', '네트워크 연결을 확인해주세요.', [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
         }
       }
     };
@@ -129,19 +118,24 @@ const UseProductScreen = () => {
       setIsLoading(false);
 
       // 성공 메시지 표시
-      showAlert('성공', '기프티콘이 사용완료 처리되었습니다.', () => {
-        // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
-        // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: 'Main',
-              params: { screen: 'TabGifticonManage', initialTab: 'used' },
-            },
-          ],
-        });
-      });
+      Alert.alert('성공', '기프티콘이 사용완료 처리되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 사용완료 후 ManageListScreen으로 이동하면서 네비게이션 스택 초기화
+            // 사용완료 탭으로 바로 이동하기 위한 파라미터 전달
+            navigation.reset({
+              index: 0,
+              routes: [
+                {
+                  name: 'Main',
+                  params: { screen: 'TabGifticonManage', initialTab: 'used' },
+                },
+              ],
+            });
+          },
+        },
+      ]);
     } catch (err) {
       setIsLoading(false);
       console.error('기프티콘 사용 완료 처리 오류:', err);
@@ -152,7 +146,7 @@ const UseProductScreen = () => {
         errorMessage = err.response.data.message;
       }
 
-      showAlert('오류', errorMessage);
+      Alert.alert('오류', errorMessage, [{ text: '확인' }]);
     }
   };
 
@@ -249,17 +243,6 @@ const UseProductScreen = () => {
 
       {/* 우측 Safe Area */}
       <View style={{ width: insets.right, height: '100%' }} />
-
-      {/* AlertDialog */}
-      <AlertDialog
-        isVisible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
-        confirmText="확인"
-        onConfirm={closeAlert}
-        hideCancel={true}
-        type="info"
-      />
     </View>
   );
 };
