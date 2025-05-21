@@ -48,12 +48,12 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 
 	@Query("""
 		SELECT g FROM Gifticon g
-				JOIN FETCH g.brand
-				JOIN FETCH g.user
-				LEFT JOIN FETCH g.sharebox
-				WHERE g.isUsed = false
-				AND g.isDeleted = false
-				AND g.expiryDate IN :targetDates
+		JOIN FETCH g.brand
+		JOIN FETCH g.user
+		LEFT JOIN FETCH g.sharebox
+		WHERE g.isUsed = false
+		AND g.isDeleted = false
+		AND g.expiryDate IN :targetDates
 		""")
 	List<Gifticon> findGifticonsWithExpiryDates(@Param("targetDates") List<LocalDate> targetDates);
 
@@ -63,6 +63,8 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 		LEFT JOIN Participation p ON p.sharebox.id = s.id
 		WHERE g.expiryDate IN :expiryDates
 		AND (g.user.id = :userId OR p.user.id = :userId)
+		AND g.isUsed = false
+		AND g.isDeleted = false
 		""")
 	List<Gifticon> findAllRelevantGifticonsWithExpiryDates(
 		@Param("expiryDates") List<LocalDate> expiryDates,
