@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.eurachacha.achacha.domain.model.sharebox.Participation;
+import com.eurachacha.achacha.domain.model.user.User;
 
 @Repository
 public interface ParticipationJpaRepository extends JpaRepository<Participation, Integer> {
@@ -22,6 +23,13 @@ public interface ParticipationJpaRepository extends JpaRepository<Participation,
 		WHERE p.sharebox.id = :shareBoxId
 		""")
 	List<Participation> findByShareboxId(@Param("shareBoxId") Integer shareBoxId);
+
+	@Query("""
+		SELECT p FROM Participation p
+		JOIN FETCH p.sharebox
+		WHERE p.user.id = :userId
+		""")
+	List<Participation> findAllByUserId(@Param("userId") Integer userId);
 
 	@Modifying
 	@Query("""
@@ -38,4 +46,6 @@ public interface ParticipationJpaRepository extends JpaRepository<Participation,
 		WHERE p.sharebox.id = :shareBoxId
 		""")
 	void deleteByShareboxId(@Param("shareBoxId") Integer shareBoxId);
+
+	List<Participation> user(User user);
 }

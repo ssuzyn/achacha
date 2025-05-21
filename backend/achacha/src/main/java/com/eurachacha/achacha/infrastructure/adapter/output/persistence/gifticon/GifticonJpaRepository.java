@@ -57,4 +57,15 @@ public interface GifticonJpaRepository extends JpaRepository<Gifticon, Integer>,
 		""")
 	List<Gifticon> findGifticonsWithExpiryDates(@Param("targetDates") List<LocalDate> targetDates);
 
+	@Query("""
+		SELECT DISTINCT g FROM Gifticon g
+		LEFT JOIN g.sharebox s
+		LEFT JOIN Participation p ON p.sharebox.id = s.id
+		WHERE g.expiryDate IN :expiryDates
+		AND (g.user.id = :userId OR p.user.id = :userId)
+		""")
+	List<Gifticon> findAllRelevantGifticonsWithExpiryDates(
+		@Param("expiryDates") List<LocalDate> expiryDates,
+		@Param("userId") Integer userId
+	);
 }
