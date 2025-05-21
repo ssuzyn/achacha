@@ -39,14 +39,8 @@ export const AlertDialog = ({
 
   // 타입에 따른 버튼 색상 매핑
   const getButtonColor = () => {
-    const typeToColorMap = {
-      info: theme.colors.primary,
-      success: theme.colors.success,
-      warning: theme.colors.error,
-      error: theme.colors.error,
-    };
-
-    return typeToColorMap[type] || typeToColorMap.info;
+    // 항상 '#56AEE9' 색상 반환 (요구사항에 따라)
+    return '#56AEE9';
   };
 
   return (

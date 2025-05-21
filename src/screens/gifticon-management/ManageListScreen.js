@@ -9,9 +9,7 @@ import {
   StatusBar,
   Animated,
   TouchableWithoutFeedback,
-  ActivityIndicator,
   RefreshControl,
-  Alert,
   TextInput,
   Modal,
 } from 'react-native';
@@ -701,13 +699,29 @@ const ManageListScreen = () => {
     }
   };
 
+  // AlertDialog 상태 관리를 위한 state 추가
+  const [commonAlertVisible, setCommonAlertVisible] = useState(false);
+  const [commonAlertTitle, setCommonAlertTitle] = useState('');
+  const [commonAlertMessage, setCommonAlertMessage] = useState('');
+  const [commonAlertType, setCommonAlertType] = useState('info');
+  const [commonAlertCallback, setCommonAlertCallback] = useState(() => {});
+
+  // 알림 다이얼로그 공통 표시 함수
+  const showAlert = (title, message, callback = () => {}, type = 'info') => {
+    setCommonAlertTitle(title);
+    setCommonAlertMessage(message);
+    setCommonAlertCallback(() => callback);
+    setCommonAlertType(type);
+    setCommonAlertVisible(true);
+  };
+
   // 금액형 기프티콘 사용 처리
   const handleUseAmountGifticon = async () => {
     if (!selectedAmountGifticon) return;
 
     // 금액 입력값 검증
     if (!amountToUse || isNaN(parseInt(amountToUse, 10)) || parseInt(amountToUse, 10) <= 0) {
-      Alert.alert('입력 오류', '사용할 금액을 올바르게 입력해주세요.');
+      showAlert('입력 오류', '사용할 금액을 올바르게 입력해주세요.');
       return;
     }
 
@@ -716,7 +730,7 @@ const ManageListScreen = () => {
 
     // 잔액 초과 검증
     if (usageAmount > remainingAmount) {
-      Alert.alert('금액 초과', `사용 가능한 금액은 ${remainingAmount.toLocaleString()}원입니다.`);
+      showAlert('금액 초과', `사용 가능한 금액은 ${remainingAmount.toLocaleString()}원입니다.`);
       return;
     }
 
@@ -749,21 +763,16 @@ const ManageListScreen = () => {
       }
 
       // 성공 메시지 표시
-      Alert.alert('사용 완료', '기프티콘이 사용처리되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            // 사용내역 화면으로 이동
-            navigation.navigate('DetailAmountHistoryScreen', {
-              gifticonId: selectedAmountGifticon.gifticonId,
-              brandName: selectedAmountGifticon.brandName,
-              gifticonName: selectedAmountGifticon.gifticonName,
-              scope: usageAmount >= remainingAmount ? 'USED' : 'MY_BOX',
-              usageType: 'SELF_USE',
-            });
-          },
-        },
-      ]);
+      showAlert('사용 완료', '기프티콘이 사용처리되었습니다.', () => {
+        // 사용내역 화면으로 이동
+        navigation.navigate('DetailAmountHistoryScreen', {
+          gifticonId: selectedAmountGifticon.gifticonId,
+          brandName: selectedAmountGifticon.brandName,
+          gifticonName: selectedAmountGifticon.gifticonName,
+          scope: usageAmount >= remainingAmount ? 'USED' : 'MY_BOX',
+          usageType: 'SELF_USE',
+        });
+      });
     } catch (error) {
       // 에러 메시지 처리
       let errorMessage = '기프티콘 사용 중 오류가 발생했습니다.';
@@ -784,7 +793,7 @@ const ManageListScreen = () => {
       }
 
       console.error('금액형 기프티콘 사용 오류:', error);
-      Alert.alert('오류', errorMessage);
+      showAlert('오류', errorMessage);
     } finally {
       setLoading(false);
       setSelectedAmountGifticon(null);
@@ -808,7 +817,7 @@ const ManageListScreen = () => {
       setFilteredGifticons(updatedGifticons);
 
       // 성공 메시지 표시
-      Alert.alert('사용 완료', '기프티콘이 사용완료 처리되었습니다.', [{ text: '확인' }]);
+      showAlert('사용 완료', '기프티콘이 사용완료 처리되었습니다.');
     } catch (error) {
       // 에러 메시지 처리
       let errorMessage = '기프티콘 사용완료 처리 중 오류가 발생했습니다.';
@@ -831,7 +840,7 @@ const ManageListScreen = () => {
       }
 
       console.error('상품형 기프티콘 사용완료 처리 오류:', error);
-      Alert.alert('오류', errorMessage);
+      showAlert('오류', errorMessage);
     } finally {
       setLoading(false);
       // 다이얼로그 닫기
@@ -1503,6 +1512,21 @@ const ManageListScreen = () => {
           </View>
         </TouchableWithoutFeedback>
       </Modal>
+
+      {/* 공통 알림 다이얼로그 추가 */}
+      <AlertDialog
+        isVisible={commonAlertVisible}
+        title={commonAlertTitle}
+        message={commonAlertMessage}
+        confirmText="확인"
+        onConfirm={() => {
+          setCommonAlertVisible(false);
+          commonAlertCallback && commonAlertCallback();
+        }}
+        onBackdropPress={() => setCommonAlertVisible(false)}
+        type={commonAlertType}
+        hideCancel={true}
+      />
     </View>
   );
 };

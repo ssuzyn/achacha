@@ -12,7 +12,6 @@ import {
   FlatList,
   // 현재 width는 사용하지 않지만 향후 확장성을 위해 import 유지
   Dimensions,
-  Alert,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -82,6 +81,13 @@ const PresentScreen = () => {
   // AlertDialog 노출 상태
   const [presentDialogVisible, setPresentDialogVisible] = useState(false);
 
+  // AlertDialog 추가
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('info');
+  const [alertCallback, setAlertCallback] = useState(() => {});
+
   // 탭바 숨기기
   useEffect(() => {
     hideTabBar();
@@ -118,7 +124,7 @@ const PresentScreen = () => {
         } else if (e?.response?.data?.message) {
           message = e.response.data.message;
         }
-        Alert.alert('에러', message);
+        showAlert('에러', message);
         setThumbnails([]);
       }
     };
@@ -140,7 +146,7 @@ const PresentScreen = () => {
           } else if (e?.response?.data?.message) {
             message = e.response.data.message;
           }
-          Alert.alert('에러', message);
+          showAlert('에러', message);
           setColorPalettes([]);
         }
       } else {
@@ -165,7 +171,7 @@ const PresentScreen = () => {
           } else if (e?.response?.data?.message) {
             message = e.response.data.message;
           }
-          Alert.alert('에러', message);
+          showAlert('에러', message);
           setTemplateDetail(null);
         }
       } else {
@@ -199,10 +205,19 @@ const PresentScreen = () => {
     // TODO: 실제 갤러리 저장 기능 구현 필요
   };
 
+  // 알림 다이얼로그 표시 함수
+  const showAlert = (title, message, callback = () => {}, type = 'info') => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+
   // 선물하기 처리 함수
   const handleSendGift = async () => {
     if (!gifticonData?.id) {
-      Alert.alert('에러', '기프티콘 정보가 없습니다.');
+      showAlert('에러', '기프티콘 정보가 없습니다.');
       return;
     }
     try {
@@ -218,7 +233,7 @@ const PresentScreen = () => {
       // API 호출 및 카카오링크 이동 후 Alert 표시
       await handleOpenKakaoShare(res.presentCardCode, res.gifticonName, res.brandName);
     } catch (e) {
-      Alert.alert('에러', '선물하기에 실패했습니다.');
+      showAlert('에러', '선물하기에 실패했습니다.');
     }
   };
 
@@ -279,7 +294,7 @@ const PresentScreen = () => {
       setIsShared(true);
     } catch (err) {
       console.log('카카오톡 공유 실패:', err);
-      Alert.alert('에러', '카카오톡 공유에 실패했습니다.');
+      showAlert('에러', '카카오톡 공유에 실패했습니다.');
     }
   };
 
@@ -411,6 +426,21 @@ const PresentScreen = () => {
           }
         }}
         type="warning"
+      />
+
+      {/* 일반 알림 다이얼로그 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        onBackdropPress={() => setAlertVisible(false)}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={() => {
+          setAlertVisible(false);
+          alertCallback && alertCallback();
+        }}
+        type={alertType}
+        hideCancel={true}
       />
     </View>
   );

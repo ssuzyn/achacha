@@ -8,15 +8,14 @@ import {
   TouchableOpacity,
   StatusBar,
   TextInput,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, Divider } from '../../../components/ui';
+import AlertDialog from '../../../components/ui/AlertDialog';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTabBar } from '../../../context/TabBarContext';
-import NavigationService from '../../../navigation/NavigationService';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import gifticonService from '../../../api/gifticonService';
 
@@ -34,6 +33,16 @@ const DetailAmountHistoryScreen = () => {
   const [gifticonId, setGifticonId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [gifticonData, setGifticonData] = useState(null);
+
+  // AlertDialog 상태 변수들
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertConfirmCallback, setAlertConfirmCallback] = useState(() => {});
+
+  // Delete 확인 다이얼로그 상태
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [deleteTransactionId, setDeleteTransactionId] = useState(null);
 
   // 바텀탭 표시
   useEffect(() => {
@@ -133,17 +142,28 @@ const DetailAmountHistoryScreen = () => {
         const errorData = error.response.data;
 
         if (status === 403) {
-          Alert.alert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
+          setAlertTitle('접근 권한 없음');
+          setAlertMessage('해당 기프티콘에 접근할 수 없습니다.');
+          setAlertConfirmCallback(() => () => {});
+          setAlertVisible(true);
         } else if (status === 404) {
-          Alert.alert('사용내역 없음', '사용내역을 찾을 수 없습니다.');
+          setAlertTitle('사용내역 없음');
+          setAlertMessage('사용내역을 찾을 수 없습니다.');
+          setAlertConfirmCallback(() => () => {});
+          setAlertVisible(true);
         } else {
-          Alert.alert(
-            '오류',
+          setAlertTitle('오류');
+          setAlertMessage(
             `사용내역을 불러오는 중 오류가 발생했습니다. ${errorData?.message || ''}`
           );
+          setAlertConfirmCallback(() => () => {});
+          setAlertVisible(true);
         }
       } else {
-        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+        setAlertTitle('오류');
+        setAlertMessage('네트워크 연결을 확인해주세요.');
+        setAlertConfirmCallback(() => () => {});
+        setAlertVisible(true);
       }
 
       setLoading(false);
@@ -191,20 +211,29 @@ const DetailAmountHistoryScreen = () => {
   const handleSaveEdit = async transactionId => {
     // 입력값 검증
     if (!editValue || editValue.trim() === '') {
-      Alert.alert('알림', '금액을 입력해주세요.');
+      setAlertTitle('알림');
+      setAlertMessage('금액을 입력해주세요.');
+      setAlertConfirmCallback(() => () => {});
+      setAlertVisible(true);
       return;
     }
 
     // 숫자 변환 전 입력값 검증 (숫자만 허용)
     if (!/^\d+$/.test(editValue)) {
-      Alert.alert('알림', '금액은 숫자만 입력 가능합니다.');
+      setAlertTitle('알림');
+      setAlertMessage('금액은 숫자만 입력 가능합니다.');
+      setAlertConfirmCallback(() => () => {});
+      setAlertVisible(true);
       return;
     }
 
     // 숫자로 변환
     const amount = parseInt(editValue, 10);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('알림', '올바른 금액을 입력하세요. (0보다 큰 숫자)');
+      setAlertTitle('알림');
+      setAlertMessage('올바른 금액을 입력하세요. (0보다 큰 숫자)');
+      setAlertConfirmCallback(() => () => {});
+      setAlertVisible(true);
       return;
     }
 
@@ -241,15 +270,13 @@ const DetailAmountHistoryScreen = () => {
       await loadUsageHistory();
 
       // 성공 메시지 표시
-      Alert.alert('성공', '기프티콘 사용금액이 변경되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            // 이전 화면으로 돌아가기
-            navigation.goBack();
-          },
-        },
-      ]);
+      setAlertTitle('성공');
+      setAlertMessage('기프티콘 사용금액이 변경되었습니다.');
+      setAlertConfirmCallback(() => () => {
+        // 이전 화면으로 돌아가기
+        navigation.goBack();
+      });
+      setAlertVisible(true);
     } catch (error) {
       console.error('사용내역 수정 오류:', error);
 
@@ -299,17 +326,18 @@ const DetailAmountHistoryScreen = () => {
 
       // 잔액 소진 관련 에러인 경우
       if (isZeroBalanceError) {
-        Alert.alert('사용 완료', '수정으로 인해 잔액이 소진되어 사용완료 처리되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => {
-              // 이전 화면으로 돌아가기
-              navigation.goBack();
-            },
-          },
-        ]);
+        setAlertTitle('사용 완료');
+        setAlertMessage('수정으로 인해 잔액이 소진되어 사용완료 처리되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // 이전 화면으로 돌아가기
+          navigation.goBack();
+        });
+        setAlertVisible(true);
       } else {
-        Alert.alert('오류', errorMessage);
+        setAlertTitle('오류');
+        setAlertMessage(errorMessage);
+        setAlertConfirmCallback(() => () => {});
+        setAlertVisible(true);
       }
     } finally {
       setLoading(false);
@@ -318,115 +346,117 @@ const DetailAmountHistoryScreen = () => {
 
   // 삭제하기 함수
   const handleDelete = transactionId => {
-    Alert.alert('거래 내역 삭제', '이 거래 내역을 삭제하시겠습니까?', [
-      {
-        text: '취소',
-        style: 'cancel',
-      },
-      {
-        text: '삭제',
-        onPress: async () => {
-          try {
-            setLoading(true);
+    setDeleteTransactionId(transactionId);
+    setDeleteConfirmVisible(true);
+  };
 
-            console.log('[DetailAmountHistoryScreen] 사용내역 삭제 요청:', {
-              gifticonId,
-              transactionId,
-            });
+  // 삭제 확인 후 처리 함수
+  const handleConfirmDelete = async () => {
+    const transactionId = deleteTransactionId;
+    setDeleteConfirmVisible(false);
 
-            // API 호출로 사용내역 삭제
-            await gifticonService.deleteAmountGifticonUsageHistory(
-              gifticonId,
-              parseInt(transactionId, 10)
-            );
+    try {
+      setLoading(true);
 
-            // UI 상태 업데이트
-            setTransactions(prev => {
-              const filteredTransactions = prev.filter(item => item.id !== transactionId);
-              return filteredTransactions;
-            });
+      console.log('[DetailAmountHistoryScreen] 사용내역 삭제 요청:', {
+        gifticonId,
+        transactionId,
+      });
 
-            // 전체 데이터 다시 로드 (잔액 업데이트를 위해)
-            await loadUsageHistory();
+      // API 호출로 사용내역 삭제
+      await gifticonService.deleteAmountGifticonUsageHistory(
+        gifticonId,
+        parseInt(transactionId, 10)
+      );
 
-            // 성공 메시지 표시
-            Alert.alert('성공', '기프티콘 사용내역이 삭제되었습니다.', [
-              {
-                text: '확인',
-                onPress: () => {
-                  // 이전 화면으로 돌아가기
-                  navigation.goBack();
-                },
-              },
-            ]);
-          } catch (error) {
-            console.error('사용내역 삭제 오류:', error);
+      // UI 상태 업데이트
+      setTransactions(prev => {
+        const filteredTransactions = prev.filter(item => item.id !== transactionId);
+        return filteredTransactions;
+      });
 
-            // 에러 메시지 처리
-            let errorMessage = '사용내역 삭제 중 오류가 발생했습니다.';
-            let isZeroBalanceError = false;
+      // 전체 데이터 다시 로드 (잔액 업데이트를 위해)
+      await loadUsageHistory();
 
-            if (error.response) {
-              console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
+      // 성공 메시지 표시
+      setAlertTitle('성공');
+      setAlertMessage('기프티콘 사용내역이 삭제되었습니다.');
+      setAlertConfirmCallback(() => () => {
+        // 이전 화면으로 돌아가기
+        navigation.goBack();
+      });
+      setAlertVisible(true);
+    } catch (error) {
+      console.error('사용내역 삭제 오류:', error);
 
-              const status = error.response.status;
-              const errorData = error.response.data;
-              const errorCode = errorData?.errorCode || errorData?.code || '';
+      // 에러 메시지 처리
+      let errorMessage = '사용내역 삭제 중 오류가 발생했습니다.';
+      let isZeroBalanceError = false;
 
-              // 에러 메시지에 잔액 관련 키워드가 있는지 확인
-              if (errorData?.message) {
-                errorMessage = errorData.message;
+      if (error.response) {
+        console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
 
-                // 잔액 관련 에러 체크
-                if (
-                  errorMessage.includes('잔액') ||
-                  errorMessage.includes('금액') ||
-                  errorCode.includes('AMOUNT') ||
-                  // 기타 관련 키워드 체크
-                  errorMessage.includes('소진') ||
-                  errorMessage.includes('초과')
-                ) {
-                  isZeroBalanceError = true;
-                }
-              } else {
-                // 특정 에러 코드에 따른 메시지 처리
-                if (status === 400) {
-                  errorMessage = '잘못된 요청입니다.';
-                } else if (status === 403) {
-                  errorMessage = '권한이 없습니다.';
-                } else if (status === 404) {
-                  errorMessage = '해당 사용내역을 찾을 수 없습니다.';
-                } else if (status === 500) {
-                  errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-                }
-              }
-            } else if (error.request) {
-              errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
-            } else {
-              errorMessage = `오류: ${error.message}`;
-            }
+        const status = error.response.status;
+        const errorData = error.response.data;
+        const errorCode = errorData?.errorCode || errorData?.code || '';
 
-            // 잔액 소진 관련 에러인 경우
-            if (isZeroBalanceError) {
-              Alert.alert('사용 완료', '삭제로 인해 잔액이 소진되어 사용완료 처리되었습니다.', [
-                {
-                  text: '확인',
-                  onPress: () => {
-                    // 이전 화면으로 돌아가기
-                    navigation.goBack();
-                  },
-                },
-              ]);
-            } else {
-              Alert.alert('오류', errorMessage);
-            }
-          } finally {
-            setLoading(false);
+        // 에러 메시지에 잔액 관련 키워드가 있는지 확인
+        if (errorData?.message) {
+          errorMessage = errorData.message;
+
+          // 잔액 관련 에러 체크
+          if (
+            errorMessage.includes('잔액') ||
+            errorMessage.includes('금액') ||
+            errorCode.includes('AMOUNT') ||
+            // 기타 관련 키워드 체크
+            errorMessage.includes('소진') ||
+            errorMessage.includes('초과')
+          ) {
+            isZeroBalanceError = true;
           }
-        },
-        style: 'destructive',
-      },
-    ]);
+        } else {
+          // 특정 에러 코드에 따른 메시지 처리
+          if (status === 400) {
+            errorMessage = '잘못된 요청입니다.';
+          } else if (status === 403) {
+            errorMessage = '권한이 없습니다.';
+          } else if (status === 404) {
+            errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+          } else if (status === 500) {
+            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+          }
+        }
+      } else if (error.request) {
+        errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
+      } else {
+        errorMessage = `오류: ${error.message}`;
+      }
+
+      // 잔액 소진 관련 에러인 경우
+      if (isZeroBalanceError) {
+        setAlertTitle('사용 완료');
+        setAlertMessage('삭제로 인해 잔액이 소진되어 사용완료 처리되었습니다.');
+        setAlertConfirmCallback(() => () => {
+          // 이전 화면으로 돌아가기
+          navigation.goBack();
+        });
+        setAlertVisible(true);
+      } else {
+        setAlertTitle('오류');
+        setAlertMessage(errorMessage);
+        setAlertConfirmCallback(() => () => {});
+        setAlertVisible(true);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 삭제 취소 함수
+  const handleCancelDelete = () => {
+    setDeleteConfirmVisible(false);
+    setDeleteTransactionId(null);
   };
 
   // amount 표시 함수
@@ -577,6 +607,35 @@ const DetailAmountHistoryScreen = () => {
           </View>
         </ScrollView>
       )}
+
+      {/* AlertDialog 컴포넌트 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        onBackdropPress={() => setAlertVisible(false)}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={() => {
+          setAlertVisible(false);
+          if (alertConfirmCallback) alertConfirmCallback();
+        }}
+        hideCancel={true}
+        type="info"
+      />
+
+      {/* 삭제 확인 다이얼로그 */}
+      <AlertDialog
+        isVisible={deleteConfirmVisible}
+        onBackdropPress={handleCancelDelete}
+        title="거래 내역 삭제"
+        message="이 거래 내역을 삭제하시겠습니까?"
+        confirmText="삭제"
+        cancelText="취소"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        type="warning"
+        hideCancel={false}
+      />
     </View>
   );
 };
