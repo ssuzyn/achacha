@@ -78,6 +78,9 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	public void giveAwayGifticon(Integer gifticonId, List<String> uuids) {
 		log.info("기프티콘 뿌리기 시작 - gifticonId: {}, uuids 개수: {}", gifticonId, uuids.size());
 
+		// 들어온 UUID 목록 로그로 남기기
+		log.info("수신된 UUID 목록: {}", uuids);
+		
 		// 로그인 된 유저
 		User loggedInUser = securityServicePort.getLoggedInUser();
 		Integer userId = loggedInUser.getId();
