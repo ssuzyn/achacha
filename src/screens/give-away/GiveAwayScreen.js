@@ -372,7 +372,17 @@ const GiveAwayScreen = ({ onClose }) => {
     const initialize = async () => {
       try {
         bleServiceRef.current = nearbyUsersService;
-        // console.log('BLE 서비스 초기화 중...');
+        console.log('BLE 서비스 초기화 중...');
+
+        // 위치 추적 중지 안전하게 처리
+        try {
+          if (bleServiceRef.current && bleServiceRef.current.stopLocationTracking) {
+            await bleServiceRef.current.stopLocationTracking();
+            console.log('위치 추적 중지됨');
+          }
+        } catch (err) {
+          console.log('위치 추적 중지 시도 중 오류 (무시됨):', err.message);
+        }
 
         try {
           await bleServiceRef.current.stopAdvertising();
@@ -753,6 +763,12 @@ const GiveAwayScreen = ({ onClose }) => {
 
   const sendGifticonToUser = async user => {
     const gifticonToSend = userDataRef.current.selectedGifticon;
+    console.log('[DEBUG] sendGifticonToUser 시작:', {
+      user,
+      gifticonToSend,
+      bleToken: user?.bleToken,
+      userDataRef: userDataRef.current,
+    });
 
     if (!gifticonToSend || !user || !user.bleToken) {
       console.error('[API] 전송 실패: 필요한 정보 누락.', { gifticonToSend, user });
@@ -767,12 +783,13 @@ const GiveAwayScreen = ({ onClose }) => {
     try {
       addReceivedAnimationReanimated(user.uuid);
       const gifticonIdToUse = gifticonToSend.gifticonId;
-      // console.log('[API] 실제 API 호출 시작:', {
-      //   gifticonId: gifticonIdToUse,
-      //   bleTokens: [user.bleToken],
-      // });
+      console.log('[DEBUG] API 호출 직전:', {
+        gifticonId: gifticonIdToUse,
+        bleTokens: [user.bleToken],
+      });
+
       const response = await giveAwayService.giveAwayGifticon(gifticonIdToUse, [user.bleToken]);
-      // console.log('[API] 호출 성공:', response);
+      console.log('[DEBUG] API 응답:', response);
 
       // 로컬 스토어에서 기프티콘 제거
       useGifticonListStore.getState().removeGifticon(gifticonIdToUse);
