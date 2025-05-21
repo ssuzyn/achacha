@@ -1,12 +1,5 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  Image,
-  TouchableOpacity,
-  Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { BottomSheetFlatList } from '@gorhom/bottom-sheet';
 const { width } = Dimensions.get('window');
 import { calculateDday } from '../utils/dateUtils';
 
@@ -80,10 +73,12 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
         <Text style={styles.listSubtitle}>*임박순으로 표시 / 상품형만 가능</Text>
       </View>
       {gifticons && gifticons.length > 0 ? (
-        <FlatList
+        <BottomSheetFlatList
           data={gifticons}
           renderItem={renderGifticonItem}
           keyExtractor={item => item.gifticonId.toString()}
+          style={{ flex: 1 }}
+          contentContainerStyle={{ ...styles.flatListContent, paddingBottom: 20 }}
         />
       ) : (
         <View style={styles.emptyContainer}>
@@ -96,16 +91,15 @@ const GiveAwayGifticonList = ({ gifticons, onSelectGifticon }) => {
 
 const styles = StyleSheet.create({
   listContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 20,
-    backgroundColor: 'rgba(218, 240, 254, 0.8)',
+    flex: 1,
+    backgroundColor: '#E5F4FE',
     width: '90%',
+    paddingTop: 4,
     borderRadius: 10,
-    maxHeight: 260,
+    alignSelf: 'center',
   },
   flatListContent: {
-    paddingTop: 8,
+    paddingTop: 4,
   },
   gifticonItem: {
     backgroundColor: '#F5FBFF',
