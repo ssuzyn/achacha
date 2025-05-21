@@ -669,10 +669,10 @@ const RegisterDetailScreen = () => {
     if ((barcode || barcodeNumber) && !barcodeImageUri && originalImageUri) {
       console.log('[기프티콘 등록] 바코드 이미지 추출 재시도');
 
-      // 사용자에게 알림
-      Alert.alert('바코드 이미지 추출', '바코드 이미지를 추출하고 있습니다. 잠시만 기다려주세요.', [
-        { text: '확인' },
-      ]);
+      // // 사용자에게 알림
+      // Alert.alert('바코드 이미지 추출', '바코드 이미지를 추출하고 있습니다. 잠시만 기다려주세요.', [
+      //   { text: '확인' },
+      // ]);
 
       // 잠시 후 바코드 이미지 추출 시도
       setTimeout(async () => {
