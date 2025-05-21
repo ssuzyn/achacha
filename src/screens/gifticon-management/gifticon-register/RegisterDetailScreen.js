@@ -17,7 +17,7 @@ import {
   TextInput,
   Keyboard,
 } from 'react-native';
-import { Button, InputLine, Text, LoadingOcrModal } from '../../../components/ui';
+import { Button, InputLine, Text, LoadingOcrModal, AlertDialog } from '../../../components/ui';
 import { useTheme } from '../../../hooks/useTheme';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -44,6 +44,12 @@ const RegisterDetailScreen = () => {
   const cropData = useGifticonStore(state => state.registerForm.cropData);
   const updateRegisterFormCropData = useGifticonStore(state => state.updateRegisterFormCropData);
   const updateRegisterFormImage = useGifticonStore(state => state.updateRegisterFormImage);
+
+  // AlertDialog 관련 상태 추가
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertCallback, setAlertCallback] = useState(null);
 
   // 상태 선언
   const [brandSearchText, setBrandSearchText] = useState(''); // 브랜드 검색 텍스트
@@ -359,30 +365,15 @@ const RegisterDetailScreen = () => {
   const handleGoBack = () => {
     // 이미지가 등록되었거나 정보가 입력된 경우에만 확인 대화상자 표시
     if (currentImageUri || productName || brandSearchText || dateInputText || barcode) {
-      Alert.alert(
+      showAlert(
         '등록 취소',
         '기프티콘 등록을 취소하시겠습니까? 입력한 정보는 저장되지 않습니다.',
-        [
-          {
-            text: '취소',
-            style: 'cancel',
-            onPress: () => {
-              // 취소 시 스토어의 initialized 상태 유지
-              const updateRegisterFormField = useGifticonStore.getState().updateRegisterFormField;
-              updateRegisterFormField('initialized', true);
-            },
-          },
-          {
-            text: '확인',
-            onPress: () => {
-              // 등록 취소 시 스토어 상태 초기화
-              const resetRegisterForm = useGifticonStore.getState().resetRegisterForm;
-              resetRegisterForm();
-              navigation.goBack();
-            },
-          },
-        ],
-        { cancelable: false }
+        () => {
+          // 등록 취소 시 스토어 상태 초기화
+          const resetRegisterForm = useGifticonStore.getState().resetRegisterForm;
+          resetRegisterForm();
+          navigation.goBack();
+        }
       );
     } else {
       // 아무 정보도 입력되지 않았으면 바로 뒤로가기
@@ -492,7 +483,7 @@ const RegisterDetailScreen = () => {
       setBoxModalVisible(false);
       setTypeLocked(true);
     } else {
-      Alert.alert('알림', '기프티콘 타입과 등록 위치를 모두 선택해주세요.');
+      showAlert('알림', '기프티콘 타입과 등록 위치를 모두 선택해주세요.');
     }
   };
 
@@ -1013,22 +1004,22 @@ const RegisterDetailScreen = () => {
   // 기프티콘 등록 처리
   const handleRegister = async () => {
     if (!currentImageUri) {
-      Alert.alert('알림', '기프티콘 이미지를 등록해주세요.');
+      showAlert('알림', '기프티콘 이미지를 등록해주세요.');
       return;
     }
 
     if (!selectedBrand) {
-      Alert.alert('알림', '브랜드를 선택해주세요.');
+      showAlert('알림', '브랜드를 선택해주세요.');
       return;
     }
 
     if (!productName.trim()) {
-      Alert.alert('알림', '상품명을 입력해주세요.');
+      showAlert('알림', '상품명을 입력해주세요.');
       return;
     }
 
     if (!expiryDate) {
-      Alert.alert('알림', '유효기간을 입력해주세요.');
+      showAlert('알림', '유효기간을 입력해주세요.');
       return;
     }
 
@@ -1038,7 +1029,7 @@ const RegisterDetailScreen = () => {
       const numericAmount = amount.replace(/,/g, '');
 
       if (!numericAmount || isNaN(Number(numericAmount)) || Number(numericAmount) <= 0) {
-        Alert.alert('알림', '유효한 금액을 입력해주세요.');
+        showAlert('알림', '유효한 금액을 입력해주세요.');
         return;
       }
     }
@@ -1102,44 +1093,7 @@ const RegisterDetailScreen = () => {
         barcodeImage
       );
 
-      console.log('기프티콘 등록 성공:', response);
-
-      // 성공 메시지 표시
-      Alert.alert('성공', '기프티콘이 성공적으로 등록되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            // ✅ 등록 성공 시에만 상태 초기화
-            const resetRegisterForm = useGifticonStore.getState().resetRegisterForm;
-            resetRegisterForm();
-
-            // 기프티콘 타입에 따라 다른 상세 화면으로 이동
-            const targetScreen =
-              gifticonType === 'PRODUCT' ? 'DetailProductScreen' : 'DetailAmountScreen';
-
-            // 탭 네비게이션을 먼저 설정하고 그 안에 있는 스택 네비게이션을 설정
-            navigation.reset({
-              index: 0,
-              routes: [
-                {
-                  name: 'Main',
-                  params: {
-                    screen: 'TabGifticonManage',
-                    params: {
-                      screen: targetScreen,
-                      params: {
-                        gifticonId: response.gifticonId,
-                        scope: boxType === 'SHARE_BOX' ? 'SHARE_BOX' : 'MY_BOX',
-                        shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,
-                      },
-                    },
-                  },
-                },
-              ],
-            });
-          },
-        },
-      ]);
+      console.log('기프티콘 등록 성공:', response); // 성공 메시지 표시      showAlert('성공', '기프티콘이 성공적으로 등록되었습니다.', () => {        // ✅ 등록 성공 시에만 상태 초기화        const resetRegisterForm = useGifticonStore.getState().resetRegisterForm;        resetRegisterForm();        // 기프티콘 타입에 따라 다른 상세 화면으로 이동        const targetScreen =          gifticonType === 'PRODUCT' ? 'DetailProductScreen' : 'DetailAmountScreen';        // 탭 네비게이션을 먼저 설정하고 그 안에 있는 스택 네비게이션을 설정        navigation.reset({          index: 0,          routes: [            {              name: 'Main',              params: {                screen: 'TabGifticonManage',                params: {                  screen: targetScreen,                  params: {                    gifticonId: response.gifticonId,                    scope: boxType === 'SHARE_BOX' ? 'SHARE_BOX' : 'MY_BOX',                    shareBoxId: boxType === 'SHARE_BOX' ? shareBoxId : null,                  },                },              },            },          ],        });      });
     } catch (error) {
       console.error('기프티콘 등록 실패:', error);
 
@@ -1167,8 +1121,7 @@ const RegisterDetailScreen = () => {
         }
       }
 
-      // ✅ 등록 실패 시에는 상태를 초기화하지 않고 에러 메시지만 표시
-      Alert.alert('오류', errorMessage);
+      // ✅ 등록 실패 시에는 상태를 초기화하지 않고 에러 메시지만 표시      showAlert('오류', errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -1418,6 +1371,22 @@ const RegisterDetailScreen = () => {
   useEffect(() => {
     loadShareBoxes();
   }, []);
+
+  // AlertDialog를 표시하는 함수
+  const showAlert = (title, message, callback = null) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback);
+    setAlertVisible(true);
+  };
+
+  // AlertDialog 닫기 함수
+  const closeAlert = () => {
+    setAlertVisible(false);
+    if (alertCallback) {
+      alertCallback();
+    }
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -2043,18 +2012,26 @@ const RegisterDetailScreen = () => {
             <TouchableOpacity
               style={styles.newBarcodeCopyButton}
               onPress={() => {
-                Alert.alert(
-                  '알림',
-                  `바코드 번호 ${barcode || barcodeNumber}이(가) 복사되었습니다.`
-                );
+                showAlert('알림', `바코드 번호 ${barcode || barcodeNumber}이(가) 복사되었습니다.`);
               }}
             >
-              <Icon name="content-copy" size={20} color="white" />
-              <Text style={styles.newBarcodeCopyText}>바코드 복사</Text>
+              {' '}
+              <Icon name="content-copy" size={20} color="white" />{' '}
+              <Text style={styles.newBarcodeCopyText}>바코드 복사</Text>{' '}
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* AlertDialog 추가 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={closeAlert}
+        hideCancel={true}
+      />
     </View>
   );
 };
