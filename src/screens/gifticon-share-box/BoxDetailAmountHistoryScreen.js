@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, Divider } from '../../components/ui';
+import { Text, Divider, AlertDialog } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import { useTabBar } from '../../context/TabBarContext';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -37,6 +37,12 @@ const BoxDetailAmountHistoryScreen = () => {
   const [gifticonName, setGifticonName] = useState('');
   const [usedAmount, setUsedAmount] = useState(null);
   const [error, setError] = useState(null);
+
+  // AlertDialog 관련 상태 변수
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertCallback, setAlertCallback] = useState(null);
 
   // 바텀탭 표시
   useEffect(() => {
@@ -150,17 +156,17 @@ const BoxDetailAmountHistoryScreen = () => {
         const errorData = error.response.data;
 
         if (status === 403) {
-          Alert.alert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
+          showAlert('접근 권한 없음', '해당 기프티콘에 접근할 수 없습니다.');
         } else if (status === 404) {
-          Alert.alert('사용내역 없음', '사용내역을 찾을 수 없습니다.');
+          showAlert('사용내역 없음', '사용내역을 찾을 수 없습니다.');
         } else {
-          Alert.alert(
+          showAlert(
             '오류',
             `사용내역을 불러오는 중 오류가 발생했습니다. ${errorData?.message || ''}`
           );
         }
       } else {
-        Alert.alert('오류', '네트워크 연결을 확인해주세요.');
+        showAlert('오류', '네트워크 연결을 확인해주세요.');
       }
 
       // 오류 발생 시 route.params에서 전달된 정보를 사용해 임시 트랜잭션 생성
@@ -225,20 +231,20 @@ const BoxDetailAmountHistoryScreen = () => {
   const handleSaveEdit = async transactionId => {
     // 입력값 검증
     if (!editValue || editValue.trim() === '') {
-      Alert.alert('알림', '금액을 입력해주세요.');
+      showAlert('알림', '금액을 입력해주세요.');
       return;
     }
 
     // 숫자 변환 전 입력값 검증 (숫자만 허용)
     if (!/^\d+$/.test(editValue)) {
-      Alert.alert('알림', '금액은 숫자만 입력 가능합니다.');
+      showAlert('알림', '금액은 숫자만 입력 가능합니다.');
       return;
     }
 
     // 숫자로 변환
     const amount = parseInt(editValue, 10);
     if (isNaN(amount) || amount <= 0) {
-      Alert.alert('알림', '올바른 금액을 입력하세요. (0보다 큰 숫자)');
+      showAlert('알림', '올바른 금액을 입력하세요. (0보다 큰 숫자)');
       return;
     }
 
@@ -275,15 +281,10 @@ const BoxDetailAmountHistoryScreen = () => {
       await loadUsageHistory();
 
       // 성공 메시지 표시
-      Alert.alert('성공', '기프티콘 사용금액이 변경되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            // 이전 화면으로 돌아가기
-            navigation.goBack();
-          },
-        },
-      ]);
+      showAlert('성공', '기프티콘 사용금액이 변경되었습니다.', () => {
+        // 이전 화면으로 돌아가기
+        navigation.goBack();
+      });
     } catch (error) {
       console.error('사용내역 수정 오류:', error);
 
@@ -316,7 +317,7 @@ const BoxDetailAmountHistoryScreen = () => {
         errorMessage = `오류: ${error.message}`;
       }
 
-      Alert.alert('오류', errorMessage);
+      showAlert('오류', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -324,93 +325,94 @@ const BoxDetailAmountHistoryScreen = () => {
 
   // 삭제하기 함수
   const handleDelete = transactionId => {
-    Alert.alert('거래 내역 삭제', '이 거래 내역을 삭제하시겠습니까?', [
-      {
-        text: '취소',
-        style: 'cancel',
-      },
-      {
-        text: '삭제',
-        onPress: async () => {
-          try {
-            setLoading(true);
+    showAlert('거래 내역 삭제', '이 거래 내역을 삭제하시겠습니까?', async () => {
+      try {
+        setLoading(true);
 
-            console.log('[BoxDetailAmountHistoryScreen] 사용내역 삭제 요청:', {
-              gifticonId,
-              transactionId,
-            });
+        console.log('[BoxDetailAmountHistoryScreen] 사용내역 삭제 요청:', {
+          gifticonId,
+          transactionId,
+        });
 
-            // API 호출로 사용내역 삭제
-            await gifticonService.deleteAmountGifticonUsageHistory(
-              gifticonId,
-              parseInt(transactionId, 10)
-            );
+        // API 호출로 사용내역 삭제
+        await gifticonService.deleteAmountGifticonUsageHistory(
+          gifticonId,
+          parseInt(transactionId, 10)
+        );
 
-            // UI 상태 업데이트
-            setTransactions(prev => {
-              const filteredTransactions = prev.filter(item => item.id !== transactionId);
-              return filteredTransactions;
-            });
+        // UI 상태 업데이트
+        setTransactions(prev => {
+          const filteredTransactions = prev.filter(item => item.id !== transactionId);
+          return filteredTransactions;
+        });
 
-            // 전체 데이터 다시 로드 (잔액 업데이트를 위해)
-            await loadUsageHistory();
+        // 전체 데이터 다시 로드 (잔액 업데이트를 위해)
+        await loadUsageHistory();
 
-            // 성공 메시지 표시
-            Alert.alert('성공', '기프티콘 사용내역이 삭제되었습니다.', [
-              {
-                text: '확인',
-                onPress: () => {
-                  // 이전 화면으로 돌아가기
-                  navigation.goBack();
-                },
-              },
-            ]);
-          } catch (error) {
-            console.error('사용내역 삭제 오류:', error);
+        // 성공 메시지 표시
+        showAlert('성공', '기프티콘 사용내역이 삭제되었습니다.', () => {
+          // 이전 화면으로 돌아가기
+          navigation.goBack();
+        });
+      } catch (error) {
+        console.error('사용내역 삭제 오류:', error);
 
-            // 에러 메시지 표시
-            let errorMessage = '사용내역 삭제 중 오류가 발생했습니다.';
+        // 에러 메시지 표시
+        let errorMessage = '사용내역 삭제 중 오류가 발생했습니다.';
 
-            if (error.response) {
-              console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
+        if (error.response) {
+          console.error('에러 응답:', JSON.stringify(error.response.data, null, 2));
 
-              const status = error.response.status;
+          const status = error.response.status;
 
-              // 특정 에러 코드에 따른 메시지 처리
-              if (status === 400) {
-                errorMessage = '잘못된 요청입니다.';
-              } else if (status === 403) {
-                errorMessage = '권한이 없습니다.';
-              } else if (status === 404) {
-                errorMessage = '해당 사용내역을 찾을 수 없습니다.';
-              } else if (status === 500) {
-                errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-              }
-
-              // 서버에서 온 메시지가 있으면 이를 우선 사용
-              if (error.response.data?.message) {
-                errorMessage = error.response.data.message;
-              }
-            } else if (error.request) {
-              errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
-            } else {
-              errorMessage = `오류: ${error.message}`;
-            }
-
-            Alert.alert('오류', errorMessage);
-          } finally {
-            setLoading(false);
+          // 특정 에러 코드에 따른 메시지 처리
+          if (status === 400) {
+            errorMessage = '잘못된 요청입니다.';
+          } else if (status === 403) {
+            errorMessage = '권한이 없습니다.';
+          } else if (status === 404) {
+            errorMessage = '해당 사용내역을 찾을 수 없습니다.';
+          } else if (status === 500) {
+            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
           }
-        },
-        style: 'destructive',
-      },
-    ]);
+
+          // 서버에서 온 메시지가 있으면 이를 우선 사용
+          if (error.response.data?.message) {
+            errorMessage = error.response.data.message;
+          }
+        } else if (error.request) {
+          errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
+        } else {
+          errorMessage = `오류: ${error.message}`;
+        }
+
+        showAlert('오류', errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    });
   };
 
   // amount 표시 함수
   const renderAmount = (amount, type) => {
     const prefix = type === 'payment' ? '-' : '';
     return `${prefix}${formatNumber(amount)}원`;
+  };
+
+  // AlertDialog를 표시하는 함수
+  const showAlert = (title, message, callback = null) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback);
+    setAlertVisible(true);
+  };
+
+  // AlertDialog 닫기 함수
+  const closeAlert = () => {
+    setAlertVisible(false);
+    if (alertCallback) {
+      alertCallback();
+    }
   };
 
   return (
@@ -555,6 +557,17 @@ const BoxDetailAmountHistoryScreen = () => {
           </View>
         </ScrollView>
       )}
+
+      {/* AlertDialog */}
+      <AlertDialog
+        isVisible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={closeAlert}
+        hideCancel={true}
+        type="info"
+      />
     </View>
   );
 };

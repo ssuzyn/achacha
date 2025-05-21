@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   StatusBar,
   TextInput,
-  Alert,
   Share,
   Modal,
   Button,
@@ -19,7 +18,7 @@ import {
 import { Icon } from 'react-native-elements';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text } from '../../components/ui';
+import { Text, AlertDialog } from '../../components/ui';
 import { useTheme } from '../../hooks/useTheme';
 import NavigationService from '../../navigation/NavigationService';
 import apiClient from '../../api/apiClient';
@@ -45,12 +44,18 @@ const BoxCreateScreen = () => {
   const webViewRef = React.useRef(null);
   const [modalVisible, setModalVisible] = useState(false);
 
+  // AlertDialog 관련 상태 변수
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertCallback, setAlertCallback] = useState(null);
+
   useEffect(() => {
     if (route.params?.code) {
       setInviteCode(route.params.code); // 입력란 자동 세팅
       Clipboard.setStringAsync(route.params.code); // 클립보드 자동 복사
       // 안내 메시지
-      Alert.alert('알림', '초대코드가 자동으로 입력되었습니다!');
+      showAlert('알림', '초대코드가 자동으로 입력되었습니다!');
     }
   }, [route.params?.code]);
 
@@ -246,7 +251,7 @@ const BoxCreateScreen = () => {
   // 쉐어박스 생성 함수
   const handleCreate = async () => {
     if (!boxName.trim()) {
-      Alert.alert('알림', '박스명을 입력해주세요.');
+      showAlert('알림', '박스명을 입력해주세요.');
       return;
     }
 
@@ -263,7 +268,7 @@ const BoxCreateScreen = () => {
       } else if (error?.response?.data?.message) {
         message = error.response.data.message;
       }
-      Alert.alert('생성 실패', message);
+      showAlert('생성 실패', message);
     }
   };
 
@@ -283,7 +288,23 @@ const BoxCreateScreen = () => {
       });
     } catch (e) {
       console.error(e);
-      Alert.alert('에러', '카카오톡 공유에 실패했습니다.');
+      showAlert('에러', '카카오톡 공유에 실패했습니다.');
+    }
+  };
+
+  // AlertDialog를 표시하는 함수
+  const showAlert = (title, message, callback = null) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback);
+    setAlertVisible(true);
+  };
+
+  // AlertDialog 닫기 함수
+  const closeAlert = () => {
+    setAlertVisible(false);
+    if (alertCallback) {
+      alertCallback();
     }
   };
 
@@ -436,6 +457,17 @@ const BoxCreateScreen = () => {
       </View>
 
       {screenState === 'create' ? renderCreateScreen() : renderShareScreen()}
+
+      {/* AlertDialog 컴포넌트 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={closeAlert}
+        hideCancel={true}
+        type="info"
+      />
     </View>
   );
 };
