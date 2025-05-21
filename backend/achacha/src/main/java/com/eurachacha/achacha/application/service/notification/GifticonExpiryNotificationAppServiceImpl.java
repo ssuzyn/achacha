@@ -76,6 +76,33 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 		}
 	}
 
+	@Override
+	@Transactional
+	public void sendExpiryDateNotificationForUser(Integer userId) {
+		LocalDate today = LocalDate.now();
+
+		// 알림 타입 찾기
+		NotificationType findCode = notificationTypeRepository.findByCode(NotificationTypeCode.EXPIRY_DATE);
+
+		// 사용자 알림 설정 조회
+		NotificationSetting findSetting = notificationSettingRepository
+			.findByUserIdAndNotificationTypeId(userId, findCode.getId());
+
+		// 알림 설정이 활성화되어 있지 않으면 종료
+		if (!notificationSettingDomainService.isEnabled(findSetting)) {
+			return;
+		}
+
+		// 단일 쿼리로 해당 사용자의 모든 관련 기프티콘 조회 (소유 + 공유받은)
+		List<Gifticon> allRelevantGifticons = gifticonRepository.findAllRelevantGifticonsWithExpiryDates(
+			getExpiryDates(today), userId);
+
+		// 모든 관련 기프티콘에 대해 알림 처리
+		for (Gifticon gifticon : allRelevantGifticons) {
+			saveAndSendNotification(gifticon, findCode, today, findSetting);
+		}
+	}
+
 	private void sharedGifticons(Gifticon findGifticon, NotificationType findCode, LocalDate today) {
 
 		// 참여자 ID 목록 추출
