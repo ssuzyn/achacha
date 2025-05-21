@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.eurachacha.achacha.application.port.input.notification.GifticonExpiryNotificationAppService;
@@ -77,7 +78,7 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 	}
 
 	@Override
-	@Transactional
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void sendExpiryDateNotificationForUser(Integer userId) {
 		LocalDate today = LocalDate.now();
 		log.info("사용자 유효기간 알림 처리 시작: 사용자ID={}, 오늘날짜={}", userId, today);
