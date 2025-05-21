@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Platform,
   PermissionsAndroid,
-  Alert,
   NativeEventEmitter,
   NativeModules,
   StatusBar,
@@ -19,7 +18,7 @@ import { useTheme, Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabBar } from '../context/TabBarContext';
-import { Divider, Text, Button } from '../components/ui';
+import { Divider, Text, Button, AlertDialog } from '../components/ui';
 import Switch from '../components/ui/Switch';
 import { Svg, Path, Line } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -91,6 +90,22 @@ const SettingScreen = () => {
   // 임시 값을 저장할 상태 추가
   const [tempExpiryInterval, setTempExpiryInterval] = useState(7);
 
+  // 알림 다이얼로그 상태 추가
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState('info');
+  const [alertCallback, setAlertCallback] = useState(() => {});
+
+  // 알림 다이얼로그 표시 함수
+  const showAlert = (title, message, callback = () => {}, type = 'info') => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+
   // 뒤로가기 처리
   const handleGoBack = useCallback(() => {
     navigation.goBack();
@@ -147,14 +162,14 @@ const SettingScreen = () => {
 
           if (!success && error) {
             // 실패 시 이전 상태로 되돌리기 위한 알림
-            Alert.alert('알림 설정 실패', error);
+            showAlert('알림 설정 실패', error);
             return false;
           }
 
           return success;
         } catch (err) {
           console.error('[알림설정] 토글 오류:', err);
-          Alert.alert('오류', '알림 설정 변경 중 문제가 발생했습니다.');
+          showAlert('오류', '알림 설정 변경 중 문제가 발생했습니다.');
           return false;
         }
       };
@@ -187,13 +202,13 @@ const SettingScreen = () => {
         if (success) {
           // 저장 성공 시 모드 전환 즉시 진행
           setEditingInterval(false);
-          Alert.alert('설정 완료', '알림 주기가 설정되었습니다.');
+          showAlert('설정 완료', '알림 주기가 설정되었습니다.');
         } else if (error) {
-          Alert.alert('알림 주기 설정 실패', error);
+          showAlert('알림 주기 설정 실패', error);
         }
       } catch (err) {
         console.error('[알림설정] 저장 중 오류:', err);
-        Alert.alert('오류', '알림 주기 설정 중 오류가 발생했습니다.');
+        showAlert('오류', '알림 주기 설정 중 오류가 발생했습니다.');
       }
     } else {
       // 수정 모드로 전환 - 현재 서버에 저장된 값으로 슬라이더 초기화
@@ -244,7 +259,7 @@ const SettingScreen = () => {
     setConnectionStep(1);
 
     if (Platform.OS !== 'android') {
-      Alert.alert('미지원', 'Nearby Advertising은 안드로이드에서만 사용 가능합니다.');
+      showAlert('미지원', 'Nearby Advertising은 안드로이드에서만 사용 가능합니다.');
       setConnectionStep(0);
       return;
     }
@@ -275,12 +290,12 @@ const SettingScreen = () => {
         const result = await WearSyncModule.startNearbyAdvertising();
         console.log('[Nearby] Advertising started:', result);
       } else {
-        Alert.alert('권한 거부됨', '워치 연결을 시작하려면 필요한 모든 권한이 필요합니다.');
+        showAlert('권한 거부됨', '워치 연결을 시작하려면 필요한 모든 권한이 필요합니다.');
         setConnectionStep(0);
       }
     } catch (error) {
       console.error('[Nearby] Failed to start advertising:', error);
-      Alert.alert('오류', '워치 연결 중 오류가 발생했습니다: ' + error.message);
+      showAlert('오류', '워치 연결 중 오류가 발생했습니다: ' + error.message);
       setConnectionStep(0);
     }
   };
@@ -401,7 +416,7 @@ const SettingScreen = () => {
           setConnectionStep(2);
         } else {
           // 연결 실패 처리
-          Alert.alert('연결 실패', '실제 연결이 성립되지 않았습니다.');
+          showAlert('연결 실패', '실제 연결이 성립되지 않았습니다.');
         }
       });
       return () => subscription.remove();
@@ -423,7 +438,7 @@ const SettingScreen = () => {
         } else if (e?.response?.data?.message) {
           message = e.response.data.message;
         }
-        Alert.alert('오류', message);
+        showAlert('오류', message);
         console.error('유저 정보 조회 실패:', e);
       }
     };
@@ -480,7 +495,7 @@ const SettingScreen = () => {
         fcmToken = await getFcmToken();
       }
       if (!refreshToken || !fcmToken) {
-        Alert.alert('오류', '로그아웃 정보가 올바르지 않습니다.');
+        showAlert('오류', '로그아웃 정보가 올바르지 않습니다.');
         return;
       }
       await logoutApi(refreshToken, fcmToken, bleToken);
@@ -494,18 +509,13 @@ const SettingScreen = () => {
       // zustand 상태도 초기화
       await useAuthStore.getState().logout();
 
-      Alert.alert('알림', '로그아웃 되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            // 필요시 로그인 화면 등으로 이동
-            navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-          },
-        },
-      ]);
+      showAlert('알림', '로그아웃 되었습니다.', () => {
+        // 필요시 로그인 화면 등으로 이동
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      });
     } catch (e) {
       console.error('로그아웃 실패:', e);
-      Alert.alert('오류', '로그아웃에 실패했습니다.');
+      showAlert('오류', '로그아웃에 실패했습니다.');
     }
   };
 
@@ -906,6 +916,21 @@ const SettingScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* AlertDialog 추가 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        onBackdropPress={() => setAlertVisible(false)}
+        onConfirm={() => {
+          setAlertVisible(false);
+          alertCallback();
+        }}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        type={alertType}
+        hideCancel={true}
+      />
     </View>
   );
 };

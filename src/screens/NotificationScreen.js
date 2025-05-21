@@ -9,13 +9,14 @@ import {
   InteractionManager,
   TouchableOpacity,
   RefreshControl,
+  Alert,
 } from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useHeaderBar } from '../context/HeaderBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ListItem, Text, AlertDialog } from '../components/ui';
+import { ListItem, Text } from '../components/ui';
 import notificationService from '../api/notificationService';
 
 // 알림 타입에 따른 아이콘 정의
@@ -80,13 +81,6 @@ const NotificationScreen = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState(null);
   const [displayData, setDisplayData] = useState([]); // 화면에 표시할 데이터
-
-  // AlertDialog 관련 상태
-  const [deletedGifticonDialog, setDeletedGifticonDialog] = useState(false);
-  const [inaccessibleShareBoxDialog, setInaccessibleShareBoxDialog] = useState(false);
-  const [leavedShareBoxDialog, setLeavedShareBoxDialog] = useState(false);
-  const [errorDialog, setErrorDialog] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
 
   // 페이지 정보 및 로딩 플래그
   const isMounted = useRef(true);
@@ -405,7 +399,7 @@ const NotificationScreen = () => {
               gifticonDetail.gifticonStatus === 'TRANSFERRED'
             ) {
               // 삭제되었거나 존재하지 않는 기프티콘인 경우 처리
-              setDeletedGifticonDialog(true);
+              Alert.alert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
               return;
             }
 
@@ -428,7 +422,7 @@ const NotificationScreen = () => {
           } catch (gifticonError) {
             console.error('[디버그] 기프티콘 상세 조회 오류:', gifticonError);
             // 기프티콘 조회 실패 시 (존재하지 않는 경우)
-            setDeletedGifticonDialog(true);
+            Alert.alert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
             return;
           }
         }
@@ -452,7 +446,7 @@ const NotificationScreen = () => {
             const isAccessible = await notificationService.checkShareBoxAccessibility(shareBoxId);
 
             if (!isAccessible) {
-              setInaccessibleShareBoxDialog(true);
+              Alert.alert('알림', '참여 중이지 않거나 삭제된 쉐어박스입니다.');
               return;
             }
 
@@ -463,21 +457,19 @@ const NotificationScreen = () => {
             });
           } catch (navError) {
             console.error('[디버그] 쉐어박스 네비게이션 오류:', navError);
-            setLeavedShareBoxDialog(true);
+            Alert.alert('알림', '삭제되었거나 나가기 처리한 쉐어박스입니다.');
           }
         }
         // 쉐어박스 삭제 알림 처리
         else if (notificationType === 'SHAREBOX_DELETED') {
-          console.log('[디버그] 쉐어박스 삭제 알림: 아무 동작 안함');
-          // 아무 동작도 하지 않음
-          return;
+          console.log('[디버그] 쉐어박스 삭제 알림: BoxMain으로 이동');
+          navigation.navigate('BoxMain');
         } else {
           console.log('처리되지 않은 알림 타입:', notificationType);
         }
       } catch (error) {
         console.error('[디버그] 알림 처리 중 오류 발생:', error);
-        setErrorMessage('알림을 처리하는 중 문제가 발생했습니다.');
-        setErrorDialog(true);
+        Alert.alert('오류', '알림을 처리하는 중 문제가 발생했습니다.');
       }
     },
     [navigation]
@@ -637,54 +629,6 @@ const NotificationScreen = () => {
           }
         />
       )}
-
-      {/* 알림 다이얼로그 - 삭제된 기프티콘 */}
-      <AlertDialog
-        isVisible={deletedGifticonDialog}
-        title="알림"
-        message="삭제되었거나 존재하지 않는 기프티콘입니다."
-        confirmText="확인"
-        hideCancel={true}
-        onConfirm={() => setDeletedGifticonDialog(false)}
-        onBackdropPress={() => setDeletedGifticonDialog(false)}
-        type="info"
-      />
-
-      {/* 알림 다이얼로그 - 접근 불가 쉐어박스 */}
-      <AlertDialog
-        isVisible={inaccessibleShareBoxDialog}
-        title="알림"
-        message="참여 중이지 않거나 삭제된 쉐어박스입니다."
-        confirmText="확인"
-        hideCancel={true}
-        onConfirm={() => setInaccessibleShareBoxDialog(false)}
-        onBackdropPress={() => setInaccessibleShareBoxDialog(false)}
-        type="info"
-      />
-
-      {/* 알림 다이얼로그 - 탈퇴한 쉐어박스 */}
-      <AlertDialog
-        isVisible={leavedShareBoxDialog}
-        title="알림"
-        message="삭제되었거나 나가기 처리한 쉐어박스입니다."
-        confirmText="확인"
-        hideCancel={true}
-        onConfirm={() => setLeavedShareBoxDialog(false)}
-        onBackdropPress={() => setLeavedShareBoxDialog(false)}
-        type="info"
-      />
-
-      {/* 알림 다이얼로그 - 일반 오류 */}
-      <AlertDialog
-        isVisible={errorDialog}
-        title="오류"
-        message={errorMessage}
-        confirmText="확인"
-        hideCancel={true}
-        onConfirm={() => setErrorDialog(false)}
-        onBackdropPress={() => setErrorDialog(false)}
-        type="error"
-      />
     </View>
   );
 };
