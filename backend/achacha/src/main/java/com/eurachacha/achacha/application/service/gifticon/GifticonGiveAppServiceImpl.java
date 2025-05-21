@@ -76,37 +76,47 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 	@Override
 	@Transactional
 	public void giveAwayGifticon(Integer gifticonId, List<String> uuids) {
+		log.info("기프티콘 뿌리기 시작 - gifticonId: {}, uuids 개수: {}", gifticonId, uuids.size());
 
 		// 로그인 된 유저
 		User loggedInUser = securityServicePort.getLoggedInUser();
 		Integer userId = loggedInUser.getId();
+		log.info("뿌리기 요청 유저 ID: {}", userId);
 
 		Gifticon findGifticon = gifticonRepository.getGifticonDetail(gifticonId);
+		log.info("뿌릴 기프티콘 정보 - name: {}, type: {}", findGifticon.getName(), findGifticon.getType());
 
 		// 삭제, 사용, 공유 여부, 타입 검증
 		gifticonDomainService.validateGifticonForGiveAway(userId, findGifticon);
+		log.info("기프티콘 유효성 검증 완료");
 
 		// 유효한 uuid만 필터링
 		List<String> validUuids = bleTokenRepository.findValuesByValueIn(uuids);
+		log.info("유효한 UUID 개수: {}/{}", validUuids.size(), uuids.size());
 
 		// 유효한 UUID가 있는지 확인
 		if (validUuids.isEmpty()) {
+			log.info("주변에 유효한 사용자가 없음 - gifticonId: {}", gifticonId);
 			throw new CustomException(ErrorCode.NO_NEARBY_PEOPLES);
 		}
 
 		String selectedUuid = getRandomUuid(validUuids);
+		log.info("무작위 선택된 UUID: {}", selectedUuid);
 
 		// 받는 사람 ble 토큰 객체
 		BleToken findToken = bleTokenRepository.findByValue(selectedUuid);
 
 		// 받는 사람 객체
 		User receiverUser = findToken.getUser();
+		log.info("선택된 수신자 ID: {}", receiverUser.getId());
 
 		// 기프티콘 소유권 업데이트
 		findGifticon.updateUser(receiverUser);
+		log.info("기프티콘 소유권 업데이트 완료");
 
 		// 기프티콘 생성 시간 업데이트 (수신자 입장으로는 받은 시간이 생성시간이기 때문)
 		findGifticon.updateCreatedAt(LocalDateTime.now());
+		log.info("기프티콘 생성 시간 업데이트 완료");
 
 		GifticonOwnerHistory newGifticonOwnerHistory = GifticonOwnerHistory.builder()
 			.gifticon(findGifticon)
@@ -117,6 +127,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 
 		// 전송 내역 저장
 		gifticonOwnerHistoryRepository.save(newGifticonOwnerHistory);
+		log.info("기프티콘 소유권 이전 내역 저장 완료");
 
 		// 알림 타입 조회
 		NotificationType notificationType = notificationTypeRepository.findByCode(
@@ -126,6 +137,7 @@ public class GifticonGiveAppServiceImpl implements GifticonGiveAppService {
 		String content = "뿌리기 선물! " + findGifticon.getName() + "이(가) 도착했어요.";
 
 		sendNotificationToUser(receiverUser.getId(), notificationType, title, content, "gifticon", gifticonId);
+		log.info("기프티콘 뿌리기 완료 - 발신자: {}, 수신자: {}, 기프티콘: {}", userId, receiverUser.getId(), findGifticon.getName());
 	}
 
 	@Override
