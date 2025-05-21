@@ -29,7 +29,7 @@ import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import GeofencingService from '../services/GeofencingService';
 import { geoNotificationService } from '../services/geoNotificationService';
-import { LocationService } from '../services/locationAlarmService';
+import LocationService from '../services/locationAlarmService';
 
 // 알림 타입 enum (API와 일치)
 const NOTIFICATION_TYPES = {
@@ -749,7 +749,7 @@ const SettingScreen = () => {
                 if (value) {
                   try {
                     // 위치 추적 시작
-                    await LocationService.startLocationTracking();
+                    await LocationService.startAllLocationServices();
 
                     const gifticons = await AsyncStorage.getItem('USER_GIFTICONS');
                     if (gifticons) {
@@ -768,7 +768,7 @@ const SettingScreen = () => {
                 } else {
                   // 스위치가 꺼질 때는 위치 추적 중지
                   try {
-                    await LocationService.stopLocationTracking();
+                    await LocationService.stopAllLocationServices();
                   } catch (error) {
                     console.error('위치 추적 중지 중 오류:', error);
                   }
