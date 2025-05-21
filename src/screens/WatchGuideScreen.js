@@ -18,6 +18,9 @@ import LottieView from 'lottie-react-native';
 
 const { width } = Dimensions.get('window');
 
+// 로티 애니메이션 파일을 미리 변수에 저장
+const alertAnimation = require('../assets/lottie/alert_animation.json');
+
 const WatchGuideScreen = () => {
   const navigation = useNavigation();
   const { theme } = useTheme();
@@ -238,12 +241,7 @@ const WatchGuideScreen = () => {
             </Text>
 
             <View style={styles.animationContainer}>
-              <LottieView
-                source={require('../assets/lottie/alert_animation.json')}
-                autoPlay
-                loop
-                style={styles.lottieAnimation}
-              />
+              <LottieView source={alertAnimation} autoPlay loop style={styles.lottieAnimation} />
             </View>
           </View>
         </Shadow>

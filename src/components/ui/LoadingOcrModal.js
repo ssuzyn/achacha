@@ -2,16 +2,14 @@ import React from 'react';
 import { View, StyleSheet, Modal, Text } from 'react-native';
 import LottieView from 'lottie-react-native';
 
+// 로티 애니메이션 파일을 미리 변수에 저장
+const ocrAnimation = require('../../assets/lottie/ocr_animation.json');
+
 const LoadingOcrModal = ({ visible, message = '이미지 처리 중...' }) => {
   return (
     <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       <View style={styles.container}>
-        <LottieView
-          source={require('../../assets/lottie/ocr_animation.json')}
-          autoPlay
-          loop
-          style={styles.lottieAnimation}
-        />
+        <LottieView source={ocrAnimation} autoPlay loop style={styles.lottieAnimation} />
         <Text style={styles.loadingText}>{message}</Text>
       </View>
     </Modal>

@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, SafeAreaView, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, View, SafeAreaView, TouchableOpacity } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { Text, Divider } from '../components/ui';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from 'react-native-elements';
@@ -17,10 +18,10 @@ const LoginScreen = () => {
           <View style={styles.mainContainer}>
             {/* 로고 영역
             <View style={styles.logoContainer}>
-              <Image
+              <FastImage
                 source={require('../assets/images/splash_icon.png')}
                 style={styles.logo}
-                resizeMode="contain"
+                resizeMode={FastImage.resizeMode.contain}
               />
             </View> */}
 
@@ -59,10 +60,10 @@ const LoginScreen = () => {
                 activeOpacity={0.7}
               >
                 <View style={styles.buttonContentContainer}>
-                  <Image
+                  <FastImage
                     source={require('../assets/images/login_kakaotalk.png')}
                     style={styles.buttonIcon}
-                    resizeMode="contain"
+                    resizeMode={FastImage.resizeMode.contain}
                   />
                   <Text
                     variant="button"

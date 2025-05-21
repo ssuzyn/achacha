@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useTheme } from '../hooks/useTheme';
 import { Text } from '../components/ui';
 import { Shadow } from 'react-native-shadow-2';
@@ -38,7 +39,7 @@ const CAROUSEL_CARDS = [
   {
     id: '2',
     type: 'radar',
-    title: '쓱 - 뿌리기\n행운의 주인공은?',
+    title: '쓱- 뿌리기\n행운의 주인공은?',
     image: require('../assets/images/home_radar.png'),
     onPress: () => NavigationService.navigate('TabMap'),
   },
@@ -69,9 +70,6 @@ const HomeScreen = () => {
 
   useEffect(() => {
     const printTokens = async () => {
-      const accessToken = await AsyncStorage.getItem('accessToken');
-      const refreshToken = await AsyncStorage.getItem('refreshToken');
-      const bleToken = await AsyncStorage.getItem('bleToken');
       const userId = await AsyncStorage.getItem('userId');
 
       // userId로 사용자 정보 조회
@@ -81,6 +79,7 @@ const HomeScreen = () => {
           if (userInfo && userInfo.userName) {
             setNickname(userInfo.userName);
           }
+          // eslint-disable-next-line no-catch-shadow
         } catch (error) {
           console.error('사용자 정보 조회 실패:', error);
         }
@@ -439,13 +438,20 @@ const HomeScreen = () => {
     mapBackgroundImage: {
       width: '100%',
       height: '100%',
+      position: 'relative',
     },
     mapBackgroundImageStyle: {
+      width: '100%',
+      height: '100%',
       borderRadius: 15,
     },
     mapOverlay: {
       backgroundColor: 'rgba(255, 255, 255, 0.65)',
-      flex: 1,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       padding: 15,
       flexDirection: 'row',
     },
@@ -518,6 +524,7 @@ const HomeScreen = () => {
       marginRight: 5,
     },
     watchGuideImage: {
+      marginTop: 15,
       width: 75,
       height: 75,
     },
@@ -583,7 +590,11 @@ const HomeScreen = () => {
           >
             <View style={[styles.giftCard, isExpired && styles.expiredGiftCard]}>
               <View style={styles.giftImageContainer}>
-                <Image source={item.image} style={styles.giftImage} resizeMode="contain" />
+                <FastImage
+                  source={item.image}
+                  style={styles.giftImage}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
               </View>
               <Text variant="body2" weight="regular" style={styles.giftBrand}>
                 {item.brand}
@@ -621,7 +632,11 @@ const HomeScreen = () => {
                 </Text>
               </View>
               <View style={styles.giftMessageImageContainer}>
-                <Image source={item.image} style={styles.giftMessageImage1} resizeMode="contain" />
+                <FastImage
+                  source={item.image}
+                  style={styles.giftMessageImage1}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
               </View>
               <View style={styles.carouselPaginationOverlay}>
                 <Text variant="caption" weight="regular" style={styles.paginationText}>
@@ -643,7 +658,11 @@ const HomeScreen = () => {
                 </Text>
               </View>
               <View style={styles.giftMessageImageContainer}>
-                <Image source={item.image} style={styles.giftMessageImage2} resizeMode="contain" />
+                <FastImage
+                  source={item.image}
+                  style={styles.giftMessageImage2}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
               </View>
               <View style={styles.carouselPaginationOverlay}>
                 <Text variant="caption" weight="regular" style={styles.paginationText}>
@@ -668,7 +687,11 @@ const HomeScreen = () => {
                 </Text>
               </View>
               <View style={styles.giftMessageImageContainer}>
-                <Image source={item.image} style={styles.giftMessageImage} resizeMode="contain" />
+                <FastImage
+                  source={item.image}
+                  style={styles.giftMessageImage}
+                  resizeMode={FastImage.resizeMode.contain}
+                />
               </View>
               <View style={styles.carouselPaginationOverlay}>
                 <Text variant="caption" weight="regular" style={styles.paginationText}>
@@ -744,10 +767,7 @@ const HomeScreen = () => {
             <Text variant="h3" weight="bold" color="primary" style={null}>
               {nickname || '아차차'}
             </Text>{' '}
-            님,
-          </Text>
-          <Text variant="h3" weight="bold" style={styles.welcomeText}>
-            당신을 위한 기프티콘이 기다려요.
+            님,{'\n'}당신을 위한 기프티콘이 기다려요.
           </Text>
         </View>
 
@@ -790,18 +810,19 @@ const HomeScreen = () => {
         <View style={styles.bottomCardSection}>
           <TouchableOpacity onPress={() => NavigationService.navigate('TabMap')}>
             <View style={styles.mapMessageCard}>
-              <ImageBackground
-                source={require('../assets/images/map.png')}
-                style={styles.mapBackgroundImage}
-                imageStyle={styles.mapBackgroundImageStyle}
-              >
+              <View style={styles.mapBackgroundImage}>
+                <FastImage
+                  source={require('../assets/images/map.png')}
+                  style={styles.mapBackgroundImageStyle}
+                  resizeMode={FastImage.resizeMode.cover}
+                />
                 <View style={styles.mapOverlay}>
                   <View style={styles.mapMessageTextContainer}>
                     <View style={styles.mapTitleContainer}>
-                      <Image
+                      <FastImage
                         source={require('../assets/images/map_marker.png')}
                         style={styles.mapMarkerImage}
-                        resizeMode="contain"
+                        resizeMode={FastImage.resizeMode.contain}
                       />
                       <Text variant="h3" weight="semiBold" style={styles.mapMessageTitle}>
                         MAP
@@ -809,7 +830,7 @@ const HomeScreen = () => {
                     </View>
                   </View>
                 </View>
-              </ImageBackground>
+              </View>
             </View>
           </TouchableOpacity>
         </View>
@@ -827,10 +848,10 @@ const HomeScreen = () => {
                 </Text>
               </View>
               <View style={styles.watchGuideImageContainer}>
-                <Image
+                <FastImage
                   source={require('../assets/images/watch_guide.png')}
                   style={styles.watchGuideImage}
-                  resizeMode="contain"
+                  resizeMode={FastImage.resizeMode.contain}
                 />
               </View>
             </View>

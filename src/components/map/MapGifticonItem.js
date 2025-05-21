@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { calculateDday } from '../../utils/dateUtils';
 import { useNavigation } from '@react-navigation/native';
 
@@ -18,7 +19,6 @@ const MapGifticonItem = ({
     brandId,
     gifticonType,
   } = gifticon;
-  const [imageError, setImageError] = useState(false);
   const navigation = useNavigation();
 
   const dday = calculateDday(gifticonExpiryDate);
@@ -69,7 +69,11 @@ const MapGifticonItem = ({
       onPress={handleItemPress}
       activeOpacity={0.7}
     >
-      <Image source={{ uri: thumbnailPath }} style={styles.image} />
+      <FastImage
+        source={{ uri: thumbnailPath }}
+        style={styles.image}
+        resizeMode={FastImage.resizeMode.cover}
+      />
       {/* 기프티콘 정보 */}
       <View style={styles.infoContainer}>
         <View style={styles.titleContainer}>

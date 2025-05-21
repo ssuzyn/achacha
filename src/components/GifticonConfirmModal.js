@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, View, Text, TouchableOpacity, Image, StyleSheet, Dimensions } from 'react-native';
+import { Modal, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import FastImage from 'react-native-fast-image';
 import { useTheme } from '../hooks/useTheme';
 
 const { width } = Dimensions.get('window');
@@ -15,9 +16,10 @@ const GifticonConfirmModal = ({ visible, selectedGifticon, onCancel, onConfirm }
           <Text style={styles.confirmModalSubtitle}>한 번 뿌린 기프티콘은 되돌릴 수 없습니다.</Text>
           {selectedGifticon && (
             <View style={styles.selectedGifticonCard}>
-              <Image
+              <FastImage
                 source={{ uri: selectedGifticon.thumbnailPath }}
                 style={styles.gifticonImage}
+                resizeMode={FastImage.resizeMode.cover}
               />
               <Text style={styles.gifticonBrand}>{selectedGifticon.brandName}</Text>
               <Text style={styles.gifticonName}>{selectedGifticon.gifticonName}</Text>

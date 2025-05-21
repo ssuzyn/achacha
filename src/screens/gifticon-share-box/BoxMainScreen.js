@@ -11,7 +11,6 @@ import {
   Alert,
   ActivityIndicator,
   StatusBar,
-  ScrollView,
   RefreshControl,
   FlatList,
 } from 'react-native';
@@ -91,10 +90,10 @@ const BoxMainScreen = () => {
     try {
       console.log('[무한스크롤] 데이터 로딩 시작:', { nextPage });
       const data = await fetchShareBoxes({ page: nextPage, size: 8 });
-      console.log('[무한스크롤] 받아온 데이터:', { 
+      console.log('[무한스크롤] 받아온 데이터:', {
         shareBoxesCount: data.shareBoxes?.length,
         hasNextPage: data.hasNextPage,
-        nextPage: data.nextPage
+        nextPage: data.nextPage,
       });
       setShareBoxes(prev => (nextPage === 0 ? data.shareBoxes : [...prev, ...data.shareBoxes]));
       setHasNextPage(data.hasNextPage);
@@ -317,11 +316,11 @@ const BoxMainScreen = () => {
         contentContainerStyle={styles.scrollContent}
         columnWrapperStyle={{ justifyContent: 'space-between' }}
         onEndReached={() => {
-          console.log('[무한스크롤] 스크롤 끝 도달:', { 
+          console.log('[무한스크롤] 스크롤 끝 도달:', {
             currentPage: page,
             loading,
             hasNextPage,
-            shareBoxesCount: shareBoxes.length
+            shareBoxesCount: shareBoxes.length,
           });
           if (!loading && hasNextPage) loadShareBoxes(page);
         }}

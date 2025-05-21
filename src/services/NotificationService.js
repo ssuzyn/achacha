@@ -136,10 +136,10 @@ const handleNavigationByType = (navigation, remoteMessage) => {
 
   console.log('알림 데이터:', data);
 
-  // 쉐어박스 삭제 알림은 메인 화면으로만 이동
+  // 쉐어박스 삭제 알림은 쉐어박스 목록 화면으로 이동
   if (notificationType === NOTIFICATION_TYPES.SHAREBOX_DELETED) {
-    console.log('쉐어박스 삭제 알림: 메인 화면으로 이동');
-    navigation.navigate('Main');
+    console.log('쉐어박스 삭제 알림: 쉐어박스 목록 화면으로 이동');
+    navigation.navigate('BoxList');
     return;
   }
 
