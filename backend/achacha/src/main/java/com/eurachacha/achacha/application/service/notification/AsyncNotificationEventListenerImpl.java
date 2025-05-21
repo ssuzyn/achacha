@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.eurachacha.achacha.application.port.input.notification.AsyncNotificationAppService;
+import com.eurachacha.achacha.application.port.input.notification.AsyncNotificationEventListener;
 import com.eurachacha.achacha.application.port.output.notification.NotificationEventPort;
 import com.eurachacha.achacha.application.service.notification.event.NotificationEventMessage;
 
@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AsyncNotificationAppServiceImpl implements AsyncNotificationAppService {
+public class AsyncNotificationEventListenerImpl implements AsyncNotificationEventListener {
 	private final NotificationEventPort notificationEventPort;
 
 	@Async("notificationTaskExecutor")
