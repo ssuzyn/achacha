@@ -27,6 +27,11 @@ const useAuthStore = create((set, get) => ({
       await AsyncStorage.setItem('refreshToken', tokens.refreshToken);
       if (tokens.bleToken) {
         await AsyncStorage.setItem('bleToken', tokens.bleToken);
+        const savedBleToken = await AsyncStorage.getItem('bleToken');
+        console.log('[BLE] AsyncStorage 저장된 bleToken (setAuth):', savedBleToken);
+        if (tokens.bleToken !== savedBleToken) {
+          console.warn('[BLE] setAuth: 서버 응답값과 AsyncStorage 값이 다릅니다!', tokens.bleToken, savedBleToken);
+        }
       }
       // 저장 후 바로 읽어서 로그 출력
       const savedAccessToken = await AsyncStorage.getItem('accessToken');
@@ -119,6 +124,11 @@ const useAuthStore = create((set, get) => ({
       }
       if (newBleToken) {
         await AsyncStorage.setItem('bleToken', newBleToken);
+        const savedBleToken = await AsyncStorage.getItem('bleToken');
+        console.log('[BLE] AsyncStorage 저장된 bleToken (updateTokens):', savedBleToken);
+        if (newBleToken !== savedBleToken) {
+          console.warn('[BLE] updateTokens: 서버 응답값과 AsyncStorage 값이 다릅니다!', newBleToken, savedBleToken);
+        }
       }
       if (newUserId) {
         await AsyncStorage.setItem('userId', newUserId);
