@@ -58,12 +58,12 @@ fun ShareWaitScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.gift), // gift.png 사용
-                    contentDescription = "나눔 선물 아이콘",
+                    contentDescription = "뿌리기 선물 아이콘",
                     modifier = Modifier.size(80.dp) // 이미지 크기 조절
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "나눔하기를 위하여\n위로 쓸어주세요",
+                    text = "뿌리기를 위하여\n위로 쓸어주세요",
                     style = MaterialTheme.typography.body1,
                     textAlign = TextAlign.Center
                 )

@@ -21,6 +21,28 @@ data class GifticonListApiResponse(
 // BarcodeInfo는 BarcodeInfo.kt 파일에 정의되어 있다고 가정
 // data class BarcodeInfo(...)
 
+@Serializable
+data class GiveAwayRequest(val uuids: List<String>)
+
+@Serializable
+data class NotificationApiResponse(
+    val notifications: List<NotificationDto>,
+    val hasNextPage: Boolean,
+    val nextPage: Int? = null
+)
+
+@Serializable
+data class NotificationDto(
+    val notificationId: Int,
+    val notificationTitle: String,
+    val notificationContent: String,
+    val notificationCreatedAt: String,
+    val notificationIsRead: Boolean,
+    val notificationType: String,
+    val gifticonId: Int? = null,
+    val gifticonName: String? = null
+)
+
 interface ApiService {
 
     // 기프티콘 목록 조회 API
@@ -54,7 +76,7 @@ interface ApiService {
         @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int,
         @Body message: UseGifticonRequest
-    ): Response<Unit>
+    ): Response<String>
 
     // 금액형 기프티콘 사용 API 추가
     @POST("api/amount-gifticons/{gifticonId}/use")
@@ -62,7 +84,22 @@ interface ApiService {
         @Header("Authorization") authorization: String,
         @Path("gifticonId") gifticonId: Int,
         @Body request: UseAmountGifticonRequest
-    ): Response<UseAmountGifticonResponse>
+    ): Response<String>
+
+    @POST("/api/gifticons/{gifticonId}/give-away")
+    suspend fun giveAwayGifticon(
+        @Header("Authorization") authorization: String,
+        @Path("gifticonId") gifticonId: Int,
+        @Body request: GiveAwayRequest
+    ): retrofit2.Response<String>
+
+    @GET("api/notifications")
+    suspend fun getNotifications(
+        @Header("Authorization") authorization: String,
+        @Query("type") type: String? = null,
+        @Query("page") page: String? = null,
+        @Query("size") size: Int = 6
+    ): Response<NotificationApiResponse>
 }
 
 // 상품권 사용 요청 바디 데이터 클래스
@@ -70,7 +107,4 @@ interface ApiService {
 data class UseGifticonRequest(val message: String)
 
 @Serializable
-data class UseAmountGifticonRequest(val usageAmount: Int)
-
-@Serializable
-data class UseAmountGifticonResponse(val message: String) 
+data class UseAmountGifticonRequest(val usageAmount: Int) 

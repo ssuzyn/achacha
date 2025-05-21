@@ -18,11 +18,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Button
 import com.koup28.achacha_app.presentation.theme.TitleFontFamily
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 @Composable
 fun ConnectPhoneScreen(
     onConnectClick: () -> Unit
 ) {
+    val (isConnecting, setIsConnecting) = remember { mutableStateOf(false) }
     Scaffold(
         timeText = { TimeText(modifier = Modifier.padding(top = 6.dp)) },
         vignette = { Vignette(vignettePosition = VignettePosition.TopAndBottom) }
@@ -48,14 +51,18 @@ fun ConnectPhoneScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Chip(
-                onClick = onConnectClick,
+                onClick = {
+                    setIsConnecting(true)
+                    onConnectClick()
+                },
                 label = { 
                     Text(
-                        text = "연결 시작", 
+                        text = if (isConnecting) "연결중..." else "연결 시작", 
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     ) 
                 },
+                enabled = !isConnecting,
                 colors = ChipDefaults.chipColors(
                     backgroundColor = Color(0xFFAECBFA), 
                     contentColor = Color.Black
