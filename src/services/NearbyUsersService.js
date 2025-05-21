@@ -267,11 +267,11 @@ class NearbyUsersService {
 
     // 기존 BLE 매니저 정리 (캐시된 기기 정보 제거)
     try {
-      console.log('[Initialize] BLE 매니저 완전 재초기화 시작');
+      // console.log('[Initialize] BLE 매니저 완전 재초기화 시작');
       this.manager.destroy();
       await new Promise(resolve => setTimeout(resolve, 1000));
       this.manager = new BleManager();
-      console.log('[Initialize] BLE 매니저 완전 재초기화 완료');
+      // console.log('[Initialize] BLE 매니저 완전 재초기화 완료');
     } catch (error) {
       console.error('[Initialize] BLE 매니저 재초기화 실패:', error);
     }
@@ -288,10 +288,10 @@ class NearbyUsersService {
 
     try {
       const now = new Date();
-      console.log('[Initialize] 토큰 유효성 검사 전:');
-      console.log('[Initialize]   - this.deviceId:', this.deviceId);
-      console.log('[Initialize]   - this.tokenExpiry:', this.tokenExpiry);
-      console.log('[Initialize]   - now:', now);
+      // console.log('[Initialize] 토큰 유효성 검사 전:');
+      // console.log('[Initialize]   - this.deviceId:', this.deviceId);
+      // console.log('[Initialize]   - this.tokenExpiry:', this.tokenExpiry);
+      // console.log('[Initialize]   - now:', now);
       if (this.tokenExpiry) {
         console.log('[Initialize]   - 만료됨? (this.tokenExpiry < now):', this.tokenExpiry < now);
       }
