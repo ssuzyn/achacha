@@ -80,25 +80,37 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 	@Transactional
 	public void sendExpiryDateNotificationForUser(Integer userId) {
 		LocalDate today = LocalDate.now();
+		log.info("사용자 유효기간 알림 처리 시작: 사용자ID={}, 오늘날짜={}", userId, today);
 
 		// 알림 타입 찾기
 		NotificationType findCode = notificationTypeRepository.findByCode(NotificationTypeCode.EXPIRY_DATE);
+		log.info("알림 타입 조회 완료: 타입ID={}", findCode.getId());
 
 		// 사용자 알림 설정 조회
 		NotificationSetting findSetting = notificationSettingRepository
 			.findByUserIdAndNotificationTypeId(userId, findCode.getId());
+
+		log.info("사용자 알림 설정 조회: 설정ID={}, 활성화상태={}, 알림주기={}일",
+			findSetting.getId(), findSetting.getIsEnabled(), findSetting.getExpirationCycle().getDays());
 
 		// 알림 설정이 활성화되어 있지 않으면 종료
 		if (!notificationSettingDomainService.isEnabled(findSetting)) {
 			return;
 		}
 
+		// 알림 발송 대상 날짜 계산
+		List<LocalDate> expiryDates = getExpiryDates(today);
+		log.info("알림 대상 날짜 계산 완료: {}", expiryDates);
+
 		// 단일 쿼리로 해당 사용자의 모든 관련 기프티콘 조회 (소유 + 공유받은)
 		List<Gifticon> allRelevantGifticons = gifticonRepository.findAllRelevantGifticonsWithExpiryDates(
 			getExpiryDates(today), userId);
+		log.info("알림 대상 기프티콘 조회 완료: 사용자ID={}, 대상 기프티콘 수={}", userId, allRelevantGifticons.size());
 
 		// 모든 관련 기프티콘에 대해 알림 처리
 		for (Gifticon gifticon : allRelevantGifticons) {
+			log.info("기프티콘 처리: ID={}, 이름={}, 만료일={}",
+				gifticon.getId(), gifticon.getName(), gifticon.getExpiryDate());
 			saveAndSendNotification(gifticon, findCode, today, findSetting);
 		}
 	}
@@ -133,17 +145,23 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 		NotificationSetting findSetting) {
 		// 알림 주기
 		int day = findSetting.getExpirationCycle().getDays();
+		log.info("알림 발송 검사 시작: 기프티콘={}, 만료일={}, 알림주기={}일",
+			findGifticon.getId(), findGifticon.getExpiryDate(), day);
 
 		List<LocalDate> expiryDates = getExpiryDates(today);
 
 		boolean isExpiryMatch = expiryDates.stream()
 			.anyMatch(expiryDate -> checkExpiryDate(findGifticon, today, expiryDate, day));
 
+		// 만료일 확인 결과
+		log.info("만료일 확인 결과: 기프티콘={}, 알림발송여부={}", findGifticon.getId(), isExpiryMatch);
+
 		// 만료일 확인: 기프티콘의 만료일이 조회된 만료일 목록(1,2,3,7,30,60,90일 후)에 포함되고,
 		// 알림 주기 확인: 만료일이 사용자의 알림 설정 주기보다 이른 경우에만 알림 발송
 		if (isExpiryMatch) {
 			String title = findCode.getCode().getDisplayName();
 			String content = getContent(findGifticon);
+			log.info("알림 생성: 제목={}, 내용={}", title, content);
 
 			// 알림 저장
 			saveNotification(findGifticon, findCode, findSetting, title, content);

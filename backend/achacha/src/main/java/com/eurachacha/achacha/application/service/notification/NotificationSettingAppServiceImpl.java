@@ -23,9 +23,11 @@ import com.eurachacha.achacha.web.common.exception.CustomException;
 import com.eurachacha.achacha.web.common.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class NotificationSettingAppServiceImpl implements NotificationSettingAppService {
 
@@ -63,17 +65,23 @@ public class NotificationSettingAppServiceImpl implements NotificationSettingApp
 		User loggedInUser = securityServicePort.getLoggedInUser();
 		Integer userId = loggedInUser.getId();
 
+		log.info("알림 설정 업데이트 시작: 사용자ID={}, 알림타입={}, 활성화={}", userId, typeCode, isEnabled);
+
 		// 알림 타입 찾기
 		NotificationType notificationType = notificationTypeRepository.findByCode(typeCode);
+		log.info("알림 타입 조회 완료: 타입ID={}, 코드={}", notificationType.getId(), notificationType.getCode());
 
 		// 사용자 ID와 알림 타입 ID로 설정 직접 찾기
 		NotificationSetting setting = notificationSettingRepository
 			.findByUserIdAndNotificationTypeId(userId, notificationType.getId());
+		log.info("기존 알림 설정 조회: 설정ID={}, 이전 활성화 상태={}", setting.getId(), setting.getIsEnabled());
 
 		setting.updateIsEnabled(isEnabled);
+		log.info("알림 설정 업데이트 완료: 설정ID={}, 새 활성화 상태={}", setting.getId(), isEnabled);
 
 		// 유효기간 알림이고 활성화된 경우에만 이벤트 발행
 		if (typeCode == NotificationTypeCode.EXPIRY_DATE && isEnabled) {
+			log.info("유효기간 알림 이벤트 발행: 사용자ID={}", userId);
 			applicationEventPublisher.publishEvent(
 				new NotificationSettingUpdatedEvent(userId, typeCode, isEnabled));
 		}
