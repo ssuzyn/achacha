@@ -12,7 +12,7 @@ import {
   Platform,
   NativeModules,
 } from 'react-native';
-import { Text, LoadingOcrModal } from '../../../components/ui';
+import { Text, LoadingOcrModal, AlertDialog } from '../../../components/ui';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
 import { useTheme } from '../../../hooks/useTheme';
@@ -47,6 +47,38 @@ const RegisterMainScreen = () => {
   const [shareBoxes, setShareBoxes] = useState([]); // 쉐어박스 목록 상태
   const [isLoadingShareBoxes, setIsLoadingShareBoxes] = useState(false); // 쉐어박스 로딩 상태
 
+  // AlertDialog 관련 상태 추가
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertCallback, setAlertCallback] = useState(null);
+  const [alertOptions, setAlertOptions] = useState(null);
+
+  // AlertDialog를 표시하는 함수
+  const showAlert = useCallback((title, message, options = null, callback = null) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertCallback(() => callback);
+    setAlertOptions(options);
+    setAlertVisible(true);
+  }, []);
+
+  // AlertDialog 닫기 함수
+  const closeAlert = useCallback(() => {
+    setAlertVisible(false);
+    if (alertCallback) {
+      alertCallback();
+    }
+  }, [alertCallback]);
+
+  // AlertDialog 옵션 버튼 선택 처리
+  const handleOptionSelect = useCallback(option => {
+    setAlertVisible(false);
+    if (option && option.onPress) {
+      option.onPress();
+    }
+  }, []);
+
   // 쉐어박스 목록 불러오기
   const loadShareBoxes = async () => {
     try {
@@ -55,7 +87,7 @@ const RegisterMainScreen = () => {
       setShareBoxes(res.shareBoxes || []);
     } catch (e) {
       console.error('쉐어박스 목록 불러오기 실패:', e);
-      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+      showAlert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
     } finally {
       setIsLoadingShareBoxes(false);
     }
@@ -187,45 +219,21 @@ const RegisterMainScreen = () => {
       } catch (metadataError) {
         console.error('[공유 인텐트] 이미지 메타데이터 조회 오류:', metadataError);
         setIsOcrLoading(false);
-        const errorMessage =
-          metadataError.message?.includes('네트워크') || metadataError.message?.includes('Network')
-            ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
-            : '기프티콘 정보 인식 중 오류가 발생했습니다.';
-        Alert.alert('메타데이터 조회 실패', errorMessage, [
-          {
-            text: '직접 입력하기',
-            onPress: () => {
-              // 공유 인텐트 이미지 정보 초기화
-              navigation.setParams({ sharedImageUri: null });
-
-              setImageOptionVisible(false);
-              navigation.navigate('RegisterDetail', {
-                selectedImage: { uri: imageAsset.uri },
-                originalImage: { uri: imageAsset.uri },
-                gifticonType: gifticonType,
-                boxType: boxType,
-                shareBoxId: selectedShareBoxId,
-                barcodeValue: barcodeValue,
-                barcodeFormat: barcodeFormat,
-                barcodeBoundingBox: barcodeBoundingBox,
-                barcodeImageUri: barcodeImageUri,
-                cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
-                cropInfo: croppedBarcodeResult?.cropInfo || null,
-                brandId: null,
-                thumbnailImage: { uri: imageAsset.uri },
-              });
-            },
-          },
-          {
-            text: '취소',
-            style: 'cancel',
-          },
-        ]);
+        handleMetadataError(
+          metadataError,
+          imageAsset,
+          barcodeValue,
+          barcodeFormat,
+          barcodeBoundingBox,
+          barcodeImageUri,
+          barcodeResult,
+          croppedBarcodeResult
+        );
       }
     } catch (e) {
       setIsOcrLoading(false);
       console.error('[공유 인텐트] 이미지 처리 중 오류:', e);
-      Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
+      showAlert('오류', '이미지 처리 중 문제가 발생했습니다.');
     }
   };
 
@@ -264,7 +272,7 @@ const RegisterMainScreen = () => {
           console.log('사용자가 이미지 선택을 취소했습니다');
         } else if (response.error) {
           console.error('이미지 선택 오류: ', response.error);
-          Alert.alert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
+          showAlert('오류', '이미지를 선택하는 중 오류가 발생했습니다: ' + response.error);
         } else {
           // 최신 버전의 react-native-image-picker는 응답 형식이 다름
           const imageAsset = response.assets ? response.assets[0] : response;
@@ -366,55 +374,83 @@ const RegisterMainScreen = () => {
                 });
               } catch (metadataError) {
                 setIsOcrLoading(false);
-
-                const errorMessage =
-                  metadataError.message.includes('네트워크') ||
-                  metadataError.message.includes('Network')
-                    ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
-                    : '기프티콘 정보 인식 중 오류가 발생했습니다.';
-
-                Alert.alert('메타데이터 조회 실패', errorMessage, [
-                  {
-                    text: '직접 입력하기',
-                    onPress: () => {
-                      setImageOptionVisible(false);
-                      navigation.navigate('RegisterDetail', {
-                        selectedImage: { uri: imageAsset.uri },
-                        originalImage: { uri: imageAsset.uri },
-                        gifticonType: gifticonType,
-                        boxType: boxType,
-                        shareBoxId: selectedShareBoxId,
-                        barcodeValue: barcodeValue,
-                        barcodeFormat: barcodeFormat,
-                        barcodeBoundingBox: barcodeBoundingBox,
-                        barcodeImageUri: barcodeImageUri,
-                        cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
-                        cropInfo: croppedBarcodeResult?.cropInfo || null,
-                        brandId: null,
-                        thumbnailImage: { uri: imageAsset.uri },
-                      });
-                    },
-                  },
-                  {
-                    text: '취소',
-                    style: 'cancel',
-                  },
-                ]);
+                handleMetadataError(
+                  metadataError,
+                  imageAsset,
+                  barcodeValue,
+                  barcodeFormat,
+                  barcodeBoundingBox,
+                  barcodeImageUri,
+                  barcodeResult,
+                  croppedBarcodeResult
+                );
               }
             } catch (processingError) {
-              Alert.alert('오류', '이미지 처리 중 문제가 발생했습니다.');
+              showAlert('오류', '이미지 처리 중 문제가 발생했습니다.');
             }
           } else {
-            Alert.alert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
+            showAlert('오류', '이미지를 불러올 수 없습니다. 다른 이미지를 선택해주세요.');
           }
         }
       });
 
       console.log('이미지 라이브러리 호출 후');
     } catch (error) {
-      Alert.alert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
+      showAlert('오류', '이미지를 선택하는 중 문제가 발생했습니다.');
     }
-  }, [navigation, gifticonType, boxType, selectedShareBoxId]);
+  }, [navigation, gifticonType, boxType, selectedShareBoxId, showAlert]);
+
+  // 메타데이터 조회 실패 처리
+  const handleMetadataError = useCallback(
+    (
+      metadataError,
+      imageAsset,
+      barcodeValue,
+      barcodeFormat,
+      barcodeBoundingBox,
+      barcodeImageUri,
+      barcodeResult,
+      croppedBarcodeResult
+    ) => {
+      const errorMessage =
+        metadataError.message?.includes('네트워크') || metadataError.message?.includes('Network')
+          ? '네트워크 연결을 확인해주세요. 오프라인 상태에서는 기프티콘 정보를 자동으로 인식할 수 없습니다.'
+          : '기프티콘 정보 인식 중 오류가 발생했습니다.';
+
+      const options = [
+        {
+          text: '직접 입력하기',
+          onPress: () => {
+            // 공유 인텐트 이미지 정보 초기화
+            navigation.setParams({ sharedImageUri: null });
+            setImageOptionVisible(false);
+            navigation.navigate('RegisterDetail', {
+              selectedImage: { uri: imageAsset.uri },
+              originalImage: { uri: imageAsset.uri },
+              gifticonType: gifticonType,
+              boxType: boxType,
+              shareBoxId: selectedShareBoxId,
+              barcodeValue: barcodeValue,
+              barcodeFormat: barcodeFormat,
+              barcodeBoundingBox: barcodeBoundingBox,
+              barcodeImageUri: barcodeImageUri,
+              cornerPoints: barcodeResult?.barcodes?.[0]?.cornerPoints || null,
+              cropInfo: croppedBarcodeResult?.cropInfo || null,
+              brandId: null,
+              thumbnailImage: { uri: imageAsset.uri },
+            });
+          },
+        },
+        {
+          text: '취소',
+          style: 'cancel',
+        },
+      ];
+
+      showAlert('메타데이터 조회 실패', errorMessage, options);
+    },
+    [navigation, gifticonType, boxType, selectedShareBoxId, showAlert]
+  );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -740,6 +776,17 @@ const RegisterMainScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* AlertDialog 컴포넌트 추가 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={closeAlert}
+        hideCancel={true}
+        type="info"
+      />
     </View>
   );
 };
