@@ -29,6 +29,8 @@ import { getFcmToken } from '../services/NotificationService';
 import useAuthStore from '../store/authStore';
 import useNotificationStore from '../store/notificationStore';
 import GeofencingService from '../services/GeofencingService';
+import { geoNotificationService } from '../services/geoNotificationService';
+import { LocationService } from '../services/locationAlarmService';
 
 // 알림 타입 enum (API와 일치)
 const NOTIFICATION_TYPES = {
@@ -480,6 +482,7 @@ const SettingScreen = () => {
       if (!fcmToken) {
         fcmToken = await getFcmToken();
       }
+      console.log('현재 저장된 FCM 토큰:', fcmToken);
       if (!refreshToken || !fcmToken) {
         Alert.alert('오류', '로그아웃 정보가 올바르지 않습니다.');
         return;
@@ -732,10 +735,33 @@ const SettingScreen = () => {
                 // API 호출
                 await handleNotificationToggle(NOTIFICATION_TYPES.LOCATION_BASED, value);
 
-                // 스위치가 켜질 때 쿨다운 리셋
+                // 스위치가 켜질 때만 위치 추적 시작 및 geoNotificationService 호출
                 if (value) {
-                  const geofencingService = new GeofencingService();
-                  await geofencingService.resetNotificationCooldowns();
+                  try {
+                    // 위치 추적 시작
+                    await LocationService.startLocationTracking();
+
+                    const gifticons = await AsyncStorage.getItem('USER_GIFTICONS');
+                    if (gifticons) {
+                      const parsedGifticons = JSON.parse(gifticons);
+                      if (parsedGifticons && parsedGifticons.length > 0) {
+                        await geoNotificationService.requestGeoNotification(
+                          parsedGifticons[0].gifticonId
+                        );
+                      }
+                    }
+                    const geofencingService = new GeofencingService();
+                    await geofencingService.resetNotificationCooldowns();
+                  } catch (error) {
+                    console.error('주변 매장 알림 초기화 중 오류:', error);
+                  }
+                } else {
+                  // 스위치가 꺼질 때는 위치 추적 중지
+                  try {
+                    await LocationService.stopLocationTracking();
+                  } catch (error) {
+                    console.error('위치 추적 중지 중 오류:', error);
+                  }
                 }
               }}
             />
