@@ -661,7 +661,9 @@ const RegisterDetailScreen = () => {
       console.log('[기프티콘 등록] 바코드 이미지 추출 재시도');
 
       // 사용자에게 알림
-      showAlert('바코드 이미지 추출', '바코드 이미지를 추출하고 있습니다. 잠시만 기다려주세요.');
+      Alert.alert('바코드 이미지 추출', '바코드 이미지를 추출하고 있습니다. 잠시만 기다려주세요.', [
+        { text: '확인' },
+      ]);
 
       // 잠시 후 바코드 이미지 추출 시도
       setTimeout(async () => {
@@ -1359,7 +1361,7 @@ const RegisterDetailScreen = () => {
       setShareBoxes(res.shareBoxes || []);
     } catch (e) {
       console.error('쉐어박스 목록 불러오기 실패:', e);
-      showAlert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
+      Alert.alert('에러', '쉐어박스 목록을 불러오지 못했습니다.');
     } finally {
       setIsLoadingShareBoxes(false);
     }
@@ -1770,7 +1772,7 @@ const RegisterDetailScreen = () => {
           if (isTypeLocked) {
             setBoxModalVisible(false);
           } else {
-            showAlert('알림', '기프티콘 타입과 등록 위치를 선택해주세요.');
+            Alert.alert('알림', '기프티콘 타입과 등록 위치를 선택해주세요.');
           }
         }}
       >
