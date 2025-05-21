@@ -170,8 +170,10 @@ public class GifticonExpiryNotificationAppServiceImpl implements GifticonExpiryN
 			if (notificationSettingDomainService.isEnabled(findSetting)) {
 				// fcm token 조회
 				List<FcmToken> findFcmTokens = fcmTokenRepository.findAllByUserId(findSetting.getUser().getId());
+				log.info("FCM 토큰 조회 완료: 사용자={}, 토큰수={}", findSetting.getUser().getId(), findFcmTokens.size());
 
 				findFcmTokens.forEach(fcmToken -> {
+					log.info("FCM 알림 발송: 토큰={}", fcmToken.getValue());
 					NotificationEventDto dto = NotificationEventDto.builder()
 						.fcmToken(fcmToken.getValue())
 						.title(title)
