@@ -9,14 +9,13 @@ import {
   InteractionManager,
   TouchableOpacity,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { Icon, useTheme } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useTabBar } from '../context/TabBarContext';
 import { useHeaderBar } from '../context/HeaderBarContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ListItem, Text } from '../components/ui';
+import { ListItem, Text, AlertDialog } from '../components/ui';
 import notificationService from '../api/notificationService';
 
 // 알림 타입에 따른 아이콘 정의
@@ -81,6 +80,11 @@ const NotificationScreen = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [error, setError] = useState(null);
   const [displayData, setDisplayData] = useState([]); // 화면에 표시할 데이터
+
+  // 알림 다이얼로그 상태
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
 
   // 페이지 정보 및 로딩 플래그
   const isMounted = useRef(true);
@@ -399,7 +403,7 @@ const NotificationScreen = () => {
               gifticonDetail.gifticonStatus === 'TRANSFERRED'
             ) {
               // 삭제되었거나 존재하지 않는 기프티콘인 경우 처리
-              Alert.alert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
+              showAlert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
               return;
             }
 
@@ -422,7 +426,7 @@ const NotificationScreen = () => {
           } catch (gifticonError) {
             console.error('[디버그] 기프티콘 상세 조회 오류:', gifticonError);
             // 기프티콘 조회 실패 시 (존재하지 않는 경우)
-            Alert.alert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
+            showAlert('알림', '삭제되었거나 존재하지 않는 기프티콘입니다.');
             return;
           }
         }
@@ -446,7 +450,7 @@ const NotificationScreen = () => {
             const isAccessible = await notificationService.checkShareBoxAccessibility(shareBoxId);
 
             if (!isAccessible) {
-              Alert.alert('알림', '참여 중이지 않거나 삭제된 쉐어박스입니다.');
+              showAlert('알림', '참여 중이지 않거나 삭제된 쉐어박스입니다.');
               return;
             }
 
@@ -457,19 +461,19 @@ const NotificationScreen = () => {
             });
           } catch (navError) {
             console.error('[디버그] 쉐어박스 네비게이션 오류:', navError);
-            Alert.alert('알림', '삭제되었거나 나가기 처리한 쉐어박스입니다.');
+            showAlert('알림', '삭제되었거나 나가기 처리한 쉐어박스입니다.');
           }
         }
         // 쉐어박스 삭제 알림 처리
         else if (notificationType === 'SHAREBOX_DELETED') {
-          console.log('[디버그] 쉐어박스 삭제 알림: BoxMain으로 이동');
-          navigation.navigate('BoxMain');
+          console.log('[디버그] 쉐어박스 삭제 알림: 네비게이션 없음');
+          // 삭제된 쉐어박스 알림은 네비게이션 하지 않음
         } else {
           console.log('처리되지 않은 알림 타입:', notificationType);
         }
       } catch (error) {
         console.error('[디버그] 알림 처리 중 오류 발생:', error);
-        Alert.alert('오류', '알림을 처리하는 중 문제가 발생했습니다.');
+        showAlert('오류', '알림을 처리하는 중 문제가 발생했습니다.');
       }
     },
     [navigation]
@@ -585,6 +589,13 @@ const NotificationScreen = () => {
     return item.uniqueId || item.id || `${item.notificationId || ''}-${Math.random()}`;
   }, []);
 
+  // AlertDialog 표시 함수
+  const showAlert = (title, message) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <StatusBar barStyle="dark-content" backgroundColor={theme.colors.background} />
@@ -629,6 +640,18 @@ const NotificationScreen = () => {
           }
         />
       )}
+
+      {/* 알림 다이얼로그 */}
+      <AlertDialog
+        isVisible={alertVisible}
+        onBackdropPress={() => setAlertVisible(false)}
+        title={alertTitle}
+        message={alertMessage}
+        confirmText="확인"
+        onConfirm={() => setAlertVisible(false)}
+        hideCancel={true}
+        type="info"
+      />
     </View>
   );
 };
