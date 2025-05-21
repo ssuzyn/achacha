@@ -17,7 +17,7 @@ import { Icon } from 'react-native-elements';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Orientation from 'react-native-orientation-locker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, AlertDialog } from '../../../components/ui';
+import { Text } from '../../../components/ui';
 import gifticonService from '../../../api/gifticonService';
 import { BASE_URL } from '../../../api/config';
 import BrightnessControl from '../../../utils/BrightnessControl';
@@ -32,16 +32,12 @@ const UseAmountScreen = () => {
   const [error, setError] = useState(null);
   const [barcodeData, setBarcodeData] = useState(null);
 
-  // AlertDialog 관련 상태 추가
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
-  const [alertCallback, setAlertCallback] = useState(null);
-
   // route.params에서 정보 가져오기
   const { id, gifticonId, barcodeNumber, remainingAmount, brandName, gifticonName } =
     route.params || {};
-  const actualGifticonId = id || gifticonId; // AlertDialog를 표시하는 함수  const showAlert = (title, message, callback = null) => {    setAlertTitle(title);    setAlertMessage(message);    setAlertCallback(() => callback);    setAlertVisible(true);  };  // AlertDialog 닫기 함수  const closeAlert = () => {    setAlertVisible(false);    if (alertCallback) {      alertCallback();      setAlertCallback(null);    }  };  // 기본 상품 정보 - 이후 API에서 가져온 데이터로 대체될 변수들
+  const actualGifticonId = id || gifticonId;
+
+  // 기본 상품 정보 - 이후 API에서 가져온 데이터로 대체될 변수들
   const productInfo = {
     name: brandName && gifticonName ? `${brandName} | ${gifticonName}` : '상품권',
     barcodeNumber: barcodeNumber || '23424-325235-2352525-45345',
@@ -103,9 +99,20 @@ const UseAmountScreen = () => {
         // 에러 메시지 표시
         if (err.response) {
           const errorMessage = err.response.data?.message || '바코드 로드 중 오류가 발생했습니다.';
-          showAlert('오류', errorMessage, () => navigation.goBack());
+
+          Alert.alert('오류', errorMessage, [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
         } else {
-          showAlert('오류', '네트워크 연결을 확인해주세요.', () => navigation.goBack());
+          Alert.alert('오류', '네트워크 연결을 확인해주세요.', [
+            {
+              text: '확인',
+              onPress: () => navigation.goBack(),
+            },
+          ]);
         }
       }
     };
@@ -167,7 +174,24 @@ const UseAmountScreen = () => {
     // 콤마 제거 후 숫자로 변환
     const numericAmount = amount ? parseInt(extractNumber(amount), 10) : 0;
 
-    // 입력 검증    if (!amount || amount.trim() === '') {      showAlert('알림', '금액을 입력해주세요.');      return;    }    // 숫자 검증    if (isNaN(numericAmount) || numericAmount <= 0) {      showAlert('알림', '유효한 금액을 입력해주세요. (0보다 큰 숫자)');      return;    }    // 잔액 초과 검증 (이미 입력 시 제한되지만 추가 검증)    const remainingAmt = barcodeData?.gifticonRemainingAmount || productInfo.remainingAmount || 0;    if (numericAmount > remainingAmt) {      showAlert('알림', `사용 가능한 금액(${remainingAmt.toLocaleString()}원)을 초과하였습니다.`);      return;    }
+    // 입력 검증
+    if (!amount || amount.trim() === '') {
+      Alert.alert('알림', '금액을 입력해주세요.');
+      return;
+    }
+
+    // 숫자 검증
+    if (isNaN(numericAmount) || numericAmount <= 0) {
+      Alert.alert('알림', '유효한 금액을 입력해주세요. (0보다 큰 숫자)');
+      return;
+    }
+
+    // 잔액 초과 검증 (이미 입력 시 제한되지만 추가 검증)
+    const remainingAmt = barcodeData?.gifticonRemainingAmount || productInfo.remainingAmount || 0;
+    if (numericAmount > remainingAmt) {
+      Alert.alert('알림', `사용 가능한 금액(${remainingAmt.toLocaleString()}원)을 초과하였습니다.`);
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -181,7 +205,27 @@ const UseAmountScreen = () => {
       // 화면 방향을 세로로 변경
       Orientation.lockToPortrait();
 
-      // 성공 메시지 표시      showAlert('성공', '기프티콘이 성공적으로 사용되었습니다.', () => {        // 먼저 DetailAmountScreen으로 돌아가기        navigation.goBack();        // 그 후 사용내역 화면으로 이동        setTimeout(() => {          navigation.navigate('DetailAmountHistoryScreen', {            gifticonId: actualGifticonId,            brandName: brandName,            gifticonName: gifticonName,            scope: numericAmount >= remainingAmt ? 'USED' : 'MY_BOX',            usageType: 'SELF_USE',          });        }, 100); // 약간의 시간을 두어 네비게이션이 올바르게 처리되게 함      });
+      // 성공 메시지 표시
+      Alert.alert('성공', '기프티콘이 성공적으로 사용되었습니다.', [
+        {
+          text: '확인',
+          onPress: () => {
+            // 먼저 DetailAmountScreen으로 돌아가기
+            navigation.goBack();
+
+            // 그 후 사용내역 화면으로 이동
+            setTimeout(() => {
+              navigation.navigate('DetailAmountHistoryScreen', {
+                gifticonId: actualGifticonId,
+                brandName: brandName,
+                gifticonName: gifticonName,
+                scope: numericAmount >= remainingAmt ? 'USED' : 'MY_BOX',
+                usageType: 'SELF_USE',
+              });
+            }, 100); // 약간의 시간을 두어 네비게이션이 올바르게 처리되게 함
+          },
+        },
+      ]);
     } catch (err) {
       // 에러 발생 시 화면 방향을 세로로 변경
       Orientation.lockToPortrait();
@@ -217,7 +261,7 @@ const UseAmountScreen = () => {
         errorMessage = '서버 응답이 없습니다. 네트워크 연결을 확인해주세요.';
       }
 
-      showAlert('오류', errorMessage);
+      Alert.alert('오류', errorMessage, [{ text: '확인' }]);
     }
   };
 
@@ -258,8 +302,10 @@ const UseAmountScreen = () => {
   return (
     <View style={[styles.container, { backgroundColor: 'white' }]}>
       <StatusBar hidden />
+
       {/* 좌측 Safe Area */}
       <View style={{ width: insets.left, height: '100%' }} />
+
       <View style={styles.mainContent}>
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
@@ -311,8 +357,10 @@ const UseAmountScreen = () => {
           </View>
         </View>
       </View>
+
       {/* 우측 Safe Area */}
       <View style={{ width: insets.right, height: '100%' }} />
+
       {/* 금액 입력 모달 */}
       <Modal
         animationType="fade"
@@ -398,15 +446,6 @@ const UseAmountScreen = () => {
           </View>
         </View>
       </Modal>
-      {/* AlertDialog 컴포넌트 추가 */}{' '}
-      <AlertDialog
-        isVisible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
-        confirmText="확인"
-        onConfirm={closeAlert}
-        hideCancel={true}
-      />
     </View>
   );
 };

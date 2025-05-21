@@ -228,7 +228,9 @@ const BoxSettingScreen = () => {
     try {
       await KakaoShareLink.sendCustom({
         templateId: 120597, // 실제 사용하는 템플릿 ID로 교체
-        templateArgs: [{ key: 'invite_code', value: shareBoxCode }],
+        templateArgs: [
+          { key: 'invite_code', value: shareBoxCode },
+        ],
       });
     } catch (e) {
       console.error(e);
@@ -329,14 +331,8 @@ const BoxSettingScreen = () => {
                 {shareBoxCode}
               </Text>
               <View style={{ flexDirection: 'row' }}>
-                <TouchableOpacity
-                  style={[
-                    styles.confirmButton,
-                    { marginRight: 6, backgroundColor: '#FFEB00', minWidth: 40 },
-                  ]}
-                  onPress={handleKakaoShare}
-                >
-                  <Image
+                <TouchableOpacity style={[styles.confirmButton, { marginRight: 6 ,backgroundColor: '#FFEB00', minWidth: 40}]} onPress={handleKakaoShare}>
+                <Image
                     source={require('../../assets/images/kakaotalk_sharing_btn_small.png')}
                     style={{ width: 15, height: 15 }}
                     resizeMode="contain"
