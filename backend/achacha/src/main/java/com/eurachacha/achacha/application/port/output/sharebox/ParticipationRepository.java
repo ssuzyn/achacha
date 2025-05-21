@@ -17,4 +17,6 @@ public interface ParticipationRepository {
 	void deleteByUserIdAndShareBoxId(Integer userId, Integer shareBoxId);
 
 	void deleteAllByShareBoxId(Integer shareBoxId);
+
+	List<Participation> findAllByUserId(Integer userId);
 }
