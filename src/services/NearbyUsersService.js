@@ -29,7 +29,6 @@ async function requestBleAdvertisePermission() {
 
 class NearbyUsersService {
   constructor() {
-    this.deviceId = null; // 초기에는 null로 설정
     this.tokenExpiry = null; // 토큰 만료 시간 저장용
     this.nearbyUsers = [];
     this.isScanning = false;
@@ -40,11 +39,9 @@ class NearbyUsersService {
     this.scanSubscription = null;
     this.manager = new BleManager();
 
+    console.log('[NearbyUsersService:constructor] 인스턴스 생성됨:', this);
     // 앱 상태 변경 이벤트 리스너 설정
     this.setupAppStateListener();
-
-    // 저장된 토큰 불러오기
-    this.loadStoredToken();
   }
 
   // 앱 상태 변경 이벤트 리스너 설정
@@ -80,16 +77,19 @@ class NearbyUsersService {
   // BLE 작업 재개 (포그라운드 복귀 시)
   async resumeBleOperations() {
     try {
-      const now = new Date();
-      if (this.deviceId && this.tokenExpiry && this.tokenExpiry > now) {
-        console.log(
-          '[resumeBleOperations] 유효한 BLE 토큰이 이미 존재합니다. 토큰 재발급을 건너뜁니다.'
-        );
+      const bleToken = useAuthStore.getState().bleToken;
+      console.log(
+        '[NearbyUsersService:resumeBleOperations] 진입, bleToken:',
+        bleToken,
+        '인스턴스:',
+        this
+      );
+      if (bleToken) {
+        console.log('[resumeBleOperations] BLE 토큰이 이미 존재합니다. 추가 발급을 건너뜁니다.');
       } else {
-        console.log('[resumeBleOperations] BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
+        console.log('[resumeBleOperations] BLE 토큰이 없으므로 새 토큰 요청...');
         await this.generateBleToken();
       }
-
       // 스캔 중이 아닐 때만 광고 시작
       if (!this.isScanning) {
         await this.startAdvertising();
@@ -97,31 +97,6 @@ class NearbyUsersService {
     } catch (error) {
       console.error('BLE 작업 재개 실패:', error);
     }
-  }
-
-  // 디바이스 UUID 가져오기
-  getDeviceId() {
-    return this.deviceId;
-  }
-
-  // 전체 UUID 생성
-  generateFullUuid() {
-    return uuidv4();
-  }
-
-  // 짧은 UUID 생성 (12자)
-  generateShortUuid() {
-    // 표준 UUID 생성
-    const fullUuid = uuidv4();
-
-    // 하이픈 제거 및 앞 12자리만 사용
-    return fullUuid.replace(/-/g, '').substring(0, 12);
-  }
-
-  // 새 짧은 UUID 생성
-  generateNewUuid() {
-    this.deviceId = this.generateShortUuid();
-    return this.deviceId;
   }
 
   // 블루투스 상태 확인 및 활성화 요청
@@ -210,8 +185,9 @@ class NearbyUsersService {
   async loadStoredToken() {
     try {
       const bleToken = useAuthStore.getState().bleToken;
+      console.log('[NearbyUsersService:loadStoredToken] 호출됨, bleToken:', bleToken);
       if (bleToken) {
-        this.deviceId = bleToken;
+        console.log('[NearbyUsersService:loadStoredToken] bleToken에 할당:', bleToken);
       }
     } catch (error) {
       console.error('저장된 BLE 토큰 불러오기 실패:', error);
@@ -220,9 +196,11 @@ class NearbyUsersService {
 
   // BLE 토큰 생성 API 호출
   async generateBleToken() {
+    const bleToken = useAuthStore.getState().bleToken;
+    console.log('[NearbyUsersService:generateBleToken] 발급 전, bleToken:', bleToken);
     try {
       const response = await apiClient.post('/api/ble', {
-        bleTokenValue: this.deviceId, // 현재 가지고 있는 토큰 값 (없으면 null)
+        bleTokenValue: bleToken, // 현재 가지고 있는 토큰 값 (없으면 null)
       });
 
       // console.log('BLE 토큰 응답:', response.data);
@@ -233,8 +211,7 @@ class NearbyUsersService {
       if (tokenValue) {
         // console.log('새 BLE 토큰 받음:', tokenValue);
         await useAuthStore.getState().updateTokens(null, null, tokenValue);
-        this.deviceId = tokenValue;
-
+        console.log('[NearbyUsersService:generateBleToken] 발급 후 bleToken:', tokenValue);
         // 새 토큰의 만료 시간 설정
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 7); // 7일 후 만료로 설정
@@ -287,28 +264,18 @@ class NearbyUsersService {
     }
 
     try {
-      const now = new Date();
-      // console.log('[Initialize] 토큰 유효성 검사 전:');
-      // console.log('[Initialize]   - this.deviceId:', this.deviceId);
-      // console.log('[Initialize]   - this.tokenExpiry:', this.tokenExpiry);
-      // console.log('[Initialize]   - now:', now);
-      if (this.tokenExpiry) {
-        console.log('[Initialize]   - 만료됨? (this.tokenExpiry < now):', this.tokenExpiry < now);
-      }
-
-      if (!this.deviceId || (this.tokenExpiry && this.tokenExpiry < now)) {
-        console.log('[Initialize] BLE 토큰이 없거나 만료됨. 새 토큰 요청...');
+      if (useAuthStore.getState().bleToken) {
+        console.log('[Initialize] BLE 토큰이 이미 존재합니다. 추가 발급을 건너뜁니다.');
+      } else {
+        console.log('[Initialize] BLE 토큰이 없으므로 새 토큰 요청...');
         const bleTokenResponse = await this.generateBleToken();
-        if (!this.deviceId) {
+        if (!useAuthStore.getState().bleToken) {
           console.error(
             '[Initialize] generateBleToken 호출 후에도 유효한 BLE 토큰을 얻지 못했습니다.'
           );
           return false;
         }
       }
-
-      // 광고 시작은 별도 API나 네이티브 구현이 필요하며, BLE-PLX는 기본적으로 지원하지 않음
-      // await this.startAdvertising();
       return true;
     } catch (error) {
       console.error('[Initialize] BLE 초기화 실패:', error);
@@ -318,6 +285,8 @@ class NearbyUsersService {
 
   // 광고 시작 (자신을 다른 기기에 알림)
   async startAdvertising() {
+    const bleToken = useAuthStore.getState().bleToken;
+    console.log('[NearbyUsersService:startAdvertising] 광고 시작, bleToken:', bleToken);
     // 앱이 포그라운드인지 확인
     if (AppState.currentState !== 'active') {
       return false;
@@ -339,17 +308,13 @@ class NearbyUsersService {
     }
 
     try {
-      // 이미 광고 중이면 중복 시작 방지
+      // 광고 시작 전 반드시 광고 중지
       if (this.isAdvertising) {
-        console.log('이미 광고 중입니다.');
-        return true;
+        await this.stopAdvertising();
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
       }
 
-      // 광고 시작 전 서비스 UUID, 토큰 로그
-      // console.log('[BLE 광고] 서비스 UUID:', this.serviceUUID);
-      // console.log('[BLE 광고] 광고할 디바이스 ID(토큰):', this.deviceId);
-
-      if (!this.deviceId) {
+      if (!bleToken) {
         return false;
       }
 
@@ -358,14 +323,14 @@ class NearbyUsersService {
         try {
           // UUID 문자열을 실제 바이트로 변환
           const uuidBytes = new TextEncoder().encode(this.serviceUUID);
-          const tokenBytes = new TextEncoder().encode(this.deviceId);
+          const tokenBytes = new TextEncoder().encode(bleToken);
 
           console.log('\n2. 광고 데이터 준비:');
-          // console.log('- Service UUID:', this.serviceUUID);
-          console.log('- BLE 토큰:', this.deviceId);
+          console.log('- Service UUID:', this.serviceUUID);
+          console.log('- BLE 토큰:', bleToken);
 
           // 토큰 크기 검사 및 조정 (13바이트 제한)
-          let tokenToUse = this.deviceId;
+          let tokenToUse = bleToken;
           if (tokenBytes.length > 13) {
             // console.log(`토큰 크기 초과 (${tokenBytes.length} > 13바이트). 축소 필요`);
 
@@ -373,8 +338,8 @@ class NearbyUsersService {
             let adjustedToken = '';
             const encoder = new TextEncoder();
 
-            for (let i = 0; i < this.deviceId.length; i++) {
-              const newToken = adjustedToken + this.deviceId[i];
+            for (let i = 0; i < bleToken.length; i++) {
+              const newToken = adjustedToken + bleToken[i];
               const newTokenBytes = encoder.encode(newToken);
 
               if (newTokenBytes.length > 13) {
@@ -393,7 +358,6 @@ class NearbyUsersService {
           try {
             // 방법 1: startAdvertising 메서드 사용 (있다면)
             if (typeof NativeModules.BleModule.startAdvertising === 'function') {
-              // console.log('\n[BLE 광고] 방법 1: UUID와 토큰 직접 전달');
               await NativeModules.BleModule.startAdvertising(this.serviceUUID, tokenToUse);
               console.log('\n✅ 광고 시작됨 (방법 1)');
               this.isAdvertising = true;
@@ -404,24 +368,19 @@ class NearbyUsersService {
 
             try {
               // 방법 2: Base64로 인코딩된 UUID+토큰 결합 데이터 사용
-              // UUID 문자열을 바이트 배열로 변환 (16바이트)
               const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');
               const uuidArray = new Uint8Array(16);
 
-              // UUID 문자열을 16진수로 파싱하여 바이트 배열에 저장
               for (let i = 0; i < 16; i++) {
                 uuidArray[i] = parseInt(uuidNoHyphens.substr(i * 2, 2), 16);
               }
 
-              // UUID와 토큰 바이트를 합친 배열 생성
               const adjustedTokenBytes = new TextEncoder().encode(tokenToUse);
               const combinedBytes = new Uint8Array(uuidArray.length + adjustedTokenBytes.length);
               combinedBytes.set(uuidArray, 0);
               combinedBytes.set(adjustedTokenBytes, uuidArray.length);
 
-              // Base64로 인코딩
               const base64Data = btoa(String.fromCharCode.apply(null, combinedBytes));
-              // console.log('\n[BLE 광고] 방법 2: 결합 데이터 사용');
               await NativeModules.BleModule.startAdvertisingOptimized(base64Data);
               console.log('\n✅ 광고 시작됨 (방법 2)');
               this.isAdvertising = true;
@@ -429,11 +388,8 @@ class NearbyUsersService {
             } catch (error2) {
               console.error('\n❌ 방법 2 실패:', error2);
 
-              // 방법 3: 매우 짧은 토큰 사용
               try {
-                // 매우 짧은 토큰 (8자 이하)
-                const shortToken = this.deviceId.substring(0, 8);
-                // console.log('\n[BLE 광고] 방법 3: 매우 짧은 토큰 사용');
+                const shortToken = bleToken.substring(0, 8);
                 await NativeModules.BleModule.startAdvertising(this.serviceUUID, shortToken);
                 console.log('\n✅ 광고 시작됨 (방법 3)');
                 this.isAdvertising = true;
@@ -464,8 +420,6 @@ class NearbyUsersService {
   // 광고 중지
   async stopAdvertising() {
     try {
-      // console.log('[BLE 광고] 광고 중지 요청');
-
       // BleModule 확인
       if (!NativeModules.BleModule) {
         console.error('[BLE 광고] BleModule을 찾을 수 없습니다.');
@@ -586,7 +540,7 @@ class NearbyUsersService {
       this.isScanning = true;
 
       console.log('\n=== BLE 스캔 시작 ===');
-      console.log('현재 디바이스 ID:', this.deviceId);
+      console.log('현재 디바이스 ID:', useAuthStore.getState().bleToken);
 
       // 정확한 16비트 UUID 준비 (0x1BF0 형식 변환)
       const uuidNoHyphens = this.serviceUUID.replace(/-/g, '');

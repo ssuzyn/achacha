@@ -60,10 +60,15 @@ export const loginWithKakao = async kakaoAccessToken => {
   const bleRes = await apiClient.post('/api/ble', {
     bleTokenValue: prevBleToken || undefined,
   });
-  const bleToken = bleRes.data.bleToken;
-
+  console.log('[BLE] /api/ble 응답 bleToken:', bleRes.data.bleToken);
+  await AsyncStorage.setItem('bleToken', bleRes.data.bleToken);
+  const savedBleToken = await AsyncStorage.getItem('bleToken');
+  console.log('[BLE] AsyncStorage 저장된 bleToken:', savedBleToken);
+  if (bleRes.data.bleToken !== savedBleToken) {
+    console.warn('[BLE] 서버 응답값과 AsyncStorage 값이 다릅니다!', bleRes.data.bleToken, savedBleToken);
+  }
   // 3. 통합 반환
-  return { user, accessToken, refreshToken, bleToken };
+  return { user, accessToken, refreshToken, bleToken: bleRes.data.bleToken };
 };
 
 /**
