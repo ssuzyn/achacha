@@ -132,12 +132,12 @@ const KakaoMapView = forwardRef(
     };
 
     // 위치 정보가 변경될 때마다 지도 업데이트
-    // useEffect(() => {
-    //   if (location && mapLoaded && webViewRef.current) {
-    //     // console.log('위치 정보 변경됨, 맵 업데이트 시도');
-    //     moveToLocation(location.coords); // 사용자의 현재 위치로 이동하도록 수정 (선택적)
-    //   }
-    // }, [location, mapLoaded]);
+    useEffect(() => {
+      if (location && mapLoaded && webViewRef.current) {
+        // console.log('위치 정보 변경됨, 맵 업데이트 시도');
+        moveToLocation(location.coords); // 사용자의 현재 위치로 이동하도록 수정 (선택적)
+      }
+    }, [location, mapLoaded]);
 
     // 지정된 좌표로 지도 이동 함수 (기존 moveToCurrentLocation에서 변경)
     const moveToLocation = coords => {
