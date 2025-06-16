@@ -7,15 +7,32 @@
 > 
 
 <div style="display: flex; align-items: flex-start;">
-  <img src="https://github.com/user-attachments/assets/219710ef-b3e7-4ec9-bd73-cbc011725893" height="170" style="margin-right: 30px;" />
+  <img src="https://github.com/user-attachments/assets/219710ef-b3e7-4ec9-bd73-cbc011725893" height="160" style="margin-right: 30px;" />
 
-  | 항목 | 내용 |
-| --- | --- |
-| **팀명** | 으라차차 |
-| **서비스명** | 아차차(Achacha) |
-| **개발 기간** | 2025.04.14 ~ 2025.05.22 (6주) |
-| **개발 인원** | 6명 / 백엔드(3), 프론트(3) |
+  <table border="1" cellspacing="0" cellpadding="8">
+    <tr>
+      <th>항목</th>
+      <th>내용</th>
+    </tr>
+    <tr>
+      <td><strong>팀명</strong></td>
+      <td>으라차차</td>
+    </tr>
+    <tr>
+      <td><strong>서비스명</strong></td>
+      <td>아차차(Achacha)</td>
+    </tr>
+    <tr>
+      <td><strong>개발 기간</strong></td>
+      <td>2025.04.14 ~ 2025.05.22 (6주)</td>
+    </tr>
+    <tr>
+      <td><strong>개발 인원</strong></td>
+      <td>6명 / 백엔드(3), 프론트(3)</td>
+    </tr>
+  </table>
 </div>
+
 
 <br>
 
@@ -190,8 +207,7 @@ OCR과 LangChain 기술을 활용해 기프티콘 이미지만으로 모든 정�
 
 <img src="https://github.com/user-attachments/assets/014b97fe-3760-4824-82e5-5d84e6670456" height="300" />
 
-**기프티콘 등록 자동화를 위한 지능형 텍스트 인식 및 분류 시스템**
-
+> **기프티콘 등록 자동화를 위한 지능형 텍스트 인식 및 분류 시스템**<br>
 기프티콘 이미지에서 정보를 자동으로 추출하고 분류하는 기술입니다.
 
 - **Naver Clova OCR**: 기프티콘 이미지에서 모든 텍스트를 정확하게 추출  
@@ -205,8 +221,7 @@ OCR과 LangChain 기술을 활용해 기프티콘 이미지만으로 모든 정�
 
 <img src="https://github.com/user-attachments/assets/d237f4e3-b297-430e-87bc-8e9b256ac69c" height="300" />
 
-**위치 기반 스마트 알림을 위한 가상 경계 설정 기술**
-
+> **위치 기반 스마트 알림을 위한 가상 경계 설정 기술**<br>
 사용자 위치를 기반으로 매장 접근 시 자동 알림을 제공하는 기술입니다.
 
 - **가상 경계 설정**: 각 브랜드 매장을 중심으로 반경 50m의 가상 울타리 생성  
@@ -221,8 +236,7 @@ OCR과 LangChain 기술을 활용해 기프티콘 이미지만으로 모든 정�
 
 <img src="https://github.com/user-attachments/assets/c9df7a31-bf43-42bd-8691-25a977b0f1fb" height="300" />
 
-**근거리 기프티콘 공유를 위한 저전력 무선 통신 기술**
-
+> **근거리 기프티콘 공유를 위한 저전력 무선 통신 기술**<br>
 주변 사용자와 실시간으로 기프티콘을 나눌 수 있는 뿌리기 기능의 핵심 기술입니다.
 
 - **기기 탐지**: 각 기기가 서비스 UUID와 BLE 토큰을 패킷으로 광고하여 상호 발견  
@@ -238,8 +252,7 @@ OCR과 LangChain 기술을 활용해 기프티콘 이미지만으로 모든 정�
 
 <img src="https://github.com/user-attachments/assets/b488a9d6-1e6d-48d4-bf0b-70a7e73b4ffc" height="300" />
 
-**대용량 알림 처리를 위한 마이크로서비스 아키텍처**
-
+> **대용량 알림 처리를 위한 마이크로서비스 아키텍처**<br>
 알림 처리 성능 향상을 위해 메인 서버와 알림 전용 서버를 분리한 구조입니다.
 
 - **MSA 구조**: 메인 서버(비즈니스 로직)와 알림 서버(알림 전용) 분리  
