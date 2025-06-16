@@ -6,33 +6,7 @@
 기프티콘 관리부터 만료 알림까지, 아차차 하나로 간편하게
 > 
 
-<div style="display: flex; align-items: flex-start;">
-  <img src="https://github.com/user-attachments/assets/219710ef-b3e7-4ec9-bd73-cbc011725893" height="160" style="margin-right: 30px;" />
-
-  <table border="1" cellspacing="0" cellpadding="8">
-    <tr>
-      <th>항목</th>
-      <th>내용</th>
-    </tr>
-    <tr>
-      <td><strong>팀명</strong></td>
-      <td>으라차차</td>
-    </tr>
-    <tr>
-      <td><strong>서비스명</strong></td>
-      <td>아차차(Achacha)</td>
-    </tr>
-    <tr>
-      <td><strong>개발 기간</strong></td>
-      <td>2025.04.14 ~ 2025.05.22 (6주)</td>
-    </tr>
-    <tr>
-      <td><strong>개발 인원</strong></td>
-      <td>6명 / 백엔드(3), 프론트(3)</td>
-    </tr>
-  </table>
-</div>
-
+<img src="https://github.com/user-attachments/assets/219710ef-b3e7-4ec9-bd73-cbc011725893" height="160" style="margin-right: 30px;" />
 
 <br>
 
@@ -62,6 +36,16 @@
 버려지는 기프티콘을 줄이고 더 많은 사람들이 혜택을 누릴 수 있도록 돕는 서비스입니다.    
 
 기프티콘 관리부터 만료 알림까지, 아차차 하나로 간편하게!    
+
+### 프로젝트 정보
+
+| 항목    | 내용                            |
+| ----- | ----------------------------- |
+| 팀명    | 으라차차                          |
+| 서비스명  | 아차차(Achacha)                  |
+| 개발 기간 | 2025.04.14 \~ 2025.05.22 (6주) |
+| 개발 인원 | 6명 / 백엔드(3), 프론트(3)           |
+
 
 <br>
 
